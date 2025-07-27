@@ -62,7 +62,8 @@ export default function PagesPage() {
     return (
        <div>
         <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-headline font-bold">Pages</h1>
+            <h1 className="text-3xl font-headline font-bold">Manage Pages</h1>
+            <Skeleton className="h-10 w-40" />
         </div>
         <Card>
             <CardHeader>
@@ -73,9 +74,8 @@ export default function PagesPage() {
                  <Skeleton className="h-12 w-full" />
                  <Skeleton className="h-12 w-full" />
                  <Skeleton className="h-12 w-full" />
-                 <div className="flex justify-end gap-2">
-                    <Skeleton className="h-10 w-32" />
-                 </div>
+                 <Skeleton className="h-12 w-full" />
+                 <Skeleton className="h-12 w-full" />
             </CardContent>
         </Card>
       </div>
