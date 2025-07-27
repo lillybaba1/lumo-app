@@ -6,8 +6,6 @@ import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, ShoppingCart } from 'lucide-react';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 import EmptyState from '@/components/empty-state';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -28,7 +26,6 @@ export default function CartPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-3xl font-headline font-bold mb-8">Your Shopping Cart</h1>
         {items.length === 0 ? (
@@ -114,7 +111,6 @@ export default function CartPage() {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 }

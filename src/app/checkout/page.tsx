@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -41,7 +39,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-3xl font-headline font-bold mb-8 text-center">Checkout</h1>
         <form onSubmit={handleSubmit}>
@@ -121,7 +118,6 @@ export default function CheckoutPage() {
           </div>
         </form>
       </main>
-      <Footer />
     </div>
   );
 }

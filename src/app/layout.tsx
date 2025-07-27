@@ -3,6 +3,10 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
 import { AIAssistantWidget } from '@/components/ai-assistant-widget';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import UserSidebar from '@/components/user-sidebar';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -24,9 +28,20 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <CartProvider>
-          {children}
-          <Toaster />
-          <AIAssistantWidget />
+          <SidebarProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <div className="flex flex-1">
+                <UserSidebar />
+                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {children}
+                </main>
+              </div>
+              <Footer />
+            </div>
+            <Toaster />
+            <AIAssistantWidget />
+          </SidebarProvider>
         </CartProvider>
       </body>
     </html>

@@ -1,13 +1,10 @@
 import { products, categories } from '@/lib/mock-data';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 import ProductCard from '@/components/product-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tight">Discover Your Style</h1>
@@ -41,7 +38,6 @@ export default function Home() {
           ))}
         </Tabs>
       </main>
-      <Footer />
     </div>
   );
 }

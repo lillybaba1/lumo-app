@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, User } from "lucide-react";
+import { ShoppingBag, User, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
+import { SidebarTrigger } from "./ui/sidebar";
 
 export default function Header() {
   const { state } = useCart();
@@ -13,7 +14,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
+        <div className="mr-4 flex items-center">
+           <SidebarTrigger className="md:hidden mr-2" />
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <ShoppingBag className="h-6 w-6 text-primary" />
             <span className="font-bold font-headline text-lg">Lumo</span>
