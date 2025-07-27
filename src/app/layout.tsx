@@ -7,17 +7,32 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import UserSidebar from '@/components/user-sidebar';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { getTheme } from '@/app/admin/appearance/actions';
+import { hexToHsl } from '@/lib/utils';
+
 
 export const metadata: Metadata = {
   title: 'Lumo',
   description: 'Your modern e-commerce experience.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getTheme();
+  const primaryHsl = hexToHsl(theme.primaryColor);
+  const accentHsl = hexToHsl(theme.accentColor);
+  const backgroundHsl = hexToHsl(theme.backgroundColor);
+
+  const themeStyle = {
+    '--primary': `${primaryHsl.h} ${primaryHsl.s}% ${primaryHsl.l}%`,
+    '--accent': `${accentHsl.h} ${accentHsl.s}% ${accentHsl.l}%`,
+    '--background': `${backgroundHsl.h} ${backgroundHsl.s}% ${backgroundHsl.l}%`,
+  } as React.CSSProperties;
+
+
   return (
     <html lang="en" className="light">
       <head>
@@ -26,7 +41,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Belleza&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased" style={themeStyle}>
         <CartProvider>
           <SidebarProvider>
             <div className="flex min-h-screen flex-col">
