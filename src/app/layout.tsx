@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
+import { AIAssistantWidget } from '@/components/ai-assistant-widget';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -25,6 +26,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <Toaster />
+          <AIAssistantWidget />
         </CartProvider>
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, Bot, User } from "lucide-react";
+import { ShoppingBag, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -21,12 +21,6 @@ export default function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/assistant">
-                <Bot className="h-4 w-4 mr-2" />
-                AI Assistant
-              </Link>
-            </Button>
             <Button variant="ghost" asChild>
                 <Link href="/login">
                     <User className="h-4 w-4 mr-2" />

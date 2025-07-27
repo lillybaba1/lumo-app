@@ -29,6 +29,9 @@ export function ChatInterface() {
     if (result.answer) {
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages(prev => [...prev, assistantMessage]);
+      // Clear the input field after successful submission
+      const form = (document.querySelector('form[data-chat-form="true"]') as HTMLFormElement);
+      if(form) form.reset();
       return { response: result.answer, error: null };
     } else {
       return { response: null, error: 'Sorry, I could not find an answer.' };
@@ -47,7 +50,7 @@ export function ChatInterface() {
   };
   
   return (
-    <Card className="w-full max-w-2xl mx-auto h-[70vh] flex flex-col">
+    <Card className="w-full max-w-md h-[60vh] flex flex-col shadow-2xl rounded-xl">
       <CardHeader>
         <CardTitle className="font-headline flex items-center">
           <Bot className="mr-2" /> AI Shopping Assistant
@@ -88,8 +91,8 @@ export function ChatInterface() {
         </ScrollArea>
       </CardContent>
       <CardFooter>
-        <form action={action} className="w-full flex items-center gap-2">
-          <Input name="query" placeholder="Ask about products, prices, or recommendations..." required />
+        <form data-chat-form="true" action={action} className="w-full flex items-center gap-2">
+          <Input name="query" placeholder="Ask about products, prices..." required />
           <SubmitButton />
         </form>
       </CardFooter>
