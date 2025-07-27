@@ -44,7 +44,7 @@ export default function AdminSidebar() {
       </nav>
       <div className="p-4 border-t mt-auto">
         <Button variant="outline" className="w-full justify-start gap-2" asChild>
-          <Link href="/login">
+          <Link href="/">
             <LogOut className="h-4 w-4" />
             Logout
           </Link>
