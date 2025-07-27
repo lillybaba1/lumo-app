@@ -1,40 +1,107 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Paintbrush } from 'lucide-react';
+import { getTheme, saveTheme } from './actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AppearancePage() {
   const { toast } = useToast();
-  const [primaryColor, setPrimaryColor] = useState("#D0BFFF");
-  const [accentColor, setAccentColor] = useState("#FFB3C6");
-  const [backgroundColor, setBackgroundColor] = useState("#E8E2FF");
+  const [primaryColor, setPrimaryColor] = useState("");
+  const [accentColor, setAccentColor] = useState("");
+  const [backgroundColor, setBackgroundColor] = useState("");
   const [backgroundImage, setBackgroundImage] = useState("");
   const [foregroundImage, setForegroundImage] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleSaveChanges = () => {
-    // In a real app, you would save these values to a database or a global state management solution.
-    // For this prototype, we'll just show a success message.
-    toast({
-      title: "Appearance Updated",
-      description: "Your storefront's appearance has been saved.",
+  useEffect(() => {
+    getTheme().then(theme => {
+      setPrimaryColor(theme.primaryColor);
+      setAccentColor(theme.accentColor);
+      setBackgroundColor(theme.backgroundColor);
+      setBackgroundImage(theme.backgroundImage);
+      setForegroundImage(theme.foregroundImage);
+      setLoading(false);
     });
+  }, []);
+
+
+  const handleSaveChanges = async () => {
+    try {
+      await saveTheme({
+        primaryColor,
+        accentColor,
+        backgroundColor,
+        backgroundImage,
+        foregroundImage,
+      });
+      toast({
+        title: "Appearance Updated",
+        description: "Your storefront's appearance has been saved.",
+      });
+    } catch (error) {
+       toast({
+        title: "Error",
+        description: "Failed to save appearance settings.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleReset = () => {
-    setPrimaryColor("#D0BFFF");
-    setAccentColor("#FFB3C6");
-    setBackgroundColor("#E8E2FF");
-    setBackgroundImage("");
-    setForegroundImage("");
-     toast({
-      title: "Appearance Reset",
-      description: "Your storefront's appearance has been reset to the default.",
+    const defaultTheme = {
+        primaryColor: "#D0BFFF",
+        accentColor: "#FFB3C6",
+        backgroundColor: "#E8E2FF",
+        backgroundImage: "",
+        foregroundImage: "",
+    };
+    setPrimaryColor(defaultTheme.primaryColor);
+    setAccentColor(defaultTheme.accentColor);
+    setBackgroundColor(defaultTheme.backgroundColor);
+    setBackgroundImage(defaultTheme.backgroundImage);
+    setForegroundImage(defaultTheme.foregroundImage);
+    saveTheme(defaultTheme).then(() => {
+         toast({
+          title: "Appearance Reset",
+          description: "Your storefront's appearance has been reset to the default.",
+        });
     });
+  }
+
+  if (loading) {
+    return (
+       <div>
+        <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-headline font-bold">Appearance</h1>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle><Skeleton className="h-8 w-48" /></CardTitle>
+                <CardDescription><Skeleton className="h-4 w-72" /></CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10 w-full" /></div>
+                 </div>
+                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-10 w-full" /></div>
+                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-10 w-full" /></div>
+                 <div className="flex justify-end gap-2">
+                    <Skeleton className="h-10 w-32" />
+                    <Skeleton className="h-10 w-32" />
+                 </div>
+            </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
