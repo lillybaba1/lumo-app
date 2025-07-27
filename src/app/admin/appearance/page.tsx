@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PaintBrush } from 'lucide-react';
+import { Paintbrush } from 'lucide-react';
 
 export default function AppearancePage() {
   const { toast } = useToast();
@@ -84,7 +84,7 @@ export default function AppearancePage() {
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleReset}>Reset to Default</Button>
             <Button onClick={handleSaveChanges}>
-              <PaintBrush className="mr-2 h-4 w-4" />
+              <Paintbrush className="mr-2 h-4 w-4" />
               Save Changes
             </Button>
           </div>
