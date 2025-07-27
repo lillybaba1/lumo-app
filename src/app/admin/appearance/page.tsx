@@ -14,6 +14,7 @@ export default function AppearancePage() {
   const [accentColor, setAccentColor] = useState("#FFB3C6");
   const [backgroundColor, setBackgroundColor] = useState("#E8E2FF");
   const [backgroundImage, setBackgroundImage] = useState("");
+  const [foregroundImage, setForegroundImage] = useState("");
 
   const handleSaveChanges = () => {
     // In a real app, you would save these values to a database or a global state management solution.
@@ -29,6 +30,7 @@ export default function AppearancePage() {
     setAccentColor("#FFB3C6");
     setBackgroundColor("#E8E2FF");
     setBackgroundImage("");
+    setForegroundImage("");
      toast({
       title: "Appearance Reset",
       description: "Your storefront's appearance has been reset to the default.",
@@ -74,6 +76,10 @@ export default function AppearancePage() {
           <div className="space-y-2">
             <Label htmlFor="background-image">Background Image URL</Label>
             <Input id="background-image" placeholder="https://example.com/your-image.png" value={backgroundImage} onChange={e => setBackgroundImage(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="foreground-image">Foreground Image URL</Label>
+            <Input id="foreground-image" placeholder="https://example.com/your-image.png" value={foregroundImage} onChange={e => setForegroundImage(e.target.value)} />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleReset}>Reset to Default</Button>
