@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { shoppingAssistant } from '@/ai/flows/shopping-assistant';
 import { Bot, User, Send, Loader2 } from 'lucide-react';
 import { Input } from './ui/input';
@@ -35,7 +35,7 @@ export function ChatInterface() {
     }
   }
 
-  const [state, action] = useFormState(formAction, { response: null, error: null });
+  const [state, action] = useActionState(formAction, { response: null, error: null });
 
   const SubmitButton = () => {
     const { pending } = useFormStatus();
