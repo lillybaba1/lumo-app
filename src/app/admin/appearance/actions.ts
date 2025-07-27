@@ -3,6 +3,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 
 const themeFilePath = path.join(process.cwd(), 'src', 'data', 'theme.json');
 
@@ -17,6 +18,7 @@ export async function saveTheme(theme: {
     await fs.writeFile(themeFilePath, JSON.stringify(theme, null, 2), 'utf-8');
     // Also update globals.css if needed, for now we just save to json
     // This part would be more complex, involving CSS variable generation
+    revalidatePath('/', 'layout');
   } catch (error) {
     console.error('Failed to save theme:', error);
     throw new Error('Failed to save theme settings.');
