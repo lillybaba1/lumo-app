@@ -24,7 +24,7 @@ export default function Header() {
             <Button variant="ghost" asChild>
                 <Link href="/login">
                     <User className="h-4 w-4 mr-2" />
-                    Admin Login
+                    Login
                 </Link>
             </Button>
             <Button variant="outline" asChild className="relative">
