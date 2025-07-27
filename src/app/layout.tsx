@@ -29,14 +29,16 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <CartProvider>
           <SidebarProvider>
-            <Header />
-            <div className="flex">
-              <UserSidebar />
-              <main className="flex-grow">
-                {children}
-              </main>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <div className="flex flex-1">
+                <UserSidebar />
+                <main className="flex-1">
+                  {children}
+                </main>
+              </div>
+              <Footer />
             </div>
-            <Footer />
             <Toaster />
             <AIAssistantWidget />
           </SidebarProvider>
