@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
   { href: '/admin/products', icon: Package, label: 'Products' },
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
+  { href: '/admin/pages', icon: FileText, label: 'Pages' },
   { href: '#', icon: Users, label: 'Customers' },
   { href: '#', icon: BarChart, label: 'Analytics' },
   { href: '#', icon: Settings, label: 'Settings' },
