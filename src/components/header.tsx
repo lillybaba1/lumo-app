@@ -22,9 +22,9 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
             <Button variant="ghost" asChild>
-                <Link href="/login">
+                <Link href="/admin/dashboard">
                     <User className="h-4 w-4 mr-2" />
-                    Login
+                    Admin
                 </Link>
             </Button>
             <Button variant="outline" asChild className="relative">

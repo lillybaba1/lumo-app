@@ -7,16 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, you would have authentication logic here.
-    // For this mock, we just redirect to the dashboard.
+  useEffect(() => {
     router.push('/admin/dashboard');
-  };
+  }, [router]);
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -26,26 +25,26 @@ export default function LoginPage() {
             </Button>
         </div>
       <Card className="w-full max-w-sm">
-        <form onSubmit={handleLogin}>
+        <form>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
                  <ShoppingBag className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="font-headline text-2xl">Lumo Admin</CardTitle>
-            <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+            <CardDescription>Redirecting to dashboard...</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@lumo.com" defaultValue="admin@lumo.com" required />
+              <Input id="email" type="email" placeholder="admin@lumo.com" defaultValue="admin@lumo.com" required disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" defaultValue="password" required />
+              <Input id="password" type="password" defaultValue="password" required disabled />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled>
               Login
             </Button>
           </CardFooter>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, ChangeEvent } from 'react';
@@ -46,13 +45,14 @@ export default function AppearancePage() {
 
   const handleSaveChanges = async () => {
     try {
-      await saveTheme({
+      const themeToSave = {
         primaryColor,
         accentColor,
         backgroundColor,
         backgroundImage,
         foregroundImage,
-      });
+      };
+      await saveTheme(themeToSave);
       toast({
         title: "Appearance Updated",
         description: "Your storefront's appearance has been saved.",
