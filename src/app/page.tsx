@@ -47,7 +47,7 @@ export default async function Home() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-6 mx-auto max-w-4xl mb-8">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mx-auto max-w-4xl mb-8">
                 <TabsTrigger value="all">All</TabsTrigger>
                 {categories.map((category) => (
                 <TabsTrigger key={category.id} value={category.id}>{category.name}</TabsTrigger>
