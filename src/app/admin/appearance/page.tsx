@@ -1,13 +1,14 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Paintbrush } from 'lucide-react';
+import { Paintbrush, Upload, X } from 'lucide-react';
 import { getTheme, saveTheme } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -30,6 +31,17 @@ export default function AppearancePage() {
       setLoading(false);
     });
   }, []);
+  
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setter(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
   const handleSaveChanges = async () => {
@@ -92,8 +104,8 @@ export default function AppearancePage() {
                     <div className="space-y-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10 w-full" /></div>
                     <div className="space-y-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10 w-full" /></div>
                  </div>
-                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-10 w-full" /></div>
-                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-10 w-full" /></div>
+                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-24 w-full" /></div>
+                 <div className="space-y-2"><Skeleton className="h-6 w-40" /><Skeleton className="h-24 w-full" /></div>
                  <div className="flex justify-end gap-2">
                     <Skeleton className="h-10 w-32" />
                     <Skeleton className="h-10 w-32" />
@@ -117,7 +129,7 @@ export default function AppearancePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label htmlFor="primary-color">Primary Color</Label>
               <div className="flex items-center gap-2">
@@ -140,14 +152,67 @@ export default function AppearancePage() {
               </div>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="background-image">Background Image URL</Label>
-            <Input id="background-image" placeholder="https://example.com/your-image.png" value={backgroundImage} onChange={e => setBackgroundImage(e.target.value)} />
+          
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div className="space-y-2">
+                <Label>Background Image</Label>
+                <div className="flex items-center gap-4">
+                  {backgroundImage ? (
+                    <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+                      <Image src={backgroundImage} alt="Background Preview" layout="fill" objectFit="cover" />
+                      <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setBackgroundImage('')}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                        <span className="text-xs text-muted-foreground">None</span>
+                    </div>
+                  )}
+                   <label htmlFor="background-image-upload" className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Button asChild variant="outline">
+                            <div>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Image
+                            </div>
+                        </Button>
+                      </div>
+                      <input id="background-image-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBackgroundImage)} />
+                    </label>
+                </div>
+              </div>
+
+             <div className="space-y-2">
+                <Label>Foreground Image</Label>
+                 <div className="flex items-center gap-4">
+                  {foregroundImage ? (
+                    <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+                      <Image src={foregroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" />
+                       <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setForegroundImage('')}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                     <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                        <span className="text-xs text-muted-foreground">None</span>
+                    </div>
+                  )}
+                    <label htmlFor="foreground-image-upload" className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                         <Button asChild variant="outline">
+                            <div>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Image
+                            </div>
+                        </Button>
+                      </div>
+                      <input id="foreground-image-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setForegroundImage)} />
+                    </label>
+                </div>
+              </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="foreground-image">Foreground Image URL</Label>
-            <Input id="foreground-image" placeholder="https://example.com/your-image.png" value={foregroundImage} onChange={e => setForegroundImage(e.target.value)} />
-          </div>
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleReset}>Reset to Default</Button>
             <Button onClick={handleSaveChanges}>
