@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Paintbrush, Upload, X } from 'lucide-react';
+import { Paintbrush, Upload, X, Loader2 } from 'lucide-react';
 import { getTheme, saveTheme } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -18,7 +18,12 @@ export default function AppearancePage() {
   const [backgroundColor, setBackgroundColor] = useState("");
   const [backgroundImage, setBackgroundImage] = useState("");
   const [foregroundImage, setForegroundImage] = useState("");
+  
+  const [initialBackgroundImage, setInitialBackgroundImage] = useState("");
+  const [initialForegroundImage, setInitialForegroundImage] = useState("");
+
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     getTheme().then(theme => {
@@ -27,6 +32,8 @@ export default function AppearancePage() {
       setBackgroundColor(theme.backgroundColor);
       setBackgroundImage(theme.backgroundImage);
       setForegroundImage(theme.foregroundImage);
+      setInitialBackgroundImage(theme.backgroundImage);
+      setInitialForegroundImage(theme.foregroundImage);
       setLoading(false);
     });
   }, []);
@@ -34,6 +41,14 @@ export default function AppearancePage() {
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+          title: "Image too large",
+          description: "Please upload an image smaller than 2MB.",
+          variant: "destructive"
+        });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setter(reader.result as string);
@@ -44,47 +59,60 @@ export default function AppearancePage() {
 
 
   const handleSaveChanges = async () => {
+    setIsSaving(true);
     try {
       const themeToSave = {
         primaryColor,
         accentColor,
         backgroundColor,
-        backgroundImage,
-        foregroundImage,
+        backgroundImage: backgroundImage || initialBackgroundImage,
+        foregroundImage: foregroundImage || initialForegroundImage,
       };
       await saveTheme(themeToSave);
       toast({
         title: "Appearance Updated",
-        description: "Your storefront's appearance has been saved. Note: Image uploads are for preview only and are not saved.",
+        description: "Your storefront's appearance has been successfully saved.",
       });
     } catch (error) {
        toast({
         title: "Error",
-        description: "Failed to save appearance settings.",
+        description: "Failed to save appearance settings. Please try again.",
         variant: "destructive"
       });
+    } finally {
+        setIsSaving(false);
     }
   };
   
-  const handleReset = () => {
+  const handleReset = async () => {
+    setIsSaving(true);
     const defaultTheme = {
         primaryColor: "#D0BFFF",
         accentColor: "#FFB3C6",
         backgroundColor: "#E8E2FF",
-        backgroundImage: "",
-        foregroundImage: "",
+        backgroundImage: "https://placehold.co/1200x800.png",
+        foregroundImage: "https://placehold.co/400x400.png",
     };
     setPrimaryColor(defaultTheme.primaryColor);
     setAccentColor(defaultTheme.accentColor);
     setBackgroundColor(defaultTheme.backgroundColor);
     setBackgroundImage(defaultTheme.backgroundImage);
     setForegroundImage(defaultTheme.foregroundImage);
-    saveTheme(defaultTheme).then(() => {
-         toast({
+    try {
+      await saveTheme(defaultTheme)
+      toast({
           title: "Appearance Reset",
           description: "Your storefront's appearance has been reset to the default.",
-        });
-    });
+      });
+    } catch(e) {
+       toast({
+        title: "Error",
+        description: "Failed to reset appearance settings.",
+        variant: "destructive"
+      });
+    } finally {
+        setIsSaving(false);
+    }
   }
 
   if (loading) {
@@ -157,11 +185,11 @@ export default function AppearancePage() {
           
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-2">
-                <Label>Background Image (preview only)</Label>
+                <Label>Background Image</Label>
                 <div className="flex items-center gap-4">
                   {backgroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                      <Image src={backgroundImage} alt="Background Preview" layout="fill" objectFit="cover" />
+                      <Image src={backgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
                       <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setBackgroundImage('')}>
                         <X className="h-4 w-4" />
                       </Button>
@@ -186,11 +214,11 @@ export default function AppearancePage() {
               </div>
 
              <div className="space-y-2">
-                <Label>Foreground Image (preview only)</Label>
+                <Label>Foreground Image</Label>
                  <div className="flex items-center gap-4">
                   {foregroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                      <Image src={foregroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" />
+                      <Image src={foregroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
                        <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setForegroundImage('')}>
                         <X className="h-4 w-4" />
                       </Button>
@@ -216,10 +244,14 @@ export default function AppearancePage() {
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleReset}>Reset to Default</Button>
-            <Button onClick={handleSaveChanges}>
-              <Paintbrush className="mr-2 h-4 w-4" />
-              Save Changes
+            <Button variant="outline" onClick={handleReset} disabled={isSaving}>Reset to Default</Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Paintbrush className="mr-2 h-4 w-4" />
+              )}
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </CardContent>

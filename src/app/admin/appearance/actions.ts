@@ -2,14 +2,15 @@
 'use server';
 
 import { getTheme as getThemeFromDb, saveTheme as saveThemeToDb } from '@/services/themeService';
+import { uploadImageAndGetUrl } from '@/services/storageService';
 import { revalidatePath } from 'next/cache';
 
 const defaultTheme = {
   primaryColor: "#D0BFFF",
   accentColor: "#FFB3C6",
   backgroundColor: "#E8E2FF",
-  backgroundImage: "",
-  foregroundImage: "",
+  backgroundImage: "https://placehold.co/1200x800.png",
+  foregroundImage: "https://placehold.co/400x400.png",
 };
 
 export async function saveTheme(theme: {
@@ -22,17 +23,22 @@ export async function saveTheme(theme: {
   try {
     const themeToSave = { ...theme };
 
-    // Don't save large data URIs to firestore
-    if (themeToSave.backgroundImage.startsWith('data:image') && themeToSave.backgroundImage.length > 1024) {
-        themeToSave.backgroundImage = '';
+    // Check if background image is a new upload (data URI)
+    if (themeToSave.backgroundImage.startsWith('data:image')) {
+        const backgroundUrl = await uploadImageAndGetUrl(themeToSave.backgroundImage, 'theme/background');
+        themeToSave.backgroundImage = backgroundUrl;
     }
-    if (themeToSave.foregroundImage.startsWith('data:image') && themeToSave.foregroundImage.length > 1024) {
-        themeToSave.foregroundImage = '';
+
+    // Check if foreground image is a new upload (data URI)
+    if (themeToSave.foregroundImage.startsWith('data:image')) {
+        const foregroundUrl = await uploadImageAndGetUrl(themeToSave.foregroundImage, 'theme/foreground');
+        themeToSave.foregroundImage = foregroundUrl;
     }
 
     await saveThemeToDb(themeToSave);
     revalidatePath('/', 'layout');
     revalidatePath('/', 'page');
+    revalidatePath('/admin/appearance');
   } catch (error) {
     console.error('Failed to save theme:', error);
     throw new Error('Failed to save theme settings.');
@@ -49,6 +55,7 @@ export async function getTheme() {
         return defaultTheme;
     } catch (error) {
         console.error('Failed to read theme:', error);
-        throw new Error('Failed to read theme settings.');
+        // This is a fallback, but we should make sure the app doesn't crash
+        return defaultTheme;
     }
 }

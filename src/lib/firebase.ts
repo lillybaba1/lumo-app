@@ -1,11 +1,12 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   "projectId": "lumo-d0hqd",
   "appId": "1:1068555679622:web:8cfd2105a457ba38d21e07",
-  "storageBucket": "lumo-d0hqd.firebasestorage.app",
+  "storageBucket": "lumo-d0hqd.appspot.com",
   "apiKey": "AIzaSyB4JQQy6rGJHRGtEWihXKrIoPFtHiBjrIA",
   "authDomain": "lumo-d0hqd.firebaseapp.com",
   "measurementId": "",
@@ -15,5 +16,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { app, db };
+export { app, db, storage };
