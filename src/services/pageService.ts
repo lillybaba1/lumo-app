@@ -19,10 +19,12 @@ export async function getPages(): Promise<Pages> {
         if (docSnap.exists()) {
             return docSnap.data() as Pages;
         }
+        // If the document doesn't exist, create it with default data.
         await setDoc(pagesDocRef, defaultPages);
         return defaultPages;
     } catch (error) {
         console.warn('Failed to connect to Firestore. Falling back to default pages.', error);
+        // Fallback for when Firestore is not available (e.g., offline, not set up)
         return defaultPages;
     }
 }

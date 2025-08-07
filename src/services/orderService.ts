@@ -8,10 +8,12 @@ export async function getOrders(): Promise<Order[]> {
   try {
     const ordersCol = collection(db, 'orders');
     const orderSnapshot = await getDocs(ordersCol);
-    const orderList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-    if (orderList.length === 0) {
-        return mockOrders;
+    if (orderSnapshot.empty) {
+      // No orders in Firestore, which could be intentional.
+      // For this app, we'll show mock data if there are no real orders.
+      return mockOrders;
     }
+    const orderList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
     return orderList;
   } catch (error) {
     console.warn('Failed to connect to Firestore. Falling back to mock orders.', error);

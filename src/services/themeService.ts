@@ -27,10 +27,12 @@ export async function getTheme(): Promise<Theme> {
         if (docSnap.exists()) {
             return docSnap.data() as Theme;
         }
+        // If the document doesn't exist, create it with default data.
         await setDoc(themeDocRef, defaultTheme);
         return defaultTheme;
     } catch (error) {
         console.warn('Failed to connect to Firestore. Falling back to default theme.', error);
+        // Fallback for when Firestore is not available (e.g., offline, not set up)
         return defaultTheme;
     }
 }

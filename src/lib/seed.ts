@@ -9,7 +9,7 @@ export async function seedInitialData() {
         const seedMarkerSnap = await getDoc(seedMarkerRef);
 
         if (seedMarkerSnap.exists()) {
-            console.log("Firestore has already been seeded.");
+            // Firestore has been seeded, do nothing.
             return;
         }
 
