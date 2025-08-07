@@ -24,6 +24,12 @@ export async function saveTheme(theme: {
   foregroundImage: string;
 }) {
   try {
+    const dataDir = path.dirname(themeFilePath);
+    try {
+      await fs.access(dataDir);
+    } catch {
+      await fs.mkdir(dataDir, { recursive: true });
+    }
     await fs.writeFile(themeFilePath, JSON.stringify(theme, null, 2), 'utf-8');
     revalidatePath('/', 'layout');
   } catch (error) {
