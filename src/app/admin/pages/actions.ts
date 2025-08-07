@@ -1,9 +1,11 @@
+
 'use server';
 
 import fs from 'fs/promises';
 import path from 'path';
 
-const pagesFilePath = path.join(process.cwd(), 'src', 'data', 'pages.json');
+const dataDir = path.join(process.cwd(), 'src', 'data');
+const pagesFilePath = path.join(dataDir, 'pages.json');
 
 const defaultPages = {
   about: { title: 'About Us', content: 'Welcome to Lumo! We are passionate about providing the best products and customer service.' },
@@ -15,8 +17,17 @@ const defaultPages = {
 
 type Pages = typeof defaultPages;
 
+async function ensureDataDirExists() {
+  try {
+    await fs.access(dataDir);
+  } catch {
+    await fs.mkdir(dataDir, { recursive: true });
+  }
+}
+
 export async function savePages(pages: Pages) {
   try {
+    await ensureDataDirExists();
     await fs.writeFile(pagesFilePath, JSON.stringify(pages, null, 2), 'utf-8');
   } catch (error) {
     console.error('Failed to save pages:', error);
@@ -31,7 +42,6 @@ export async function getPages(): Promise<Pages> {
         return JSON.parse(pagesData);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            // File doesn't exist, create it with default content
             try {
                 await savePages(defaultPages);
                 return defaultPages;

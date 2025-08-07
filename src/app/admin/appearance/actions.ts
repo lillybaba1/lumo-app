@@ -5,7 +5,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 
-const themeFilePath = path.join(process.cwd(), 'src', 'data', 'theme.json');
+const dataDir = path.join(process.cwd(), 'src', 'data');
+const themeFilePath = path.join(dataDir, 'theme.json');
 
 const defaultTheme = {
   primaryColor: "#D0BFFF",
@@ -15,6 +16,13 @@ const defaultTheme = {
   foregroundImage: "",
 };
 
+async function ensureDataDirExists() {
+  try {
+    await fs.access(dataDir);
+  } catch {
+    await fs.mkdir(dataDir, { recursive: true });
+  }
+}
 
 export async function saveTheme(theme: {
   primaryColor: string;
@@ -24,14 +32,10 @@ export async function saveTheme(theme: {
   foregroundImage: string;
 }) {
   try {
-    const dataDir = path.dirname(themeFilePath);
-    try {
-      await fs.access(dataDir);
-    } catch {
-      await fs.mkdir(dataDir, { recursive: true });
-    }
+    await ensureDataDirExists();
     await fs.writeFile(themeFilePath, JSON.stringify(theme, null, 2), 'utf-8');
     revalidatePath('/', 'layout');
+    revalidatePath('/', 'page');
   } catch (error) {
     console.error('Failed to save theme:', error);
     throw new Error('Failed to save theme settings.');
