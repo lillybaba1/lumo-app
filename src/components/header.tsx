@@ -24,9 +24,9 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
             <Button variant="ghost" asChild>
-              <Link href="/admin/dashboard">
+              <Link href="/login">
                 <User className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Admin</span>
+                <span className="hidden md:inline">Login</span>
               </Link>
             </Button>
             <Button variant="outline" asChild className="relative">

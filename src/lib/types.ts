@@ -37,3 +37,10 @@ export interface PageContent {
   title: string;
   content: string;
 }
+
+export interface User {
+    uid: string;
+    email: string;
+    name: string;
+    createdAt: string;
+}

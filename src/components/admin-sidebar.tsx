@@ -9,9 +9,9 @@ const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
   { href: '/admin/products', icon: Package, label: 'Products' },
+  { href: '/admin/customers', icon: Users, label: 'Customers' },
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
   { href: '/admin/pages', icon: FileText, label: 'Pages' },
-  { href: '#', icon: Users, label: 'Customers' },
   { href: '#', icon: BarChart, label: 'Analytics' },
   { href: '#', icon: Settings, label: 'Settings' },
 ];
