@@ -48,14 +48,9 @@ export async function saveTheme(theme: {
 export async function getTheme() {
     try {
         const theme = await getThemeFromDb();
-        if (theme) {
-            return theme;
-        }
-        await saveThemeToDb(defaultTheme);
-        return defaultTheme;
+        return theme || defaultTheme;
     } catch (error) {
         console.error('Failed to read theme:', error);
-        // This is a fallback, but we should make sure the app doesn't crash
-        return defaultTheme;
+        throw new Error('Failed to read theme settings.');
     }
 }

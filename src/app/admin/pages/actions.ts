@@ -24,11 +24,7 @@ export async function savePages(pages: Pages) {
 export async function getPages(): Promise<Pages> {
     try {
         const pages = await getPagesFromDb();
-        if (pages && Object.keys(pages).length > 0) {
-            return pages;
-        }
-        await savePagesToDb(defaultPages);
-        return defaultPages;
+        return pages && Object.keys(pages).length > 0 ? pages : defaultPages;
     } catch (error) {
         console.error('Failed to read pages:', error);
         throw new Error('Failed to read page settings.');
