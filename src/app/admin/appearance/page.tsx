@@ -55,7 +55,7 @@ export default function AppearancePage() {
       await saveTheme(themeToSave);
       toast({
         title: "Appearance Updated",
-        description: "Your storefront's appearance has been saved.",
+        description: "Your storefront's appearance has been saved. Note: Image uploads are for preview only and are not saved.",
       });
     } catch (error) {
        toast({
@@ -157,7 +157,7 @@ export default function AppearancePage() {
           
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-2">
-                <Label>Background Image</Label>
+                <Label>Background Image (preview only)</Label>
                 <div className="flex items-center gap-4">
                   {backgroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">
@@ -186,7 +186,7 @@ export default function AppearancePage() {
               </div>
 
              <div className="space-y-2">
-                <Label>Foreground Image</Label>
+                <Label>Foreground Image (preview only)</Label>
                  <div className="flex items-center gap-4">
                   {foregroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">

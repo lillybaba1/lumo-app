@@ -20,7 +20,17 @@ export async function saveTheme(theme: {
   foregroundImage: string;
 }) {
   try {
-    await saveThemeToDb(theme);
+    const themeToSave = { ...theme };
+
+    // Don't save large data URIs to firestore
+    if (themeToSave.backgroundImage.startsWith('data:image') && themeToSave.backgroundImage.length > 1024) {
+        themeToSave.backgroundImage = '';
+    }
+    if (themeToSave.foregroundImage.startsWith('data:image') && themeToSave.foregroundImage.length > 1024) {
+        themeToSave.foregroundImage = '';
+    }
+
+    await saveThemeToDb(themeToSave);
     revalidatePath('/', 'layout');
     revalidatePath('/', 'page');
   } catch (error) {
