@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -7,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { orders } from '@/lib/mock-data';
+import { getOrders } from '@/services/orderService';
 
 const statusVariant = {
     'Pending': 'default',
@@ -16,7 +17,8 @@ const statusVariant = {
     'Cancelled': 'destructive',
 } as const;
 
-export default function OrdersPage() {
+export default async function OrdersPage() {
+  const orders = await getOrders();
   return (
     <div>
       <h1 className="text-3xl font-headline font-bold mb-6">Orders</h1>

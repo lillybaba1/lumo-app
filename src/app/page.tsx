@@ -1,11 +1,16 @@
-import { products, categories } from '@/lib/mock-data';
+
 import ProductCard from '@/components/product-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTheme } from '@/app/admin/appearance/actions';
 import Image from 'next/image';
+import { getProducts, getCategories } from '@/services/productService';
+import { seedInitialData } from '@/lib/seed';
 
 export default async function Home() {
+  await seedInitialData();
   const theme = await getTheme();
+  const products = await getProducts();
+  const categories = await getCategories();
 
   return (
     <div className="flex flex-col min-h-screen">

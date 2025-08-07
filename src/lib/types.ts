@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -26,4 +27,13 @@ export interface Order {
   status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
   date: string;
   paymentMethod: 'Wave Money' | 'Cash on Delivery';
+}
+
+export interface Pages {
+  [key: string]: PageContent;
+}
+
+export interface PageContent {
+  title: string;
+  content: string;
 }

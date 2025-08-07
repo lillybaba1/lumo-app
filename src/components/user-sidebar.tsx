@@ -1,13 +1,25 @@
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, ShoppingCart, User, Tag, Compass } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { categories } from '@/lib/mock-data';
+import { useEffect, useState } from 'react';
+import { getCategories } from '@/services/productService';
+import { Category } from '@/lib/types';
 
 export default function UserSidebar() {
   const pathname = usePathname();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const fetchedCategories = await getCategories();
+      setCategories(fetchedCategories);
+    }
+    fetchCategories();
+  }, [])
 
   return (
     <Sidebar collapsible="icon" side="left">

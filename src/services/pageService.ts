@@ -1,8 +1,9 @@
 
-'use server';
-
-import { getPages as getPagesFromDb, savePages as savePagesToDb } from '@/services/pageService';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Pages } from '@/lib/types';
+
+const pagesDocRef = doc(db, 'content', 'pages');
 
 const defaultPages: Pages = {
   about: { title: 'About Us', content: 'Welcome to Lumo! We are passionate about providing the best products and customer service.' },
@@ -12,25 +13,25 @@ const defaultPages: Pages = {
   policy: { title: 'Return Policy', content: 'We accept returns within 30 days of purchase for a full refund.' },
 };
 
-export async function savePages(pages: Pages) {
-  try {
-    await savePagesToDb(pages);
-  } catch (error) {
-    console.error('Failed to save pages:', error);
-    throw new Error('Failed to save page settings.');
-  }
-}
-
 export async function getPages(): Promise<Pages> {
     try {
-        const pages = await getPagesFromDb();
-        if (pages && Object.keys(pages).length > 0) {
-            return pages;
+        const docSnap = await getDoc(pagesDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as Pages;
         }
-        await savePagesToDb(defaultPages);
+        await setDoc(pagesDocRef, defaultPages);
         return defaultPages;
     } catch (error) {
-        console.error('Failed to read pages:', error);
-        throw new Error('Failed to read page settings.');
+        console.warn('Failed to connect to Firestore. Falling back to default pages.', error);
+        return defaultPages;
+    }
+}
+
+export async function savePages(pages: Pages): Promise<void> {
+     try {
+        await setDoc(pagesDocRef, pages);
+    } catch (error) {
+         console.error('Failed to save pages to Firestore.', error);
+         throw new Error('Failed to save pages. Ensure Firestore is set up correctly.');
     }
 }

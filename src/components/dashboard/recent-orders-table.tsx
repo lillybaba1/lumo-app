@@ -1,3 +1,6 @@
+
+'use client'
+
 import {
   Table,
   TableBody,
@@ -8,8 +11,10 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { orders } from '@/lib/mock-data';
 import type { Order } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { getOrders } from '@/services/orderService';
+import { Skeleton } from '../ui/skeleton';
 
 const statusVariant = {
     'Pending': 'default',
@@ -20,7 +25,44 @@ const statusVariant = {
 
 
 export default function RecentOrdersTable() {
-    const recentOrders = orders.slice(0, 5);
+    const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            const allOrders = await getOrders();
+            setRecentOrders(allOrders.slice(0, 5));
+            setLoading(false);
+        }
+        fetchOrders();
+    }, [])
+
+    if (loading) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Recent Orders</CardTitle>
+                    <CardDescription>An overview of the latest orders.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <div className="space-y-2">
+                     {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex justify-between items-center p-2">
+                            <div className="space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                            <Skeleton className="h-4 w-16" />
+                        </div>
+                     ))}
+                   </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+
   return (
     <Card>
       <CardHeader>
