@@ -6,30 +6,28 @@ import { getStorage, Bucket } from 'firebase-admin/storage';
 import { firebaseConfig } from './firebaseConfig';
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK will not be initialized. Some features may not work as expected.");
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK cannot be initialized.");
 }
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)
-  : {};
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 
 const appName = 'firebase-admin-app-lumo';
 
-let adminApp: App | null = null;
-if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  adminApp = getApps().find(app => app.name === appName) ?? initializeApp({
+let adminApp: App;
+
+if (getApps().some(app => app.name === appName)) {
+  adminApp = getApps().find(app => app.name === appName)!;
+} else {
+  adminApp = initializeApp({
     credential: cert(serviceAccount),
     storageBucket: firebaseConfig.storageBucket,
   }, appName);
+  console.log("Firebase Admin SDK initialized successfully.");
 }
 
-const dbAdmin: Firestore | null = adminApp ? getFirestore(adminApp) : null;
-const authAdmin: Auth | null = adminApp ? getAuth(adminApp) : null;
-const bucket: Bucket | null = adminApp ? getStorage(adminApp).bucket() : null;
-const isFirebaseAdminInitialized = !!adminApp;
-
-if (adminApp) {
-    console.log("Firebase Admin SDK initialized successfully.");
-}
+const dbAdmin: Firestore = getFirestore(adminApp);
+const authAdmin: Auth = getAuth(adminApp);
+const bucket: Bucket = getStorage(adminApp).bucket();
+const isFirebaseAdminInitialized = true;
 
 export { adminApp, dbAdmin, authAdmin, bucket, isFirebaseAdminInitialized };

@@ -1,13 +1,13 @@
 
 import { NextResponse } from "next/server";
-import { bucket, isFirebaseAdminInitialized } from "@/lib/firebaseAdmin";
+import { bucket } from "@/lib/firebaseAdmin";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   console.log("POST /api/upload called");
-  if (!isFirebaseAdminInitialized || !bucket) {
-      return NextResponse.json({ error: "Firebase Admin SDK not initialized. Please check server logs." }, { status: 500 });
+  if (!bucket) {
+      return NextResponse.json({ error: "Firebase Admin SDK not initialized or storage bucket not available. Please check server logs." }, { status: 500 });
   }
     
   try {
@@ -26,8 +26,11 @@ export async function POST(req: Request) {
       resumable: false,
       public: true,
     });
+    
+    // Remove gs:// prefix from bucket name for constructing the URL
+    const bucketName = bucket.name.replace('gs://', '');
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURI(path)}`;
 
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURI(path)}`;
     console.log("Successfully generated public URL:", publicUrl);
     return NextResponse.json({ url: publicUrl });
   } catch (err: any) {
