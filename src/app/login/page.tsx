@@ -11,6 +11,7 @@ import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { signInUser } from '@/services/authService';
+import { FirebaseError } from 'firebase/app';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,12 +30,20 @@ export default function LoginPage() {
         description: 'Welcome back!',
       });
       router.push('/admin/dashboard');
-    } catch (error: any) {
-      toast({
-        title: 'Login Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
+    } catch (error) {
+       if (error instanceof FirebaseError) {
+        toast({
+          title: 'Login Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'An unexpected error occurred',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
