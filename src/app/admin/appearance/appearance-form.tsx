@@ -107,6 +107,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
     const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!previewRef.current) return;
+        e.preventDefault();
         setIsDragging(true);
         const previewRect = previewRef.current.getBoundingClientRect();
         dragStartRef.current = {
@@ -122,6 +123,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
 
     const handleResizeStart = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
+        e.preventDefault();
         if (!previewRef.current) return;
         setIsResizing(true);
         const previewRect = previewRef.current.getBoundingClientRect();
@@ -138,6 +140,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isDragging && !isResizing) return;
+        e.preventDefault();
         if (!previewRef.current) return;
 
         const { x: startX, y: startY, posX: startPosX, posY: startPosY, scale: startScale, width, height } = dragStartRef.current;
@@ -155,7 +158,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             const newScale = startScale + (dx / width) * 100;
             setFgScale(Math.max(10, Math.min(300, newScale)));
         }
-    }, [isDragging, isResizing]);
+    }, [isDragging, isResizing, fgPosX, fgPosY, fgScale]);
 
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
@@ -163,11 +166,15 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     }, []);
 
     useEffect(() => {
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        const onMouseMove = (e: MouseEvent) => handleMouseMove(e);
+        const onMouseUp = () => handleMouseUp();
+        
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
         };
     }, [handleMouseMove, handleMouseUp]);
 
@@ -322,5 +329,3 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       </Card>
   );
 }
-
-    
