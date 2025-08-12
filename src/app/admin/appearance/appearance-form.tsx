@@ -140,7 +140,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         </Button>
                         </div>
                     ) : (
-                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state">
                             <span className="text-xs text-muted-foreground">None</span>
                         </div>
                     )}
@@ -167,7 +167,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         </Button>
                         </div>
                     ) : (
-                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state">
                             <span className="text-xs text-muted-foreground">None</span>
                         </div>
                     )}
