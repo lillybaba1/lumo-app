@@ -9,6 +9,9 @@ interface Theme {
     backgroundColor: string;
     backgroundImage: string;
     foregroundImage: string;
+    foregroundImageScale?: number;
+    foregroundImagePositionX?: number;
+    foregroundImagePositionY?: number;
 }
 
 export async function getTheme(): Promise<Theme | null> {

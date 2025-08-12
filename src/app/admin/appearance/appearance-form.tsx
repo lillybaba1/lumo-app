@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Paintbrush, Upload, X, Loader2 } from 'lucide-react';
 import { saveTheme } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
 
 type Theme = {
   primaryColor: string;
@@ -19,6 +21,9 @@ type Theme = {
   backgroundColor: string;
   backgroundImage: string;
   foregroundImage: string;
+  foregroundImageScale?: number;
+  foregroundImagePositionX?: number;
+  foregroundImagePositionY?: number;
 };
 
 export default function AppearanceForm({ theme }: { theme: Theme }) {
@@ -30,6 +35,10 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
   const [backgroundImage, setBackgroundImage] = useState(theme.backgroundImage);
   const [foregroundImage, setForegroundImage] = useState(theme.foregroundImage);
+
+  const [fgScale, setFgScale] = useState(theme.foregroundImageScale ?? 100);
+  const [fgPosX, setFgPosX] = useState(theme.foregroundImagePositionX ?? 50);
+  const [fgPosY, setFgPosY] = useState(theme.foregroundImagePositionY ?? 50);
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,6 +57,9 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       formData.append('backgroundColor', backgroundColor);
       formData.append('backgroundImage', backgroundImage);
       formData.append('foregroundImage', foregroundImage);
+      formData.append('foregroundImageScale', String(fgScale));
+      formData.append('foregroundImagePositionX', String(fgPosX));
+      formData.append('foregroundImagePositionY', String(fgPosY));
 
       const result = await saveTheme(formData);
 
@@ -88,6 +100,14 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     }
   };
 
+  const foregroundPreviewStyle: React.CSSProperties = {
+      transform: `scale(${fgScale / 100})`,
+      left: `${fgPosX}%`,
+      top: `${fgPosY}%`,
+      transformOrigin: 'top left',
+  };
+
+
   return (
       <Card>
         <form onSubmit={handleFormSubmit}>
@@ -121,9 +141,11 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 </div>
                 </div>
             </div>
+
+            <Separator className="my-8" />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="space-y-4">
                     <Label>Background Image</Label>
                     <div className="flex items-center gap-4">
                     {backgroundImage ? (
@@ -142,7 +164,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         <Button asChild variant="outline" type="button" disabled={isUploading}>
                             <div>
                                 <Upload className="mr-2 h-4 w-4" />
-                                Upload Image
+                                Upload
                             </div>
                         </Button>
                         <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBackgroundImage, 'theme/background')} />
@@ -150,7 +172,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-4">
                     <Label>Foreground Image</Label>
                     <div className="flex items-center gap-4">
                     {foregroundImage ? (
@@ -169,16 +191,55 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         <Button asChild variant="outline" type="button" disabled={isUploading}>
                             <div>
                                 <Upload className="mr-2 h-4 w-4" />
-                                Upload Image
+                                Upload
                             </div>
                         </Button>
                         <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setForegroundImage, 'theme/foreground')} />
                         </label>
                     </div>
                 </div>
+
+                 <div className="space-y-4 md:col-span-2">
+                    <Label>Foreground Image Settings</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border rounded-md">
+                        <div className="space-y-2">
+                            <Label htmlFor="fg-scale" className="text-sm">Scale ({fgScale}%)</Label>
+                            <Slider id="fg-scale" value={[fgScale]} onValueChange={(v) => setFgScale(v[0])} min={25} max={200} step={5} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="fg-pos-x" className="text-sm">Horizontal Position ({fgPosX}%)</Label>
+                            <Slider id="fg-pos-x" value={[fgPosX]} onValueChange={(v) => setFgPosX(v[0])} min={-50} max={150} step={1} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="fg-pos-y" className="text-sm">Vertical Position ({fgPosY}%)</Label>
+                            <Slider id="fg-pos-y" value={[fgPosY]} onValueChange={(v) => setFgPosY(v[0])} min={-50} max={150} step={1} />
+                        </div>
+                    </div>
+                </div>
+
+                 <div className="space-y-4 md:col-span-2">
+                    <Label>Live Preview</Label>
+                    <div className="relative w-full h-64 rounded-lg overflow-hidden border bg-muted/30">
+                        {backgroundImage && <Image src={backgroundImage} alt="Background" layout="fill" objectFit="cover" unoptimized />}
+                         <div className="absolute inset-0 bg-black/30"></div>
+                        {foregroundImage && (
+                            <div className="absolute w-32 h-32" style={foregroundPreviewStyle}>
+                                <Image src={foregroundImage} alt="Foreground" layout="fill" objectFit="contain" unoptimized />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center text-white p-4 bg-black/20 rounded-lg">
+                                <h3 className="font-headline text-2xl">Hero Title</h3>
+                                <p className="text-sm">Hero description text.</p>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
             </div>
 
-            <div className="flex justify-end gap-2">
+
+            <div className="flex justify-end gap-2 mt-8">
                 <Button type="submit" disabled={isSaving || isUploading}>
                     {isSaving ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -14,6 +14,9 @@ export async function saveTheme(
         backgroundColor: formData.get('backgroundColor') as string,
         backgroundImage: formData.get('backgroundImage') as string,
         foregroundImage: formData.get('foregroundImage') as string,
+        foregroundImageScale: Number(formData.get('foregroundImageScale') ?? 100),
+        foregroundImagePositionX: Number(formData.get('foregroundImagePositionX') ?? 50),
+        foregroundImagePositionY: Number(formData.get('foregroundImagePositionY') ?? 50),
     };
 
     await saveThemeToDb(themeToSave);

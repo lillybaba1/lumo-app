@@ -8,6 +8,9 @@ type Hero3DProps = {
   theme: {
     backgroundImage: string;
     foregroundImage: string;
+    foregroundImageScale?: number;
+    foregroundImagePositionX?: number;
+    foregroundImagePositionY?: number;
   };
 };
 
@@ -38,11 +41,19 @@ export default function Hero3D({ theme }: Hero3DProps) {
     transition: 'transform 0.1s ease',
   };
 
-  const foregroundImageStyle = {
+  const foregroundImageStyle: React.CSSProperties = {
     transform: 'translateZ(50px) scale(0.9)',
     transition: 'transform 0.1s ease',
   };
   
+  const foregroundContainerStyle: React.CSSProperties = {
+    transformStyle: 'preserve-3d',
+    left: `${theme.foregroundImagePositionX ?? 75}%`,
+    top: `${theme.foregroundImagePositionY ?? 50}%`,
+    transform: `translate(-50%, -50%) scale(${ (theme.foregroundImageScale ?? 100) / 100})`,
+    position: 'absolute'
+  };
+
   const textStyle = {
     transform: 'translateZ(75px)',
     transition: 'transform 0.1s ease',
@@ -75,17 +86,19 @@ export default function Hero3D({ theme }: Hero3DProps) {
             <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into Lumo</h1>
             <p className="mt-4 md:mt-6 text-base md:text-xl max-w-2xl drop-shadow-md mx-auto md:mx-0">An immersive shopping experience designed just for you. Explore our collections in a new dimension.</p>
           </div>
-          <div className="flex justify-center" style={{transformStyle: 'preserve-3d'}}>
+          <div className="relative h-full w-full hidden md:block">
             {theme.foregroundImage && (
-              <div className="relative w-48 h-48 md:w-80 md:h-80" style={foregroundImageStyle}>
-                <Image
-                  src={theme.foregroundImage}
-                  alt="Featured Product"
-                  fill
-                  className="object-contain drop-shadow-2xl transform-gpu"
-                  unoptimized
-                  sizes="100vw"
-                />
+              <div style={foregroundContainerStyle}>
+                <div className="relative w-48 h-48 md:w-80 md:h-80" style={foregroundImageStyle}>
+                    <Image
+                    src={theme.foregroundImage}
+                    alt="Featured Product"
+                    fill
+                    className="object-contain drop-shadow-2xl transform-gpu"
+                    unoptimized
+                    sizes="100vw"
+                    />
+                </div>
               </div>
             )}
           </div>

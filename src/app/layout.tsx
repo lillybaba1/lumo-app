@@ -22,6 +22,9 @@ const defaultTheme = {
   backgroundColor: "#E8E2FF",
   backgroundImage: "https://placehold.co/1200x800.png",
   foregroundImage: "https://placehold.co/400x400.png",
+  foregroundImageScale: 100,
+  foregroundImagePositionX: 50,
+  foregroundImagePositionY: 50,
 };
 
 
