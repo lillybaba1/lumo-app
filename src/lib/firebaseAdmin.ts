@@ -3,13 +3,14 @@ import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getStorage, Bucket } from 'firebase-admin/storage';
+import { firebaseConfig } from './firebaseConfig';
 
 // This guard prevents re-initialization in development environments.
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK will not be initialized. Using mock data.");
 }
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON 
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
   ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)
   : {};
 
@@ -19,7 +20,7 @@ const adminApp: App | null = getApps().find(app => app.name === appName) ?? (
   process.env.FIREBASE_SERVICE_ACCOUNT_JSON
     ? initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: `${serviceAccount.project_id}.appspot.com`
+        storageBucket: firebaseConfig.storageBucket,
       }, appName)
     : null
 );
