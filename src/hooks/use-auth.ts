@@ -24,8 +24,6 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 
   } catch (error) {
     // Session cookie is invalid or expired.
-    // Force cleanup of the cookie.
-    cookies().set("session", "", { maxAge: 0 });
     return null;
   }
 }
