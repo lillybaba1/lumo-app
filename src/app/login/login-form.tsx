@@ -51,8 +51,8 @@ export default function LoginForm() {
          if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
            description = 'Invalid email or password. Please try again.';
          }
-       } else if (error.code?.includes('auth/')) {
-            description = 'Invalid email or password. Please try again.';
+       } else if (error.message) {
+          description = error.message;
        }
 
        toast({
