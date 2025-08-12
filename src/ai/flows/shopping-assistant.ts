@@ -11,8 +11,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+});
+
 const ShoppingAssistantInputSchema = z.object({
   query: z.string().describe('The user query for the shopping assistant.'),
+  history: z.array(MessageSchema).optional().describe('The conversation history.'),
 });
 export type ShoppingAssistantInput = z.infer<typeof ShoppingAssistantInputSchema>;
 
@@ -30,9 +36,15 @@ const shoppingAssistantPrompt = ai.definePrompt({
   input: {schema: ShoppingAssistantInputSchema},
   output: {schema: ShoppingAssistantOutputSchema},
   prompt: `You are an AI shopping assistant. Your goal is to help users with their shopping-related tasks.
+  Keep your responses concise and helpful.
 
-  Answer the following question:
+  Here is the conversation history:
+  {{#each history}}
+    {{#if (eq role 'user')}}User: {{content}}{{/if}}
+    {{#if (eq role 'assistant')}}Assistant: {{content}}{{/if}}
+  {{/each}}
 
+  Answer the following question based on the history:
   {{query}}`,
 });
 

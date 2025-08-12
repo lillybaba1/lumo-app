@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from 'react';
+import { useState, useActionState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { shoppingAssistant } from '@/ai/flows/shopping-assistant';
 import { Bot, User, Send, Loader2 } from 'lucide-react';
@@ -16,15 +16,17 @@ type Message = {
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   async function formAction(prevState: any, formData: FormData) {
     const query = formData.get('query') as string;
     if (!query) return { response: null, error: 'Query is empty' };
 
     const userMessage: Message = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
+    const currentMessages = [...messages, userMessage];
+    setMessages(currentMessages);
 
-    const result = await shoppingAssistant({ query });
+    const result = await shoppingAssistant({ query, history: messages });
     
     if (result.answer) {
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
@@ -34,11 +36,19 @@ export function ChatInterface() {
       if(form) form.reset();
       return { response: result.answer, error: null };
     } else {
+      // Revert user message if AI fails
+      setMessages(messages);
       return { response: null, error: 'Sorry, I could not find an answer.' };
     }
   }
 
   const [state, action] = useActionState(formAction, { response: null, error: null });
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const SubmitButton = () => {
     const { pending } = useFormStatus();
@@ -57,7 +67,7 @@ export function ChatInterface() {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        <ScrollArea className="h-full pr-4">
+        <ScrollArea className="h-full pr-4" ref={scrollAreaRef as any}>
           <div className="space-y-4">
             {messages.map((msg, index) => (
               <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
@@ -92,7 +102,7 @@ export function ChatInterface() {
       </CardContent>
       <CardFooter>
         <form data-chat-form="true" action={action} className="w-full flex items-center gap-2">
-          <Input name="query" placeholder="Ask about products, prices..." required />
+          <Input name="query" placeholder="Ask about products, prices..." required autoComplete="off"/>
           <SubmitButton />
         </form>
       </CardFooter>
