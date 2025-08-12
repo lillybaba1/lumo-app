@@ -13,15 +13,18 @@ const defaultTheme = {
   foregroundImage: "https://placehold.co/400x400.png",
 };
 
-export async function saveTheme(theme: {
-  primaryColor: string;
-  accentColor: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  foregroundImage: string;
-}) {
+export async function saveTheme(
+    prevState: any,
+    formData: FormData
+  ): Promise<{ message: string; success: boolean }> {
   try {
-    const themeToSave = { ...theme };
+    const themeToSave = {
+        primaryColor: formData.get('primaryColor') as string,
+        accentColor: formData.get('accentColor') as string,
+        backgroundColor: formData.get('backgroundColor') as string,
+        backgroundImage: formData.get('backgroundImage') as string,
+        foregroundImage: formData.get('foregroundImage') as string,
+    }
 
     // Check if background image is a new upload (data URI)
     if (themeToSave.backgroundImage.startsWith('data:image')) {
@@ -39,20 +42,20 @@ export async function saveTheme(theme: {
     revalidatePath('/', 'layout');
     revalidatePath('/', 'page');
     revalidatePath('/admin/appearance');
+
+    return { message: 'Theme saved successfully!', success: true };
   } catch (error) {
     console.error('Failed to save theme:', error);
-    throw new Error('Failed to save theme settings.');
+    return { message: 'Failed to save theme settings.', success: false };
   }
 }
 
 export async function getTheme() {
     try {
         const theme = await getThemeFromDb();
-        // Ensure all properties exist, falling back to defaults if necessary
         return { ...defaultTheme, ...theme };
     } catch (error) {
         console.error('Failed to read theme:', error);
-        // Return a complete default theme object on error
         return defaultTheme;
     }
 }
