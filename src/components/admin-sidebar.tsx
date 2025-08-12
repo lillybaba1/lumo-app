@@ -13,7 +13,7 @@ const navItems = [
   { href: '/admin/customers', icon: Users, label: 'Customers' },
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
   { href: '/admin/pages', icon: FileText, label: 'Pages' },
-  { href: '#', icon: BarChart, label: 'Analytics' },
+  { href: '/admin/analytics', icon: BarChart, label: 'Analytics' },
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
