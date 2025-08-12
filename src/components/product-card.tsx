@@ -16,6 +16,12 @@ interface ProductCardProps {
 }
 type Settings = { currency?: string };
 
+function getCurrencySymbol(currencyCode: string | undefined) {
+    if (!currencyCode) return '$';
+    if (currencyCode === 'GMD') return 'D';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
@@ -25,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     getSettings().then(s => setSettings(s || {}));
   }, []);
 
-  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+  const currencySymbol = getCurrencySymbol(settings?.currency);
 
 
   const handleAddToCart = () => {

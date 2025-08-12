@@ -18,10 +18,16 @@ const statusVariant = {
     'Cancelled': 'destructive',
 } as const;
 
+function getCurrencySymbol(currencyCode: string | undefined) {
+    if (!currencyCode) return '$';
+    if (currencyCode === 'GMD') return 'D';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+}
+
 export default async function OrdersPage() {
   const orders = await getOrders();
   const settings = await getSettings();
-  const currencySymbol = settings?.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+  const currencySymbol = getCurrencySymbol(settings?.currency);
 
   return (
     <div>

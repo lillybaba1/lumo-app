@@ -15,6 +15,12 @@ import { getSettings } from '../admin/settings/actions';
 
 type Settings = { currency?: string };
 
+function getCurrencySymbol(currencyCode: string | undefined) {
+    if (!currencyCode) return '$';
+    if (currencyCode === 'GMD') return 'D';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+}
+
 export default function CartPage() {
   const { state, dispatch } = useCart();
   const { items } = state;
@@ -24,7 +30,7 @@ export default function CartPage() {
     getSettings().then(s => setSettings(s || {}));
   }, []);
 
-  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+  const currencySymbol = getCurrencySymbol(settings?.currency);
 
 
   const updateQuantity = (productId: string, quantity: number) => {

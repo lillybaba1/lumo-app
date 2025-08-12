@@ -15,6 +15,12 @@ import { useEffect, useState } from 'react';
 
 type Settings = { currency?: string };
 
+function getCurrencySymbol(currencyCode: string | undefined) {
+    if (!currencyCode) return '$';
+    if (currencyCode === 'GMD') return 'D';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+}
+
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
   const { items } = state;
@@ -26,7 +32,7 @@ export default function CheckoutPage() {
     getSettings().then(s => setSettings(s || {}));
   }, []);
 
-  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+  const currencySymbol = getCurrencySymbol(settings?.currency);
 
 
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);

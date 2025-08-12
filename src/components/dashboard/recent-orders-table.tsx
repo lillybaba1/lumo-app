@@ -26,13 +26,19 @@ const statusVariant = {
     'Cancelled': 'destructive',
 } as const;
 
+function getCurrencySymbol(currencyCode: string | undefined) {
+    if (!currencyCode) return '$';
+    if (currencyCode === 'GMD') return 'D';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+}
+
 
 export default function RecentOrdersTable() {
     const [recentOrders, setRecentOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [settings, setSettings] = useState<Settings>({});
 
-    const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+    const currencySymbol = getCurrencySymbol(settings?.currency);
 
 
     useEffect(() => {
