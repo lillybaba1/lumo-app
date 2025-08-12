@@ -15,7 +15,6 @@ try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
     
-    // Use a unique app name to avoid conflicts
     const appName = 'firebase-admin-app-lumo';
 
     if (!getApps().some(app => app.name === appName)) {
@@ -38,6 +37,8 @@ try {
   }
 } catch (error: any) {
   console.error("Firebase Admin SDK initialization failed:", error.message);
+  // We don't want to throw here, as it can prevent the app from starting.
+  // Services will handle the uninitialized state.
 }
 
 export { adminApp, dbAdmin, authAdmin, storageAdmin, bucket, isFirebaseAdminInitialized };

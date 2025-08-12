@@ -76,8 +76,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         const url = await uploadImageAndGetUrl(file, path);
         imageSetter(url);
         toast({ title: 'Upload successful', description: 'Image has been uploaded.'});
-      } catch (error) {
-        toast({ title: 'Upload failed', description: 'Could not upload image.', variant: 'destructive'});
+      } catch (error: any) {
+        toast({ 
+          title: 'Upload failed', 
+          description: error.message || 'Could not upload image.', 
+          variant: 'destructive'
+        });
       } finally {
         setIsUploading(false);
       }
