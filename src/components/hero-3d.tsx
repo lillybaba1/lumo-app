@@ -49,9 +49,9 @@ export default function Hero3D({ theme }: Hero3DProps) {
   };
 
   return (
-    <div style={{ perspective: '1000px' }} className="w-full min-h-[60vh] flex items-center justify-center">
+    <div style={{ perspective: '1000px' }} className="w-full min-h-[70vh] md:min-h-[60vh] flex items-center justify-center p-4">
       <section
-        className="relative w-[95%] h-[55vh] flex items-center justify-center text-white overflow-hidden rounded-2xl shadow-2xl"
+        className="relative w-full h-[65vh] md:h-[55vh] flex items-center justify-center text-white overflow-hidden rounded-2xl shadow-2xl"
         style={sectionStyle}
       >
         {theme.backgroundImage ? (
@@ -70,14 +70,14 @@ export default function Hero3D({ theme }: Hero3DProps) {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 z-0"></div>
         )}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="text-left" style={textStyle}>
-            <h1 className="font-headline text-5xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into Lumo</h1>
-            <p className="mt-6 text-lg md:text-xl max-w-2xl drop-shadow-md">An immersive shopping experience designed just for you. Explore our collections in a new dimension.</p>
+        <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="text-center md:text-left" style={textStyle}>
+            <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into Lumo</h1>
+            <p className="mt-4 md:mt-6 text-base md:text-xl max-w-2xl drop-shadow-md mx-auto md:mx-0">An immersive shopping experience designed just for you. Explore our collections in a new dimension.</p>
           </div>
           <div className="flex justify-center" style={{transformStyle: 'preserve-3d'}}>
             {theme.foregroundImage && (
-              <div className="relative w-64 h-64 md:w-80 md:h-80" style={foregroundImageStyle}>
+              <div className="relative w-48 h-48 md:w-80 md:h-80" style={foregroundImageStyle}>
                 <Image
                   src={theme.foregroundImage}
                   alt="Featured Product"
