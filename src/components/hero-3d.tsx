@@ -48,10 +48,10 @@ export default function Hero3D({ theme }: Hero3DProps) {
   
   const foregroundContainerStyle: React.CSSProperties = {
     position: 'absolute',
-    left: '50%',
-    top: '50%',
+    left: `${theme.foregroundImagePositionX ?? 50}%`,
+    top: `${theme.foregroundImagePositionY ?? 50}%`,
     transformStyle: 'preserve-3d',
-    transform: `translateX(-50%) translateX(${theme.foregroundImagePositionX ?? 0}px) translateY(-50%) translateY(${theme.foregroundImagePositionY ?? 0}px) scale(${(theme.foregroundImageScale ?? 100) / 100})`
+    transform: `translateX(-50%) translateY(-50%) scale(${(theme.foregroundImageScale ?? 100) / 100})`
   };
 
   const textStyle = {
