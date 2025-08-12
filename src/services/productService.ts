@@ -4,7 +4,23 @@
 import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { Product, Category } from '@/lib/types';
 import { products as mockProducts, categories as mockCategories } from '@/lib/mock-data';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+
+function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
+    const newObj: Record<string, any> = {};
+    for (const key in obj) {
+        const value = obj[key];
+        if (value instanceof Timestamp) {
+            newObj[key] = value.toDate().toISOString();
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+            newObj[key] = serializeTimestamps(value);
+        } else {
+            newObj[key] = value;
+        }
+    }
+    return newObj;
+}
+
 
 export async function getProducts(): Promise<Product[]> {
     if (!isFirebaseAdminInitialized || !dbAdmin) {
@@ -16,7 +32,11 @@ export async function getProducts(): Promise<Product[]> {
         if (productSnapshot.empty) {
             return [];
         }
-        const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        const productList = productSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const serializedData = serializeTimestamps(data);
+            return { id: doc.id, ...serializedData } as Product;
+        });
         return productList;
     } catch (error) {
         console.error('Failed to fetch products from Firestore:', error);
@@ -33,7 +53,12 @@ export async function getProductById(id: string): Promise<Product | null> {
         if (!productDoc.exists) {
             return null;
         }
-        return { id: productDoc.id, ...productDoc.data() } as Product;
+        const data = productDoc.data();
+        if (!data) return null;
+
+        const serializedData = serializeTimestamps(data);
+        return { id: productDoc.id, ...serializedData } as Product;
+
     } catch (error) {
         console.error(`Failed to fetch product ${id} from Firestore:`, error);
         return null;
