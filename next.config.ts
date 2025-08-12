@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: firebaseConfig.storageBucket,
+        hostname: new URL(firebaseConfig.storageBucket).hostname,
       }
     ],
   },
