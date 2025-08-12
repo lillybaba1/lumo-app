@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -7,14 +8,25 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { ShoppingCart } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getSettings } from '@/app/admin/settings/actions';
 
 interface ProductCardProps {
   product: Product;
 }
+type Settings = { currency?: string };
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
+  const [settings, setSettings] = useState<Settings>({});
+
+  useEffect(() => {
+    getSettings().then(s => setSettings(s || {}));
+  }, []);
+
+  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
 
   const handleAddToCart = () => {
     dispatch({ type: 'ADD_ITEM', payload: product });
@@ -42,7 +54,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-muted-foreground text-sm">{product.description}</p>
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center">
-        <p className="text-xl font-bold">${product.price.toFixed(2)}</p>
+        <p className="text-xl font-bold">{currencySymbol}{product.price.toFixed(2)}</p>
         <Button onClick={handleAddToCart} size="sm">
           <ShoppingCart className="mr-2 h-4 w-4" />
           Add to Cart

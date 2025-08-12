@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -13,7 +14,7 @@ const navItems = [
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
   { href: '/admin/pages', icon: FileText, label: 'Pages' },
   { href: '#', icon: BarChart, label: 'Analytics' },
-  { href: '#', icon: Settings, label: 'Settings' },
+  { href: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function AdminSidebar() {

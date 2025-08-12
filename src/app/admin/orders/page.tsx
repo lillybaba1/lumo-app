@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { getOrders } from '@/services/orderService';
+import { getSettings } from '@/app/admin/settings/actions';
 
 const statusVariant = {
     'Pending': 'default',
@@ -19,6 +20,9 @@ const statusVariant = {
 
 export default async function OrdersPage() {
   const orders = await getOrders();
+  const settings = await getSettings();
+  const currencySymbol = settings?.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
   return (
     <div>
       <h1 className="text-3xl font-headline font-bold mb-6">Orders</h1>
@@ -44,7 +48,7 @@ export default async function OrdersPage() {
                 <TableCell>
                   <Badge variant={statusVariant[order.status]}>{order.status}</Badge>
                 </TableCell>
-                <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{currencySymbol}{order.total.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

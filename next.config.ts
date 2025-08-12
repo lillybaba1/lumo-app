@@ -20,8 +20,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: firebaseConfig.storageBucket,
-      }
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: `/**`,
+      },
     ],
   },
 };

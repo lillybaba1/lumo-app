@@ -21,21 +21,31 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { deleteProduct } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { getSettings } from '../settings/actions';
+
+type Settings = { currency?: string };
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      const fetchedProducts = await getProducts();
+    const fetchData = async () => {
+      const [fetchedProducts, fetchedSettings] = await Promise.all([
+        getProducts(),
+        getSettings()
+      ]);
       setProducts(fetchedProducts);
+      setSettings(fetchedSettings || {});
       setLoading(false);
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
   const handleDeleteClick = (product: Product) => {
@@ -162,7 +172,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell>
                   <DropdownMenu>

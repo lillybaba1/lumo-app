@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCart } from '@/hooks/use-cart';
@@ -9,12 +10,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { getSettings } from '../admin/settings/actions';
+import { useEffect, useState } from 'react';
+
+type Settings = { currency?: string };
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
   const { items } = state;
   const { toast } = useToast();
   const router = useRouter();
+  const [settings, setSettings] = useState<Settings>({});
+
+  useEffect(() => {
+    getSettings().then(s => setSettings(s || {}));
+  }, []);
+
+  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
 
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -101,13 +114,13 @@ export default function CheckoutPage() {
                     {items.map(item => (
                         <div key={item.product.id} className="flex justify-between text-sm">
                             <span>{item.product.name} x {item.quantity}</span>
-                            <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                            <span>{currencySymbol}{(item.product.price * item.quantity).toFixed(2)}</span>
                         </div>
                     ))}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>${subtotal.toFixed(2)}</span>
+                        <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                     </div>
                 </CardContent>
                 <CardFooter>

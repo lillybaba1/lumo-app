@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -9,10 +10,22 @@ import { Trash2, ShoppingCart } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useEffect, useState } from 'react';
+import { getSettings } from '../admin/settings/actions';
+
+type Settings = { currency?: string };
 
 export default function CartPage() {
   const { state, dispatch } = useCart();
   const { items } = state;
+  const [settings, setSettings] = useState<Settings>({});
+
+  useEffect(() => {
+    getSettings().then(s => setSettings(s || {}));
+  }, []);
+
+  const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
 
   const updateQuantity = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity: Math.max(1, quantity) } });
@@ -56,7 +69,7 @@ export default function CartPage() {
                             <Image src={product.imageUrl} alt={product.name} width={80} height={80} className="rounded-md" data-ai-hint={`${product.category} product`} />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>${product.price.toFixed(2)}</TableCell>
+                          <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
                           <TableCell>
                             <Input
                               type="number"
@@ -66,7 +79,7 @@ export default function CartPage() {
                               className="w-20"
                             />
                           </TableCell>
-                          <TableCell>${(product.price * quantity).toFixed(2)}</TableCell>
+                          <TableCell>{currencySymbol}{(product.price * quantity).toFixed(2)}</TableCell>
                           <TableCell>
                             <Button variant="ghost" size="icon" onClick={() => removeItem(product.id)}>
                               <Trash2 className="h-4 w-4" />
@@ -88,7 +101,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -96,7 +109,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter>

@@ -15,6 +15,9 @@ import type { Order } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { getOrders } from '@/services/orderService';
 import { Skeleton } from '../ui/skeleton';
+import { getSettings } from '@/app/admin/settings/actions';
+
+type Settings = { currency?: string };
 
 const statusVariant = {
     'Pending': 'default',
@@ -27,14 +30,22 @@ const statusVariant = {
 export default function RecentOrdersTable() {
     const [recentOrders, setRecentOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [settings, setSettings] = useState<Settings>({});
+
+    const currencySymbol = settings.currency ? (new Intl.NumberFormat('en-US', { style: 'currency', currency: settings.currency }).formatToParts(1).find(p => p.type === 'currency')?.value || '$') : '$';
+
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            const allOrders = await getOrders();
+        const fetchData = async () => {
+            const [allOrders, fetchedSettings] = await Promise.all([
+                getOrders(),
+                getSettings()
+            ]);
             setRecentOrders(allOrders.slice(0, 5));
+            setSettings(fetchedSettings || {});
             setLoading(false);
         }
-        fetchOrders();
+        fetchData();
     }, [])
 
     if (loading) {
@@ -87,7 +98,7 @@ export default function RecentOrdersTable() {
                 <TableCell>
                   <Badge variant={statusVariant[order.status]}>{order.status}</Badge>
                 </TableCell>
-                <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{currencySymbol}{order.total.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

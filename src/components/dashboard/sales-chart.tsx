@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
@@ -19,7 +20,7 @@ const dataTemplate = [
   { name: "Dec", total: 0 },
 ];
 
-export default function SalesChart() {
+export default function SalesChart({ currencySymbol = '$' }: { currencySymbol?: string }) {
     const [data, setData] = useState(dataTemplate);
 
     useEffect(() => {
@@ -48,7 +49,7 @@ export default function SalesChart() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${currencySymbol}${value}`}
                 />
                 <Tooltip 
                   cursor={{fill: 'hsl(var(--accent))', radius: 'var(--radius)'}}
@@ -57,6 +58,7 @@ export default function SalesChart() {
                     borderColor: 'hsl(var(--border))',
                     borderRadius: 'var(--radius)'
                   }}
+                  formatter={(value) => `${currencySymbol}${value}`}
                 />
                 <Bar dataKey="total" fill="hsl(262.1 83.3% 57.8%)" radius={[4, 4, 0, 0]} />
             </BarChart>
