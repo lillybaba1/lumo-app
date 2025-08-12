@@ -32,11 +32,19 @@ export default function LoginPage() {
       router.push('/admin/dashboard');
     } catch (error) {
        if (error instanceof FirebaseError) {
-        toast({
-          title: 'Login Failed',
-          description: error.message,
-          variant: 'destructive',
-        });
+        if (error.code === 'auth/invalid-credential') {
+            toast({
+                title: 'Login Failed',
+                description: 'Invalid email or password. Please try again.',
+                variant: 'destructive',
+            });
+        } else {
+            toast({
+                title: 'Login Failed',
+                description: error.message,
+                variant: 'destructive',
+            });
+        }
       } else {
         toast({
           title: 'An unexpected error occurred',
