@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -17,6 +18,7 @@ import { User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 export default function CustomersPage() {
   const { toast } = useToast();
@@ -71,6 +73,7 @@ export default function CustomersPage() {
                     <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
                         <TableHead>Joined On</TableHead>
                         <TableHead>Actions</TableHead>
                     </TableRow>
@@ -80,6 +83,7 @@ export default function CustomersPage() {
                     <TableRow key={i}>
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
                     </TableRow>
@@ -121,6 +125,7 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Joined On</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -130,6 +135,9 @@ export default function CustomersPage() {
                 <TableRow key={user.uid}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>{user.role}</Badge>
+                  </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <DropdownMenu>

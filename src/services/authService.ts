@@ -15,6 +15,11 @@ export async function createUser(email: string, password: string, name: string) 
   if (!isFirebaseAdminInitialized || !dbAdmin) {
     throw new Error("User creation is not available. Please configure Firebase Admin SDK.");
   }
+
+  // Check if this is the first user
+  const usersSnapshot = await dbAdmin.collection('users').limit(1).get();
+  const role = usersSnapshot.empty ? 'admin' : 'customer';
+
   // Use the client SDK to create the user in Firebase Auth
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
@@ -26,6 +31,7 @@ export async function createUser(email: string, password: string, name: string) 
     email: user.email,
     name: name,
     createdAt: new Date().toISOString(),
+    role: role,
   });
 
   return { uid: user.uid, email: user.email };
@@ -52,6 +58,7 @@ export async function getUsers(): Promise<User[]> {
         email: userRecord.email || '',
         name: firestoreUserData?.name || userRecord.displayName || 'N/A',
         createdAt: userRecord.metadata.creationTime,
+        role: firestoreUserData?.role || 'customer',
       };
     }));
     return users;
