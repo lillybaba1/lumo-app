@@ -46,11 +46,16 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor);
   const [accentColor, setAccentColor] = useState(theme.accentColor);
   const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor);
-  const [backgroundImage, setBackgroundImage] = useState(theme.backgroundImage);
-  const [foregroundImage, setForegroundImage] = useState(theme.foregroundImage);
   
   const [bgPreview, setBgPreview] = useState<string | null>(null);
   const [fgPreview, setFgPreview] = useState<string | null>(null);
+  
+  const [currentBackgroundImage, setCurrentBackgroundImage] = useState(theme.backgroundImage);
+  const [currentForegroundImage, setCurrentForegroundImage] = useState(theme.foregroundImage);
+
+  const bgInputRef = React.useRef<HTMLInputElement>(null);
+  const fgInputRef = React.useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     if (state.message) {
@@ -59,16 +64,10 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         description: state.message,
         variant: state.success ? "default" : "destructive",
       });
-      
-      if(state.success) {
-          // Reset previews on successful save
-          setBgPreview(null);
-          setFgPreview(null);
-      }
     }
   }, [state, toast]);
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setter: (value: string | null) => void, previewSetter: (value: string | null) => void) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, previewSetter: (value: string | null) => void) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
@@ -82,16 +81,14 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setter(result);
         previewSetter(result);
       };
       reader.readAsDataURL(file);
     }
   };
   
-  const currentBackgroundImage = bgPreview ?? backgroundImage;
-  const currentForegroundImage = fgPreview ?? foregroundImage;
-
+  const displayBackgroundImage = bgPreview ?? currentBackgroundImage;
+  const displayForegroundImage = fgPreview ?? currentForegroundImage;
 
   return (
       <Card>
@@ -103,9 +100,8 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                 {/* Hidden inputs to pass image URLs to the server action */}
-                <input type="hidden" name="backgroundImage" value={backgroundImage} />
-                <input type="hidden" name="foregroundImage" value={foregroundImage} />
+                <input type="hidden" name="currentBackgroundImage" value={currentBackgroundImage} />
+                <input type="hidden" name="currentForegroundImage" value={currentForegroundImage} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
@@ -135,10 +131,10 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 <div className="space-y-2">
                     <Label>Background Image</Label>
                     <div className="flex items-center gap-4">
-                    {currentBackgroundImage ? (
+                    {displayBackgroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={currentBackgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setBackgroundImage(''); setBgPreview(null); }}>
+                        <Image src={displayBackgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentBackgroundImage(''); setBgPreview(null); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
@@ -148,15 +144,13 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         </div>
                     )}
                     <label htmlFor="background-image-upload" className="cursor-pointer">
-                        <div className="flex items-center gap-2">
-                            <Button asChild variant="outline" type="button">
-                                <div>
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Upload Image
-                                </div>
-                            </Button>
-                        </div>
-                        <input id="background-image-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBackgroundImage, setBgPreview)} />
+                        <Button asChild variant="outline" type="button">
+                            <div>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Image
+                            </div>
+                        </Button>
+                        <input id="background-image-upload" name="backgroundImage" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBgPreview)} />
                         </label>
                     </div>
                 </div>
@@ -164,10 +158,10 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 <div className="space-y-2">
                     <Label>Foreground Image</Label>
                     <div className="flex items-center gap-4">
-                    {currentForegroundImage ? (
+                    {displayForegroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={currentForegroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setForegroundImage(''); setFgPreview(null); }}>
+                        <Image src={displayForegroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentForegroundImage(''); setFgPreview(null); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
@@ -177,15 +171,13 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         </div>
                     )}
                         <label htmlFor="foreground-image-upload" className="cursor-pointer">
-                        <div className="flex items-center gap-2">
-                            <Button asChild variant="outline" type="button">
-                                <div>
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Upload Image
-                                </div>
-                            </Button>
-                        </div>
-                        <input id="foreground-image-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setForegroundImage, setFgPreview)} />
+                        <Button asChild variant="outline" type="button">
+                            <div>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Image
+                            </div>
+                        </Button>
+                        <input id="foreground-image-upload" name="foregroundImage" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setFgPreview)} />
                         </label>
                     </div>
                 </div>

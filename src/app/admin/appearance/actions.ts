@@ -18,29 +18,35 @@ export async function saveTheme(
     formData: FormData
   ): Promise<{ message: string; success: boolean }> {
   try {
-    const themeToSave = {
+    const themeToSave: any = {
         primaryColor: formData.get('primaryColor') as string,
         accentColor: formData.get('accentColor') as string,
         backgroundColor: formData.get('backgroundColor') as string,
-        backgroundImage: formData.get('backgroundImage') as string,
-        foregroundImage: formData.get('foregroundImage') as string,
     }
 
-    // Check if background image is a new upload (data URI)
-    if (themeToSave.backgroundImage.startsWith('data:image')) {
-        const backgroundUrl = await uploadImageAndGetUrl(themeToSave.backgroundImage, 'theme/background');
-        themeToSave.backgroundImage = backgroundUrl;
+    const currentBackgroundImage = formData.get('currentBackgroundImage') as string;
+    const currentForegroundImage = formData.get('currentForegroundImage') as string;
+    
+    const newBackgroundImageFile = formData.get('backgroundImage') as File;
+    const newForegroundImageFile = formData.get('foregroundImage') as File;
+
+    if (newBackgroundImageFile && newBackgroundImageFile.size > 0) {
+        const bgDataUri = await fileToDataUri(newBackgroundImageFile);
+        themeToSave.backgroundImage = await uploadImageAndGetUrl(bgDataUri, 'theme/background');
+    } else {
+        themeToSave.backgroundImage = currentBackgroundImage;
     }
 
-    // Check if foreground image is a new upload (data URI)
-    if (themeToSave.foregroundImage.startsWith('data:image')) {
-        const foregroundUrl = await uploadImageAndGetUrl(themeToSave.foregroundImage, 'theme/foreground');
-        themeToSave.foregroundImage = foregroundUrl;
+    if (newForegroundImageFile && newForegroundImageFile.size > 0) {
+        const fgDataUri = await fileToDataUri(newForegroundImageFile);
+        themeToSave.foregroundImage = await uploadImageAndGetUrl(fgDataUri, 'theme/foreground');
+    } else {
+        themeToSave.foregroundImage = currentForegroundImage;
     }
+
 
     await saveThemeToDb(themeToSave);
     revalidatePath('/', 'layout');
-    revalidatePath('/', 'page');
     revalidatePath('/admin/appearance');
 
     return { message: 'Theme saved successfully!', success: true };
@@ -49,6 +55,13 @@ export async function saveTheme(
     return { message: 'Failed to save theme settings.', success: false };
   }
 }
+
+async function fileToDataUri(file: File) {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return `data:${file.type};base64,${buffer.toString('base64')}`;
+}
+
 
 export async function getTheme() {
     try {
