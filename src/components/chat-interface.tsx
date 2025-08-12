@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useActionState, useEffect, useRef } from 'react';
@@ -14,19 +15,24 @@ type Message = {
   content: string;
 };
 
+const CHAT_CLEAR_TIMEOUT = 3 * 60 * 1000; // 3 minutes
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  
-  async function formAction(prevState: any, formData: FormData) {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [state, action] = useActionState(async (prevState: any, formData: FormData) => {
     const query = formData.get('query') as string;
     if (!query) return { response: null, error: 'Query is empty' };
 
     const userMessage: Message = { role: 'user', content: query };
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
+    setMessages(prev => [...prev, userMessage]);
 
-    const result = await shoppingAssistant({ query, history: messages });
+    // Pass the full history including the new user message
+    const currentHistory = [...messages, userMessage];
+
+    const result = await shoppingAssistant({ query, history: currentHistory.slice(0, -1) });
     
     if (result.answer) {
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
@@ -40,9 +46,31 @@ export function ChatInterface() {
       setMessages(messages);
       return { response: null, error: 'Sorry, I could not find an answer.' };
     }
-  }
+  }, { response: null, error: null });
+  
 
-  const [state, action] = useActionState(formAction, { response: null, error: null });
+  // Effect to manage chat clearing timeout
+  useEffect(() => {
+    // Clear any existing timer
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // If there are messages, set a new timer
+    if (messages.length > 0) {
+      timeoutRef.current = setTimeout(() => {
+        setMessages([]);
+      }, CHAT_CLEAR_TIMEOUT);
+    }
+
+    // Cleanup timer on component unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [messages]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
