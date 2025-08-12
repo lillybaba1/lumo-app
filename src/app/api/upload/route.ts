@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     });
     
     const bucketName = bucket.name;
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURI(path)}`;
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(path)}`;
 
     console.log("Successfully generated public URL:", publicUrl);
     return NextResponse.json({ url: publicUrl });
