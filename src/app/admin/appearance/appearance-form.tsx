@@ -43,13 +43,21 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
 
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0, scale: 0, width: 0, height: 0 });
+  const dragStateRef = useRef({
+      isDragging: false,
+      isResizing: false,
+      startX: 0,
+      startY: 0,
+      startPosX: 0,
+      startPosY: 0,
+      startScale: 0,
+      previewWidth: 0,
+      previewHeight: 0
+  });
 
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -108,16 +116,17 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!previewRef.current) return;
         e.preventDefault();
-        setIsDragging(true);
         const previewRect = previewRef.current.getBoundingClientRect();
-        dragStartRef.current = {
-            x: e.clientX,
-            y: e.clientY,
-            posX: fgPosX,
-            posY: fgPosY,
-            scale: fgScale,
-            width: previewRect.width,
-            height: previewRect.height
+        dragStateRef.current = {
+            isDragging: true,
+            isResizing: false,
+            startX: e.clientX,
+            startY: e.clientY,
+            startPosX: fgPosX,
+            startPosY: fgPosY,
+            startScale: fgScale,
+            previewWidth: previewRect.width,
+            previewHeight: previewRect.height
         };
     };
 
@@ -125,44 +134,44 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         e.stopPropagation();
         e.preventDefault();
         if (!previewRef.current) return;
-        setIsResizing(true);
         const previewRect = previewRef.current.getBoundingClientRect();
-        dragStartRef.current = {
-            x: e.clientX,
-            y: e.clientY,
-            posX: fgPosX,
-            posY: fgPosY,
-            scale: fgScale,
-            width: previewRect.width,
-            height: previewRect.height
+        dragStateRef.current = {
+            isDragging: false,
+            isResizing: true,
+            startX: e.clientX,
+            startY: e.clientY,
+            startPosX: fgPosX,
+            startPosY: fgPosY,
+            startScale: fgScale,
+            previewWidth: previewRect.width,
+            previewHeight: previewRect.height
         };
     };
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isDragging && !isResizing) return;
+        const state = dragStateRef.current;
+        if (!state.isDragging && !state.isResizing) return;
         e.preventDefault();
-        if (!previewRef.current) return;
 
-        const { x: startX, y: startY, posX: startPosX, posY: startPosY, scale: startScale, width, height } = dragStartRef.current;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+        const dx = e.clientX - state.startX;
+        const dy = e.clientY - state.startY;
 
-        if (isDragging) {
-            const newPosX = startPosX + (dx / width) * 100;
-            const newPosY = startPosY + (dy / height) * 100;
+        if (state.isDragging) {
+            const newPosX = state.startPosX + (dx / state.previewWidth) * 100;
+            const newPosY = state.startPosY + (dy / state.previewHeight) * 100;
             setFgPosX(Math.max(0, Math.min(100, newPosX)));
             setFgPosY(Math.max(0, Math.min(100, newPosY)));
         }
 
-        if (isResizing) {
-            const newScale = startScale + (dx / width) * 100;
+        if (state.isResizing) {
+            const newScale = state.startScale + (dx / state.previewWidth) * 100;
             setFgScale(Math.max(10, Math.min(300, newScale)));
         }
-    }, [isDragging, isResizing]);
+    }, []);
 
     const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-        setIsResizing(false);
+        dragStateRef.current.isDragging = false;
+        dragStateRef.current.isResizing = false;
     }, []);
 
     useEffect(() => {
@@ -287,7 +296,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                         {foregroundImage && (
                              <div 
                                 style={foregroundPreviewStyle}
-                                className={cn('absolute group', isDragging || isResizing ? 'cursor-grabbing' : 'cursor-grab')}
+                                className={cn('absolute group', dragStateRef.current.isDragging || dragStateRef.current.isResizing ? 'cursor-grabbing' : 'cursor-grab')}
                                 onMouseDown={handleDragStart}
                             >
                                 <div className="relative w-full h-full" style={{ paddingBottom: '100%' }}>
