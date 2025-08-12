@@ -16,8 +16,8 @@ export default function AppearancePage() {
   const [primaryColor, setPrimaryColor] = useState("");
   const [accentColor, setAccentColor] = useState("");
   const [backgroundColor, setBackgroundColor] = useState("");
-  const [backgroundImage, setBackgroundImage] = useState("");
-  const [foregroundImage, setForegroundImage] = useState("");
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [foregroundImage, setForegroundImage] = useState<string | null>(null);
   
   const [initialBackgroundImage, setInitialBackgroundImage] = useState("");
   const [initialForegroundImage, setInitialForegroundImage] = useState("");
@@ -65,10 +65,15 @@ export default function AppearancePage() {
         primaryColor,
         accentColor,
         backgroundColor,
-        backgroundImage: backgroundImage || initialBackgroundImage,
-        foregroundImage: foregroundImage || initialForegroundImage,
+        backgroundImage: backgroundImage || '',
+        foregroundImage: foregroundImage || '',
       };
       await saveTheme(themeToSave);
+      
+       // After saving, update initial states to reflect the new saved state
+      setInitialBackgroundImage(themeToSave.backgroundImage);
+      setInitialForegroundImage(themeToSave.foregroundImage);
+
       toast({
         title: "Appearance Updated",
         description: "Your storefront's appearance has been successfully saved.",
@@ -100,6 +105,8 @@ export default function AppearancePage() {
     setForegroundImage(defaultTheme.foregroundImage);
     try {
       await saveTheme(defaultTheme)
+      setInitialBackgroundImage(defaultTheme.backgroundImage);
+      setInitialForegroundImage(defaultTheme.foregroundImage);
       toast({
           title: "Appearance Reset",
           description: "Your storefront's appearance has been reset to the default.",
@@ -146,6 +153,10 @@ export default function AppearancePage() {
     )
   }
 
+  const currentBackgroundImage = backgroundImage ?? initialBackgroundImage;
+  const currentForegroundImage = foregroundImage ?? initialForegroundImage;
+
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -187,10 +198,10 @@ export default function AppearancePage() {
              <div className="space-y-2">
                 <Label>Background Image</Label>
                 <div className="flex items-center gap-4">
-                  {backgroundImage ? (
+                  {currentBackgroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                      <Image src={backgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
-                      <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setBackgroundImage('')}>
+                      <Image src={currentBackgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
+                      <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => setBackgroundImage('')}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -216,10 +227,10 @@ export default function AppearancePage() {
              <div className="space-y-2">
                 <Label>Foreground Image</Label>
                  <div className="flex items-center gap-4">
-                  {foregroundImage ? (
+                  {currentForegroundImage ? (
                     <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                      <Image src={foregroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
-                       <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setForegroundImage('')}>
+                      <Image src={currentForegroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
+                       <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => setForegroundImage('')}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>

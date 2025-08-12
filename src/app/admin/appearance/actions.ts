@@ -10,7 +10,7 @@ const defaultTheme = {
   accentColor: "#FFB3C6",
   backgroundColor: "#E8E2FF",
   backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "",
+  foregroundImage: "https://placehold.co/400x400.png",
 };
 
 export async function saveTheme(theme: {
@@ -48,9 +48,11 @@ export async function saveTheme(theme: {
 export async function getTheme() {
     try {
         const theme = await getThemeFromDb();
-        return theme || defaultTheme;
+        // Ensure all properties exist, falling back to defaults if necessary
+        return { ...defaultTheme, ...theme };
     } catch (error) {
         console.error('Failed to read theme:', error);
-        throw new Error('Failed to read theme settings.');
+        // Return a complete default theme object on error
+        return defaultTheme;
     }
 }
