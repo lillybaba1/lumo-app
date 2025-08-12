@@ -5,6 +5,7 @@ import { bucket, isFirebaseAdminInitialized } from "@/lib/firebaseAdmin";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  console.log("POST /api/upload called");
   if (!isFirebaseAdminInitialized || !bucket) {
       return NextResponse.json({ error: "Firebase Admin SDK not initialized. Please check server logs." }, { status: 500 });
   }
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
     });
 
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURI(path)}`;
+    console.log("Successfully generated public URL:", publicUrl);
     return NextResponse.json({ url: publicUrl });
   } catch (err: any) {
     console.error("Upload to Firebase Storage failed:", err);

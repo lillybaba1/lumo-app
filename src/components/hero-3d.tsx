@@ -60,7 +60,9 @@ export default function Hero3D({ theme }: Hero3DProps) {
             alt="Background"
             fill
             className="object-cover z-0 transform-gpu"
+            sizes="100vw"
             priority
+            
             unoptimized
             data-ai-hint="modern room"
           />
@@ -82,6 +84,7 @@ export default function Hero3D({ theme }: Hero3DProps) {
                   fill
                   className="object-contain drop-shadow-2xl transform-gpu"
                   unoptimized
+                  sizes="100vw"
                 />
               </div>
             )}

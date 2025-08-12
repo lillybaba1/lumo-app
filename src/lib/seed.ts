@@ -3,7 +3,7 @@
 
 import { dbAdmin, isFirebaseAdminInitialized } from './firebaseAdmin';
 import { products as mockProducts, categories as mockCategories } from './mock-data';
-import * as defaultPagesData from '@/data/pages.json';
+import defaultPagesData from '@/data/pages.json';
 
 const defaultTheme = {
   primaryColor: "#D0BFFF",
