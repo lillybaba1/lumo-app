@@ -1,76 +1,23 @@
 
 "use client";
 
-import { useState, useActionState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
-import { shoppingAssistant } from '@/ai/flows/shopping-assistant';
 import { Bot, User, Send, Loader2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
+import type { Message } from './ai-assistant-widget';
 
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
+type ChatInterfaceProps = {
+    messages: Message[];
+    action: (payload: FormData) => void;
+    isPending: boolean;
 };
 
-const CHAT_CLEAR_TIMEOUT = 3 * 60 * 1000; // 3 minutes
-
-export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ChatInterface({ messages, action, isPending }: ChatInterfaceProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [state, action] = useActionState(async (prevState: any, formData: FormData) => {
-    const query = formData.get('query') as string;
-    if (!query) return { response: null, error: 'Query is empty' };
-
-    const userMessage: Message = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
-
-    // Pass the full history including the new user message
-    const currentHistory = [...messages, userMessage];
-
-    const result = await shoppingAssistant({ query, history: currentHistory.slice(0, -1) });
-    
-    if (result.answer) {
-      const assistantMessage: Message = { role: 'assistant', content: result.answer };
-      setMessages(prev => [...prev, assistantMessage]);
-      // Clear the input field after successful submission
-      const form = (document.querySelector('form[data-chat-form="true"]') as HTMLFormElement);
-      if(form) form.reset();
-      return { response: result.answer, error: null };
-    } else {
-      // Revert user message if AI fails
-      setMessages(messages);
-      return { response: null, error: 'Sorry, I could not find an answer.' };
-    }
-  }, { response: null, error: null });
-  
-
-  // Effect to manage chat clearing timeout
-  useEffect(() => {
-    // Clear any existing timer
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // If there are messages, set a new timer
-    if (messages.length > 0) {
-      timeoutRef.current = setTimeout(() => {
-        setMessages([]);
-      }, CHAT_CLEAR_TIMEOUT);
-    }
-
-    // Cleanup timer on component unmount
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [messages]);
-
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -79,10 +26,9 @@ export function ChatInterface() {
   }, [messages]);
 
   const SubmitButton = () => {
-    const { pending } = useFormStatus();
     return (
-      <Button type="submit" size="icon" disabled={pending}>
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+      <Button type="submit" size="icon" disabled={isPending}>
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
       </Button>
     );
   };
@@ -114,7 +60,7 @@ export function ChatInterface() {
                 )}
               </div>
             ))}
-             {useFormStatus().pending && (
+             {isPending && (
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-primary/20 rounded-full">
                   <Bot className="w-6 h-6 text-primary" />
