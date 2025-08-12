@@ -156,23 +156,28 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     };
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        const state = dragStateRef.current;
-        if (!state.isDragging && !state.isResizing) return;
+        const { isDragging, isResizing, startX, startY, startPosX, startPosY, startScale, previewWidth, previewHeight } = dragStateRef.current;
+        if (!isDragging && !isResizing) return;
+        
         e.preventDefault();
 
-        const dx = e.clientX - state.startX;
-        const dy = e.clientY - state.startY;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
 
-        if (state.isDragging) {
-            const newPosX = state.startPosX + (dx / state.previewWidth) * 100;
-            const newPosY = state.startPosY + (dy / state.previewHeight) * 100;
-            setFgPosX(Math.max(0, Math.min(100, newPosX)));
-            setFgPosY(Math.max(0, Math.min(100, newPosY)));
+        if (isDragging) {
+            if (previewWidth > 0 && previewHeight > 0) {
+                const newPosX = startPosX + (dx / previewWidth) * 100;
+                const newPosY = startPosY + (dy / previewHeight) * 100;
+                setFgPosX(Math.max(0, Math.min(100, newPosX)));
+                setFgPosY(Math.max(0, Math.min(100, newPosY)));
+            }
         }
 
-        if (state.isResizing) {
-            const newScale = state.startScale + (dx / state.previewWidth) * 100;
-            setFgScale(Math.max(10, Math.min(300, newScale)));
+        if (isResizing) {
+            if(previewWidth > 0) {
+                const newScale = startScale + (dx / previewWidth) * 100;
+                setFgScale(Math.max(10, Math.min(300, newScale)));
+            }
         }
     }, []);
 
@@ -182,15 +187,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     }, []);
 
     useEffect(() => {
-        const onMouseMove = (e: MouseEvent) => handleMouseMove(e);
-        const onMouseUp = () => handleMouseUp();
-        
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
 
         return () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
         };
     }, [handleMouseMove, handleMouseUp]);
 
@@ -345,5 +347,3 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       </Card>
   );
 }
-
-    
