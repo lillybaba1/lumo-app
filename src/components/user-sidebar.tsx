@@ -8,10 +8,12 @@ import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButto
 import { useEffect, useState } from 'react';
 import { getCategories } from '@/services/productService';
 import { Category } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function UserSidebar() {
   const pathname = usePathname();
   const [categories, setCategories] = useState<Category[]>([]);
+  const { role } = useAuth();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -66,14 +68,16 @@ export default function UserSidebar() {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={pathname.startsWith('/admin')} tooltip="Admin">
-                            <Link href="/admin/dashboard">
-                                <User />
-                                <span>Admin</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {role === 'admin' && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname.startsWith('/admin')} tooltip="Admin">
+                                <Link href="/admin/dashboard">
+                                    <User />
+                                    <span>Admin</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
                  </SidebarGroup>
 
             </SidebarMenu>
