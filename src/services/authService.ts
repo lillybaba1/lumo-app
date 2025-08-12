@@ -4,13 +4,11 @@
 import { auth, db } from '@/lib/firebaseClient';
 import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { 
-  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 import { doc, getDoc } from 'firebase/firestore';
-import { FirebaseError } from 'firebase/app';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
