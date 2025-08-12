@@ -84,10 +84,10 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, previewSetter: (value: string | null) => void, dataUriSetter: (value: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      if (file.size > 4 * 1024 * 1024) { // 4MB limit
         toast({
           title: "Image too large",
-          description: "Please upload an image smaller than 2MB.",
+          description: "Please upload an image smaller than 4MB.",
           variant: "destructive"
         });
         return;
@@ -111,8 +111,9 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <input type="hidden" name="currentBackgroundImage" value={currentBackgroundImage} />
-                <input type="hidden" name="currentForegroundImage" value={currentForegroundImage} />
+                {/* These hidden inputs hold the state for the form submission */}
+                <input type="hidden" name="currentBackgroundImage" value={bgPreview ? '' : currentBackgroundImage} />
+                <input type="hidden" name="currentForegroundImage" value={fgPreview ? '' : currentForegroundImage} />
                 <input type="hidden" name="backgroundImage" value={bgDataUri} />
                 <input type="hidden" name="foregroundImage" value={fgDataUri} />
 

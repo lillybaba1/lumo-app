@@ -30,15 +30,17 @@ export async function saveTheme(
     const newBackgroundImageDataUri = formData.get('backgroundImage') as string;
     const newForegroundImageDataUri = formData.get('foregroundImage') as string;
 
-    if (newBackgroundImageDataUri) {
+    // Handle background image
+    if (newBackgroundImageDataUri) { // A new image was uploaded
         themeToSave.backgroundImage = await uploadImageAndGetUrl(newBackgroundImageDataUri, 'theme/background');
-    } else {
+    } else { // No new image, check if the current one should be kept or removed
         themeToSave.backgroundImage = currentBackgroundImage;
     }
 
-    if (newForegroundImageDataUri) {
+    // Handle foreground image
+    if (newForegroundImageDataUri) { // A new image was uploaded
         themeToSave.foregroundImage = await uploadImageAndGetUrl(newForegroundImageDataUri, 'theme/foreground');
-    } else {
+    } else { // No new image, check if the current one should be kept or removed
         themeToSave.foregroundImage = currentForegroundImage;
     }
 
