@@ -45,8 +45,8 @@ export default function Hero3D({ theme }: Hero3DProps) {
     position: 'absolute',
     left: `${theme.foregroundImagePositionX ?? 50}%`,
     top: `${theme.foregroundImagePositionY ?? 50}%`,
-    width: `${(theme.foregroundImageScale ?? 100) / 4}%`, // Adjust denominator as needed for desired base size
-    transform: 'translate(-50%, -50%)',
+    width: `${(theme.foregroundImageScale ?? 100) / 4}%`,
+    transform: `translate(-50%, -50%)`,
     transformStyle: 'preserve-3d',
   };
 
@@ -108,5 +108,4 @@ export default function Hero3D({ theme }: Hero3DProps) {
     </div>
   );
 }
-
     
