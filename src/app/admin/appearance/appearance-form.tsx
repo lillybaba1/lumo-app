@@ -158,7 +158,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             const newScale = startScale + (dx / width) * 100;
             setFgScale(Math.max(10, Math.min(300, newScale)));
         }
-    }, [isDragging, isResizing, fgPosX, fgPosY, fgScale]);
+    }, [isDragging, isResizing]);
 
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
