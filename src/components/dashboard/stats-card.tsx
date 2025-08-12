@@ -18,7 +18,7 @@ export default function StatsCard({ title, value, icon: Icon, change, valueClass
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className={cn("text-2xl font-bold", valueClassName)}>{value}</div>
+        <div className={cn("text-2xl font-bold break-words", valueClassName)}>{value}</div>
         <p className="text-xs text-muted-foreground">{change}</p>
       </CardContent>
     </Card>
