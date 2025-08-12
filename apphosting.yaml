@@ -5,3 +5,7 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# This application is a dynamic Next.js app, not a static site.
+# serveStatic: false tells App Hosting to run the 'start' script.
+serveStatic: false
