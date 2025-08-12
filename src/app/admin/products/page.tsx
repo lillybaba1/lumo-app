@@ -11,16 +11,23 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
+import { MoreHorizontal, PlusCircle, Trash2, Edit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { deleteProduct } from './actions';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -30,6 +37,33 @@ export default function ProductsPage() {
     }
     fetchProducts();
   }, []);
+
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+  }
+
+  const handleConfirmDelete = () => {
+    if (!productToDelete) return;
+
+    startTransition(async () => {
+      const result = await deleteProduct(productToDelete.id);
+      if (result.success) {
+        setProducts(products.filter(p => p.id !== productToDelete.id));
+        toast({
+            title: "Product Deleted",
+            description: `${productToDelete.name} has been successfully deleted.`,
+        });
+      } else {
+        toast({
+            title: "Error",
+            description: result.message,
+            variant: "destructive"
+        });
+      }
+      setProductToDelete(null);
+    });
+  }
+
 
   if (loading) {
     return (
@@ -72,12 +106,32 @@ export default function ProductsPage() {
   }
 
   return (
+    <>
+    <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product "{productToDelete?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} disabled={isPending} className="bg-destructive hover:bg-destructive/90">
+              {isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-headline font-bold">Products</h1>
-        <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Product
+        <Button asChild>
+            <Link href="/admin/products/add">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Product
+            </Link>
         </Button>
       </div>
       <div className="border rounded-lg">
@@ -101,7 +155,8 @@ export default function ProductsPage() {
                     alt={product.name}
                     width={50}
                     height={50}
-                    className="rounded-md"
+                    className="rounded-md object-cover"
+                    unoptimized
                     data-ai-hint={`${product.category} product`}
                   />
                 </TableCell>
@@ -119,8 +174,16 @@ export default function ProductsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">Delete</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/products/edit/${product.id}`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(product)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -130,5 +193,6 @@ export default function ProductsPage() {
         </Table>
       </div>
     </div>
+    </>
   );
 }
