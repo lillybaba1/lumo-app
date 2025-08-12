@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { useState, ChangeEvent } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,26 +21,6 @@ type Theme = {
   foregroundImage: string;
 };
 
-const initialState: { message: string | null, success: boolean } = {
-  message: null,
-  success: false,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <Paintbrush className="mr-2 h-4 w-4" />
-      )}
-      {pending ? 'Saving...' : 'Save Changes'}
-    </Button>
-  );
-}
-
-
 export default function AppearanceForm({ theme }: { theme: Theme }) {
   const { toast } = useToast();
   
@@ -53,6 +32,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const [foregroundImage, setForegroundImage] = useState(theme.foregroundImage);
   
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
@@ -60,6 +40,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      setIsSaving(true);
       
       const formData = new FormData();
       formData.append('primaryColor', primaryColor);
@@ -75,6 +56,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
           description: result.message,
           variant: result.success ? "default" : "destructive",
       });
+      setIsSaving(false);
   }
 
 
@@ -193,7 +175,14 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </div>
 
             <div className="flex justify-end gap-2">
-                <SubmitButton />
+                <Button type="submit" disabled={isSaving || isUploading}>
+                    {isSaving ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Paintbrush className="mr-2 h-4 w-4" />
+                    )}
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
             </div>
             </CardContent>
         </form>

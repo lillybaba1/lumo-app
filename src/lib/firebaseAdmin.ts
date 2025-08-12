@@ -15,13 +15,16 @@ try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
     
-    if (getApps().length === 0) {
+    // Use a unique app name to avoid conflicts
+    const appName = 'firebase-admin-app-lumo';
+
+    if (!getApps().some(app => app.name === appName)) {
       adminApp = initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: 'lumo-app-183f5.appspot.com'
-      });
+        storageBucket: `${serviceAccount.project_id}.appspot.com`
+      }, appName);
     } else {
-      adminApp = getApps()[0]!;
+      adminApp = getApps().find(app => app.name === appName)!;
     }
     
     dbAdmin = getFirestore(adminApp);

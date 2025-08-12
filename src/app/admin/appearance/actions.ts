@@ -1,16 +1,8 @@
 
 'use server';
 
-import { getTheme as getThemeFromDb, saveTheme as saveThemeToDb } from '@/services/themeService';
+import { saveTheme as saveThemeToDb, getTheme as getThemeFromDb } from '@/services/themeService';
 import { revalidatePath } from 'next/cache';
-
-const defaultTheme = {
-  primaryColor: "#D0BFFF",
-  accentColor: "#FFB3C6",
-  backgroundColor: "#E8E2FF",
-  backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
-};
 
 export async function saveTheme(
     formData: FormData
@@ -37,11 +29,5 @@ export async function saveTheme(
 }
 
 export async function getTheme() {
-    try {
-        const theme = await getThemeFromDb();
-        return { ...defaultTheme, ...theme };
-    } catch (error) {
-        console.error('Failed to read theme:', error);
-        return defaultTheme;
-    }
+    return await getThemeFromDb();
 }
