@@ -2,8 +2,7 @@
 'use server';
 
 import { cookies } from "next/headers";
-import { authAdmin } from "@/lib/firebaseAdmin";
-import { dbAdmin } from "@/lib/firebaseAdmin";
+import { authAdmin, dbAdmin } from "@/lib/firebaseAdmin";
 import { DecodedIdToken } from "firebase-admin/auth";
 
 export interface AuthenticatedUser extends DecodedIdToken {
@@ -24,7 +23,9 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
     return { ...decodedClaims, role };
 
   } catch (error) {
-    console.error("Session cookie verification failed:", error);
+    // Session cookie is invalid or expired.
+    // Force cleanup of the cookie.
+    cookies().set("session", "", { maxAge: 0 });
     return null;
   }
 }

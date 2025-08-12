@@ -27,6 +27,7 @@ export async function POST(req: Request) {
       maxAge: expiresIn / 1000,
     });
     
+    // Revalidate the layout to ensure the new user state is picked up
     revalidatePath('/', 'layout');
 
     return res;
@@ -34,22 +35,4 @@ export async function POST(req: Request) {
     console.error("Session route error:", e);
     return NextResponse.json({ error: e?.message ?? "session failed" }, { status: 500 });
   }
-}
-
-export async function DELETE() {
-    try {
-        const res = NextResponse.json({ ok: true });
-        res.cookies.set("session", "", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 0,
-        });
-        revalidatePath('/', 'layout');
-        return res;
-    } catch (e: any) {
-        console.error("Session logout error:", e);
-        return NextResponse.json({ error: e?.message ?? "logout failed" }, { status: 500 });
-    }
 }

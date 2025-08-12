@@ -10,9 +10,8 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
-import { FirebaseError } from 'firebase/app';
 
 
 export default function LoginForm() {
@@ -26,6 +25,7 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     try {
+      await setPersistence(auth, browserLocalPersistence);
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
       
@@ -39,37 +39,17 @@ export default function LoginForm() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `Session creation failed: ${res.status}`);
       }
-
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back!',
-      });
-      router.push('/admin/dashboard');
-      router.refresh();
+      
+      // Hard redirect to ensure RSC reads the new cookie
+      window.location.assign('/admin/dashboard');
 
     } catch (error: any) {
        console.error("Login failed:", error);
-       if (error instanceof FirebaseError) {
-           if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-               toast({
-                   title: 'Login Failed',
-                   description: 'Invalid email or password. Please try again.',
-                   variant: 'destructive',
-               });
-           } else {
-               toast({
-                   title: 'Login Failed',
-                   description: error.message,
-                   variant: 'destructive',
-               });
-           }
-       } else {
-         toast({
-           title: 'An unexpected error occurred',
-           description: error.message || 'Please try again.',
+       toast({
+           title: 'Login Failed',
+           description: error.message || 'An unknown error occurred. Please try again.',
            variant: 'destructive',
-         });
-       }
+       });
     } finally {
       setLoading(false);
     }
@@ -114,4 +94,3 @@ export default function LoginForm() {
     </div>
   );
 }
-

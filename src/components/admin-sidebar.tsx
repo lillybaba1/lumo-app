@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AuthenticatedUser } from '@/hooks/use-auth';
@@ -27,21 +26,19 @@ type AdminSidebarProps = {
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    const res = await fetch("/api/auth/session", {
-      method: "DELETE",
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
     });
 
     if (res.ok) {
-        router.push('/login');
-        router.refresh();
         toast({
             title: "Logged Out",
             description: "You have been successfully logged out."
-        })
+        });
+        window.location.assign('/login');
     } else {
         toast({
             title: "Logout Failed",
