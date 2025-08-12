@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, FirebaseError } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 
 
@@ -45,9 +45,15 @@ export default function LoginForm() {
 
     } catch (error: any) {
        console.error("Login failed:", error);
+       let description = 'An unknown error occurred. Please try again.';
+       if (error instanceof FirebaseError) {
+         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+           description = 'Invalid email or password. Please try again.';
+         }
+       }
        toast({
            title: 'Login Failed',
-           description: error.message || 'An unknown error occurred. Please try again.',
+           description,
            variant: 'destructive',
        });
     } finally {
