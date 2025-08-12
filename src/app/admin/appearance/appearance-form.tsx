@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from 'react';
 import { useState, useActionState, useEffect, ChangeEvent } from 'react';
 import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
