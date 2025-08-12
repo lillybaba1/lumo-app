@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 export async function createUser(email: string, password: string, name: string) {
@@ -86,4 +87,37 @@ export async function deleteUser(uid: string) {
     console.error("Error deleting user:", error);
     return { success: false, message: error.message };
   }
+}
+
+export async function getUserRole(userId: string): Promise<string | null> {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+        // This will be the case in client-side components.
+        // We will need a client-callable wrapper.
+        return null;
+    }
+    try {
+        const userDoc = await dbAdmin.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+            return userDoc.data()?.role || null;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting user role:", error);
+        return null;
+    }
+}
+
+// Client-callable function to get role
+export async function getUserRoleClient(userId: string): Promise<string | null> {
+    try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            return userDoc.data()?.role || 'customer';
+        }
+        return 'customer';
+    } catch (error) {
+        console.error("Error fetching user role on client:", error);
+        return 'customer';
+    }
 }
