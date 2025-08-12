@@ -51,7 +51,7 @@ export default function Hero3D({ theme }: Hero3DProps) {
     left: '50%',
     top: '50%',
     transformStyle: 'preserve-3d',
-    transform: `translateX(calc(-50% + ${((theme.foregroundImagePositionX ?? 50) - 50) * 8}px)) translateY(calc(-50% + ${((theme.foregroundImagePositionY ?? 50) - 50) * 4}px)) scale(${(theme.foregroundImageScale ?? 100) / 100})`,
+    transform: `translateX(-50%) translateY(-50%) translateX(${((theme.foregroundImagePositionX ?? 50) - 50) * 8}px) translateY(${((theme.foregroundImagePositionY ?? 50) - 50) * 4}px) scale(${(theme.foregroundImageScale ?? 100) / 100})`,
   };
 
   const textStyle = {
