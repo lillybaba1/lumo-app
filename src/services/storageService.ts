@@ -1,6 +1,8 @@
 
-import { storage } from '@/lib/firebase';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+'use server';
+
+import { storageAdmin } from '@/lib/firebaseAdmin';
+import { Stream } from 'stream';
 
 /**
  * Uploads an image to Firebase Storage and returns the download URL.
@@ -11,16 +13,34 @@ import { ref, uploadString, getDownloadURL } from 'firebase/storage';
  */
 export async function uploadImageAndGetUrl(dataUri: string, path: string): Promise<string> {
     try {
-        // Create a storage reference
-        const storageRef = ref(storage, `${path}/${Date.now()}`);
+        const bucket = storageAdmin.bucket();
+        const mimeType = dataUri.match(/data:(.*);base64,/)?.[1];
+        if (!mimeType) {
+            throw new Error('Invalid data URI');
+        }
 
-        // Upload the file
-        const uploadResult = await uploadString(storageRef, dataUri, 'data_url');
-        
-        // Get the download URL
-        const downloadUrl = await getDownloadURL(uploadResult.ref);
-        
-        return downloadUrl;
+        const base64Data = dataUri.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `${path}/${Date.now()}`;
+        const file = bucket.file(fileName);
+
+        const stream = new Stream.PassThrough();
+        stream.end(buffer);
+
+        await new Promise((resolve, reject) => {
+            stream.pipe(file.createWriteStream({
+                metadata: {
+                    contentType: mimeType,
+                },
+            }))
+            .on('error', reject)
+            .on('finish', resolve);
+        });
+
+        // Make the file public and get the URL
+        await file.makePublic();
+        return file.publicUrl();
+
     } catch (error) {
         console.error("Image upload failed:", error);
         throw new Error("Could not upload image.");

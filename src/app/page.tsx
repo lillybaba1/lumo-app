@@ -6,9 +6,17 @@ import { getProducts, getCategories } from '@/services/productService';
 import { seedInitialData } from '@/lib/seed';
 import Hero3D from '@/components/hero-3d';
 
+const defaultTheme = {
+  primaryColor: "#D0BFFF",
+  accentColor: "#FFB3C6",
+  backgroundColor: "#E8E2FF",
+  backgroundImage: "https://placehold.co/1200x800.png",
+  foregroundImage: "https://placehold.co/400x400.png",
+};
+
 export default async function Home() {
   await seedInitialData();
-  const theme = await getTheme();
+  const theme = await getTheme() ?? defaultTheme;
   const products = await getProducts();
   const categories = await getCategories();
 

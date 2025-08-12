@@ -1,6 +1,7 @@
 
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+'use server';
+
+import { dbAdmin } from '@/lib/firebaseAdmin';
 
 interface Theme {
     primaryColor: string;
@@ -10,33 +11,24 @@ interface Theme {
     foregroundImage: string;
 }
 
-const themeDocRef = doc(db, 'settings', 'theme');
+const themeDocRef = dbAdmin.collection('settings').doc('theme');
 
-const defaultTheme: Theme = {
-  primaryColor: "#D0BFFF",
-  accentColor: "#FFB3C6",
-  backgroundColor: "#E8E2FF",
-  backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
-};
-
-
-export async function getTheme(): Promise<Theme> {
+export async function getTheme(): Promise<Theme | null> {
     try {
-        const docSnap = await getDoc(themeDocRef);
-        if (docSnap.exists()) {
+        const docSnap = await themeDocRef.get();
+        if (docSnap.exists) {
             return docSnap.data() as Theme;
         }
-        return defaultTheme;
+        return null;
     } catch (error) {
-        console.warn('Failed to connect to Firestore. Falling back to default theme.', error);
-        return defaultTheme;
+        console.error('Failed to get theme from Firestore:', error);
+        return null;
     }
 }
 
 export async function saveTheme(theme: Partial<Theme>): Promise<void> {
     try {
-        await setDoc(themeDocRef, theme, { merge: true });
+        await themeDocRef.set(theme, { merge: true });
     } catch (error) {
          console.error('Failed to save theme to Firestore.', error);
          throw new Error('Failed to save theme. Ensure Firestore is set up correctly.');

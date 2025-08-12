@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -10,18 +11,26 @@ import Footer from '@/components/footer';
 import { getTheme } from '@/app/admin/appearance/actions';
 import { hexToHsl } from '@/lib/utils';
 
-
 export const metadata: Metadata = {
   title: 'Lumo',
   description: 'Your modern e-commerce experience.',
 };
+
+const defaultTheme = {
+  primaryColor: "#D0BFFF",
+  accentColor: "#FFB3C6",
+  backgroundColor: "#E8E2FF",
+  backgroundImage: "https://placehold.co/1200x800.png",
+  foregroundImage: "https://placehold.co/400x400.png",
+};
+
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const theme = await getTheme();
+  const theme = await getTheme() ?? defaultTheme;
   const primaryHsl = hexToHsl(theme.primaryColor);
   const accentHsl = hexToHsl(theme.accentColor);
   const backgroundHsl = hexToHsl(theme.backgroundColor);

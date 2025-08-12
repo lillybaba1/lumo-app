@@ -1,8 +1,9 @@
 
-import { db } from './firebase';
-import { collection, doc, getDoc, writeBatch } from 'firebase/firestore';
+'use server';
+
+import { dbAdmin } from './firebaseAdmin';
 import { products as mockProducts, categories as mockCategories } from './mock-data';
-import { PageContent } from './types';
+import * as defaultPagesData from '@/data/pages.json';
 
 const defaultTheme = {
   primaryColor: "#D0BFFF",
@@ -12,49 +13,39 @@ const defaultTheme = {
   foregroundImage: "https://placehold.co/400x400.png",
 };
 
-const defaultPages: Record<string, PageContent> = {
-  about: { title: 'About Us', content: 'Welcome to Lumo! We are passionate about providing the best products and customer service.' },
-  shipping: { title: 'Shipping Policy', content: 'We offer free shipping on all orders over $50. Orders are typically processed within 2-3 business days.' },
-  contact: { title: 'Contact Us', content: 'Have questions? Email us at support@lumo.com or call us at (123) 456-7890.' },
-  faq: { title: 'FAQ', content: 'Q: How do I return an item? A: Please contact our support team for a return authorization.' },
-  policy: { title: 'Return Policy', content: 'We accept returns within 30 days of purchase for a full refund.' },
-};
-
+const defaultPages = defaultPagesData;
 
 export async function seedInitialData() {
     try {
-        const seedMarkerRef = doc(db, 'internal', 'seedMarker');
-        const seedMarkerSnap = await getDoc(seedMarkerRef);
+        const seedMarkerRef = dbAdmin.collection('internal').doc('seedMarker');
+        const seedMarkerSnap = await seedMarkerRef.get();
 
-        if (seedMarkerSnap.exists()) {
-            // Firestore has been seeded, do nothing.
+        if (seedMarkerSnap.exists) {
             return;
         }
 
         console.log("Seeding initial data into Firestore...");
 
-        const batch = writeBatch(db);
+        const batch = dbAdmin.batch();
 
         // Seed categories
-        const categoriesCollection = collection(db, 'categories');
         mockCategories.forEach(category => {
-            const categoryRef = doc(categoriesCollection, category.id);
+            const categoryRef = dbAdmin.collection('categories').doc(category.id);
             batch.set(categoryRef, { name: category.name });
         });
 
         // Seed products
-        const productsCollection = collection(db, 'products');
         mockProducts.forEach(product => {
-            const productRef = doc(productsCollection, product.id);
+            const productRef = dbAdmin.collection('products').doc(product.id);
             batch.set(productRef, product);
         });
 
-        // Seed default theme
-        const themeRef = doc(db, 'settings', 'theme');
+        // Seed default theme if it doesn't exist
+        const themeRef = dbAdmin.collection('settings').doc('theme');
         batch.set(themeRef, defaultTheme);
         
-        // Seed default pages
-        const pagesRef = doc(db, 'content', 'pages');
+        // Seed default pages if they don't exist
+        const pagesRef = dbAdmin.collection('content').doc('pages');
         batch.set(pagesRef, defaultPages);
         
         // Set the seed marker
@@ -63,7 +54,11 @@ export async function seedInitialData() {
         await batch.commit();
 
         console.log("Firestore seeded successfully.");
-    } catch (error) {
-        console.warn("Could not seed Firestore. This is likely because the database has not been created yet. Please create a Firestore database in your Firebase project.", error);
+    } catch (error: any) {
+        if (error.code === 'UNAVAILABLE' || (error.errorInfo && error.errorInfo.code === 'auth/configuration-not-found')) {
+             console.warn("Could not connect to Firestore to seed data. This is likely because the database has not been created yet or the service account is not configured. Please create a Firestore database and set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable.");
+        } else {
+            console.error("An unexpected error occurred during data seeding:", error);
+        }
     }
 }

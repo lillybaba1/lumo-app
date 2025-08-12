@@ -1,9 +1,10 @@
 
 import Link from 'next/link';
 import { getPages } from '@/app/admin/pages/actions';
+import * as defaultPagesData from '@/data/pages.json';
 
 export default async function Footer() {
-  const pages = await getPages();
+  const pages = await getPages() ?? defaultPagesData;
 
   return (
     <footer className="border-t bg-muted/20">

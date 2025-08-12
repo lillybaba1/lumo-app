@@ -1,54 +1,53 @@
 
 'use server';
 
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebaseClient';
+import { dbAdmin, authAdmin } from '@/lib/firebaseAdmin';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  deleteUser as deleteFirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDocs, collection, deleteDoc } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 
 
 export async function createUser(email: string, password: string, name: string) {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+  // Use the client SDK to create the user in Firebase Auth
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
 
-    // Now, create a document in the 'users' collection
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      email: user.email,
-      name: name,
-      createdAt: new Date().toISOString(),
-    });
+  // Use the Admin SDK to create the user document in Firestore
+  // This should be done on the server to ensure data integrity
+  await dbAdmin.collection('users').doc(user.uid).set({
+    uid: user.uid,
+    email: user.email,
+    name: name,
+    createdAt: new Date().toISOString(),
+  });
 
-    return user;
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
+  return { uid: user.uid, email: user.email };
 }
 
+// Sign-in is a client-side operation
 export async function signInUser(email: string, password: string) {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
+  return signInWithEmailAndPassword(auth, email, password);
 }
 
 
 export async function getUsers(): Promise<User[]> {
   try {
-    const usersCol = collection(db, 'users');
-    const userSnapshot = await getDocs(usersCol);
-    if (userSnapshot.empty) {
-      return [];
-    }
-    return userSnapshot.docs.map(doc => doc.data() as User);
+    const userRecords = await authAdmin.listUsers();
+    const users: User[] = await Promise.all(userRecords.users.map(async (userRecord) => {
+      const firestoreUserDoc = await dbAdmin.collection('users').doc(userRecord.uid).get();
+      const firestoreUserData = firestoreUserDoc.data();
+      return {
+        uid: userRecord.uid,
+        email: userRecord.email || '',
+        name: firestoreUserData?.name || userRecord.displayName || 'N/A',
+        createdAt: userRecord.metadata.creationTime,
+      };
+    }));
+    return users;
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return [];
@@ -57,18 +56,15 @@ export async function getUsers(): Promise<User[]> {
 
 export async function deleteUser(uid: string) {
   try {
-    // This is tricky because deleting a Firebase Auth user is a privileged operation
-    // and cannot be safely called from the client-side without admin privileges.
-    // For this prototype, we'll just delete the user's document from Firestore.
-    // A real implementation would require a backend function (e.g., Cloud Function)
-    // with admin SDK to properly delete the auth user.
-    
-    await deleteDoc(doc(db, "users", uid));
+    // Use the Admin SDK to delete the auth user and their Firestore document
+    await authAdmin.deleteUser(uid);
+    await dbAdmin.collection('users').doc(uid).delete();
 
     revalidatePath('/admin/customers');
     
-    return { success: true, message: "User document deleted. Auth user not deleted." };
+    return { success: true, message: "User deleted successfully." };
   } catch (error: any) {
+    console.error("Error deleting user:", error);
     return { success: false, message: error.message };
   }
 }
