@@ -2,9 +2,12 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { AuthenticatedUser } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -17,8 +20,35 @@ const navItems = [
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function AdminSidebar() {
+type AdminSidebarProps = {
+    user: AuthenticatedUser | null;
+}
+
+export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const res = await fetch("/api/auth/session", {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+        router.push('/login');
+        router.refresh();
+        toast({
+            title: "Logged Out",
+            description: "You have been successfully logged out."
+        })
+    } else {
+        toast({
+            title: "Logout Failed",
+            description: "Something went wrong. Please try again.",
+            variant: "destructive"
+        })
+    }
+  }
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-card text-card-foreground flex flex-col">
@@ -45,11 +75,9 @@ export default function AdminSidebar() {
         </ul>
       </nav>
       <div className="p-4 border-t mt-auto">
-        <Button variant="outline" className="w-full justify-start gap-2" asChild>
-          <Link href="/">
+        <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Logout
-          </Link>
         </Button>
       </div>
     </aside>

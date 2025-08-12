@@ -1,32 +1,30 @@
 
-"use client";
+'use server';
 
-import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebaseClient';
-import { getUserRoleClient } from '@/services/authService';
+import { cookies } from "next/headers";
+import { authAdmin } from "@/lib/firebaseAdmin";
+import { dbAdmin } from "@/lib/firebaseAdmin";
+import { DecodedIdToken } from "firebase-admin/auth";
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+export interface AuthenticatedUser extends DecodedIdToken {
+    role?: 'admin' | 'customer';
+}
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setLoading(true);
-      if (user) {
-        setUser(user);
-        const userRole = await getUserRoleClient(user.uid);
-        setRole(userRole);
-      } else {
-        setUser(null);
-        setRole(null);
-      }
-      setLoading(false);
-    });
+export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
+  const sessionCookie = (cookies().get("session")?.value) || "";
+  if (!sessionCookie) return null;
+  
+  try {
+    const decodedClaims = await authAdmin.verifySessionCookie(sessionCookie, true);
+    
+    // Get user role from Firestore
+    const userDoc = await dbAdmin.collection('users').doc(decodedClaims.uid).get();
+    const role = userDoc.exists ? userDoc.data()?.role : 'customer';
 
-    return () => unsubscribe();
-  }, []);
+    return { ...decodedClaims, role };
 
-  return { user, role, loading };
+  } catch (error) {
+    console.error("Session cookie verification failed:", error);
+    return null;
+  }
 }
