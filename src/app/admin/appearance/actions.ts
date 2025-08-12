@@ -10,7 +10,7 @@ const defaultTheme = {
   accentColor: "#FFB3C6",
   backgroundColor: "#E8E2FF",
   backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
+  foregroundImage: "",
 };
 
 export async function saveTheme(theme: {

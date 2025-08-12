@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -60,15 +61,16 @@ export default function Hero3D({ theme }: Hero3DProps) {
             objectFit="cover"
             className="z-0 transform-gpu"
             priority
+            data-ai-hint="modern room"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 z-0"></div>
         )}
-        <div className="absolute inset-0 bg-black/50 z-10"></div>
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
         <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="text-left" style={textStyle}>
-            <h1 className="font-headline text-5xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Discover Your Style</h1>
-            <p className="mt-6 text-lg md:text-xl max-w-2xl drop-shadow-md">Browse our curated collection of the latest trends in fashion, electronics, beauty, and more.</p>
+            <h1 className="font-headline text-5xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into Lumo</h1>
+            <p className="mt-6 text-lg md:text-xl max-w-2xl drop-shadow-md">An immersive shopping experience designed just for you. Explore our collections in a new dimension.</p>
           </div>
           <div className="flex justify-center" style={{transformStyle: 'preserve-3d'}}>
             {theme.foregroundImage && (
