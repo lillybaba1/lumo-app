@@ -2,7 +2,6 @@
 'use server';
 
 import { getTheme as getThemeFromDb, saveTheme as saveThemeToDb } from '@/services/themeService';
-import { uploadImageAndGetUrl } from '@/services/storageService';
 import { revalidatePath } from 'next/cache';
 
 const defaultTheme = {
@@ -14,36 +13,16 @@ const defaultTheme = {
 };
 
 export async function saveTheme(
-    prevState: any,
     formData: FormData
   ): Promise<{ message: string; success: boolean }> {
   try {
-    const themeToSave: any = {
+    const themeToSave = {
         primaryColor: formData.get('primaryColor') as string,
         accentColor: formData.get('accentColor') as string,
         backgroundColor: formData.get('backgroundColor') as string,
-    }
-
-    const currentBackgroundImage = formData.get('currentBackgroundImage') as string;
-    const currentForegroundImage = formData.get('currentForegroundImage') as string;
-    
-    const newBackgroundImageDataUri = formData.get('backgroundImage') as string;
-    const newForegroundImageDataUri = formData.get('foregroundImage') as string;
-
-    // Handle background image
-    if (newBackgroundImageDataUri) { // A new image was uploaded
-        themeToSave.backgroundImage = await uploadImageAndGetUrl(newBackgroundImageDataUri, 'theme/background');
-    } else { // No new image, check if the current one should be kept or removed
-        themeToSave.backgroundImage = currentBackgroundImage;
-    }
-
-    // Handle foreground image
-    if (newForegroundImageDataUri) { // A new image was uploaded
-        themeToSave.foregroundImage = await uploadImageAndGetUrl(newForegroundImageDataUri, 'theme/foreground');
-    } else { // No new image, check if the current one should be kept or removed
-        themeToSave.foregroundImage = currentForegroundImage;
-    }
-
+        backgroundImage: formData.get('backgroundImage') as string,
+        foregroundImage: formData.get('foregroundImage') as string,
+    };
 
     await saveThemeToDb(themeToSave);
     revalidatePath('/', 'layout');
@@ -60,7 +39,6 @@ export async function saveTheme(
 export async function getTheme() {
     try {
         const theme = await getThemeFromDb();
-        // Ensure all default keys are present
         return { ...defaultTheme, ...theme };
     } catch (error) {
         console.error('Failed to read theme:', error);

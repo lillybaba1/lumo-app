@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Paintbrush, Upload, X, Loader2 } from 'lucide-react';
 import { saveTheme } from './actions';
+import { uploadImageAndGetUrl } from '@/services/storageService';
 
 type Theme = {
   primaryColor: string;
@@ -40,48 +41,44 @@ function SubmitButton() {
   );
 }
 
-// Helper to convert file to data URI
-async function fileToDataUri(file: File): Promise<string> {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
 
 export default function AppearanceForm({ theme }: { theme: Theme }) {
   const { toast } = useToast();
-  const [state, formAction] = useActionState(saveTheme, initialState);
-
+  
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor);
   const [accentColor, setAccentColor] = useState(theme.accentColor);
   const [backgroundColor, setBackgroundColor] = useState(theme.backgroundColor);
   
-  const [bgPreview, setBgPreview] = useState<string | null>(null);
-  const [fgPreview, setFgPreview] = useState<string | null>(null);
+  const [backgroundImage, setBackgroundImage] = useState(theme.backgroundImage);
+  const [foregroundImage, setForegroundImage] = useState(theme.foregroundImage);
   
-  const [bgDataUri, setBgDataUri] = useState<string>('');
-  const [fgDataUri, setFgDataUri] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
 
-  const [currentBackgroundImage, setCurrentBackgroundImage] = useState(theme.backgroundImage);
-  const [currentForegroundImage, setCurrentForegroundImage] = useState(theme.foregroundImage);
-  
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
 
 
-  useEffect(() => {
-    if (state.message) {
-      toast({
-        title: state.success ? "Appearance Updated" : "Error",
-        description: state.message,
-        variant: state.success ? "default" : "destructive",
-      });
-    }
-  }, [state, toast]);
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      
+      const formData = new FormData();
+      formData.append('primaryColor', primaryColor);
+      formData.append('accentColor', accentColor);
+      formData.append('backgroundColor', backgroundColor);
+      formData.append('backgroundImage', backgroundImage);
+      formData.append('foregroundImage', foregroundImage);
 
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, previewSetter: (value: string | null) => void, dataUriSetter: (value: string) => void) => {
+      const result = await saveTheme(formData);
+
+      toast({
+          title: result.success ? "Appearance Updated" : "Error",
+          description: result.message,
+          variant: result.success ? "default" : "destructive",
+      });
+  }
+
+
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, imageSetter: (url: string) => void, path: string) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 4 * 1024 * 1024) { // 4MB limit
@@ -92,18 +89,22 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         });
         return;
       }
-      const dataUri = await fileToDataUri(file);
-      previewSetter(dataUri);
-      dataUriSetter(dataUri);
+      setIsUploading(true);
+      try {
+        const url = await uploadImageAndGetUrl(file, path);
+        imageSetter(url);
+        toast({ title: 'Upload successful', description: 'Image has been uploaded.'});
+      } catch (error) {
+        toast({ title: 'Upload failed', description: 'Could not upload image.', variant: 'destructive'});
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
-  
-  const displayBackgroundImage = bgPreview ?? currentBackgroundImage;
-  const displayForegroundImage = fgPreview ?? currentForegroundImage;
 
   return (
       <Card>
-        <form action={formAction}>
+        <form onSubmit={handleFormSubmit}>
             <CardHeader>
             <CardTitle>Theme Customization</CardTitle>
             <CardDescription>
@@ -111,12 +112,6 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* These hidden inputs hold the state for the form submission */}
-                <input type="hidden" name="currentBackgroundImage" value={bgPreview ? '' : currentBackgroundImage} />
-                <input type="hidden" name="currentForegroundImage" value={fgPreview ? '' : currentForegroundImage} />
-                <input type="hidden" name="backgroundImage" value={bgDataUri} />
-                <input type="hidden" name="foregroundImage" value={fgDataUri} />
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                 <Label htmlFor="primary-color">Primary Color</Label>
@@ -145,26 +140,26 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 <div className="space-y-2">
                     <Label>Background Image</Label>
                     <div className="flex items-center gap-4">
-                    {displayBackgroundImage ? (
+                    {backgroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={displayBackgroundImage} alt="Background Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentBackgroundImage(''); setBgPreview(null); setBgDataUri(''); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
+                        <Image src={backgroundImage} alt="Background Preview" fill className="object-cover" unoptimized/>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setBackgroundImage(''); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
                     ) : (
                         <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state background">
-                            <span className="text-xs text-muted-foreground">None</span>
+                            {isUploading ? <Loader2 className="animate-spin"/> : <span className="text-xs text-muted-foreground">None</span>}
                         </div>
                     )}
                     <label htmlFor="background-image-upload" className="cursor-pointer">
-                        <Button asChild variant="outline" type="button">
+                        <Button asChild variant="outline" type="button" disabled={isUploading}>
                             <div>
                                 <Upload className="mr-2 h-4 w-4" />
                                 Upload Image
                             </div>
                         </Button>
-                        <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBgPreview, setBgDataUri)} />
+                        <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBackgroundImage, 'theme/background')} />
                         </label>
                     </div>
                 </div>
@@ -172,33 +167,36 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 <div className="space-y-2">
                     <Label>Foreground Image</Label>
                     <div className="flex items-center gap-4">
-                    {displayForegroundImage ? (
+                    {foregroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={displayForegroundImage} alt="Foreground Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentForegroundImage(''); setFgPreview(null); setFgDataUri(''); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
+                        <Image src={foregroundImage} alt="Foreground Preview" fill className="object-cover" unoptimized/>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setForegroundImage(''); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
                     ) : (
                         <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state foreground">
-                            <span className="text-xs text-muted-foreground">None</span>
+                           {isUploading ? <Loader2 className="animate-spin"/> : <span className="text-xs text-muted-foreground">None</span>}
                         </div>
                     )}
                         <label htmlFor="foreground-image-upload" className="cursor-pointer">
-                        <Button asChild variant="outline" type="button">
+                        <Button asChild variant="outline" type="button" disabled={isUploading}>
                             <div>
                                 <Upload className="mr-2 h-4 w-4" />
                                 Upload Image
                             </div>
                         </Button>
-                        <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setFgPreview, setFgDataUri)} />
+                        <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setForegroundImage, 'theme/foreground')} />
                         </label>
                     </div>
                 </div>
             </div>
 
             <div className="flex justify-end gap-2">
-                <SubmitButton />
+                <Button type="submit">
+                  <Paintbrush className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
             </div>
             </CardContent>
         </form>
