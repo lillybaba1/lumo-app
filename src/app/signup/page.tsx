@@ -26,22 +26,20 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    try {
-      const result = await createUser(email, password, name);
-      if (result.success) {
-        toast({
-          title: 'Signup Successful',
-          description: 'Your account has been created. Please log in.',
-        });
-        router.push('/login');
-      } else {
-        setError(result.message || 'An unknown error occurred.');
-      }
-    } catch (error: any) {
-      setError(error.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
+    
+    const result = await createUser(email, password, name);
+    
+    if (result.success) {
+      toast({
+        title: 'Signup Successful',
+        description: 'Your account has been created. Please log in.',
+      });
+      router.push('/login');
+    } else {
+      setError(result.message || 'An unknown error occurred.');
     }
+    
+    setLoading(false);
   };
 
   return (

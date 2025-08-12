@@ -10,7 +10,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 import { doc, getDoc } from 'firebase/firestore';
-import { FirebaseError } from 'firebase-admin';
+import { FirebaseError } from 'firebase/app';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
@@ -40,6 +40,9 @@ export async function createUser(email: string, password: string, name: string):
   } catch (error: any) {
     if (error.code === 'auth/weak-password') {
       return { success: false, message: 'Password is too weak. Please use at least 6 characters.' };
+    }
+    if (error.code === 'auth/email-already-exists') {
+      return { success: false, message: 'An account with this email already exists.' };
     }
     return { success: false, message: error.message || 'An unknown error occurred during signup.' };
   }
