@@ -27,8 +27,7 @@ export async function POST(req: Request) {
       public: true,
     });
     
-    // Remove gs:// prefix from bucket name for constructing the URL
-    const bucketName = bucket.name.replace('gs://', '');
+    const bucketName = bucket.name;
     const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURI(path)}`;
 
     console.log("Successfully generated public URL:", publicUrl);
