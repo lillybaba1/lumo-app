@@ -2,8 +2,8 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useActionState, useEffect, ChangeEvent } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, ChangeEvent } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -193,10 +193,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </div>
 
             <div className="flex justify-end gap-2">
-                <Button type="submit">
-                  <Paintbrush className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
+                <SubmitButton />
             </div>
             </CardContent>
         </form>

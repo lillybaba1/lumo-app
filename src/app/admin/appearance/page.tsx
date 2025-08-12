@@ -2,16 +2,8 @@
 import { getTheme } from './actions';
 import AppearanceForm from './appearance-form';
 
-const defaultTheme = {
-  primaryColor: "#D0BFFF",
-  accentColor: "#FFB3C6",
-  backgroundColor: "#E8E2FF",
-  backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
-};
-
 export default async function AppearancePage() {
-  const theme = await getTheme() ?? defaultTheme;
+  const theme = await getTheme();
 
   return (
     <div>
