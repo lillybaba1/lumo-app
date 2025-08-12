@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -40,12 +41,12 @@ const shoppingAssistantPrompt = ai.definePrompt({
 
   Here is the conversation history:
   {{#each history}}
-    {{#if (eq role 'user')}}User: {{content}}{{/if}}
-    {{#if (eq role 'assistant')}}Assistant: {{content}}{{/if}}
+    {{role}}: {{content}}
   {{/each}}
 
   Answer the following question based on the history:
-  {{query}}`,
+  User: {{query}}
+  Assistant:`,
 });
 
 const shoppingAssistantFlow = ai.defineFlow(
