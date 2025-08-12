@@ -133,7 +133,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     <div className="flex items-center gap-4">
                     {displayBackgroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={displayBackgroundImage} alt="Background Preview" layout="fill" objectFit="cover" unoptimized/>
+                        <Image src={displayBackgroundImage} alt="Background Preview" fill className="object-cover" unoptimized/>
                         <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentBackgroundImage(''); setBgPreview(null); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
@@ -160,7 +160,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     <div className="flex items-center gap-4">
                     {displayForegroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                        <Image src={displayForegroundImage} alt="Foreground Preview" layout="fill" objectFit="cover" unoptimized/>
+                        <Image src={displayForegroundImage} alt="Foreground Preview" fill className="object-cover" unoptimized/>
                         <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentForegroundImage(''); setFgPreview(null); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>

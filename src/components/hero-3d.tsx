@@ -16,6 +16,7 @@ export default function Hero3D({ theme }: Hero3DProps) {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      if (typeof window === 'undefined') return;
       const { innerWidth: width, innerHeight: height } = window;
       const { clientX: x, clientY: y } = e;
 
@@ -57,9 +58,8 @@ export default function Hero3D({ theme }: Hero3DProps) {
           <Image
             src={theme.backgroundImage}
             alt="Background"
-            layout="fill"
-            objectFit="cover"
-            className="z-0 transform-gpu"
+            fill
+            className="object-cover z-0 transform-gpu"
             priority
             unoptimized
             data-ai-hint="modern room"
@@ -79,9 +79,8 @@ export default function Hero3D({ theme }: Hero3DProps) {
                 <Image
                   src={theme.foregroundImage}
                   alt="Featured Product"
-                  layout="fill"
-                  objectFit="contain"
-                  className="drop-shadow-2xl transform-gpu"
+                  fill
+                  className="object-contain drop-shadow-2xl transform-gpu"
                   unoptimized
                 />
               </div>
