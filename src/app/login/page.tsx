@@ -11,7 +11,6 @@ import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { signInUser } from '@/services/authService';
-import { FirebaseError } from 'firebase/app';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,8 +29,8 @@ export default function LoginPage() {
         description: 'Welcome back!',
       });
       router.push('/admin/dashboard');
-    } catch (error) {
-       if (error instanceof FirebaseError) {
+    } catch (error: any) {
+      if (error.code) { // Check for Firebase error code
         if (error.code === 'auth/invalid-credential') {
             toast({
                 title: 'Login Failed',
