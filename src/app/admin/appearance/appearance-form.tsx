@@ -40,6 +40,16 @@ function SubmitButton() {
   );
 }
 
+// Helper to convert file to data URI
+async function fileToDataUri(file: File): Promise<string> {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 export default function AppearanceForm({ theme }: { theme: Theme }) {
   const { toast } = useToast();
   const [state, formAction] = useActionState(saveTheme, initialState);
@@ -51,9 +61,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const [bgPreview, setBgPreview] = useState<string | null>(null);
   const [fgPreview, setFgPreview] = useState<string | null>(null);
   
+  const [bgDataUri, setBgDataUri] = useState<string>('');
+  const [fgDataUri, setFgDataUri] = useState<string>('');
+
   const [currentBackgroundImage, setCurrentBackgroundImage] = useState(theme.backgroundImage);
   const [currentForegroundImage, setCurrentForegroundImage] = useState(theme.foregroundImage);
-
+  
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -68,7 +81,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     }
   }, [state, toast]);
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, previewSetter: (value: string | null) => void) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, previewSetter: (value: string | null) => void, dataUriSetter: (value: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
@@ -79,12 +92,9 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         });
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        previewSetter(result);
-      };
-      reader.readAsDataURL(file);
+      const dataUri = await fileToDataUri(file);
+      previewSetter(dataUri);
+      dataUriSetter(dataUri);
     }
   };
   
@@ -103,6 +113,8 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             <CardContent className="space-y-6">
                 <input type="hidden" name="currentBackgroundImage" value={currentBackgroundImage} />
                 <input type="hidden" name="currentForegroundImage" value={currentForegroundImage} />
+                <input type="hidden" name="backgroundImage" value={bgDataUri} />
+                <input type="hidden" name="foregroundImage" value={fgDataUri} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
@@ -135,12 +147,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     {displayBackgroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
                         <Image src={displayBackgroundImage} alt="Background Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentBackgroundImage(''); setBgPreview(null); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentBackgroundImage(''); setBgPreview(null); setBgDataUri(''); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
                     ) : (
-                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state">
+                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state background">
                             <span className="text-xs text-muted-foreground">None</span>
                         </div>
                     )}
@@ -151,7 +163,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                                 Upload Image
                             </div>
                         </Button>
-                        <input id="background-image-upload" name="backgroundImage" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBgPreview)} />
+                        <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBgPreview, setBgDataUri)} />
                         </label>
                     </div>
                 </div>
@@ -162,12 +174,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     {displayForegroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
                         <Image src={displayForegroundImage} alt="Foreground Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentForegroundImage(''); setFgPreview(null); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setCurrentForegroundImage(''); setFgPreview(null); setFgDataUri(''); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
                     ) : (
-                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state">
+                        <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="empty state foreground">
                             <span className="text-xs text-muted-foreground">None</span>
                         </div>
                     )}
@@ -178,7 +190,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                                 Upload Image
                             </div>
                         </Button>
-                        <input id="foreground-image-upload" name="foregroundImage" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setFgPreview)} />
+                        <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setFgPreview, setFgDataUri)} />
                         </label>
                     </div>
                 </div>

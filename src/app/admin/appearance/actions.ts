@@ -27,19 +27,17 @@ export async function saveTheme(
     const currentBackgroundImage = formData.get('currentBackgroundImage') as string;
     const currentForegroundImage = formData.get('currentForegroundImage') as string;
     
-    const newBackgroundImageFile = formData.get('backgroundImage') as File;
-    const newForegroundImageFile = formData.get('foregroundImage') as File;
+    const newBackgroundImageDataUri = formData.get('backgroundImage') as string;
+    const newForegroundImageDataUri = formData.get('foregroundImage') as string;
 
-    if (newBackgroundImageFile && newBackgroundImageFile.size > 0) {
-        const bgDataUri = await fileToDataUri(newBackgroundImageFile);
-        themeToSave.backgroundImage = await uploadImageAndGetUrl(bgDataUri, 'theme/background');
+    if (newBackgroundImageDataUri) {
+        themeToSave.backgroundImage = await uploadImageAndGetUrl(newBackgroundImageDataUri, 'theme/background');
     } else {
         themeToSave.backgroundImage = currentBackgroundImage;
     }
 
-    if (newForegroundImageFile && newForegroundImageFile.size > 0) {
-        const fgDataUri = await fileToDataUri(newForegroundImageFile);
-        themeToSave.foregroundImage = await uploadImageAndGetUrl(fgDataUri, 'theme/foreground');
+    if (newForegroundImageDataUri) {
+        themeToSave.foregroundImage = await uploadImageAndGetUrl(newForegroundImageDataUri, 'theme/foreground');
     } else {
         themeToSave.foregroundImage = currentForegroundImage;
     }
@@ -52,20 +50,15 @@ export async function saveTheme(
     return { message: 'Theme saved successfully!', success: true };
   } catch (error) {
     console.error('Failed to save theme:', error);
-    return { message: 'Failed to save theme settings.', success: false };
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { message: `Failed to save theme settings: ${errorMessage}`, success: false };
   }
 }
-
-async function fileToDataUri(file: File) {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return `data:${file.type};base64,${buffer.toString('base64')}`;
-}
-
 
 export async function getTheme() {
     try {
         const theme = await getThemeFromDb();
+        // Ensure all default keys are present
         return { ...defaultTheme, ...theme };
     } catch (error) {
         console.error('Failed to read theme:', error);
