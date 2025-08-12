@@ -53,13 +53,13 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
                  <ShoppingBag className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="font-headline text-2xl">Lumo Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+            <CardTitle className="font-headline text-2xl">Login to Lumo</CardTitle>
+            <CardDescription>Welcome back! Please log in to your account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@lumo.com" required value={email} onChange={e => setEmail(e.target.value)} />
+              <Input id="email" type="email" placeholder="you@lumo.com" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
