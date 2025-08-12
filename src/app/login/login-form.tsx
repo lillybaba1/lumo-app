@@ -42,7 +42,7 @@ export default function LoginForm() {
       }
       
       // Hard redirect to ensure RSC reads the new cookie
-      window.location.assign('/admin/dashboard');
+      window.location.assign('/');
 
     } catch (error: any) {
        console.error("Login failed:", error);
