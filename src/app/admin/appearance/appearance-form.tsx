@@ -113,6 +113,13 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
     }
   };
   
+  const handleRemoveImage = (imageSetter: (url: string) => void, inputRef: React.RefObject<HTMLInputElement>) => {
+    imageSetter('');
+    if (inputRef.current) {
+        inputRef.current.value = '';
+    }
+  };
+  
     const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!previewRef.current) return;
         e.preventDefault();
@@ -240,7 +247,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     {backgroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
                         <Image src={backgroundImage} alt="Background Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setBackgroundImage(''); if (bgInputRef.current) bgInputRef.current.value = ''; }}>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => handleRemoveImage(setBackgroundImage, bgInputRef)}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
@@ -267,7 +274,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     {foregroundImage ? (
                         <div className="relative w-24 h-24 rounded-md overflow-hidden border">
                         <Image src={foregroundImage} alt="Foreground Preview" fill className="object-cover" unoptimized/>
-                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => { setForegroundImage(''); if (fgInputRef.current) fgInputRef.current.value = ''; }}>
+                        <Button variant="ghost" size="icon" type="button" className="absolute top-0 right-0 h-6 w-6 bg-black/50 hover:bg-black/70 text-white" onClick={() => handleRemoveImage(setForegroundImage, fgInputRef)}>
                             <X className="h-4 w-4" />
                         </Button>
                         </div>
@@ -338,3 +345,5 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       </Card>
   );
 }
+
+    
