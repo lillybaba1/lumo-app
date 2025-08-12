@@ -49,11 +49,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
       </CardHeader>
-      <CardContent className="flex-grow p-4">
-        <CardTitle className="font-headline text-lg mb-2">{product.name}</CardTitle>
-        <p className="text-muted-foreground text-sm">{product.description}</p>
+      <CardContent className="flex-grow p-4 flex flex-col">
+        <CardTitle className="font-headline text-lg mb-2 min-h-[2.5rem]">{product.name}</CardTitle>
+        <p className="text-muted-foreground text-sm flex-grow">{product.description}</p>
       </CardContent>
-      <CardFooter className="p-4 flex justify-between items-center">
+      <CardFooter className="p-4 flex justify-between items-center mt-auto">
         <p className="text-xl font-bold">{currencySymbol}{product.price.toFixed(2)}</p>
         <Button onClick={handleAddToCart} size="sm">
           <ShoppingCart className="mr-2 h-4 w-4" />
