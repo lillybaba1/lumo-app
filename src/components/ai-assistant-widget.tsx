@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useActionState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Loader2, User } from 'lucide-react';
+import { useState, useEffect, useRef, useTransition } from 'react';
+import { Bot, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { ChatInterface } from './chat-interface';
 import { shoppingAssistant } from '@/ai/flows/shopping-assistant';
@@ -18,29 +18,31 @@ export function AIAssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const [state, action, isPending] = useActionState(async (prevState: any, formData: FormData) => {
-    const query = formData.get('query') as string;
-    if (!query) return { response: null, error: 'Query is empty' };
+  const handleQuerySubmit = async (query: string) => {
+    if (!query) return;
 
     const userMessage: Message = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
 
-    const currentHistory = [...messages, userMessage];
-
-    const result = await shoppingAssistant({ query, history: currentHistory.slice(0, -1) });
-    
-    if (result.answer) {
-      const assistantMessage: Message = { role: 'assistant', content: result.answer };
-      setMessages(prev => [...prev, assistantMessage]);
-      const form = (document.querySelector('form[data-chat-form="true"]') as HTMLFormElement);
-      if(form) form.reset();
-      return { response: result.answer, error: null };
-    } else {
-      setMessages(messages);
-      return { response: null, error: 'Sorry, I could not find an answer.' };
-    }
-  }, { response: null, error: null });
+    startTransition(async () => {
+        try {
+            const result = await shoppingAssistant({ query, history: messages });
+            if (result.answer) {
+                const assistantMessage: Message = { role: 'assistant', content: result.answer };
+                setMessages(prev => [...prev, assistantMessage]);
+            } else {
+                 const errorMessage: Message = { role: 'assistant', content: "Sorry, I couldn't find an answer." };
+                 setMessages(prev => [...prev, errorMessage]);
+            }
+        } catch (error) {
+            const errorMessage: Message = { role: 'assistant', content: "An error occurred. Please try again." };
+            setMessages(prev => [...prev, errorMessage]);
+        }
+    });
+  };
 
   // Effect to manage chat clearing timeout
   useEffect(() => {
@@ -68,7 +70,7 @@ export function AIAssistantWidget() {
         <div className="mb-2">
            <ChatInterface 
              messages={messages}
-             action={action}
+             onQuerySubmit={handleQuerySubmit}
              isPending={isPending}
            />
         </div>

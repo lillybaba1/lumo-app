@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useEffect, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 import { Bot, User, Send, Loader2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -12,27 +11,30 @@ import type { Message } from './ai-assistant-widget';
 
 type ChatInterfaceProps = {
     messages: Message[];
-    action: (payload: FormData) => void;
+    onQuerySubmit: (query: string) => void;
     isPending: boolean;
 };
 
-export function ChatInterface({ messages, action, isPending }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onQuerySubmit, isPending }: ChatInterfaceProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState('');
+  
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
-
-  const SubmitButton = () => {
-    return (
-      <Button type="submit" size="icon" disabled={isPending}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-      </Button>
-    );
-  };
   
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    onQuerySubmit(query);
+    setQuery('');
+    formRef.current?.reset();
+  }
+
   return (
     <Card className="w-full max-w-md h-[60vh] flex flex-col shadow-2xl rounded-xl">
       <CardHeader>
@@ -75,9 +77,18 @@ export function ChatInterface({ messages, action, isPending }: ChatInterfaceProp
         </ScrollArea>
       </CardContent>
       <CardFooter>
-        <form data-chat-form="true" action={action} className="w-full flex items-center gap-2">
-          <Input name="query" placeholder="Ask about products, prices..." required autoComplete="off"/>
-          <SubmitButton />
+        <form ref={formRef} onSubmit={handleSubmit} className="w-full flex items-center gap-2">
+          <Input 
+            name="query" 
+            placeholder="Ask about products, prices..." 
+            required 
+            autoComplete="off"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Button type="submit" size="icon" disabled={isPending}>
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
         </form>
       </CardFooter>
     </Card>
