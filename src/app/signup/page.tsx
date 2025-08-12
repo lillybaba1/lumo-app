@@ -11,6 +11,7 @@ import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createUser } from '@/services/authService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -19,23 +20,25 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
-      await createUser(email, password, name);
-      toast({
-        title: 'Signup Successful',
-        description: 'Your account has been created. Please log in.',
-      });
-      router.push('/login');
+      const result = await createUser(email, password, name);
+      if (result.success) {
+        toast({
+          title: 'Signup Successful',
+          description: 'Your account has been created. Please log in.',
+        });
+        router.push('/login');
+      } else {
+        setError(result.message || 'An unknown error occurred.');
+      }
     } catch (error: any) {
-      toast({
-        title: 'Signup Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
+      setError(error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -58,6 +61,11 @@ export default function SignupPage() {
             <CardDescription>Join Lumo to start your shopping experience.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+             {error && (
+                <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+             )}
              <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" type="text" placeholder="John Doe" required value={name} onChange={e => setName(e.target.value)} />
@@ -69,6 +77,7 @@ export default function SignupPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Password must be at least 6 characters long.</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

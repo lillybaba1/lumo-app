@@ -10,31 +10,39 @@ import {
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 import { doc, getDoc } from 'firebase/firestore';
+import { FirebaseError } from 'firebase-admin';
 
 
-export async function createUser(email: string, password: string, name: string) {
+export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
   if (!isFirebaseAdminInitialized || !dbAdmin || !authAdmin) {
-    throw new Error("User creation is not available. Please configure Firebase Admin SDK.");
+    return { success: false, message: "User creation is not available. Please configure Firebase Admin SDK." };
   }
+  
+  try {
+    const usersSnapshot = await dbAdmin.collection('users').limit(1).get();
+    const role = usersSnapshot.empty ? 'admin' : 'customer';
 
-  const usersSnapshot = await dbAdmin.collection('users').limit(1).get();
-  const role = usersSnapshot.empty ? 'admin' : 'customer';
+    const userRecord = await authAdmin.createUser({
+      email,
+      password,
+      displayName: name,
+    });
 
-  const userRecord = await authAdmin.createUser({
-    email,
-    password,
-    displayName: name,
-  });
+    await dbAdmin.collection('users').doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      email: userRecord.email,
+      name: name,
+      createdAt: new Date().toISOString(),
+      role: role,
+    });
 
-  await dbAdmin.collection('users').doc(userRecord.uid).set({
-    uid: userRecord.uid,
-    email: userRecord.email,
-    name: name,
-    createdAt: new Date().toISOString(),
-    role: role,
-  });
-
-  return { uid: userRecord.uid, email: userRecord.email };
+    return { success: true, data: { uid: userRecord.uid, email: userRecord.email } };
+  } catch (error: any) {
+    if (error.code === 'auth/weak-password') {
+      return { success: false, message: 'Password is too weak. Please use at least 6 characters.' };
+    }
+    return { success: false, message: error.message || 'An unknown error occurred during signup.' };
+  }
 }
 
 // Sign-in is a client-side operation
