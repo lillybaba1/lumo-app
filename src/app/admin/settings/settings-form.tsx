@@ -22,6 +22,7 @@ const currencies = [
     { code: 'JPY', name: 'Japanese Yen (¥)' },
     { code: 'AUD', name: 'Australian Dollar (A$)' },
     { code: 'CAD', name: 'Canadian Dollar (C$)' },
+    { code: 'GMD', name: 'Gambian Dalasi (D)' },
 ];
 
 export default function SettingsForm({ settings }: { settings: Settings }) {
