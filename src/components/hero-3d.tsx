@@ -40,18 +40,19 @@ export default function Hero3D({ theme }: Hero3DProps) {
     transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
     transition: 'transform 0.1s ease',
   };
-
-  const foregroundImageStyle: React.CSSProperties = {
-    transform: 'translateZ(50px) scale(0.9)',
-    transition: 'transform 0.1s ease',
-  };
   
   const foregroundContainerStyle: React.CSSProperties = {
     position: 'absolute',
     left: `${theme.foregroundImagePositionX ?? 50}%`,
     top: `${theme.foregroundImagePositionY ?? 50}%`,
+    width: `${(theme.foregroundImageScale ?? 100) / 4}%`, // Adjust denominator as needed for desired base size
+    transform: 'translate(-50%, -50%)',
     transformStyle: 'preserve-3d',
-    transform: `translateX(-50%) translateY(-50%) scale(${(theme.foregroundImageScale ?? 100) / 100})`,
+  };
+
+  const foregroundImageStyle: React.CSSProperties = {
+    transform: 'translateZ(50px)',
+    transition: 'transform 0.1s ease',
   };
 
   const textStyle = {
@@ -89,14 +90,14 @@ export default function Hero3D({ theme }: Hero3DProps) {
           <div className="relative h-full w-full hidden md:block">
             {theme.foregroundImage && (
               <div style={foregroundContainerStyle}>
-                <div className="relative w-48 h-48 md:w-80 md:h-80" style={foregroundImageStyle}>
+                <div className="relative w-full h-auto" style={{...foregroundImageStyle, paddingTop: '100%'}}>
                     <Image
                     src={theme.foregroundImage}
                     alt="Featured Product"
                     fill
                     className="object-contain drop-shadow-2xl transform-gpu"
                     unoptimized
-                    sizes="100vw"
+                    sizes="33vw"
                     />
                 </div>
               </div>
@@ -107,3 +108,5 @@ export default function Hero3D({ theme }: Hero3DProps) {
     </div>
   );
 }
+
+    

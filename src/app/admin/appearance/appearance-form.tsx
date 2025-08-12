@@ -2,18 +2,19 @@
 "use client";
 
 import * as React from 'react';
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Paintbrush, Upload, X, Loader2 } from 'lucide-react';
+import { Paintbrush, Upload, X, Loader2, CornerDownRight } from 'lucide-react';
 import { saveTheme } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
-import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
 
 type Theme = {
   primaryColor: string;
@@ -42,9 +43,13 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
 
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0, scale: 0, width: 0, height: 0 });
 
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -99,12 +104,80 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       }
     }
   };
+  
+    const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!previewRef.current) return;
+        setIsDragging(true);
+        const previewRect = previewRef.current.getBoundingClientRect();
+        dragStartRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            posX: fgPosX,
+            posY: fgPosY,
+            scale: fgScale,
+            width: previewRect.width,
+            height: previewRect.height
+        };
+    };
+
+    const handleResizeStart = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        if (!previewRef.current) return;
+        setIsResizing(true);
+        const previewRect = previewRef.current.getBoundingClientRect();
+        dragStartRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            posX: fgPosX,
+            posY: fgPosY,
+            scale: fgScale,
+            width: previewRect.width,
+            height: previewRect.height
+        };
+    };
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging && !isResizing) return;
+        if (!previewRef.current) return;
+
+        const { x: startX, y: startY, posX: startPosX, posY: startPosY, scale: startScale, width, height } = dragStartRef.current;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (isDragging) {
+            const newPosX = startPosX + (dx / width) * 100;
+            const newPosY = startPosY + (dy / height) * 100;
+            setFgPosX(Math.max(0, Math.min(100, newPosX)));
+            setFgPosY(Math.max(0, Math.min(100, newPosY)));
+        }
+
+        if (isResizing) {
+            const newScale = startScale + (dx / width) * 100;
+            setFgScale(Math.max(10, Math.min(300, newScale)));
+        }
+    }, [isDragging, isResizing]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        setIsResizing(false);
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [handleMouseMove, handleMouseUp]);
+
 
   const foregroundPreviewStyle: React.CSSProperties = {
-      transform: `scale(${fgScale / 100})`,
+      position: 'absolute',
       left: `${fgPosX}%`,
       top: `${fgPosY}%`,
-      transformOrigin: 'top left',
+      width: `${fgScale}%`,
+      transform: 'translate(-50%, -50%)',
   };
 
 
@@ -200,34 +273,29 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                 </div>
 
                  <div className="space-y-4 md:col-span-2">
-                    <Label>Foreground Image Settings</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border rounded-md">
-                        <div className="space-y-2">
-                            <Label htmlFor="fg-scale" className="text-sm">Scale ({fgScale}%)</Label>
-                            <Slider id="fg-scale" value={[fgScale]} onValueChange={(v) => setFgScale(v[0])} min={25} max={200} step={5} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="fg-pos-x" className="text-sm">Horizontal Position ({fgPosX}%)</Label>
-                            <Slider id="fg-pos-x" value={[fgPosX]} onValueChange={(v) => setFgPosX(v[0])} min={-50} max={150} step={1} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="fg-pos-y" className="text-sm">Vertical Position ({fgPosY}%)</Label>
-                            <Slider id="fg-pos-y" value={[fgPosY]} onValueChange={(v) => setFgPosY(v[0])} min={-50} max={150} step={1} />
-                        </div>
-                    </div>
-                </div>
-
-                 <div className="space-y-4 md:col-span-2">
                     <Label>Live Preview</Label>
-                    <div className="relative w-full h-64 rounded-lg overflow-hidden border bg-muted/30">
+                    <div ref={previewRef} className="relative w-full h-80 rounded-lg overflow-hidden border bg-muted/30 select-none">
                         {backgroundImage && <Image src={backgroundImage} alt="Background" layout="fill" objectFit="cover" unoptimized />}
                          <div className="absolute inset-0 bg-black/30"></div>
                         {foregroundImage && (
-                            <div className="absolute w-32 h-32" style={foregroundPreviewStyle}>
-                                <Image src={foregroundImage} alt="Foreground" layout="fill" objectFit="contain" unoptimized />
-                            </div>
+                             <div 
+                                style={foregroundPreviewStyle}
+                                className={cn('absolute group', isDragging || isResizing ? 'cursor-grabbing' : 'cursor-grab')}
+                                onMouseDown={handleDragStart}
+                            >
+                                <div className="relative w-full h-full" style={{ paddingBottom: '100%' }}>
+                                    <Image src={foregroundImage} alt="Foreground" layout="fill" objectFit="contain" unoptimized className="pointer-events-none" />
+                                </div>
+                                <button
+                                    type="button"
+                                    className="absolute -bottom-2 -right-2 w-5 h-5 bg-primary rounded-full cursor-nwse-resize text-primary-foreground flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
+                                    onMouseDown={handleResizeStart}
+                                >
+                                    <CornerDownRight className="w-3 h-3" />
+                                </button>
+                             </div>
                         )}
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="text-center text-white p-4 bg-black/20 rounded-lg">
                                 <h3 className="font-headline text-2xl">Hero Title</h3>
                                 <p className="text-sm">Hero description text.</p>
@@ -254,3 +322,5 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       </Card>
   );
 }
+
+    
