@@ -3,14 +3,10 @@
 
 import { getPages as getPagesFromDb, savePages as savePagesToDb } from '@/services/pageService';
 import { Pages } from '@/lib/types';
+import * as defaultPagesData from '@/data/pages.json';
 
-const defaultPages: Pages = {
-  about: { title: 'About Us', content: 'Welcome to Lumo! We are passionate about providing the best products and customer service.' },
-  shipping: { title: 'Shipping Policy', content: 'We offer free shipping on all orders over $50. Orders are typically processed within 2-3 business days.' },
-  contact: { title: 'Contact Us', content: 'Have questions? Email us at support@lumo.com or call us at (123) 456-7890.' },
-  faq: { title: 'FAQ', content: 'Q: How do I return an item? A: Please contact our support team for a return authorization.' },
-  policy: { title: 'Return Policy', content: 'We accept returns within 30 days of purchase for a full refund.' },
-};
+
+const defaultPages: Pages = defaultPagesData;
 
 export async function savePages(pages: Pages) {
   try {
@@ -27,6 +23,6 @@ export async function getPages(): Promise<Pages> {
         return pages && Object.keys(pages).length > 0 ? pages : defaultPages;
     } catch (error) {
         console.error('Failed to read pages:', error);
-        throw new Error('Failed to read page settings.');
+        return defaultPages;
     }
 }
