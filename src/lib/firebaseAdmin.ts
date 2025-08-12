@@ -5,9 +5,8 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 import { getStorage, Bucket } from 'firebase-admin/storage';
 import { firebaseConfig } from './firebaseConfig';
 
-// This guard prevents re-initialization in development environments.
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK will not be initialized. Using mock data.");
+  console.warn("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK will not be initialized. Some features may not work as expected.");
 }
 
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
@@ -16,14 +15,13 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
 
 const appName = 'firebase-admin-app-lumo';
 
-const adminApp: App | null = getApps().find(app => app.name === appName) ?? (
-  process.env.FIREBASE_SERVICE_ACCOUNT_JSON
-    ? initializeApp({
-        credential: cert(serviceAccount),
-        storageBucket: firebaseConfig.storageBucket,
-      }, appName)
-    : null
-);
+let adminApp: App | null = null;
+if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  adminApp = getApps().find(app => app.name === appName) ?? initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: firebaseConfig.storageBucket,
+  }, appName);
+}
 
 const dbAdmin: Firestore | null = adminApp ? getFirestore(adminApp) : null;
 const authAdmin: Auth | null = adminApp ? getAuth(adminApp) : null;
