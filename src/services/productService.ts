@@ -1,11 +1,14 @@
 
 'use server';
 
-import { dbAdmin } from '@/lib/firebaseAdmin';
+import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { Product, Category } from '@/lib/types';
 import { products as mockProducts, categories as mockCategories } from '@/lib/mock-data';
 
 export async function getProducts(): Promise<Product[]> {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+        return mockProducts;
+    }
     try {
         const productsCol = dbAdmin.collection('products');
         const productSnapshot = await productsCol.get();
@@ -16,13 +19,14 @@ export async function getProducts(): Promise<Product[]> {
         return productList;
     } catch (error) {
         console.error('Failed to fetch products from Firestore:', error);
-        // In a real app, you might want to throw the error or handle it differently.
-        // For now, we return an empty array to avoid crashing.
-        return [];
+        return mockProducts;
     }
 }
 
 export async function getCategories(): Promise<Category[]> {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+        return mockCategories;
+    }
     try {
         const categoriesCol = dbAdmin.collection('categories');
         const categorySnapshot = await categoriesCol.get();
@@ -33,6 +37,6 @@ export async function getCategories(): Promise<Category[]> {
         return categoryList;
     } catch (error) {
         console.error('Failed to fetch categories from Firestore:', error);
-        return [];
+        return mockCategories;
     }
 }

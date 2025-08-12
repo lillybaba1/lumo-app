@@ -1,7 +1,7 @@
 
 'use server';
 
-import { dbAdmin } from '@/lib/firebaseAdmin';
+import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 
 interface Theme {
     primaryColor: string;
@@ -11,10 +11,12 @@ interface Theme {
     foregroundImage: string;
 }
 
-const themeDocRef = dbAdmin.collection('settings').doc('theme');
-
 export async function getTheme(): Promise<Theme | null> {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+        return null;
+    }
     try {
+        const themeDocRef = dbAdmin.collection('settings').doc('theme');
         const docSnap = await themeDocRef.get();
         if (docSnap.exists) {
             return docSnap.data() as Theme;
@@ -27,7 +29,12 @@ export async function getTheme(): Promise<Theme | null> {
 }
 
 export async function saveTheme(theme: Partial<Theme>): Promise<void> {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+         console.error('Failed to save theme. Firebase Admin SDK not initialized.');
+         throw new Error('Failed to save theme. Firebase not configured.');
+    }
     try {
+        const themeDocRef = dbAdmin.collection('settings').doc('theme');
         await themeDocRef.set(theme, { merge: true });
     } catch (error) {
          console.error('Failed to save theme to Firestore.', error);

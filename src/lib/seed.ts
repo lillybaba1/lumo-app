@@ -1,7 +1,7 @@
 
 'use server';
 
-import { dbAdmin } from './firebaseAdmin';
+import { dbAdmin, isFirebaseAdminInitialized } from './firebaseAdmin';
 import { products as mockProducts, categories as mockCategories } from './mock-data';
 import * as defaultPagesData from '@/data/pages.json';
 
@@ -16,6 +16,12 @@ const defaultTheme = {
 const defaultPages = defaultPagesData;
 
 export async function seedInitialData() {
+    if (!isFirebaseAdminInitialized || !dbAdmin) {
+        // Silently fail if the admin SDK is not available.
+        // The console warning in firebaseAdmin.ts is sufficient.
+        return;
+    }
+
     try {
         const seedMarkerRef = dbAdmin.collection('internal').doc('seedMarker');
         const seedMarkerSnap = await seedMarkerRef.get();

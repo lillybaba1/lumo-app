@@ -1,7 +1,7 @@
 
 'use server';
 
-import { storageAdmin } from '@/lib/firebaseAdmin';
+import { storageAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { Stream } from 'stream';
 
 /**
@@ -12,6 +12,12 @@ import { Stream } from 'stream';
  * @returns The public download URL of the uploaded image.
  */
 export async function uploadImageAndGetUrl(dataUri: string, path: string): Promise<string> {
+    if (!isFirebaseAdminInitialized || !storageAdmin) {
+        console.error("Cannot upload image, Firebase Admin not initialized.");
+        // Return a placeholder or throw an error that can be caught by the UI
+        throw new Error("Image upload is not available. Please configure Firebase Admin SDK.");
+    }
+    
     try {
         const bucket = storageAdmin.bucket();
         const mimeType = dataUri.match(/data:(.*);base64,/)?.[1];

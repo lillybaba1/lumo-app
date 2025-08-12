@@ -1,10 +1,14 @@
 
 'use server';
 
-import { dbAdmin } from '@/lib/firebaseAdmin';
+import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { Order } from '@/lib/types';
+import { orders as mockOrders } from '@/lib/mock-data';
 
 export async function getOrders(): Promise<Order[]> {
+  if (!isFirebaseAdminInitialized || !dbAdmin) {
+    return mockOrders;
+  }
   try {
     const ordersCol = dbAdmin.collection('orders');
     const orderSnapshot = await ordersCol.get();
@@ -15,6 +19,6 @@ export async function getOrders(): Promise<Order[]> {
     return orderList;
   } catch (error) {
     console.error('Failed to fetch orders from Firestore:', error);
-    return [];
+    return mockOrders;
   }
 }
