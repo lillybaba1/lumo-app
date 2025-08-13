@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ProductCard from '@/components/product-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTheme } from '@/app/admin/appearance/actions';
@@ -31,7 +31,7 @@ export default function HomePageDataContainer() {
   const [theme, setTheme] = useState<any>(defaultTheme);
   const [loading, setLoading] = useState(true);
 
-  useState(() => {
+  useEffect(() => {
     async function fetchData() {
       await seedInitialData();
       const [productsData, categoriesData, themeData] = await Promise.all([
@@ -45,7 +45,7 @@ export default function HomePageDataContainer() {
       setLoading(false);
     }
     fetchData();
-  });
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   if (loading) {
     // Optional: add a loading skeleton here
