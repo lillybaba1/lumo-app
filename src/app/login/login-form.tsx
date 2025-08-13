@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { loginUser } from '@/services/authService';
+import { auth } from '@/lib/firebaseClient';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function LoginForm() {
@@ -24,22 +25,35 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     try {
-        const result = await loginUser(email, password);
-        if (result.success) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
+
+        const res = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+        });
+
+        if (res.ok) {
             // Hard redirect to ensure RSC reads the new cookie
             window.location.assign('/');
         } else {
-            toast({
+            const errorData = await res.json();
+             toast({
                 title: 'Login Failed',
-                description: result.message || 'Invalid email or password.',
+                description: errorData.error || 'Could not create session.',
                 variant: 'destructive',
             });
         }
     } catch (error: any) {
        console.error("Login failed:", error);
+       let errorMessage = 'An unknown error occurred. Please try again.';
+       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+           errorMessage = 'Invalid email or password.';
+       }
        toast({
            title: 'Login Failed',
-           description: 'An unknown error occurred. Please try again.',
+           description: errorMessage,
            variant: 'destructive',
        });
     } finally {
