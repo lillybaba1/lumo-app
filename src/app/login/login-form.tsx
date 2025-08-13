@@ -10,9 +10,7 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { FirebaseError } from 'firebase/app';
-import { auth } from '@/lib/firebaseClient';
+import { loginUser } from '@/services/authService';
 
 
 export default function LoginForm() {
@@ -26,38 +24,22 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      await setPersistence(auth, browserLocalPersistence);
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await cred.user.getIdToken();
-      
-      const res = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `Session creation failed: ${res.status}`);
-      }
-      
-      // Hard redirect to ensure RSC reads the new cookie
-      window.location.assign('/');
-
+        const result = await loginUser(email, password);
+        if (result.success) {
+            // Hard redirect to ensure RSC reads the new cookie
+            window.location.assign('/');
+        } else {
+            toast({
+                title: 'Login Failed',
+                description: result.message || 'Invalid email or password.',
+                variant: 'destructive',
+            });
+        }
     } catch (error: any) {
        console.error("Login failed:", error);
-       let description = 'An unknown error occurred. Please try again.';
-       if (error instanceof FirebaseError) {
-         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-           description = 'Invalid email or password. Please try again.';
-         }
-       } else if (error.message) {
-          description = error.message;
-       }
-
        toast({
            title: 'Login Failed',
-           description,
+           description: 'An unknown error occurred. Please try again.',
            variant: 'destructive',
        });
     } finally {
