@@ -1,6 +1,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 // This function can be marked `async` if using `await` inside
 export function middleware(req: NextRequest) {
   const isAuthed = !!req.cookies.get("session")?.value;
