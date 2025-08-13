@@ -94,7 +94,7 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
             ...product,
             createdAt: FieldValue.serverTimestamp(),
         });
-        return { id: productRef.id, ...product };
+        return { id: productRef.id, ...product, imageUrls: product.imageUrls };
     } catch (error) {
         console.error('Failed to add product to Firestore:', error);
         throw new Error('Could not save product.');

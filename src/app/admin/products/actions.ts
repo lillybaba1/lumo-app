@@ -14,7 +14,12 @@ const productSchema = z.object({
   price: z.coerce.number().min(0.01, 'Price must be greater than 0'),
   category: z.string().min(1, 'Category is required'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
-  imageUrl: z.string().url('Invalid image URL').min(1, 'Image is required'),
+  imageUrls: z.preprocess((arg) => {
+    if (typeof arg === 'string') {
+      return arg.split(',');
+    }
+    return arg;
+  }, z.array(z.string().url()).min(1, 'At least one image is required')),
 });
 
 export async function saveProduct(formData: FormData) {
@@ -39,6 +44,7 @@ export async function saveProduct(formData: FormData) {
       await addProduct(productData);
     }
     revalidatePath('/admin/products');
+    revalidatePath('/products');
   } catch (error) {
     console.error('Failed to save product:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';

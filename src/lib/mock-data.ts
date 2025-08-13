@@ -1,3 +1,4 @@
+
 import type { Product, Category, Order } from './types';
 
 export const categories: Category[] = [
@@ -8,14 +9,14 @@ export const categories: Category[] = [
 ];
 
 export const products: Product[] = [
-  { id: '1', name: 'Wireless Headphones', description: 'High-fidelity sound', price: 199.99, imageUrl: 'https://placehold.co/600x600', category: 'Electronics', stock: 15 },
-  { id: '2', name: 'Organic Green Tea', description: 'Fresh and aromatic', price: 12.50, imageUrl: 'https://placehold.co/600x600', category: 'Food', stock: 50 },
-  { id: '3', name: 'Silk Scarf', description: '100% pure silk', price: 75.00, imageUrl: 'https://placehold.co/600x600', category: 'Fashion', stock: 25 },
-  { id: '4', name: 'Vitamin C Serum', description: 'Brightens and evens skin tone', price: 45.00, imageUrl: 'https://placehold.co/600x600', category: 'Beauty', stock: 40 },
-  { id: '5', name: 'Smartwatch', description: 'Track your fitness and notifications', price: 249.99, imageUrl: 'https://placehold.co/600x600', category: 'Electronics', stock: 20 },
-  { id: '6', name: 'Artisanal Chocolate Bar', description: '70% dark chocolate with sea salt', price: 8.99, imageUrl: 'https://placehold.co/600x600', category: 'Food', stock: 100 },
-  { id: '7', name: 'Leather Handbag', description: 'Genuine leather with gold hardware', price: 320.00, imageUrl: 'https://placehold.co/600x600', category: 'Fashion', stock: 10 },
-  { id: '8', name: 'Hydrating Face Mask', description: 'For a glowing complexion', price: 22.00, imageUrl: 'https://placehold.co/600x600', category: 'Beauty', stock: 60 },
+  { id: '1', name: 'Wireless Headphones', description: 'High-fidelity sound', price: 199.99, imageUrls: ['https://placehold.co/600x600', 'https://placehold.co/600x600.png?text=Side', 'https://placehold.co/600x600.png?text=Top'], category: 'Electronics', stock: 15 },
+  { id: '2', name: 'Organic Green Tea', description: 'Fresh and aromatic', price: 12.50, imageUrls: ['https://placehold.co/600x600'], category: 'Food', stock: 50 },
+  { id: '3', name: 'Silk Scarf', description: '100% pure silk', price: 75.00, imageUrls: ['https://placehold.co/600x600'], category: 'Fashion', stock: 25 },
+  { id: '4', name: 'Vitamin C Serum', description: 'Brightens and evens skin tone', price: 45.00, imageUrls: ['https://placehold.co/600x600'], category: 'Beauty', stock: 40 },
+  { id: '5', name: 'Smartwatch', description: 'Track your fitness and notifications', price: 249.99, imageUrls: ['https://placehold.co/600x600'], category: 'Electronics', stock: 20 },
+  { id: '6', name: 'Artisanal Chocolate Bar', description: '70% dark chocolate with sea salt', price: 8.99, imageUrls: ['https://placehold.co/600x600'], category: 'Food', stock: 100 },
+  { id: '7', name: 'Leather Handbag', description: 'Genuine leather with gold hardware', price: 320.00, imageUrls: ['https://placehold.co/600x600'], category: 'Fashion', stock: 10 },
+  { id: '8', name: 'Hydrating Face Mask', description: 'For a glowing complexion', price: 22.00, imageUrls: ['https://placehold.co/600x600'], category: 'Beauty', stock: 60 },
 ];
 
 export const orders: Order[] = [

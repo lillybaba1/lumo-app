@@ -72,7 +72,7 @@ export default function CartPage() {
                       {items.map(({ product, quantity }) => (
                         <TableRow key={product.id}>
                           <TableCell>
-                            <Image src={product.imageUrl} alt={product.name} width={80} height={80} className="rounded-md" data-ai-hint={`${product.category} product`} />
+                            <Image src={product.imageUrls[0]} alt={product.name} width={80} height={80} className="rounded-md" data-ai-hint={`${product.category} product`} />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
                           <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>

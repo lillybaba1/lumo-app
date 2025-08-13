@@ -167,7 +167,7 @@ export default function ProductsPage() {
               <TableRow key={product.id}>
                 <TableCell>
                   <Image
-                    src={product.imageUrl}
+                    src={product.imageUrls[0]}
                     alt={product.name}
                     width={50}
                     height={50}
