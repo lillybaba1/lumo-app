@@ -1,9 +1,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/hooks/use-auth";
 
 // This function can be marked `async` if using `await` inside
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const isAuthed = !!req.cookies.get("session")?.value;
   const { pathname } = req.nextUrl;
 
@@ -19,19 +18,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
   
-  if (isAuthed && pathname.startsWith('/admin')) {
-    // We can't check role here because middleware can't access the database.
-    // Role-based access control will be handled in the AdminLayout component.
-    // Just verify the session is valid.
-    const user = await getCurrentUser();
-    if (!user) {
-       const url = req.nextUrl.clone(); 
-       url.pathname = "/login";
-       return NextResponse.redirect(url);
-    }
-  }
-
-
   return NextResponse.next();
 }
 
