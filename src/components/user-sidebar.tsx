@@ -56,16 +56,16 @@ export default async function UserSidebar() {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    {user?.role === 'admin' && (
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Admin">
-                                <Link href="/admin/dashboard">
-                                    <User />
-                                    <span>Admin</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    )}
+                    
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Admin">
+                            <Link href="/admin/dashboard">
+                                <User />
+                                <span>Admin</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    
                  </SidebarGroup>
 
             </SidebarMenu>
