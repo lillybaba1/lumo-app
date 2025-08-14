@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
 
+// This route is now primarily for session creation after signup.
+// Login uses a server action.
 export async function POST(req: Request) {
   try {
     const { idToken } = await req.json();

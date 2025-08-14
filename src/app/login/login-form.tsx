@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebaseClient';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { loginUser } from '@/services/authService';
 
 
 export default function LoginForm() {
@@ -28,20 +29,15 @@ export default function LoginForm() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const idToken = await userCredential.user.getIdToken();
 
-        const res = await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
+        const result = await loginUser(idToken);
 
-        if (res.ok) {
+        if (result.success) {
             // Hard redirect to ensure RSC reads the new cookie
             window.location.assign('/');
         } else {
-            const errorData = await res.json();
              toast({
                 title: 'Login Failed',
-                description: errorData.error || 'Could not create session.',
+                description: result.message || 'Could not create session.',
                 variant: 'destructive',
             });
         }

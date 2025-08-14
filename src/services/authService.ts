@@ -6,6 +6,7 @@ import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAd
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 import { doc, getDoc } from 'firebase/firestore';
+import { cookies } from 'next/headers';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
@@ -40,6 +41,37 @@ export async function createUser(email: string, password: string, name: string):
       return { success: false, message: 'An account with this email already exists.' };
     }
     return { success: false, message: error.message || 'An unknown error occurred during signup.' };
+  }
+}
+
+
+export async function loginUser(idToken: string): Promise<{ success: boolean; message?: string }> {
+  if (!isFirebaseAdminInitialized || !authAdmin) {
+    const message = "Authentication is not available. Please configure Firebase Admin SDK.";
+    return { success: false, message };
+  }
+
+  try {
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+    const decodedIdToken = await authAdmin.verifyIdToken(idToken, true);
+
+    if (new Date().getTime() / 1000 - decodedIdToken.auth_time < 5 * 60) {
+      const sessionCookie = await authAdmin.createSessionCookie(idToken, { expiresIn });
+      cookies().set("session", sessionCookie, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: expiresIn / 1000,
+      });
+      revalidatePath('/', 'layout');
+      return { success: true };
+    } else {
+      return { success: false, message: "Recent sign-in required." };
+    }
+  } catch (error: any) {
+    console.error("Login user error:", error);
+    return { success: false, message: "Failed to create session." };
   }
 }
 
