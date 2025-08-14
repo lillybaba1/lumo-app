@@ -1,20 +1,7 @@
-<svg
-  width="48"
-  height="48"
-  viewBox="0 0 48 48"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <rect width="48" height="48" rx="8" fill="hsl(258 100% 85%)" />
-  <text
-    x="50%"
-    y="50%"
-    dominant-baseline="central"
-    text-anchor="middle"
-    font-family="Belleza, sans-serif"
-    font-size="28"
-    fill="hsl(260 100% 25%)"
-  >
-    L
-  </text>
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 24C10 31.732 16.268 38 24 38C31.732 38 38 31.732 38 24" stroke="#785549" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 24H44" stroke="#2c2c2c" stroke-width="4" stroke-linecap="round"/>
+<path d="M24 6L10 24H38L24 6Z" fill="#A47B6F" stroke="#785549" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14 24L24 9L34 24" stroke="#785549" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 24L24 15L29 24" stroke="#785549" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
