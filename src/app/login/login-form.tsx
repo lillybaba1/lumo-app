@@ -73,7 +73,7 @@ export default function LoginForm() {
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   {error}
-                </AlerdDescription>
+                </AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
