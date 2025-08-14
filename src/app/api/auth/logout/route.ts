@@ -11,8 +11,8 @@ export async function POST() {
   // Clear the session cookie
   cookies().set(COOKIE_NAME, "", { 
       httpOnly: true, 
-      secure: process.env.NODE_ENV === "production", 
-      sameSite: "lax", 
+      secure: true,
+      sameSite: 'none',
       path: "/", 
       maxAge: 0 
   });

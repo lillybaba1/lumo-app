@@ -16,8 +16,8 @@ export async function POST(req: Request) {
     name: COOKIE_NAME,
     value: sessionCookie,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // DO NOT set Secure on localhost
-    sameSite: 'lax',
+    secure: true, 
+    sameSite: 'none',
     path: '/',
     maxAge: Math.floor(expiresIn / 1000),
   });
@@ -30,8 +30,8 @@ export async function DELETE() {
     name: process.env.FIREBASE_COOKIE_NAME || 'session',
     value: '',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/',
     maxAge: 0,
   });

@@ -41,6 +41,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                         alt={`${product.name} - Image ${index + 1}`}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         unoptimized
                       />
                     </div>
