@@ -3,18 +3,19 @@
 
 import { cookies } from "next/headers";
 import { authAdmin, dbAdmin } from "@/lib/firebaseAdmin";
-import { DecodedIdToken } from "firebase-admin/auth";
+import type { DecodedIdToken } from "firebase-admin/auth";
 
 export interface AuthenticatedUser extends DecodedIdToken {
     role?: 'admin' | 'customer';
 }
 
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
-  const sessionCookie = (cookies().get("session")?.value) || "";
-  if (!sessionCookie) return null;
+  const jar = await cookies(); // Next 15 requires await
+  const session = jar.get(process.env.FIREBASE_COOKIE_NAME || 'session')?.value || '';
+  if (!session) return null;
   
   try {
-    const decodedClaims = await authAdmin.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await authAdmin.verifySessionCookie(session, true);
     
     // Get user role from Firestore
     const userDoc = await dbAdmin.collection('users').doc(decodedClaims.uid).get();

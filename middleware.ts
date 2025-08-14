@@ -1,34 +1,42 @@
 
-import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "./src/hooks/use-auth";
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export const runtime = "nodejs";
+const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
 
-// This function can be marked `async` if using `await` inside
-export async function middleware(req: NextRequest) {
-  const user = await getCurrentUser();
-  const { pathname } = req.nextUrl;
+const PUBLIC_PATHS = [
+  '/', '/login', '/signup', '/favicon.ico',
+  '/_next', '/images', '/api/session' // allow login API
+];
 
-  // If user is logged in
-  if (user) {
-    // and tries to access login or signup, redirect to home
-    if (pathname === '/login' || pathname === '/signup') {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
-    // and is not an admin but tries to access admin routes, redirect to home
-    if (pathname.startsWith('/admin') && user.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
+function isPublic(path: string) {
+  // Allow product detail pages and static pages to be public
+  if (path.startsWith('/products/') || path.startsWith('/pages/')) {
+    return true;
   }
-  // If user is not logged in and tries to access admin routes, redirect to login
-  else if (pathname.startsWith('/admin')) {
-     return NextResponse.redirect(new URL('/login', req.url));
+  return PUBLIC_PATHS.some(p => path === p || path.startsWith(p + '/'));
+}
+function needsAuth(path: string) {
+  return path.startsWith('/admin') || path.startsWith('/account');
+}
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const hasSession = req.cookies.has(COOKIE_NAME);
+
+  if ((pathname === '/login' || pathname === '/signup') && hasSession) {
+    const url = req.nextUrl.clone(); url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  if (needsAuth(pathname) && !hasSession && !isPublic(pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
-export const config = {
-  matcher: ['/admin/:path*', '/login', '/signup'],
-};
+export const config = { matcher: ['/((?!api/health|_next/static|favicon.ico).*)'] };

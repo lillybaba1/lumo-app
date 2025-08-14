@@ -2,60 +2,54 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/lib/firebaseClient';
+import { ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { loginUser } from '@/services/authService';
-
+import { auth } from '@/lib/firebaseClient';
 
 export default function LoginForm() {
-  const router = useRouter();
-  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/';
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const idToken = await userCredential.user.getIdToken();
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await cred.user.getIdToken(true);
 
-        const result = await loginUser(idToken);
+      const r = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin', // critical
+        body: JSON.stringify({ idToken }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Failed to set session');
 
-        if (result.success) {
-            // Hard redirect to ensure RSC reads the new cookie
-            window.location.assign('/');
-        } else {
-             toast({
-                title: 'Login Failed',
-                description: result.message || 'Could not create session.',
-                variant: 'destructive',
-            });
-        }
-    } catch (error: any) {
-       console.error("Login failed:", error);
-       let errorMessage = 'An unknown error occurred. Please try again.';
-       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      // Hard reload so middleware/server see the new cookie
+      window.location.href = next;
+    } catch (e: any) {
+      let errorMessage = 'An unknown error occurred. Please try again.';
+       if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
            errorMessage = 'Invalid email or password.';
+       } else if (e.message) {
+           errorMessage = e.message;
        }
-       toast({
-           title: 'Login Failed',
-           description: errorMessage,
-           variant: 'destructive',
-       });
-    } finally {
+      setError(errorMessage);
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -65,7 +59,7 @@ export default function LoginForm() {
             </Button>
         </div>
       <Card className="w-full max-w-sm">
-        <form onSubmit={handleLogin}>
+        <form onSubmit={onSubmit}>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
                  <ShoppingBag className="h-8 w-8 text-primary" />
@@ -74,6 +68,14 @@ export default function LoginForm() {
             <CardDescription>Welcome back! Please log in to your account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  {error}
+                </AlerdDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="you@lumo.com" required value={email} onChange={e => setEmail(e.target.value)} />

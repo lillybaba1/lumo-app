@@ -1,40 +1,39 @@
 
-import { NextResponse } from "next/server";
-import { authAdmin } from "@/lib/firebaseAdmin";
-import { revalidatePath } from "next/cache";
+import { NextResponse } from 'next/server';
+import { authAdmin } from '@/lib/firebaseAdmin';
 
-export const runtime = "nodejs";
+const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
 
-// This route is now primarily for session creation after signup.
-// Login uses a server action.
 export async function POST(req: Request) {
-  try {
-    const { idToken } = await req.json();
-    if (!idToken) {
-      return NextResponse.json({ error: "Missing idToken" }, { status: 400 });
-    }
+  const { idToken } = await req.json();
+  if (!idToken) return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
 
-    // Optional: verify token to enforce only your project
-    await authAdmin.verifyIdToken(idToken);
+  const expiresIn = 5 * 24 * 60 * 60 * 1000; // 5 days
+  const sessionCookie = await authAdmin.createSessionCookie(idToken, { expiresIn });
 
-    const expiresIn = 1000 * 60 * 60 * 24 * 5; // 5 days
-    const sessionCookie = await authAdmin.createSessionCookie(idToken, { expiresIn });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set({
+    name: COOKIE_NAME,
+    value: sessionCookie,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // DO NOT set Secure on localhost
+    sameSite: 'lax',
+    path: '/',
+    maxAge: Math.floor(expiresIn / 1000),
+  });
+  return res;
+}
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set("session", sessionCookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: expiresIn / 1000,
-    });
-    
-    // Revalidate the layout to ensure the new user state is picked up
-    revalidatePath('/', 'layout');
-
-    return res;
-  } catch (e: any) {
-    console.error("Session route error:", e);
-    return NextResponse.json({ error: e?.message ?? "session failed" }, { status: 500 });
-  }
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set({
+    name: process.env.FIREBASE_COOKIE_NAME || 'session',
+    value: '',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+  return res;
 }
