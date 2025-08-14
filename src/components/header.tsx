@@ -1,13 +1,14 @@
+
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, User } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { SidebarTrigger } from "./ui/sidebar";
 
-export default function Header() {
+export default function Header({ children }: { children: React.ReactNode }) {
   const { state } = useCart();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -23,12 +24,7 @@ export default function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">
-                <User className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Login</span>
-              </Link>
-            </Button>
+            {children}
             <Button variant="outline" asChild className="relative">
               <Link href="/cart">
                 <ShoppingBag className="h-4 w-4 md:mr-2" />

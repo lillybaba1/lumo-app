@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -10,6 +9,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { getTheme } from '@/app/admin/appearance/actions';
 import { hexToHsl } from '@/lib/utils';
+import AuthMenu from '@/components/auth-menu';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -57,7 +57,9 @@ export default async function RootLayout({
         <CartProvider>
           <SidebarProvider>
             <div className="flex min-h-screen flex-col">
-              <Header />
+              <Header>
+                <AuthMenu />
+              </Header>
               <div className="flex flex-1">
                 <UserSidebar />
                 <main className="flex-1">
