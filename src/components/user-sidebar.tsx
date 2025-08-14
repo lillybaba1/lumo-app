@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Home, ShoppingCart, User, Tag, Compass } from 'lucide-react';
+import { Home, ShoppingCart, User, Tag, Compass, UserCog } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { getCategories } from '@/services/productService';
 import { getCurrentUser } from '@/hooks/use-auth';
@@ -57,14 +57,16 @@ export default async function UserSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Admin">
-                            <Link href="/admin/dashboard">
-                                <User />
-                                <span>Admin</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {user?.role === 'admin' && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Admin">
+                                <Link href="/admin/dashboard">
+                                    <UserCog />
+                                    <span>Admin</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
                     
                  </SidebarGroup>
 
