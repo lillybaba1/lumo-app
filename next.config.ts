@@ -26,6 +26,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-};
+  webpack: (config, { isServer, nextRuntime }) => {
+    // Only add this rule for the edge runtime
+    if (nextRuntime === 'edge') {
+      config.experiments = {
+        ...config.experiments,
+        asyncWebAssembly: true,
+      };
 
+      config.module.rules.push({
+        test: /\.wasm$/,
+        type: 'webassembly/async',
+      });
+    }
+    return config;
+  },
+};
 export default nextConfig;
