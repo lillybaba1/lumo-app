@@ -9,8 +9,10 @@
  * - ShoppingAssistantOutput - The return type for the shoppingAssistant function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+// Comment out genkit and ai imports as they rely on Node.js modules
+// import {ai} from '@/ai/genkit';
+// import {z} from 'genkit';
+import { z } from 'zod'; // Use zod directly as it's Edge compatible
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -28,35 +30,8 @@ const ShoppingAssistantOutputSchema = z.object({
 });
 export type ShoppingAssistantOutput = z.infer<typeof ShoppingAssistantOutputSchema>;
 
+// Temporary stub for Cloudflare Edge build
 export async function shoppingAssistant(input: ShoppingAssistantInput): Promise<ShoppingAssistantOutput> {
-  return shoppingAssistantFlow(input);
+ return { reply: "Assistant disabled on Cloudflare Edge build for now." };
 }
 
-const shoppingAssistantPrompt = ai.definePrompt({
-  name: 'shoppingAssistantPrompt',
-  input: {schema: ShoppingAssistantInputSchema},
-  output: {schema: ShoppingAssistantOutputSchema},
-  prompt: `You are an AI shopping assistant. Your goal is to help users with their shopping-related tasks.
-  Keep your responses concise and helpful.
-
-  Here is the conversation history:
-  {{#each history}}
-    {{role}}: {{content}}
-  {{/each}}
-
-  Answer the following question based on the history:
-  User: {{query}}
-  Assistant:`,
-});
-
-const shoppingAssistantFlow = ai.defineFlow(
-  {
-    name: 'shoppingAssistantFlow',
-    inputSchema: ShoppingAssistantInputSchema,
-    outputSchema: ShoppingAssistantOutputSchema,
-  },
-  async input => {
-    const {output} = await shoppingAssistantPrompt(input);
-    return output!;
-  }
-);

@@ -6,10 +6,11 @@ import { Order } from '@/lib/types';
 import { orders as mockOrders } from '@/lib/mock-data';
 
 export async function getOrders(): Promise<Order[]> {
-  if (!isFirebaseAdminInitialized || !dbAdmin) {
-    return mockOrders;
-  }
-  try {
+  // Temporarily stubbed for Cloudflare Edge compatibility
+  return [];
+
+  /*
+  if (isFirebaseAdminInitialized() && dbAdmin) {
     const ordersCol = dbAdmin.collection('orders');
     const orderSnapshot = await ordersCol.get();
     if (orderSnapshot.empty) {
