@@ -1,7 +1,7 @@
 
 'use server';
 
-import { auth, db } from '@/lib/firebaseClient';
+import { db, auth } from '@/lib/firebaseClient';
 import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';

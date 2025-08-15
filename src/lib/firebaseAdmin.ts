@@ -5,11 +5,11 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 import { getStorage, Bucket } from 'firebase-admin/storage';
 import { firebaseConfig } from './firebaseConfig';
 
-if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK cannot be initialized.");
+if (!process.env.SERVICE_ACCOUNT_JSON) {
+  throw new Error("SERVICE_ACCOUNT_JSON is not set. Firebase Admin SDK cannot be initialized.");
 }
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
 
 const appName = 'firebase-admin-app-lumo';
 
