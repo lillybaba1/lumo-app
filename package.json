@@ -6,18 +6,12 @@
 
 "scripts": {
   "dev": "next dev --turbopack",
-  "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-  "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-  "build": "npx @cloudflare/next-on-pages@1",
+  "build": "next build",
   "start": "next start",
-  "lint": "next lint",
-  "typecheck": "tsc --noEmit",
-  "postinstall": "patch-package",
-  "deploy": "npx wrangler pages deploy .vercel/output/static"
+  "postinstall": "patch-package"
+
 },
-
-
-  "dependencies": {
+"dependencies": {
     "@genkit-ai/firebase": "^1.16.1",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.16.1",
