@@ -1,4 +1,6 @@
 
+export const runtime = 'edge';
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -20,7 +22,9 @@ export async function POST(req: Request) {
   const { sameSite, secure } = cookiePolicy(new URL(req.url));
   
   // Clear the session cookie
-  cookies().set(COOKIE_NAME, "", { 
+  (await
+    // Clear the session cookie
+    cookies()).set(COOKIE_NAME, "", { 
       httpOnly: true, 
       secure,
       sameSite,

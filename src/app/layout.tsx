@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+export const runtime = 'edge';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
