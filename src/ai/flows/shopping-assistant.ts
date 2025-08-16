@@ -1,18 +1,6 @@
-
 'use server';
 
-/**
- * @fileOverview AI shopping assistant flow.
- *
- * - shoppingAssistant - A function that takes a user query and returns an answer from the AI shopping assistant.
- * - ShoppingAssistantInput - The input type for the shoppingAssistant function.
- * - ShoppingAssistantOutput - The return type for the shoppingAssistant function.
- */
-
-// Comment out genkit and ai imports as they rely on Node.js modules
-// import {ai} from '@/ai/genkit';
-// import {z} from 'genkit';
-import { z } from 'zod'; // Use zod directly as it's Edge compatible
+import { z } from 'zod';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -30,8 +18,9 @@ const ShoppingAssistantOutputSchema = z.object({
 });
 export type ShoppingAssistantOutput = z.infer<typeof ShoppingAssistantOutputSchema>;
 
-// Temporary stub for Cloudflare Edge build
-export async function shoppingAssistant(input: ShoppingAssistantInput): Promise<ShoppingAssistantOutput> {
- return { reply: "Assistant disabled on Cloudflare Edge build for now." };
+// Edge-safe stub for now
+export async function shoppingAssistant(
+  _input: ShoppingAssistantInput
+): Promise<ShoppingAssistantOutput> {
+  return { answer: 'Assistant disabled on Cloudflare Edge build for now.' };
 }
-
