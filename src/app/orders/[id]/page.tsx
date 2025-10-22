@@ -1,13 +1,18 @@
 import { getOrderById } from '@/services/orderService';
+import { getPaymentByOrder } from '@/services/paymentService';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Package, MapPin, CreditCard, Calendar, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const order = await getOrderById(id);
+  const [order, payment] = await Promise.all([
+    getOrderById(id),
+    getPaymentByOrder(id),
+  ]);
 
   if (!order) {
     notFound();
@@ -182,6 +187,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   {order.paymentStatus}
                 </Badge>
               </div>
+              {payment && (
+                <>
+                  <Separator className="my-2" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Payment Record</p>
+                    <Link href="/payments" className="text-primary hover:underline text-sm">
+                      View Payment Details
+                    </Link>
+                  </div>
+                  {payment.transactionId && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Transaction ID</p>
+                      <p className="font-mono text-sm">{payment.transactionId}</p>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

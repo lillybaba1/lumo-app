@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Separator } from '@/components/ui/separator';
 import { getSettings } from '../admin/settings/actions';
 import { createOrder } from '@/services/orderService';
-import { validateCoupon } from '@/services/couponService';
+import { validateCoupon, incrementCouponUsage } from '@/services/couponService';
+import { initiateWaveMoneyPayment, processCashOnDelivery } from '@/services/paymentService';
 import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2 } from 'lucide-react';
@@ -118,6 +119,27 @@ export default function CheckoutPage() {
       };
 
       const order = await createOrder(orderData);
+
+      // Increment coupon usage if coupon was applied
+      if (appliedCoupon) {
+        await incrementCouponUsage(appliedCoupon.code);
+      }
+
+      // Create payment record
+      const paymentData = {
+        orderId: order.id,
+        amount: total,
+        currency: settings?.currency || 'USD',
+        paymentMethod: paymentMethod,
+        customerEmail: email,
+        customerName: `${firstName} ${lastName}`,
+      };
+
+      if (paymentMethod === 'Wave Money') {
+        await initiateWaveMoneyPayment(paymentData);
+      } else {
+        await processCashOnDelivery(paymentData);
+      }
 
       toast({
         title: "Order Placed Successfully!",
