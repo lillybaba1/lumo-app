@@ -3,8 +3,6 @@ import { getPages } from '@/app/admin/pages/actions';
 import { notFound } from 'next/navigation';
 import * as defaultPagesData from '@/data/pages.json';
 
-export const runtime = 'edge';
-
 export default async function StaticPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const pages = await getPages() ?? defaultPagesData;
