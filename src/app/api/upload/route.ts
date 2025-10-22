@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { bucket } from "@/lib/firebaseAdmin";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 export async function POST(req: Request) {
   console.log("POST /api/upload called");

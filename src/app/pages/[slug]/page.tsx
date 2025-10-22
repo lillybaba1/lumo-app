@@ -3,16 +3,12 @@ import { getPages } from '@/app/admin/pages/actions';
 import { notFound } from 'next/navigation';
 import * as defaultPagesData from '@/data/pages.json';
 
-export async function generateStaticParams() {
-  const pages = await getPages() ?? defaultPagesData;
-  return Object.keys(pages).map((slug) => ({
-    slug,
-  }));
-}
+export const runtime = 'edge';
 
-export default async function StaticPage({ params }: { params: { slug: string } }) {
+export default async function StaticPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const pages = await getPages() ?? defaultPagesData;
-  const page = pages[params.slug];
+  const page = pages[slug];
 
   if (!page) {
     notFound();

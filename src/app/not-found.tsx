@@ -1,4 +1,4 @@
-// Using default Node.js runtime for Firebase compatibility
+export const runtime = 'edge';
 export const dynamic = 'force-static';
 
 export default function NotFound() {
