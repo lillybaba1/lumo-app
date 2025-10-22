@@ -13,6 +13,7 @@ import { ProductReviews } from '@/components/product-reviews';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AddToCartButton from './add-to-cart-button';
+import { WishlistButton } from '@/components/wishlist-button';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
     if (!currencyCode) return '$';
@@ -140,11 +141,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           <Separator />
 
-          {/* Add to Cart */}
-          <div className="pt-4">
-            <AddToCartButton product={product} />
+          {/* Add to Cart & Wishlist */}
+          <div className="pt-4 space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <AddToCartButton product={product} />
+              </div>
+              <WishlistButton
+                productId={product.id}
+                productName={product.name}
+                currentUserId={currentUserId}
+                isInWishlist={false}
+                variant="button"
+                size="default"
+              />
+            </div>
             {isOutOfStock && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground">
                 This product is currently out of stock. Check back later!
               </p>
             )}
