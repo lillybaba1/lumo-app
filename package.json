@@ -2,16 +2,16 @@
   "name": "nextn",
   "version": "0.1.0",
   "private": true,
-  
-
-"scripts": {
-  "dev": "next dev --turbopack",
-  "build": "next build",
-  "start": "next start",
-  "postinstall": "patch-package"
-
-},
-"dependencies": {
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "patch-package",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "npm run pages:build && wrangler pages deploy",
+    "pages:dev": "npx @cloudflare/next-on-pages --experimental-minify"
+  },
+  "dependencies": {
     "@genkit-ai/firebase": "^1.16.1",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.16.1",
@@ -60,13 +60,15 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "genkit-cli": "^1.14.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vercel": "^47.0.4"
   },
   "engines": {
     "node": "20"

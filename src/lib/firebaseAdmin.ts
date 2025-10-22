@@ -33,8 +33,8 @@ export const adminDb = () => getAdminApp();
 export const adminStorage = () => getAdminApp();
 export const adminBucket = () => getAdminApp();
 
-export const authAdmin = getAdminApp();
-export const dbAdmin = getAdminApp();
-export const bucket = getAdminApp();
+export const authAdmin = null;
+export const dbAdmin = null;
+export const bucket = null;
 
 export const isFirebaseAdminInitialized = () => false;

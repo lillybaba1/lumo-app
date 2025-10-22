@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import { NextResponse } from 'next/server';
 
 const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME ?? 'session';
