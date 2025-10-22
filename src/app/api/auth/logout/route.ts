@@ -1,5 +1,5 @@
 
-export const runtime = 'edge';
+// Using default Node.js runtime for Firebase compatibility
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
