@@ -1,12 +1,17 @@
 
 import { notFound } from 'next/navigation';
 import { getProductById } from '@/services/productService';
+import { getReviewsByProduct, getProductStats, getUserReviewForProduct } from '@/services/reviewService';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { getSettings } from '@/app/admin/settings/actions';
+import { StarRating } from '@/components/star-rating';
+import { ProductReviews } from '@/components/product-reviews';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import AddToCartButton from './add-to-cart-button';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
@@ -15,27 +20,40 @@ async function getCurrencySymbol(currencyCode: string | undefined) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
 }
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const product = await getProductById(id);
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [product, reviews, stats, settings] = await Promise.all([
+    getProductById(id),
+    getReviewsByProduct(id),
+    getProductStats(id),
+    getSettings(),
+  ]);
 
   if (!product) {
     notFound();
   }
-  
-  const settings = await getSettings();
+
   const currencySymbol = await getCurrencySymbol(settings?.currency);
+
+  // TODO: Get current user info from auth context
+  const currentUserId = undefined;
+  const currentUserName = undefined;
+  const userReview = currentUserId ? await getUserReviewForProduct(currentUserId, id) : null;
+
+  const isLowStock = product.stock > 0 && product.stock <= 5;
+  const isOutOfStock = product.stock === 0;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        {/* Product Images */}
         <div>
           <Card className="overflow-hidden">
             <Carousel className="w-full">
               <CarouselContent>
                 {product.imageUrls.map((url, index) => (
                   <CarouselItem key={index}>
-                    <div className="aspect-square relative">
+                    <div className="aspect-square relative bg-muted">
                       <Image
                         src={url}
                         alt={`${product.name} - Image ${index + 1}`}
@@ -43,30 +61,130 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         unoptimized
+                        priority={index === 0}
                       />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4" />
-              <CarouselNext className="right-4" />
+              {product.imageUrls.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-4" />
+                  <CarouselNext className="right-4" />
+                </>
+              )}
             </Carousel>
           </Card>
         </div>
-        
-        <div className="flex flex-col">
-          <h1 className="text-4xl font-headline font-bold mb-4">{product.name}</h1>
-          <p className="text-2xl font-semibold text-primary mb-6">{currencySymbol}{product.price.toFixed(2)}</p>
-          <div className="prose dark:prose-invert max-w-none mb-6">
-            <p>{product.description}</p>
+
+        {/* Product Info */}
+        <div className="flex flex-col space-y-6">
+          {/* Category Badge */}
+          <div>
+            <Badge variant="secondary" className="mb-2">
+              {product.category}
+            </Badge>
           </div>
-          <div className="mt-auto pt-6">
-            <div className="flex items-center gap-4">
-              <AddToCartButton product={product} />
-               <p className="text-sm text-muted-foreground">{product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</p>
+
+          {/* Product Name */}
+          <div>
+            <h1 className="text-4xl font-headline font-bold mb-3">{product.name}</h1>
+
+            {/* Rating */}
+            {stats.totalReviews > 0 && (
+              <div className="flex items-center gap-2">
+                <StarRating rating={stats.averageRating} size="md" showNumber />
+                <span className="text-sm text-muted-foreground">
+                  ({stats.totalReviews} {stats.totalReviews === 1 ? 'review' : 'reviews'})
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Price */}
+          <div>
+            <p className="text-3xl font-bold text-primary">{currencySymbol}{product.price.toFixed(2)}</p>
+          </div>
+
+          {/* Description */}
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Description</h2>
+            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+          </div>
+
+          <Separator />
+
+          {/* Stock Status */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-muted-foreground" />
+              <span className="font-medium">Availability:</span>
+              {isOutOfStock ? (
+                <Badge variant="destructive">Out of Stock</Badge>
+              ) : isLowStock ? (
+                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
+                  Only {product.stock} left!
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400">
+                  In Stock ({product.stock} available)
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TruckIcon className="h-4 w-4" />
+              <span>Free shipping on orders over {currencySymbol}50</span>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Add to Cart */}
+          <div className="pt-4">
+            <AddToCartButton product={product} />
+            {isOutOfStock && (
+              <p className="text-sm text-muted-foreground mt-2">
+                This product is currently out of stock. Check back later!
+              </p>
+            )}
+          </div>
+
+          {/* Additional Info */}
+          <Card className="bg-muted/50">
+            <CardContent className="pt-6">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">SKU:</span>
+                  <span className="font-medium">{product.id.substring(0, 8).toUpperCase()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Category:</span>
+                  <span className="font-medium">{product.category}</span>
+                </div>
+                {stats.totalSales > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Sales:</span>
+                    <span className="font-medium">{stats.totalSales}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-4xl mx-auto">
+        <ProductReviews
+          productId={id}
+          reviews={reviews}
+          averageRating={stats.averageRating}
+          totalReviews={stats.totalReviews}
+          currentUserId={currentUserId}
+          currentUserName={currentUserName}
+          userHasReviewed={!!userReview}
+        />
       </div>
     </div>
   );
