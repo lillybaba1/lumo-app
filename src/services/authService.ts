@@ -1,6 +1,5 @@
 
-'use server';
-export const runtime = 'nodejs';
+ 'use server';
 
 import { db, auth } from '@/lib/firebaseClient';
 import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';

@@ -1,7 +1,5 @@
 
-'use server';
-
-export const runtime = 'nodejs';
+ 'use server';
 
 import { dbAdmin, isFirebaseAdminInitialized } from './firebaseAdmin';
 import { products as mockProducts, categories as mockCategories } from './mock-data';

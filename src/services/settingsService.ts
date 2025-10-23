@@ -1,8 +1,6 @@
 
 'use server';
 
-export const runtime = 'nodejs';
-
 import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 
 interface Settings {
