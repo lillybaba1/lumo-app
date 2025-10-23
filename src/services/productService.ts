@@ -3,14 +3,7 @@
 // Note: avoid importing the client-only `db` at module top-level which
 // would throw on server runtime. We'll dynamically use either the
 // Admin SDK (server) or the client SDK (browser) inside functions.
-import {
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  Timestamp,
-} from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { Product, Category } from '@/lib/types';
 import { products as mockProducts, categories as mockCategories } from '@/lib/mock-data';
 
@@ -40,7 +33,7 @@ export async function getProducts(): Promise<Product[]> {
         const snap = await adminDb.collection('products').orderBy('name').get();
         if (!snap || snap.empty) return mockProducts;
         return snap.docs.map((d: any) => {
-          const data = serializeTimestamps(d.data());
+          const data = serializeTimestamps(d.data() || {});
           const product = { id: d.id, ...data } as Product;
           if (!product.categoryId && typeof product.category === 'string') {
             product.categoryId = product.category.toLowerCase().replace(/\s+/g, '-');
@@ -84,8 +77,8 @@ export async function getProductById(id: string): Promise<Product | null> {
       try {
         const adminDb = dbAdmin();
         const snap = await adminDb.collection('products').doc(id).get();
-        if (!snap.exists) return null;
-        const data = serializeTimestamps(snap.data());
+  if (!snap.exists) return null;
+  const data = serializeTimestamps(snap.data() || {});
         return { id: snap.id, ...data } as Product;
       } catch (adminErr) {
         console.error(`Admin DB error fetching product ${id}:`, adminErr);
@@ -93,13 +86,13 @@ export async function getProductById(id: string): Promise<Product | null> {
       }
     }
 
-    const { getDoc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const ref = doc(db, 'products', id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    const data = serializeTimestamps(snap.data());
+  const { getDoc, doc } = await import('firebase/firestore');
+  const { getClientDb } = await import('@/lib/firebaseClient');
+  const db = getClientDb();
+  const ref = doc(db, 'products', id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = serializeTimestamps(snap.data() || {});
     return { id: snap.id, ...data } as Product;
   } catch (error) {
     console.error(`Failed to fetch product ${id} from Firestore:`, error);
@@ -138,11 +131,21 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function addProduct(product: Omit<Product, 'id'>): Promise<Product> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const adminDb = dbAdmin();
+      const ref = await adminDb.collection('products').add({ ...product, createdAt: new Date() });
+      return { id: ref.id, ...product, imageUrls: product.imageUrls } as Product;
+    }
+
+    const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const ref = await addDoc(collection(db, 'products'), {
       ...product,
       createdAt: serverTimestamp(),
     });
-    return { id: ref.id, ...product, imageUrls: product.imageUrls };
+    return { id: ref.id, ...product, imageUrls: product.imageUrls } as Product;
   } catch (error) {
     console.error('Failed to add product to Firestore:', error);
     throw new Error('Could not save product.');
@@ -152,6 +155,14 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
 export async function updateProduct(product: Product): Promise<void> {
   try {
     const { id, ...rest } = product;
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      await dbAdmin().collection('products').doc(id).set({ ...rest, updatedAt: new Date() }, { merge: true });
+      return;
+    }
+    const { updateDoc, doc, serverTimestamp } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     await updateDoc(doc(db, 'products', id), {
       ...rest,
       updatedAt: serverTimestamp(),
@@ -164,6 +175,14 @@ export async function updateProduct(product: Product): Promise<void> {
 
 export async function deleteProduct(id: string): Promise<void> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      await dbAdmin().collection('products').doc(id).delete();
+      return;
+    }
+    const { deleteDoc, doc } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     await deleteDoc(doc(db, 'products', id));
   } catch (error) {
     console.error(`Failed to delete product ${id} from Firestore:`, error);

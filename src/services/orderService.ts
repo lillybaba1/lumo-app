@@ -136,6 +136,14 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 export async function updateOrder(orderId: string, updates: Partial<Order>): Promise<void> {
   try {
     const { id, ...rest } = updates as any;
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      await dbAdmin().collection('orders').doc(orderId).set({ ...rest, updatedAt: new Date() }, { merge: true });
+      return;
+    }
+    const { updateDoc, doc, serverTimestamp } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     await updateDoc(doc(db, 'orders', orderId), {
       ...rest,
       updatedAt: serverTimestamp(),

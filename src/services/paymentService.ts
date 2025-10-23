@@ -191,11 +191,12 @@ export async function updatePaymentStatus(
       await updateDoc(doc(db, 'payments', id), updates);
     }
 
-    // Update order payment status
+    // Update order payment status (order update only needs orderId + status)
     if (status === 'Completed') {
-      await updateOrderStatus(payment.orderId, 'Processing', 'Paid');
+      await updateOrderStatus(payment.orderId, 'Processing');
     } else if (status === 'Failed') {
-      await updateOrderStatus(payment.orderId, payment.orderId, 'Failed');
+      // Map failed payment to cancelled order
+      await updateOrderStatus(payment.orderId, 'Cancelled');
     }
   } catch (error) {
     console.error(`Failed to update payment status for ${id}:`, error);
@@ -277,8 +278,8 @@ export async function refundPayment(id: string, reason?: string): Promise<void> 
       });
     }
 
-    // Update order status
-    await updateOrderStatus(payment.orderId, 'Cancelled', 'Pending');
+  // Update order status
+  await updateOrderStatus(payment.orderId, 'Cancelled');
   } catch (error) {
     console.error(`Failed to refund payment ${id}:`, error);
     throw new Error('Could not process refund.');

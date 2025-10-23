@@ -1,16 +1,12 @@
+"use server";
 
- 'use server';
-
-import { db, auth } from '@/lib/firebaseClient';
 import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
-import { doc, getDoc } from 'firebase/firestore';
-import { cookies } from 'next/headers';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
-  if (!isFirebaseAdminInitialized() || !dbAdmin || !authAdmin) {
+  if (!isFirebaseAdminInitialized()) {
     return { success: false, message: "User creation is not available. Please configure Firebase Admin SDK." };
   }
   
@@ -46,7 +42,7 @@ export async function createUser(email: string, password: string, name: string):
 
 
 export async function getUsers(): Promise<User[]> {
-  if (!isFirebaseAdminInitialized() || !authAdmin || !dbAdmin) {
+  if (!isFirebaseAdminInitialized()) {
     console.warn("Cannot get users, Firebase Admin not initialized.");
     return [];
   }
@@ -71,7 +67,7 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function deleteUser(uid: string) {
-   if (!isFirebaseAdminInitialized() || !authAdmin || !dbAdmin) {
+   if (!isFirebaseAdminInitialized()) {
     const message = "User deletion is not available. Please configure Firebase Admin SDK.";
     console.error(message);
     return { success: false, message };
@@ -91,32 +87,36 @@ export async function deleteUser(uid: string) {
 }
 
 export async function getUserRole(userId: string): Promise<string | null> {
-    if (!isFirebaseAdminInitialized || !dbAdmin) {
-        // This will be the case in client-side components.
-        // We will need a client-callable wrapper.
-        return null;
+  if (!isFirebaseAdminInitialized()) {
+    // This will be the case in client-side components.
+    // We will need a client-callable wrapper.
+    return null;
+  }
+  try {
+    const userDoc = await dbAdmin().collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      return userDoc.data()?.role || null;
     }
-    try {
-        const userDoc = await dbAdmin.collection('users').doc(userId).get();
-        if (userDoc.exists) {
-            return userDoc.data()?.role || null;
-        }
-        return null;
-    } catch (error) {
-        console.error("Error getting user role:", error);
-        return null;
-    }
+    return null;
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return null;
+  }
 }
 
 // Client-callable function to get role
 export async function getUserRoleClient(userId: string): Promise<string | null> {
     try {
-        const userDocRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            return userDoc.data()?.role || 'customer';
-        }
-        return 'customer';
+    const firestore = await import('firebase/firestore');
+    const { doc, getDoc } = firestore;
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      return userDoc.data()?.role || 'customer';
+    }
+    return 'customer';
     } catch (error) {
         console.error("Error fetching user role on client:", error);
         return 'customer';
