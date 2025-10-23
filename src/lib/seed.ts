@@ -1,6 +1,8 @@
 
 'use server';
 
+export const runtime = 'nodejs';
+
 import { dbAdmin, isFirebaseAdminInitialized } from './firebaseAdmin';
 import { products as mockProducts, categories as mockCategories } from './mock-data';
 import defaultPagesData from '@/data/pages.json';
@@ -16,15 +18,15 @@ const defaultTheme = {
 const defaultPages = defaultPagesData;
 
 export async function seedInitialData() {
-    if (!isFirebaseAdminInitialized || !dbAdmin) {
+    if (!isFirebaseAdminInitialized() || !dbAdmin) {
         // Silently fail if the admin SDK is not available.
         // The console warning in firebaseAdmin.ts is sufficient.
         return;
     }
 
     try {
-        const seedMarkerRef = dbAdmin.collection('internal').doc('seedMarker');
-        const seedMarkerSnap = await seedMarkerRef.get();
+    const seedMarkerRef = dbAdmin().collection('internal').doc('seedMarker');
+    const seedMarkerSnap = await seedMarkerRef.get();
 
         if (seedMarkerSnap.exists) {
             return;
@@ -32,30 +34,30 @@ export async function seedInitialData() {
 
         console.log("Seeding initial data into Firestore...");
 
-        const batch = dbAdmin.batch();
+    const batch = dbAdmin().batch();
 
         // Seed categories
         mockCategories.forEach(category => {
-            const categoryRef = dbAdmin.collection('categories').doc(category.id);
+            const categoryRef = dbAdmin().collection('categories').doc(category.id);
             batch.set(categoryRef, { name: category.name });
         });
 
         // Seed products
         mockProducts.forEach(product => {
-            const productRef = dbAdmin.collection('products').doc(product.id);
+            const productRef = dbAdmin().collection('products').doc(product.id);
             batch.set(productRef, product);
         });
 
         // Seed default theme if it doesn't exist
-        const themeRef = dbAdmin.collection('settings').doc('theme');
+    const themeRef = dbAdmin().collection('settings').doc('theme');
         batch.set(themeRef, defaultTheme);
         
         // Seed default pages if they don't exist
-        const pagesRef = dbAdmin.collection('content').doc('pages');
+    const pagesRef = dbAdmin().collection('content').doc('pages');
         batch.set(pagesRef, defaultPages);
         
         // Set the seed marker
-        batch.set(seedMarkerRef, { seeded: true, timestamp: new Date() });
+    batch.set(seedMarkerRef, { seeded: true, timestamp: new Date() });
         
         await batch.commit();
 

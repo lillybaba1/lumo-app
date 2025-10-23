@@ -1,6 +1,8 @@
 
 'use server';
 
+export const runtime = 'nodejs';
+
 import { cookies } from "next/headers";
 import { authAdmin, dbAdmin } from "@/lib/firebaseAdmin";
 import type { DecodedIdToken } from "firebase-admin/auth";
@@ -15,10 +17,10 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   if (!session) return null;
   
   try {
-    const decodedClaims = await authAdmin.verifySessionCookie(session, true);
-    
-    // Get user role from Firestore
-    const userDoc = await dbAdmin.collection('users').doc(decodedClaims.uid).get();
+  const decodedClaims = await authAdmin().verifySessionCookie(session, true);
+
+  // Get user role from Firestore
+  const userDoc = await dbAdmin().collection('users').doc(decodedClaims.uid).get();
     const role = userDoc.exists ? userDoc.data()?.role : 'customer';
 
     return { ...decodedClaims, role };

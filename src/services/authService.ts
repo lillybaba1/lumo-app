@@ -1,5 +1,6 @@
 
 'use server';
+export const runtime = 'nodejs';
 
 import { db, auth } from '@/lib/firebaseClient';
 import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
@@ -10,21 +11,21 @@ import { cookies } from 'next/headers';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
-  if (!isFirebaseAdminInitialized || !dbAdmin || !authAdmin) {
+  if (!isFirebaseAdminInitialized() || !dbAdmin || !authAdmin) {
     return { success: false, message: "User creation is not available. Please configure Firebase Admin SDK." };
   }
   
   try {
-    const usersSnapshot = await dbAdmin.collection('users').limit(1).get();
+    const usersSnapshot = await dbAdmin().collection('users').limit(1).get();
     const role = usersSnapshot.empty ? 'admin' : 'customer';
 
-    const userRecord = await authAdmin.createUser({
+    const userRecord = await authAdmin().createUser({
       email,
       password,
       displayName: name,
     });
 
-    await dbAdmin.collection('users').doc(userRecord.uid).set({
+    await dbAdmin().collection('users').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email: userRecord.email,
       name: name,
@@ -46,14 +47,14 @@ export async function createUser(email: string, password: string, name: string):
 
 
 export async function getUsers(): Promise<User[]> {
-  if (!isFirebaseAdminInitialized || !authAdmin || !dbAdmin) {
+  if (!isFirebaseAdminInitialized() || !authAdmin || !dbAdmin) {
     console.warn("Cannot get users, Firebase Admin not initialized.");
     return [];
   }
   try {
-    const userRecords = await authAdmin.listUsers();
-    const users: User[] = await Promise.all(userRecords.users.map(async (userRecord) => {
-      const firestoreUserDoc = await dbAdmin.collection('users').doc(userRecord.uid).get();
+    const userRecords = await authAdmin().listUsers();
+    const users: User[] = await Promise.all(userRecords.users.map(async (userRecord: any) => {
+      const firestoreUserDoc = await dbAdmin().collection('users').doc(userRecord.uid).get();
       const firestoreUserData = firestoreUserDoc.data();
       return {
         uid: userRecord.uid,
@@ -71,15 +72,15 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function deleteUser(uid: string) {
-   if (!isFirebaseAdminInitialized || !authAdmin || !dbAdmin) {
+   if (!isFirebaseAdminInitialized() || !authAdmin || !dbAdmin) {
     const message = "User deletion is not available. Please configure Firebase Admin SDK.";
     console.error(message);
     return { success: false, message };
   }
   try {
     // Use the Admin SDK to delete the auth user and their Firestore document
-    await authAdmin.deleteUser(uid);
-    await dbAdmin.collection('users').doc(uid).delete();
+    await authAdmin().deleteUser(uid);
+    await dbAdmin().collection('users').doc(uid).delete();
 
     revalidatePath('/admin/customers');
     
