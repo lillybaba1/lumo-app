@@ -1,5 +1,6 @@
 
 import Link from 'next/link';
+import CategoryLink from '@/components/category-link';
 import { Home, ShoppingCart, User, Tag, Compass, UserCog } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { getCategories } from '@/services/productService';
@@ -37,10 +38,10 @@ export default async function UserSidebar() {
                      {categories.map((category) => (
                         <SidebarMenuItem key={category.id}>
                             <SidebarMenuButton asChild tooltip={category.name}>
-                                 <Link href={`/?category=${category.id}`}>
+                                 <CategoryLink href={`/categories/${category.id}`}>
                                     <Tag />
                                     <span>{category.name}</span>
-                                </Link>
+                                </CategoryLink>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
