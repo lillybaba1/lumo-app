@@ -1,40 +1,107 @@
 import 'server-only';
 
-// import admin from 'firebase-admin';
+/**
+ * Node-only Firebase Admin initializer.
+ * Supports three credential sources (in order):
+ * - FIREBASE_SERVICE_ACCOUNT_JSON (raw JSON string)
+ * - FIREBASE_SERVICE_ACCOUNT_BASE64 (base64-encoded JSON)
+ * - GOOGLE_APPLICATION_CREDENTIALS (file path for ADC)
+ *
+ * This file intentionally refuses to initialize on Edge runtimes.
+ */
+import admin from 'firebase-admin';
 
-// declare global { var __FIREBASE_ADMIN_APP__: admin.app.App | undefined; }
-// import { firebaseConfig } from './firebaseConfig';
-// function readSvcFromEnv(): any | null {
-//   const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-//   const b64  = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-//   const path = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-//   if (json) return JSON.parse(json);
-//   if (b64)  return JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
-//   if (path) return { __path: path };
-//   return null; // none -> use ADC on Firebase
-// }
-
-// function normalizeSvc(raw: any) {
-//   if ((raw as any).__path) return raw;
-//   let privateKey = raw.private_key ?? raw.privateKey;
-//   if (typeof privateKey === 'string' && privateKey.includes('\n')) privateKey = privateKey.replace(/\\n/g, '\n');
-//   const projectId   = raw.project_id   ?? raw.projectId;
-//   const clientEmail = raw.client_email ?? raw.clientEmail;
-//   if (!projectId || !clientEmail || !privateKey) throw new Error('Bad service account');
-//   return { projectId, clientEmail, privateKey };
-// }
-
-export function getAdminApp() {
-  throw new Error('Firebase Admin is not available on Cloudflare Edge runtime.');
+declare global {
+  // eslint-disable-next-line no-var
+  var __FIREBASE_ADMIN_APP__: admin.app.App | undefined;
 }
 
-export const adminAuth = () => getAdminApp();
-export const adminDb = () => getAdminApp();
-export const adminStorage = () => getAdminApp();
-export const adminBucket = () => getAdminApp();
+function readSvcFromEnv(): any | null {
+  const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  const path = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (json) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON contains invalid JSON');
+    }
+  }
+  if (b64) {
+    try {
+      const raw = Buffer.from(b64, 'base64').toString('utf8');
+      return JSON.parse(raw);
+    } catch (e) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 is not valid base64 JSON');
+    }
+  }
+  if (path) return { __path: path };
+  return null; // use ADC when available
+}
 
-export const authAdmin = null;
-export const dbAdmin = null;
-export const bucket = null;
+function normalizeSvc(raw: any) {
+  if ((raw as any).__path) return raw;
+  let privateKey = raw.private_key ?? raw.privateKey;
+  if (typeof privateKey === 'string' && privateKey.includes('\\n')) privateKey = privateKey.replace(/\\n/g, '\n');
+  const projectId = raw.project_id ?? raw.projectId;
+  const clientEmail = raw.client_email ?? raw.clientEmail;
+  if (!projectId || !clientEmail || !privateKey) throw new Error('Bad service account JSON');
+  return { projectId, clientEmail, privateKey };
+}
 
-export const isFirebaseAdminInitialized = () => false;
+export function getAdminApp(): admin.app.App {
+  // Prevent admin SDK usage on Edge runtimes
+  const isEdge = process.env.NEXT_RUNTIME === 'edge' || process.env.CF_PAGES === '1' || process.env.EDGE_RUNTIME === '1';
+  if (isEdge) {
+    throw new Error('Firebase Admin is not available on Edge runtimes. Run admin code in a Node server or serverless function.');
+  }
+
+  if (global.__FIREBASE_ADMIN_APP__) return global.__FIREBASE_ADMIN_APP__;
+
+  const svc = readSvcFromEnv();
+
+  if (svc && (svc as any).__path) {
+    // GOOGLE_APPLICATION_CREDENTIALS is set; let the SDK use ADC
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    global.__FIREBASE_ADMIN_APP__ = admin.app();
+    return global.__FIREBASE_ADMIN_APP__;
+  }
+
+  if (svc) {
+    const normalized = normalizeSvc(svc);
+    const certObj = {
+      projectId: normalized.projectId,
+      clientEmail: normalized.clientEmail,
+      privateKey: normalized.privateKey,
+    };
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(certObj as admin.ServiceAccount),
+        // optional: set storageBucket if needed
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${normalized.projectId}.appspot.com`,
+      });
+    }
+    global.__FIREBASE_ADMIN_APP__ = admin.app();
+    return global.__FIREBASE_ADMIN_APP__;
+  }
+
+  // No explicit credentials, try Application Default Credentials
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  global.__FIREBASE_ADMIN_APP__ = admin.app();
+  return global.__FIREBASE_ADMIN_APP__;
+}
+
+export const adminAuth = () => getAdminApp().auth();
+export const adminDb = () => getAdminApp().firestore();
+export const adminStorage = () => getAdminApp().storage();
+export const adminBucket = () => getAdminApp().storage().bucket();
+
+export const authAdmin = adminAuth;
+export const dbAdmin = adminDb;
+export const bucket = adminBucket;
+
+export const isFirebaseAdminInitialized = () => !!global.__FIREBASE_ADMIN_APP__;

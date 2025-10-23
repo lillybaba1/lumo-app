@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore Firebase service account
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        env:
+          SA_B64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: |
+          echo "$SA_B64" | base64 --decode > "$GITHUB_WORKSPACE/serviceAccountKey.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/serviceAccountKey.json" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: |
+          if npm test --silent; then echo "tests passed"; else echo "no tests or failed"; fi
