@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -64,6 +65,7 @@ export default function HomePageDataContainer() {
 }
 
 function Home({ products, categories, theme }: { products: Product[], categories: Category[], theme: any }) {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name-asc');
@@ -80,6 +82,12 @@ function Home({ products, categories, theme }: { products: Product[], categories
   useEffect(() => {
     setPriceRange([0, maxPrice]);
   }, [maxPrice]);
+
+  // read category from URL params when component mounts or params change
+  useEffect(() => {
+    const cat = searchParams?.get('category');
+    if (cat) setSelectedCategory(cat);
+  }, [searchParams]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;

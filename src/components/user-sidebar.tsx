@@ -25,7 +25,7 @@ export default async function UserSidebar() {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="All Products">
-                        <Link href="#">
+                        <Link href="/">
                             <Compass />
                             <span>All Products</span>
                         </Link>
@@ -37,7 +37,7 @@ export default async function UserSidebar() {
                      {categories.map((category) => (
                         <SidebarMenuItem key={category.id}>
                             <SidebarMenuButton asChild tooltip={category.name}>
-                                 <Link href="#">
+                                 <Link href={`/?category=${category.id}`}>
                                     <Tag />
                                     <span>{category.name}</span>
                                 </Link>
