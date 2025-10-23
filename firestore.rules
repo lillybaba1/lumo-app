@@ -15,71 +15,73 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Products - read all, write admin only
+    // Products - public read for shopping, admin-only write
     match /products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // Public catalog browsing
+      allow write: if isAdmin(); // Only admins can manage products
     }
 
-    // Categories - read all, write admin only
+    // Categories - public read for shopping, admin-only write
     match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // Public catalog browsing
+      allow write: if isAdmin(); // Only admins can manage categories
     }
 
-    // Orders - read own orders, create own, admin can do all
+    // Orders - customers can only access their own, admins can access all
     match /orders/{orderId} {
       allow read: if isAdmin() ||
                      (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin(); // Only admins can modify/delete orders
     }
 
-    // Payments - admin only (sensitive financial data)
+    // Payments - admin-only access (sensitive financial data)
     match /payments/{paymentId} {
       allow read, write: if isAdmin();
     }
 
-    // Users - read own profile, admin can read all
+    // Users - customers can only access their own profile, admins can access all
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow read: if isAdmin() || isOwner(userId);
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId) || isAdmin();
+      allow update: if isAdmin() || isOwner(userId);
       allow delete: if isAdmin();
     }
 
-    // Reviews - read all, create/update own, admin can moderate
+    // Reviews - public read, customers can create/update only their own, admins can do all
     match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() &&
-                       (resource.data.userId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow read: if true; // Public reviews for products
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() ||
+                       (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin(); // Only admins can delete reviews
     }
 
-    // Wishlists - read/write own only
+    // Wishlists - customers can only access their own, admins can access all
     match /wishlists/{wishlistId} {
-      allow read, write: if isSignedIn() &&
-                            resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn();
+      allow read: if isAdmin() ||
+                     (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin() ||
+                               (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    // Coupons - read all, write admin only
+    // Coupons - public read for applying discounts, admin-only write
     match /coupons/{couponId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // Customers need to apply coupons at checkout
+      allow write: if isAdmin(); // Only admins can manage coupons
     }
 
-    // Settings - read all, write admin only
+    // Settings - public read for theme/config, admin-only write
     match /settings/{doc} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // Public access to site settings/theme
+      allow write: if isAdmin(); // Only admins can change settings
     }
 
-    // Content/Pages - read all, write admin only
+    // Content/Pages - public read for CMS pages, admin-only write
     match /content/{doc} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // Public access to CMS content
+      allow write: if isAdmin(); // Only admins can edit content
     }
   }
 }
