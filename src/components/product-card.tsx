@@ -74,11 +74,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             <CardTitle className="font-headline text-lg mb-2 min-h-[2.5rem]">{product.name}</CardTitle>
             <p className="text-muted-foreground text-sm flex-grow line-clamp-2">{product.description}</p>
         </CardContent>
-        <CardFooter className="p-4 flex justify-between items-center mt-auto">
-            <p className="text-xl font-bold">{currencySymbol}{product.price.toFixed(2)}</p>
-            <Button onClick={handleAddToCart} size="sm">
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            Add to Cart
+        <CardFooter className="p-4 flex flex-col sm:flex-row justify-between items-center mt-auto gap-2">
+            <p className="text-xl font-bold whitespace-nowrap">{currencySymbol}{product.price.toFixed(2)}</p>
+            <Button onClick={handleAddToCart} size="sm" className="w-full sm:w-auto flex items-center justify-center">
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
             </Button>
         </CardFooter>
         </Card>
