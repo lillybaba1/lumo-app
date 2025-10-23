@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Heart } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -25,6 +25,12 @@ export default function Header({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
             {children}
+            <Button variant="outline" asChild>
+              <Link href="/wishlist">
+                <Heart className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Wishlist</span>
+              </Link>
+            </Button>
             <Button variant="outline" asChild className="relative">
               <Link href="/cart">
                 <ShoppingBag className="h-4 w-4 md:mr-2" />

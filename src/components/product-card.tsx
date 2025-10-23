@@ -11,6 +11,7 @@ import { ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getSettings } from '@/app/admin/settings/actions';
 import Link from 'next/link';
+import { WishlistButton } from '@/components/wishlist-button';
 
 interface ProductCardProps {
   product: Product;
@@ -49,7 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <Card className="flex flex-col overflow-hidden h-full rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader className="p-0">
+        <CardHeader className="p-0 relative">
             <div className="aspect-square relative">
             <Image
                 src={imageUrl}
@@ -59,6 +60,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
+            </div>
+            <div className="absolute top-2 right-2 z-10" onClick={(e) => e.preventDefault()}>
+              <WishlistButton
+                productId={product.id}
+                productName={product.name}
+                currentUserId={undefined}
+                isInWishlist={false}
+              />
             </div>
         </CardHeader>
         <CardContent className="flex-grow p-4 flex flex-col">
