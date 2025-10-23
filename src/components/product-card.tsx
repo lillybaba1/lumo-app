@@ -70,15 +70,20 @@ export default function ProductCard({ product }: ProductCardProps) {
               />
             </div>
         </CardHeader>
-        <CardContent className="flex-grow p-4 flex flex-col">
+        <CardContent className="flex-grow p-4 flex flex-col min-w-0">
             <CardTitle className="font-headline text-lg mb-2 min-h-[2.5rem]">{product.name}</CardTitle>
             <p className="text-muted-foreground text-sm flex-grow line-clamp-2">{product.description}</p>
         </CardContent>
-        <CardFooter className="p-4 flex flex-col sm:flex-row justify-between items-center mt-auto gap-2">
+        <CardFooter className="p-4 flex flex-col sm:flex-row justify-between items-center mt-auto gap-2 min-w-0">
             <p className="text-xl font-bold whitespace-nowrap">{currencySymbol}{product.price.toFixed(2)}</p>
-            <Button onClick={handleAddToCart} size="sm" className="w-full sm:w-auto flex items-center justify-center">
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
+            <Button
+              onClick={handleAddToCart}
+              size="sm"
+              aria-label={`Add ${product.name} to cart`}
+              className="w-full sm:w-auto flex items-center justify-center px-2 sm:px-3 whitespace-normal min-w-0"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4 shrink-0" />
+              <span className="hidden md:inline truncate max-w-[6.5rem]">Add to Cart</span>
             </Button>
         </CardFooter>
         </Card>
