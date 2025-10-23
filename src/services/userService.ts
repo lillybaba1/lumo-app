@@ -14,9 +14,9 @@ export async function createUserDocument(
   name: string
 ): Promise<{ success: boolean; role?: string; message?: string }> {
   try {
-    // Check if this is the first user (should be admin)
-    const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(1)));
-    const role = usersSnapshot.empty ? 'admin' : 'customer';
+    // Always create users with safe default role 'customer'.
+    // Manual promotion to 'admin' must be done via a protected server-side API.
+    const role = 'customer';
 
     // Create user document in Firestore
     await setDoc(doc(db, 'users', uid), {
