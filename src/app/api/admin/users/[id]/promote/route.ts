@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import 'server-only';
 
 import { NextResponse } from 'next/server';
