@@ -49,16 +49,20 @@ export default function SignupForm() {
         throw new Error(result.message || 'Failed to create user profile');
       }
 
+      const userRole = result.role || 'customer';
+
       toast({
         title: 'Account Created',
-        description: "Welcome to Lumo! You're now logged in.",
+        description: userRole === 'admin'
+          ? "Welcome to Lumo! You're now logged in as admin."
+          : "Welcome to Lumo! You're now logged in.",
       });
 
-      // Create session cookie
+      // Create session cookie with actual role from database
       const sessionData = {
         userId: user.uid,
         email: user.email,
-        role: 'customer', // First user gets admin role automatically in createUserDocument
+        role: userRole, // First user gets 'admin', others get 'customer'
       };
 
       document.cookie = `session=${JSON.stringify(sessionData)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict`;
