@@ -32,6 +32,24 @@ function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
   return out;
 }
 
+export async function getAllReviews(): Promise<Review[]> {
+  try {
+    const q = query(
+      collection(db, 'reviews'),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return [];
+    return snap.docs.map(d => {
+      const data = serializeTimestamps(d.data());
+      return { id: d.id, ...data } as Review;
+    });
+  } catch (error) {
+    console.error('Failed to fetch all reviews:', error);
+    return [];
+  }
+}
+
 export async function getReviewsByProduct(productId: string): Promise<Review[]> {
   try {
     const q = query(

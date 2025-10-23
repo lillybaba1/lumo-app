@@ -3,8 +3,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Tag, MessageSquare, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { AuthenticatedUser } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -13,8 +14,8 @@ const navItems = [
   { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
   { href: '/admin/products', icon: Package, label: 'Products' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
-  { href: '/admin/coupons', icon: Tag, label: 'Coupons' },
-  { href: '/admin/reviews', icon: MessageSquare, label: 'Reviews' },
+  { href: '/admin/coupons', icon: Ticket, label: 'Coupons' },
+  { href: '/admin/reviews', icon: Star, label: 'Reviews' },
   { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
   { href: '/admin/pages', icon: FileText, label: 'Pages' },
@@ -23,7 +24,7 @@ const navItems = [
 ];
 
 type AdminSidebarProps = {
-    user: { userId: string; email: string; role: string };
+    user: AuthenticatedUser | null;
 }
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
@@ -52,11 +53,8 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-card text-card-foreground flex flex-col">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center gap-2">
          <h1 className="text-2xl font-headline font-bold">Lumo</h1>
-         <p className="text-xs text-muted-foreground mt-1 truncate" title={user.email}>
-          {user.email}
-         </p>
       </div>
       <nav className="flex-grow px-2 py-4">
         <ul className="space-y-1">
@@ -78,9 +76,6 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         </ul>
       </nav>
       <div className="p-4 border-t mt-auto">
-        <div className="text-xs text-muted-foreground mb-2 px-2">
-          Admin Access
-        </div>
         <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Logout

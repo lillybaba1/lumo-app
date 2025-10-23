@@ -12,18 +12,26 @@ function getCurrencySymbol(currencyCode: string | undefined) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
 }
 
+function formatCurrency(amount: number, currencySymbol: string) {
+  return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export default async function DashboardPage() {
   const [settings, analytics] = await Promise.all([
     getSettings(),
-    getAnalytics(),
+    getAnalytics()
   ]);
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
   // Get top selling product
-  const topProduct = analytics.topProducts[0];
-  const topProductName = topProduct ? topProduct.product.name : 'No sales yet';
-  const topProductSales = topProduct ? `${topProduct.sales} sold` : 'Start selling';
+  const bestSeller = analytics.topProducts.length > 0
+    ? analytics.topProducts[0].product.name
+    : 'N/A';
+
+  const bestSellerSales = analytics.topProducts.length > 0
+    ? `${analytics.topProducts[0].sales} sold`
+    : 'No sales yet';
 
   return (
     <div>
@@ -33,33 +41,32 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatsCard
           title="Total Revenue"
-          value={`${currencySymbol}${analytics.totalRevenue.toFixed(2)}`}
+          value={formatCurrency(analytics.totalRevenue, currencySymbol)}
           icon={DollarSign}
-          change={`From ${analytics.totalOrders} orders`}
+          change={`From ${analytics.totalOrders} paid orders`}
         />
         <StatsCard
-          title="Total Orders"
+          title="Orders"
           value={analytics.totalOrders.toString()}
           icon={ShoppingCart}
-          change={`${analytics.ordersByStatus.Pending} pending`}
+          change={`${analytics.ordersByStatus.Pending} pending, ${analytics.ordersByStatus.Delivered} delivered`}
         />
         <StatsCard
             title="Best Seller"
-            value={topProductName}
+            value={bestSeller}
             icon={Package}
-            change={topProductSales}
+            change={bestSellerSales}
             valueClassName="text-xl"
         />
         <StatsCard
             title="Total Customers"
             value={analytics.totalCustomers.toString()}
             icon={Users}
-            change={`${analytics.totalProducts} products`}
+            change={`${analytics.totalProducts} products available`}
         />
       </div>
       <div className="grid grid-cols-1 gap-6">
         <SalesChart currencySymbol={currencySymbol} revenueData={analytics.revenueByMonth} />
-        <RecentOrdersTable />
       </div>
     </div>
   );

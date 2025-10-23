@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -8,15 +9,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { getOrders } from '@/services/orderService';
 import { getSettings } from '@/app/admin/settings/actions';
-import Link from 'next/link';
-import { Eye } from 'lucide-react';
 
 const statusVariant = {
     'Pending': 'default',
-    'Processing': 'default',
     'Shipped': 'secondary',
     'Delivered': 'outline',
     'Cancelled': 'destructive',
@@ -33,6 +30,15 @@ export default async function OrdersPage() {
   const settings = await getSettings();
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-headline font-bold mb-6">Orders</h1>
@@ -46,27 +52,23 @@ export default async function OrdersPage() {
               <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium font-mono">#{order.id.substring(0, 8).toUpperCase()}</TableCell>
+              <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                <TableCell className="font-medium">
+                  <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
+                    {order.id}
+                  </Link>
+                </TableCell>
                 <TableCell>{order.customerName}</TableCell>
-                <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>{order.paymentMethod}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[order.status]}>{order.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right">{currencySymbol}{order.total.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/admin/orders/${order.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
