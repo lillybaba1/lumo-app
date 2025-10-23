@@ -58,7 +58,7 @@ export default function SignupForm() {
       const sessionData = {
         userId: user.uid,
         email: user.email,
-        role: 'customer', // First user gets admin role automatically in createUserDocument
+        role: result.role || 'customer',
       };
 
       document.cookie = `session=${JSON.stringify(sessionData)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict`;

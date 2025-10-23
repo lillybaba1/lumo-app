@@ -12,7 +12,7 @@ export async function createUserDocument(
   uid: string,
   email: string,
   name: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; role?: string; message?: string }> {
   try {
     // Check if this is the first user (should be admin)
     const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(1)));
@@ -27,7 +27,7 @@ export async function createUserDocument(
       createdAt: new Date().toISOString(),
     });
 
-    return { success: true };
+    return { success: true, role };
   } catch (error: any) {
     console.error('Failed to create user document:', error);
     return { success: false, message: error.message || 'Failed to create user profile.' };
