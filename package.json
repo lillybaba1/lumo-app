@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "postinstall": "patch-package",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:deploy": "npm run pages:build && wrangler pages deploy",
-    "pages:dev": "npx @cloudflare/next-on-pages --experimental-minify"
+  "dev": "next dev --turbopack",
+  "build": "next build",
+  "start": "next start",
+  "postinstall": "patch-package",
+  "pages:build": "npx @cloudflare/next-on-pages",
+  "pages:deploy": "npm run pages:build && wrangler pages deploy",
+  "pages:dev": "npx @cloudflare/next-on-pages --experimental-minify",
+  "emulator:start": "firebase emulators:start --only firestore,auth,storage",
+  "emulator:build": "npm run emulator:start -- --export-on-exit && npm run build"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.16.1",
