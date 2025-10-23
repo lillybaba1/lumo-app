@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AuthenticatedUser } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,9 @@ const navItems = [
   { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
   { href: '/admin/products', icon: Package, label: 'Products' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
+  { href: '/admin/coupons', icon: Ticket, label: 'Coupons' },
+  { href: '/admin/reviews', icon: Star, label: 'Reviews' },
+  { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
   { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
   { href: '/admin/pages', icon: FileText, label: 'Pages' },
   { href: '/admin/analytics', icon: BarChart, label: 'Analytics' },

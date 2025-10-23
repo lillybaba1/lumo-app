@@ -3,39 +3,33 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useEffect, useState } from "react";
 
-const dataTemplate = [
-  { name: "Jan", total: 0 },
-  { name: "Feb", total: 0 },
-  { name: "Mar", total: 0 },
-  { name: "Apr", total: 0 },
-  { name: "May", total: 0 },
-  { name: "Jun", total: 0 },
-  { name: "Jul", total: 0 },
-  { name: "Aug", total: 0 },
-  { name: "Sep", total: 0 },
-  { name: "Oct", total: 0 },
-  { name: "Nov", total: 0 },
-  { name: "Dec", total: 0 },
-];
+interface RevenueData {
+  month: string;
+  revenue: number;
+}
 
-export default function SalesChart({ currencySymbol = '$' }: { currencySymbol?: string }) {
-    const [data, setData] = useState(dataTemplate);
+interface SalesChartProps {
+  currencySymbol?: string;
+  revenueData?: RevenueData[];
+}
 
-    useEffect(() => {
-        setData(dataTemplate.map(item => ({...item, total: Math.floor(Math.random() * 5000) + 1000 })));
-    }, [])
+export default function SalesChart({ currencySymbol = '$', revenueData = [] }: SalesChartProps) {
+    // Transform revenueData to chart format
+    const chartData = revenueData.map(item => ({
+      name: item.month,
+      total: item.revenue
+    }))
 
   return (
      <Card>
         <CardHeader>
             <CardTitle className="font-headline">Sales Overview</CardTitle>
-            <CardDescription>A summary of your sales performance over the year.</CardDescription>
+            <CardDescription>Monthly revenue from completed orders (last 12 months)</CardDescription>
         </CardHeader>
         <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={data}>
+            <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                 dataKey="name"

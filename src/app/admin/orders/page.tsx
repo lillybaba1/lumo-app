@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -29,6 +30,15 @@ export default async function OrdersPage() {
   const settings = await getSettings();
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-headline font-bold mb-6">Orders</h1>
@@ -46,10 +56,14 @@ export default async function OrdersPage() {
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
+              <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                <TableCell className="font-medium">
+                  <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
+                    {order.id}
+                  </Link>
+                </TableCell>
                 <TableCell>{order.customerName}</TableCell>
-                <TableCell>{order.date}</TableCell>
+                <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>{order.paymentMethod}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[order.status]}>{order.status}</Badge>

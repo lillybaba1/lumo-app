@@ -4,6 +4,7 @@ import StatsCard from '@/components/dashboard/stats-card';
 import SalesChart from '@/components/dashboard/sales-chart';
 import RecentOrdersTable from '@/components/dashboard/recent-orders-table';
 import { getSettings } from '@/app/admin/settings/actions';
+import { getAnalytics } from '@/services/analyticsService';
 
 function getCurrencySymbol(currencyCode: string | undefined) {
     if (!currencyCode) return '$';
@@ -11,44 +12,61 @@ function getCurrencySymbol(currencyCode: string | undefined) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
 }
 
+function formatCurrency(amount: number, currencySymbol: string) {
+  return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export default async function DashboardPage() {
-  const settings = await getSettings();
+  const [settings, analytics] = await Promise.all([
+    getSettings(),
+    getAnalytics()
+  ]);
+
   const currencySymbol = getCurrencySymbol(settings?.currency);
-  
+
+  // Get top selling product
+  const bestSeller = analytics.topProducts.length > 0
+    ? analytics.topProducts[0].product.name
+    : 'N/A';
+
+  const bestSellerSales = analytics.topProducts.length > 0
+    ? `${analytics.topProducts[0].sales} sold`
+    : 'No sales yet';
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-headline font-bold">Dashboard</h1>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <StatsCard 
-          title="Total Revenue" 
-          value={`${currencySymbol}45,231.89`}
+        <StatsCard
+          title="Total Revenue"
+          value={formatCurrency(analytics.totalRevenue, currencySymbol)}
           icon={DollarSign}
-          change="+20.1% from last month"
+          change={`From ${analytics.totalOrders} paid orders`}
         />
-        <StatsCard 
+        <StatsCard
           title="Orders"
-          value="+2350"
+          value={analytics.totalOrders.toString()}
           icon={ShoppingCart}
-          change="+180.1% from last month"
+          change={`${analytics.ordersByStatus.Pending} pending, ${analytics.ordersByStatus.Delivered} delivered`}
         />
         <StatsCard
             title="Best Seller"
-            value="Hydrating Serum"
+            value={bestSeller}
             icon={Package}
-            change="Top product this month"
+            change={bestSellerSales}
             valueClassName="text-xl"
         />
         <StatsCard
-            title="New Customers"
-            value="+573"
+            title="Total Customers"
+            value={analytics.totalCustomers.toString()}
             icon={Users}
-            change="+201 since last month"
+            change={`${analytics.totalProducts} products available`}
         />
       </div>
       <div className="grid grid-cols-1 gap-6">
-        <SalesChart currencySymbol={currencySymbol} />
+        <SalesChart currencySymbol={currencySymbol} revenueData={analytics.revenueByMonth} />
       </div>
     </div>
   );
