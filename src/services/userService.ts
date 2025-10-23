@@ -1,0 +1,50 @@
+'use server';
+
+import { db } from '@/lib/firebaseClient';
+import { collection, doc, setDoc, getDocs, getDoc, query, limit } from 'firebase/firestore';
+import type { User } from '@/lib/types';
+
+/**
+ * Create user document in Firestore after Firebase Auth signup
+ * This is called after client-side createUserWithEmailAndPassword
+ */
+export async function createUserDocument(
+  uid: string,
+  email: string,
+  name: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    // Check if this is the first user (should be admin)
+    const usersSnapshot = await getDocs(query(collection(db, 'users'), limit(1)));
+    const role = usersSnapshot.empty ? 'admin' : 'customer';
+
+    // Create user document in Firestore
+    await setDoc(doc(db, 'users', uid), {
+      uid,
+      email,
+      name,
+      role,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to create user document:', error);
+    return { success: false, message: error.message || 'Failed to create user profile.' };
+  }
+}
+
+/**
+ * Get user by ID
+ */
+export async function getUserById(uid: string): Promise<User | null> {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (!userDoc.exists()) return null;
+
+    return userDoc.data() as User;
+  } catch (error) {
+    console.error('Failed to get user:', error);
+    return null;
+  }
+}
