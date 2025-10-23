@@ -10,9 +10,9 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { createUser } from '@/services/authService';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
+import { createUserDocument } from '@/services/userService';
 
 
 export default function SignupForm() {
@@ -25,51 +25,68 @@ export default function SignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    const result = await createUser(email, password, name);
-    
-    if (result.success) {
+
+    if (password.length < 6) {
       toast({
-        title: 'Account Created',
-        description: "Welcome to Lumo! Please log in to continue.",
-      });
-
-       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const idToken = await userCredential.user.getIdToken();
-
-        const res = await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
-
-        if (res.ok) {
-            window.location.assign('/'); // Hard redirect
-        } else {
-             const errorData = await res.json();
-             toast({
-                title: 'Login Failed After Signup',
-                description: errorData.error || 'Could not create session.',
-                variant: 'destructive',
-            });
-             router.push('/login');
-        }
-    } catch (error: any) {
-        toast({
-           title: 'Login Failed After Signup',
-           description: 'Please try logging in manually.',
-           variant: 'destructive',
-       });
-       router.push('/login');
-    }
-    } else {
-      toast({
-        title: 'Signup Failed',
-        description: result.message || 'An unknown error occurred.',
+        title: 'Password Too Short',
+        description: 'Password must be at least 6 characters.',
         variant: 'destructive',
       });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create user with Firebase Client SDK
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document in Firestore
+      const result = await createUserDocument(user.uid, email, name);
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create user profile');
+      }
+
+      toast({
+        title: 'Account Created',
+        description: "Welcome to Lumo! You're now logged in.",
+      });
+
+      // Create session cookie
+      const sessionData = {
+        userId: user.uid,
+        email: user.email,
+        role: 'customer', // First user gets admin role automatically in createUserDocument
+      };
+
+      document.cookie = `session=${JSON.stringify(sessionData)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict`;
+
+      // Redirect to home
+      router.push('/');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Signup error:', error);
+
+      let errorMessage = 'An unknown error occurred.';
+
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'An account with this email already exists.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Use at least 6 characters.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: 'Signup Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
       setLoading(false);
     }
   };
@@ -101,7 +118,7 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+              <Input id="password" type="password" placeholder="At least 6 characters" required value={password} onChange={e => setPassword(e.target.value)} minLength={6} />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
@@ -109,7 +126,7 @@ export default function SignupForm() {
               {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
             </Button>
              <p className="text-xs text-muted-foreground">
-              Already have an account? <Link href="/login" className="underline">Log in</Link>
+              Already have an account? <Link href="/admin/login" className="underline">Log in</Link>
             </p>
           </CardFooter>
         </form>
@@ -117,3 +134,4 @@ export default function SignupForm() {
     </div>
   );
 }
+
