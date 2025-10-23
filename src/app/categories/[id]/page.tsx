@@ -9,7 +9,11 @@ export default async function CategoryPage({ params, searchParams }: { params: {
 
   const all = await getProducts();
   const catId = params.id.toLowerCase();
-  const filtered = all.filter(p => (p.categoryId || p.category.toLowerCase()) === catId || p.category.toLowerCase() === catId);
+  const filtered = all.filter(p => {
+    const catLower = (p.category || '').toLowerCase();
+    const catIdField = (p.categoryId || '').toLowerCase();
+    return catIdField === catId || catLower === catId;
+  });
 
   // simple sorting
   filtered.sort((a: Product, b: Product) => {

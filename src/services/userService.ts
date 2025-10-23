@@ -1,8 +1,9 @@
 'use server';
 
-import { db } from '@/lib/firebaseClient';
-import { collection, doc, setDoc, getDocs, getDoc, query, limit } from 'firebase/firestore';
+import { doc as firestoreDoc, setDoc as firestoreSetDoc, getDoc as firestoreGetDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
+
+// We'll dynamically pick adminDb() on the server or getClientDb() on the client inside functions.
 
 /**
  * Create user document in Firestore after Firebase Auth signup
@@ -18,14 +19,16 @@ export async function createUserDocument(
     // Manual promotion to 'admin' must be done via a protected server-side API.
     const role = 'customer';
 
-    // Create user document in Firestore
-    await setDoc(doc(db, 'users', uid), {
-      uid,
-      email,
-      name,
-      role,
-      createdAt: new Date().toISOString(),
-    });
+    // Create user document in Firestore (prefer Admin SDK on server)
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const adminDb = dbAdmin();
+      await adminDb.collection('users').doc(uid).set({ uid, email, name, role, createdAt: new Date().toISOString() });
+    } else {
+      const { getClientDb } = await import('@/lib/firebaseClient');
+      const db = getClientDb();
+      await firestoreSetDoc(firestoreDoc(db, 'users', uid), { uid, email, name, role, createdAt: new Date().toISOString() });
+    }
 
     return { success: true, role };
   } catch (error: any) {
@@ -39,9 +42,17 @@ export async function createUserDocument(
  */
 export async function getUserById(uid: string): Promise<User | null> {
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const adminDb = dbAdmin();
+      const snap = await adminDb.collection('users').doc(uid).get();
+      if (!snap.exists) return null;
+      return snap.data() as User;
+    }
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
+    const userDoc = await firestoreGetDoc(firestoreDoc(db, 'users', uid));
     if (!userDoc.exists()) return null;
-
     return userDoc.data() as User;
   } catch (error) {
     console.error('Failed to get user:', error);

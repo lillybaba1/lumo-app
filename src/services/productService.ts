@@ -1,16 +1,13 @@
-'use server';
+"use server";
 
-import { db } from '@/lib/firebaseClient';
+// Note: avoid importing the client-only `db` at module top-level which
+// would throw on server runtime. We'll dynamically use either the
+// Admin SDK (server) or the client SDK (browser) inside functions.
 import {
-  collection,
-  getDocs,
   doc,
-  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
@@ -34,6 +31,35 @@ function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
 
 export async function getProducts(): Promise<Product[]> {
   try {
+    // Server: try Admin SDK first (preferred in server environment).
+    if (typeof window === 'undefined') {
+      try {
+        const { dbAdmin } = await import('@/lib/firebaseAdmin');
+        const adminDb = dbAdmin();
+        // admin.firestore() Query API
+        const snap = await adminDb.collection('products').orderBy('name').get();
+        if (!snap || snap.empty) return mockProducts;
+        return snap.docs.map((d: any) => {
+          const data = serializeTimestamps(d.data());
+          const product = { id: d.id, ...data } as Product;
+          if (!product.categoryId && typeof product.category === 'string') {
+            product.categoryId = product.category.toLowerCase().replace(/\s+/g, '-');
+          }
+          return product;
+        });
+      } catch (adminErr) {
+        // Admin SDK not available (no credentials) — fall back to mock data
+        console.error('Admin Firestore not available on server:', adminErr);
+        return mockProducts;
+      }
+    }
+
+    // Client-side: dynamically import client Firestore helpers
+    const [{ collection, getDocs, query, orderBy }, { getClientDb }] = await Promise.all([
+      await import('firebase/firestore'),
+      await import('@/lib/firebaseClient')
+    ]);
+    const db = getClientDb();
     const q = query(collection(db, 'products'), orderBy('name'));
     const snap = await getDocs(q);
     if (snap.empty) return [];
@@ -53,6 +79,23 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProductById(id: string): Promise<Product | null> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      try {
+        const adminDb = dbAdmin();
+        const snap = await adminDb.collection('products').doc(id).get();
+        if (!snap.exists) return null;
+        const data = serializeTimestamps(snap.data());
+        return { id: snap.id, ...data } as Product;
+      } catch (adminErr) {
+        console.error(`Admin DB error fetching product ${id}:`, adminErr);
+        return null;
+      }
+    }
+
+    const { getDoc } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const ref = doc(db, 'products', id);
     const snap = await getDoc(ref);
     if (!snap.exists()) return null;
@@ -66,6 +109,24 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
+    if (typeof window === 'undefined') {
+      try {
+        const { dbAdmin } = await import('@/lib/firebaseAdmin');
+        const adminDb = dbAdmin();
+        const snap = await adminDb.collection('categories').get();
+        if (!snap || snap.empty) return mockCategories;
+        return snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as Omit<Category, 'id'>) }));
+      } catch (adminErr) {
+        console.error('Admin Firestore not available on server:', adminErr);
+        return mockCategories;
+      }
+    }
+
+    const [{ getDocs, collection }, { getClientDb }] = await Promise.all([
+      await import('firebase/firestore'),
+      await import('@/lib/firebaseClient')
+    ]);
+    const db = getClientDb();
     const snap = await getDocs(collection(db, 'categories'));
     if (snap.empty) return [];
     return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Category, 'id'>) }));

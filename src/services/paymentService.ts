@@ -1,16 +1,8 @@
-'use server';
+"use server";
 
-import { db } from '@/lib/firebaseClient';
 import {
-  collection,
-  getDocs,
-  doc,
-  getDoc,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
+  doc as firestoreDoc,
+  getDoc as firestoreGetDoc,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
@@ -48,6 +40,15 @@ function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
 
 export async function createPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const adminDb = dbAdmin();
+      const ref = await adminDb.collection('payments').add({ ...payment, createdAt: new Date() });
+      return { id: ref.id, ...payment, createdAt: new Date().toISOString() };
+    }
+    const { addDoc, collection, getDocs, query, where, orderBy } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const ref = await addDoc(collection(db, 'payments'), {
       ...payment,
       createdAt: serverTimestamp(),
@@ -65,9 +66,19 @@ export async function createPayment(payment: Omit<Payment, 'id' | 'createdAt'>):
 
 export async function getPaymentById(id: string): Promise<Payment | null> {
   try {
-    const snap = await getDoc(doc(db, 'payments', id));
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const snap = await dbAdmin().collection('payments').doc(id).get();
+      if (!snap.exists) return null;
+      const data = serializeTimestamps(snap.data() || {});
+      return { id: snap.id, ...data } as Payment;
+    }
+    const { getDoc } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
+    const snap = await getDoc(firestoreDoc(db, 'payments', id));
     if (!snap.exists()) return null;
-    const data = serializeTimestamps(snap.data());
+    const data = serializeTimestamps(snap.data() || {});
     return { id: snap.id, ...data } as Payment;
   } catch (error) {
     console.error(`Failed to fetch payment ${id}:`, error);
@@ -77,11 +88,22 @@ export async function getPaymentById(id: string): Promise<Payment | null> {
 
 export async function getPaymentByOrder(orderId: string): Promise<Payment | null> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const snap = await dbAdmin().collection('payments').where('orderId', '==', orderId).get();
+      if (!snap || snap.empty) return null;
+      const doc = snap.docs[0];
+      const data = serializeTimestamps(doc.data() || {});
+      return { id: doc.id, ...data } as Payment;
+    }
+    const { collection, getDocs, query, where } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const q = query(collection(db, 'payments'), where('orderId', '==', orderId));
     const snap = await getDocs(q);
     if (snap.empty) return null;
     const doc = snap.docs[0];
-    const data = serializeTimestamps(doc.data());
+    const data = serializeTimestamps(doc.data() || {});
     return { id: doc.id, ...data } as Payment;
   } catch (error) {
     console.error(`Failed to fetch payment for order ${orderId}:`, error);
@@ -91,6 +113,15 @@ export async function getPaymentByOrder(orderId: string): Promise<Payment | null
 
 export async function getPaymentsByCustomer(customerEmail: string): Promise<Payment[]> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const snap = await dbAdmin().collection('payments').where('customerEmail', '==', customerEmail).orderBy('createdAt', 'desc').get();
+      if (!snap || snap.empty) return [];
+      return snap.docs.map((d: any) => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Payment));
+    }
+    const { collection, getDocs, query, where, orderBy } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const q = query(
       collection(db, 'payments'),
       where('customerEmail', '==', customerEmail),
@@ -99,7 +130,7 @@ export async function getPaymentsByCustomer(customerEmail: string): Promise<Paym
     const snap = await getDocs(q);
     if (snap.empty) return [];
     return snap.docs.map(d => {
-      const data = serializeTimestamps(d.data());
+      const data = serializeTimestamps(d.data() || {});
       return { id: d.id, ...data } as Payment;
     });
   } catch (error) {
@@ -110,11 +141,20 @@ export async function getPaymentsByCustomer(customerEmail: string): Promise<Paym
 
 export async function getAllPayments(): Promise<Payment[]> {
   try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const snap = await dbAdmin().collection('payments').orderBy('createdAt', 'desc').get();
+      if (!snap || snap.empty) return [];
+      return snap.docs.map((d: any) => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Payment));
+    }
+    const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
     const q = query(collection(db, 'payments'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
     if (snap.empty) return [];
     return snap.docs.map(d => {
-      const data = serializeTimestamps(d.data());
+      const data = serializeTimestamps(d.data() || {});
       return { id: d.id, ...data } as Payment;
     });
   } catch (error) {
@@ -129,7 +169,7 @@ export async function updatePaymentStatus(
   transactionId?: string
 ): Promise<void> {
   try {
-    const payment = await getPaymentById(id);
+  const payment = await getPaymentById(id);
     if (!payment) throw new Error('Payment not found');
 
     const updates: any = {
@@ -141,7 +181,15 @@ export async function updatePaymentStatus(
       updates.transactionId = transactionId;
     }
 
-    await updateDoc(doc(db, 'payments', id), updates);
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      await dbAdmin().collection('payments').doc(id).set({ ...updates }, { merge: true });
+    } else {
+      const { updateDoc, doc } = await import('firebase/firestore');
+      const { getClientDb } = await import('@/lib/firebaseClient');
+      const db = getClientDb();
+      await updateDoc(doc(db, 'payments', id), updates);
+    }
 
     // Update order payment status
     if (status === 'Completed') {
@@ -211,15 +259,23 @@ export async function refundPayment(id: string, reason?: string): Promise<void> 
       throw new Error('Only completed payments can be refunded');
     }
 
-    await updateDoc(doc(db, 'payments', id), {
-      status: 'Refunded',
-      updatedAt: serverTimestamp(),
-      metadata: {
-        ...payment.metadata,
-        refundReason: reason,
-        refundedAt: new Date().toISOString(),
-      },
-    });
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      await dbAdmin().collection('payments').doc(id).set({ status: 'Refunded', updatedAt: new Date(), metadata: { ...payment.metadata, refundReason: reason, refundedAt: new Date().toISOString() } }, { merge: true });
+    } else {
+      const { updateDoc, doc } = await import('firebase/firestore');
+      const { getClientDb } = await import('@/lib/firebaseClient');
+      const db = getClientDb();
+      await updateDoc(doc(db, 'payments', id), {
+        status: 'Refunded',
+        updatedAt: serverTimestamp(),
+        metadata: {
+          ...payment.metadata,
+          refundReason: reason,
+          refundedAt: new Date().toISOString(),
+        },
+      });
+    }
 
     // Update order status
     await updateOrderStatus(payment.orderId, 'Cancelled', 'Pending');
