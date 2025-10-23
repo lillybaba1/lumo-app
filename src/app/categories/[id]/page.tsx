@@ -2,17 +2,69 @@ import { getProducts } from '@/services/productService';
 import ProductCard from '@/components/product-card';
 import type { Product } from '@/lib/types';
 
-export default async function CategoryPage({ params }: { params: { id: string } }) {
+export default async function CategoryPage({ params, searchParams }: { params: { id: string }, searchParams: { page?: string, sort?: string } }) {
+  const page = parseInt(searchParams.page || '1', 10) || 1;
+  const perPage = 12;
+  const sort = searchParams.sort || 'name-asc';
+
   const all = await getProducts();
-  const products = all.filter(p => p.category === params.id || p.category.toLowerCase() === params.id.toLowerCase());
+  const catId = params.id.toLowerCase();
+  const filtered = all.filter(p => (p.categoryId || p.category.toLowerCase()) === catId || p.category.toLowerCase() === catId);
+
+  // simple sorting
+  filtered.sort((a: Product, b: Product) => {
+    switch (sort) {
+      case 'price-asc': return a.price - b.price;
+      case 'price-desc': return b.price - a.price;
+      case 'name-desc': return b.name.localeCompare(a.name);
+      default: return a.name.localeCompare(b.name);
+    }
+  });
+
+  const total = filtered.length;
+  const start = (page - 1) * perPage;
+  const paged = filtered.slice(start, start + perPage);
+
+  const title = params.id.charAt(0).toUpperCase() + params.id.slice(1);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-6">Category</h1>
+      <nav className="text-sm text-muted-foreground mb-4">Home / Categories / <span className="font-semibold">{title}</span></nav>
+      <h1 className="text-2xl font-semibold mb-4">{title}</h1>
+
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-sm text-muted-foreground">{total} products</div>
+        <div>
+          <select
+            defaultValue={sort}
+            onChange={(e) => { /* client navigation handled by next/navigation in client component if needed */ }}
+            className="border rounded px-2 py-1"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((p: Product) => (
+        {paged.map((p: Product) => (
           <ProductCard key={p.id} product={p} />
         ))}
+      </div>
+
+      <div className="flex justify-between items-center mt-8">
+        <div>
+          {page > 1 && (
+            <a href={`?page=${page - 1}&sort=${sort}`} className="px-3 py-1 border rounded">Previous</a>
+          )}
+        </div>
+        <div>
+          {start + perPage < total && (
+            <a href={`?page=${page + 1}&sort=${sort}`} className="px-3 py-1 border rounded">Next</a>
+          )}
+        </div>
       </div>
     </div>
   );

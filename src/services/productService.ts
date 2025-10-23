@@ -39,7 +39,11 @@ export async function getProducts(): Promise<Product[]> {
     if (snap.empty) return [];
     return snap.docs.map(d => {
       const data = serializeTimestamps(d.data());
-      return { id: d.id, ...data } as Product;
+      const product = { id: d.id, ...data } as Product;
+      if (!product.categoryId && typeof product.category === 'string') {
+        product.categoryId = product.category.toLowerCase().replace(/\s+/g, '-');
+      }
+      return product;
     });
   } catch (error) {
     console.error('Failed to fetch products from Firestore:', error);

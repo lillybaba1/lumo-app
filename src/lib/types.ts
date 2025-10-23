@@ -6,6 +6,8 @@ export interface Product {
   price: number;
   imageUrls: string[];
   category: string;
+  // optional category id / slug for linking
+  categoryId?: string;
   stock: number;
 }
 
