@@ -17,19 +17,43 @@ function formatCurrency(amount: number, currencySymbol: string) {
 }
 
 export default async function DashboardPage() {
-  const [settings, analytics] = await Promise.all([
-    getSettings(),
-    getAnalytics()
-  ]);
+  let settings = null;
+  let analytics = null;
+  
+  try {
+    [settings, analytics] = await Promise.all([
+      getSettings(),
+      getAnalytics()
+    ]);
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    // Provide default values
+    analytics = {
+      totalRevenue: 0,
+      totalOrders: 0,
+      totalCustomers: 0,
+      totalProducts: 0,
+      recentOrders: [],
+      topProducts: [],
+      revenueByMonth: [],
+      ordersByStatus: {
+        'Pending': 0,
+        'Processing': 0,
+        'Shipped': 0,
+        'Delivered': 0,
+        'Cancelled': 0,
+      },
+    };
+  }
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
-  // Get top selling product
-  const bestSeller = analytics.topProducts.length > 0
+  // Get top selling product - handle null analytics
+  const bestSeller = analytics?.topProducts && analytics.topProducts.length > 0
     ? analytics.topProducts[0].product.name
     : 'N/A';
 
-  const bestSellerSales = analytics.topProducts.length > 0
+  const bestSellerSales = analytics?.topProducts && analytics.topProducts.length > 0
     ? `${analytics.topProducts[0].sales} sold`
     : 'No sales yet';
 
@@ -41,15 +65,15 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatsCard
           title="Total Revenue"
-          value={formatCurrency(analytics.totalRevenue, currencySymbol)}
+          value={formatCurrency(analytics?.totalRevenue || 0, currencySymbol)}
           icon={DollarSign}
-          change={`From ${analytics.totalOrders} paid orders`}
+          change={`From ${analytics?.totalOrders || 0} paid orders`}
         />
         <StatsCard
           title="Orders"
-          value={analytics.totalOrders.toString()}
+          value={(analytics?.totalOrders || 0).toString()}
           icon={ShoppingCart}
-          change={`${analytics.ordersByStatus.Pending} pending, ${analytics.ordersByStatus.Delivered} delivered`}
+          change={`${analytics?.ordersByStatus?.Pending || 0} pending, ${analytics?.ordersByStatus?.Delivered || 0} delivered`}
         />
         <StatsCard
             title="Best Seller"
@@ -60,13 +84,13 @@ export default async function DashboardPage() {
         />
         <StatsCard
             title="Total Customers"
-            value={analytics.totalCustomers.toString()}
+            value={(analytics?.totalCustomers || 0).toString()}
             icon={Users}
-            change={`${analytics.totalProducts} products available`}
+            change={`${analytics?.totalProducts || 0} products available`}
         />
       </div>
       <div className="grid grid-cols-1 gap-6">
-        <SalesChart currencySymbol={currencySymbol} revenueData={analytics.revenueByMonth} />
+        <SalesChart currencySymbol={currencySymbol} revenueData={analytics?.revenueByMonth || []} />
       </div>
     </div>
   );
