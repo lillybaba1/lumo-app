@@ -1,5 +1,4 @@
-
-import type { Product, Category, Order } from './types';
+ import type { Product, Category, Order } from './types';
 
 export const categories: Category[] = [
   { id: 'electronics', name: 'Electronics' },

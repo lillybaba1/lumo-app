@@ -5,7 +5,8 @@ import { useState, useEffect, useRef, useTransition } from 'react';
 import { Bot, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { ChatInterface } from './chat-interface';
-import { shoppingAssistant } from '@/ai/flows/shopping-assistant';
+// The server shopping assistant is exposed via an API route so the client
+// can call it regardless of whether pages are rendered on Edge or Node.
 
 export type Message = {
   role: 'user' | 'assistant';
@@ -24,23 +25,30 @@ export function AIAssistantWidget() {
     if (!query) return;
 
     const userMessage: Message = { role: 'user', content: query };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMessage]);
 
     startTransition(async () => {
-        try {
-            const result = await shoppingAssistant({ query, history: messages });
-            if (result.answer) {
-                const assistantMessage: Message = { role: 'assistant', content: result.answer };
-                setMessages(prev => [...prev, assistantMessage]);
-            } else {
-                 const errorMessage: Message = { role: 'assistant', content: "Sorry, I couldn't find an answer." };
-                 setMessages(prev => [...prev, errorMessage]);
-            }
-        } catch (error) {
-            const errorMessage: Message = { role: 'assistant', content: "An error occurred. Please try again." };
-            setMessages(prev => [...prev, errorMessage]);
+      try {
+        const res = await fetch('/api/assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, history: messages }),
+        });
+        const data = await res.json();
+        if (data && typeof data.answer === 'string') {
+          const assistantMessage: Message = { role: 'assistant', content: data.answer };
+          setMessages(prev => [...prev, assistantMessage]);
+        } else if (data && data.error) {
+          const errMsg: Message = { role: 'assistant', content: `Error: ${String(data.error)}` };
+          setMessages(prev => [...prev, errMsg]);
+        } else {
+          const errorMessage: Message = { role: 'assistant', content: "Sorry, I couldn't find an answer." };
+          setMessages(prev => [...prev, errorMessage]);
         }
+      } catch (error) {
+        const errorMessage: Message = { role: 'assistant', content: 'An error occurred. Please try again.' };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     });
   };
 

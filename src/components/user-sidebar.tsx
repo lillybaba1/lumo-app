@@ -42,19 +42,7 @@ export default async function UserSidebar() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                 <SidebarGroup>
-                    <SidebarGroupLabel>Categories</SidebarGroupLabel>
-                     {categories.map((category) => (
-                        <SidebarMenuItem key={category.id}>
-                            <SidebarMenuButton asChild tooltip={category.name}>
-                                 <CategoryLink href={`/categories/${category.id}`}>
-                                    <Tag />
-                                    <span>{category.name}</span>
-                                </CategoryLink>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                 </SidebarGroup>
+                 {/* Categories sidebar removed to avoid duplicate category lists; filters panel provides category selection */}
 
                  <SidebarGroup>
                     <SidebarGroupLabel>My Account</SidebarGroupLabel>
