@@ -5,12 +5,21 @@ import { Home, ShoppingCart, User, Tag, Compass, UserCog } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { getCategories } from '@/services/productService';
 import { getCurrentUser } from '@/hooks/use-auth';
+import type { Category } from '@/lib/types';
 
 export default async function UserSidebar() {
-  const [categories, user] = await Promise.all([
-    getCategories(),
-    getCurrentUser()
-  ]);
+  let categories: Category[] = [];
+  let user = null;
+  
+  try {
+    [categories, user] = await Promise.all([
+      getCategories(),
+      getCurrentUser()
+    ]);
+  } catch (error) {
+    console.error('Error loading sidebar data:', error);
+    // Continue with empty data rather than crashing
+  }
 
   return (
     <Sidebar collapsible="icon" side="left">
