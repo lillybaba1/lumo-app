@@ -3,7 +3,8 @@ import Link from 'next/link';
 import CategoryLink from '@/components/category-link';
 import { Home, ShoppingCart, User, Tag, Compass, UserCog } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { getCategories } from '@/services/productService';
+import { getCategories, getProducts } from '@/services/productService';
+import SidebarCategories from './sidebar-categories';
 import { getCurrentUser } from '@/hooks/use-auth';
 import type { Category } from '@/lib/types';
 
@@ -11,15 +12,27 @@ export default async function UserSidebar() {
   let categories: Category[] = [];
   let user = null;
   
-  try {
-    [categories, user] = await Promise.all([
-      getCategories(),
-      getCurrentUser()
-    ]);
-  } catch (error) {
-    console.error('Error loading sidebar data:', error);
-    // Continue with empty data rather than crashing
-  }
+    try {
+        const [cats, userData, products] = await Promise.all([
+            getCategories(),
+            getCurrentUser(),
+            getProducts(),
+        ]);
+        categories = cats;
+        user = userData;
+
+        // compute simple counts per category (by category id or name)
+        const counts: Record<string, number> = {};
+        products.forEach(p => {
+            const cid = p.categoryId ?? (typeof p.category === 'string' ? p.category.toLowerCase().replace(/\s+/g, '-') : undefined);
+            if (cid) counts[cid] = (counts[cid] || 0) + 1;
+        });
+        // attach counts to categories via a small object passed to client component
+        (categories as any).__counts = counts;
+    } catch (error) {
+        console.error('Error loading sidebar data:', error);
+        // Continue with empty data rather than crashing
+    }
 
   return (
     <Sidebar collapsible="icon" side="left">
@@ -42,8 +55,14 @@ export default async function UserSidebar() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                 {/* Categories sidebar removed to avoid duplicate category lists; filters panel provides category selection */}
-
+                                 {/* Categories */}
+                                 <SidebarGroup>
+                                        <SidebarGroupLabel>Categories</SidebarGroupLabel>
+                                        <div className="px-3">
+                                            {/* Client component for interactive category list */}
+                                            <SidebarCategories categories={categories} counts={(categories as any).__counts} />
+                                        </div>
+                                 </SidebarGroup>
                  <SidebarGroup>
                     <SidebarGroupLabel>My Account</SidebarGroupLabel>
                      <SidebarMenuItem>
