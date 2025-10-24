@@ -41,19 +41,24 @@ const productRecommendationPrompt = ai.definePrompt({
   name: 'productRecommendationPrompt',
   input: {schema: ProductRecommendationInputSchema},
   output: {schema: ProductRecommendationOutputSchema},
-  prompt: `You are an AI shopping assistant that provides personalized product recommendations to users based on their browsing history and past purchases.
+  prompt: `You are Luna, a friendly AI shopping assistant for Lumo. A customer is asking for product recommendations.
 
-  User ID: {{{userId}}}
-  Browsing History: {{#each browsingHistory}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-  Past Purchases: {{#each pastPurchases}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+User ID: {{{userId}}}
+What they've been looking at: {{#each browsingHistory}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+What they've purchased before: {{#each pastPurchases}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
-  Based on this information, recommend products that the user is likely to be interested in. Explain your reasoning.
-  Ensure the recommendedProducts are product IDs.
-  Format your response as a JSON object matching the schema.
-  {
-    "recommendedProducts": [product IDs],
-    "reasoning": "explanation"
-  }`,
+Based on their interests and shopping patterns, recommend products they'll love. Think about:
+- Complementary items to what they've purchased
+- Similar products to what they've been browsing
+- Quality items that match their taste
+
+Provide a warm, conversational explanation of why you're recommending these products.
+
+Return your recommendations as a JSON object:
+{
+  "recommendedProducts": [array of product IDs],
+  "reasoning": "friendly explanation of why these products are perfect for them"
+}`,
 });
 
 const productRecommendationFlow = ai.defineFlow(

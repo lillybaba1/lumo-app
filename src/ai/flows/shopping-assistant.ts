@@ -77,8 +77,18 @@ export async function shoppingAssistant(
 
     // Otherwise use the product question answering flow with product context.
     const question = query;
+
+    // Format conversation history for the AI to maintain context
+    const conversationHistory = history && history.length > 0
+      ? history.map(msg => `${msg.role === 'user' ? 'Customer' : 'Luna'}: ${msg.content}`).join('\n')
+      : undefined;
+
     try {
-      const res = await productQuestionAnswering({ question, productDetails });
+      const res = await productQuestionAnswering({
+        question,
+        productDetails,
+        conversationHistory
+      });
       if (res && res.answer) return { answer: res.answer };
       // fallthrough to local fallback below
     } catch (qaErr) {
@@ -88,31 +98,70 @@ export async function shoppingAssistant(
 
     // Local fallback: simple keyword search over the fetched products.
     try {
-      const q = query.toLowerCase();
+      const q = query.toLowerCase().trim();
+
+      // Handle greetings
+      const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+      if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ','))) {
+        return {
+          answer: "Hello! 👋 Welcome to Lumo! I'm Luna, your shopping assistant. I'm here to help you find the perfect products. What are you looking for today?"
+        };
+      }
+
+      // Handle follow-up questions without AI context
+      const followUps = ['do you have them', 'tell me more', 'more info', 'more information', 'details'];
+      if (followUps.some(f => q.includes(f))) {
+        const lastUserMessage = history?.filter(m => m.role === 'user').slice(-2, -1)[0];
+        if (lastUserMessage) {
+          return {
+            answer: `I'd love to provide more details! However, I need my AI connection to give you comprehensive information. Could you please be more specific about which product you'd like to know more about? For example, ask about "Hydrating Face Mask details" or "tell me about the Wireless Headphones".`
+          };
+        }
+      }
+
       const tokens = q.split(/\s+/).filter(Boolean);
+
+      // Try fuzzy matching for common typos (e.g., "sikn" -> "skin")
+      const fuzzyTokens = tokens.map(token => {
+        if (token.match(/^sk?i[kn]+$/)) return 'skin'; // sikn, skin, skiin -> skin
+        if (token.match(/^ca?re?$/)) return 'care'; // care, car -> care
+        return token;
+      });
+
       const matches = slice.filter((p: any) => {
         const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
-        return tokens.every(t => hay.includes(t));
+        return fuzzyTokens.every(t => hay.includes(t));
       });
 
       if (matches.length === 0) {
         // If no exact-match, try looser matching on any token
         const loose = slice.filter((p: any) => {
           const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
-          return tokens.some(t => hay.includes(t));
+          return fuzzyTokens.some(t => hay.includes(t));
         });
         if (loose.length === 0) {
-          return { answer: "I couldn't find matching products locally. Try rephrasing your question or check back later." };
+          return {
+            answer: "I couldn't find any matching products. Could you try describing what you're looking for differently? For example, try 'electronics', 'fashion', or 'skincare'."
+          };
         }
-        const top = loose.slice(0, 4).map((p: any) => `${p.name} — ${p.price ? `$${p.price}` : 'price unknown'}`);
-        return { answer: `I found these products that might help:\n${top.join('\n')}` };
+        const top = loose.slice(0, 4).map((p: any) => `• ${p.name} — $${p.price || '??'} (${p.category || 'General'})`);
+        return {
+          answer: `I found these products that might interest you:\n\n${top.join('\n')}\n\nWould you like to know more about any of these?`
+        };
       }
 
-      const topMatches = matches.slice(0, 6).map((p: any) => `${p.name} — ${p.price ? `$${p.price}` : 'price unknown'} (${p.category || 'uncategorized'})`);
-      return { answer: `Here are some matching products:\n${topMatches.join('\n')}` };
+      const topMatches = matches.slice(0, 6).map((p: any) => {
+        const desc = p.description ? `\n  ${String(p.description).slice(0, 100)}${String(p.description).length > 100 ? '...' : ''}` : '';
+        return `• **${p.name}** — $${p.price || '??'} (${p.category || 'General'})${desc}`;
+      });
+      return {
+        answer: `Great! Here are the products I found:\n\n${topMatches.join('\n\n')}\n\nWould you like more details about any of these?`
+      };
     } catch (localErr) {
       console.error('Local fallback failed:', localErr);
-      return { answer: "I'm sorry — I couldn't complete that request right now." };
+      return {
+        answer: "I'm having trouble processing your request right now. Please try again or rephrase your question."
+      };
     }
   } catch (err) {
     console.error('shoppingAssistant error:', err);
