@@ -47,8 +47,9 @@ function formatDate(dateString: string) {
   });
 }
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
-  const order = await getOrderById(params.id);
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const order = await getOrderById(id);
 
   if (!order) {
     notFound();

@@ -2,13 +2,23 @@ import { getProducts } from '@/services/productService';
 import ProductCard from '@/components/product-card';
 import type { Product } from '@/lib/types';
 
-export default async function CategoryPage({ params, searchParams }: { params: { id: string }, searchParams: { page?: string, sort?: string } }) {
-  const page = parseInt(searchParams.page || '1', 10) || 1;
+export default async function CategoryPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ page?: string, sort?: string }>
+}) {
+  // Next.js 15: params and searchParams are now promises
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+
+  const page = parseInt(resolvedSearchParams.page || '1', 10) || 1;
   const perPage = 12;
-  const sort = searchParams.sort || 'name-asc';
+  const sort = resolvedSearchParams.sort || 'name-asc';
 
   const all = await getProducts();
-  const catId = params.id.toLowerCase();
+  const catId = resolvedParams.id.toLowerCase();
   const filtered = all.filter(p => {
     const catLower = (p.category || '').toLowerCase();
     const catIdField = (p.categoryId || '').toLowerCase();
@@ -29,7 +39,7 @@ export default async function CategoryPage({ params, searchParams }: { params: {
   const start = (page - 1) * perPage;
   const paged = filtered.slice(start, start + perPage);
 
-  const title = params.id.charAt(0).toUpperCase() + params.id.slice(1);
+  const title = resolvedParams.id.charAt(0).toUpperCase() + resolvedParams.id.slice(1);
 
   return (
     <div className="container mx-auto px-4 py-8">

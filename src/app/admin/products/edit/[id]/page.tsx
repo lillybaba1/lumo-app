@@ -4,8 +4,8 @@ import { getProductById, getCategories } from '@/services/productService';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const product = await getProductById(id);
     const categories = await getCategories();
 
