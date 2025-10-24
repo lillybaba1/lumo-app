@@ -28,14 +28,10 @@ export type ShoppingAssistantOutput = z.infer<typeof ShoppingAssistantOutputSche
 export async function shoppingAssistant(
   input: ShoppingAssistantInput
 ): Promise<ShoppingAssistantOutput> {
-  // If running on Edge (Cloudflare Pages / Edge runtime), keep the safe stub.
-  const isEdge =
-    process.env.NEXT_RUNTIME === 'edge' ||
-    process.env.CF_PAGES === '1' ||
-    process.env.EDGE_RUNTIME === '1';
-  if (isEdge) {
-    return { answer: 'Assistant disabled on Cloudflare Edge build for now.' };
-  }
+  // Note: do not early-return based on environment flags here. The
+  // API route (`/api/assistant`) controls runtime selection. If the
+  // runtime doesn't support required libs the flow will throw and we
+  // will return a graceful fallback below.
 
   const { query, history } = input;
 

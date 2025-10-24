@@ -192,38 +192,7 @@ function Home({ products, categories, theme }: { products: Product[], categories
 
                     <Separator />
 
-                    {/* Category Filter */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">Category</Label>
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="category"
-                            value="all"
-                            checked={selectedCategory === 'all'}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="rounded-full"
-                          />
-                          <span className="text-sm">All Products</span>
-                        </label>
-                        {categories.map((category) => (
-                          <label key={category.id} className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="category"
-                              value={category.id}
-                              checked={selectedCategory === category.id}
-                              onChange={(e) => setSelectedCategory(e.target.value)}
-                              className="rounded-full"
-                            />
-                            <span className="text-sm">{category.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Separator />
+                    {/* Category filter removed per request */}
 
                     {/* Price Range Filter */}
                     <div>
