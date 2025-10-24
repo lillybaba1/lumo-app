@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidFileSize(maxSizeMB) {
+      return request.resource.size < maxSizeMB * 1024 * 1024;
+    }
+    
+    // Product images - admin only write, public read
+    match /products/{productId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageType() && isValidFileSize(5);
+    }
+    
+    // Category images - admin only write, public read
+    match /categories/{categoryId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageType() && isValidFileSize(5);
+    }
+    
+    // User avatars - user can upload their own, public read
+    match /users/{userId}/avatar/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidImageType() && isValidFileSize(2);
+    }
+    
+    // Review images - users can upload with their reviews
+    match /reviews/{reviewId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImageType() && isValidFileSize(5);
+    }
+    
+    // General uploads (admin only)
+    match /uploads/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidFileSize(10);
+    }
+    
+    // Page content images (CMS)
+    match /pages/{pageId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageType() && isValidFileSize(5);
+    }
+  }
+}

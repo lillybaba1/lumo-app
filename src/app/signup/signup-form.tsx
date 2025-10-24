@@ -54,14 +54,15 @@ export default function SignupForm() {
         description: "Welcome to Lumo! You're now logged in.",
       });
 
-      // Create session cookie
-      const sessionData = {
-        userId: user.uid,
-        email: user.email,
-        role: result.role || 'customer',
-      };
-
-      document.cookie = `session=${JSON.stringify(sessionData)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict`;
+      // Create a server-side session cookie so middleware can read it (same as login)
+      const idToken = await user.getIdToken(true);
+      const r = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ idToken }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
 
       // Redirect to home
       router.push('/');
