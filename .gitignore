@@ -46,3 +46,4 @@ firestore-debug.log
 .firebase/
 service-account-key.json
 **/service-account*.json
+service-account-base64.txt
