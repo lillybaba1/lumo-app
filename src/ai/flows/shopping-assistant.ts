@@ -77,8 +77,43 @@ export async function shoppingAssistant(
 
     // Otherwise use the product question answering flow with product context.
     const question = query;
-    const res = await productQuestionAnswering({ question, productDetails });
-    return { answer: res.answer };
+    try {
+      const res = await productQuestionAnswering({ question, productDetails });
+      if (res && res.answer) return { answer: res.answer };
+      // fallthrough to local fallback below
+    } catch (qaErr) {
+      console.error('productQuestionAnswering failed, falling back to local search:', qaErr);
+      // Continue to a local fallback that can answer simple queries from product data.
+    }
+
+    // Local fallback: simple keyword search over the fetched products.
+    try {
+      const q = query.toLowerCase();
+      const tokens = q.split(/\s+/).filter(Boolean);
+      const matches = slice.filter((p: any) => {
+        const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
+        return tokens.every(t => hay.includes(t));
+      });
+
+      if (matches.length === 0) {
+        // If no exact-match, try looser matching on any token
+        const loose = slice.filter((p: any) => {
+          const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
+          return tokens.some(t => hay.includes(t));
+        });
+        if (loose.length === 0) {
+          return { answer: "I couldn't find matching products locally. Try rephrasing your question or check back later." };
+        }
+        const top = loose.slice(0, 4).map((p: any) => `${p.name} — ${p.price ? `$${p.price}` : 'price unknown'}`);
+        return { answer: `I found these products that might help:\n${top.join('\n')}` };
+      }
+
+      const topMatches = matches.slice(0, 6).map((p: any) => `${p.name} — ${p.price ? `$${p.price}` : 'price unknown'} (${p.category || 'uncategorized'})`);
+      return { answer: `Here are some matching products:\n${topMatches.join('\n')}` };
+    } catch (localErr) {
+      console.error('Local fallback failed:', localErr);
+      return { answer: "I'm sorry — I couldn't complete that request right now." };
+    }
   } catch (err) {
     console.error('shoppingAssistant error:', err);
     return { answer: "I'm sorry — I couldn't complete that request right now." };
