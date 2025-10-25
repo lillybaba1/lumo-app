@@ -3,24 +3,71 @@
 
 import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
 
-interface Settings {
+export interface Settings {
+    // General Store Info
     currency: string;
+    storeName?: string;
+    storeTagline?: string;
+    storeEmail?: string;
+    storePhone?: string;
+    storeAddress?: string;
+    storeLogo?: string;
+
+    // Tax Settings
+    taxEnabled?: boolean;
+    taxRate?: number;
+    taxLabel?: string;
+    displayPricesWithTax?: boolean;
+
+    // Shipping Settings
+    freeShippingEnabled?: boolean;
+    freeShippingThreshold?: number;
+    flatRateShippingEnabled?: boolean;
+    flatRateShippingCost?: number;
+
+    // Email/Notification Settings
+    emailOrderConfirmation?: boolean;
+    emailShippingNotification?: boolean;
+    emailNewsletter?: boolean;
+
+    // Inventory Settings
+    lowStockThreshold?: number;
+    enableLowStockAlerts?: boolean;
 }
 
-export async function getSettings(): Promise<Settings | null> {
+const defaultSettings: Settings = {
+    currency: 'USD',
+    storeName: 'Lumo Store',
+    storeTagline: 'Your trusted e-commerce store',
+    taxEnabled: false,
+    taxRate: 0,
+    taxLabel: 'Tax',
+    displayPricesWithTax: false,
+    freeShippingEnabled: false,
+    freeShippingThreshold: 100,
+    flatRateShippingEnabled: false,
+    flatRateShippingCost: 10,
+    emailOrderConfirmation: true,
+    emailShippingNotification: true,
+    emailNewsletter: false,
+    lowStockThreshold: 10,
+    enableLowStockAlerts: true,
+};
+
+export async function getSettings(): Promise<Settings> {
     if (!isFirebaseAdminInitialized() || !dbAdmin) {
-        return { currency: 'USD' };
+        return defaultSettings;
     }
     try {
         const settingsDocRef = dbAdmin().collection('settings').doc('storeConfig');
         const docSnap = await settingsDocRef.get();
         if (docSnap.exists) {
-            return docSnap.data() as Settings;
+            return { ...defaultSettings, ...docSnap.data() } as Settings;
         }
-        return { currency: 'USD' }; // Default currency
+        return defaultSettings;
     } catch (error) {
         console.error('Failed to get settings from Firestore:', error);
-        return { currency: 'USD' };
+        return defaultSettings;
     }
 }
 
