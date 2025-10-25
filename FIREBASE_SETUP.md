@@ -1,11 +1,24 @@
 # Firebase Setup Guide - Fix Signup Error
 
-## ❌ Current Error
-```
-"Unable to detect a project Id in the current environment"
+## ❌ Common Errors
+
+### Error 1: "Unable to detect a project Id in the current environment"
+This means Firebase Admin SDK credentials are missing from your environment variables.
+
+### Error 2: "Failed to determine project ID: getaddrinfo ENOTFOUND metadata.google.internal"
+This means Firebase is trying to use Google Cloud metadata (cloud environment) instead of your local credentials. **Your .env.local is not being loaded properly.**
+
+---
+
+## 🔍 Quick Diagnosis
+
+Run this command to check your configuration:
+
+```bash
+node scripts/verify-firebase-env.js
 ```
 
-This means Firebase Admin SDK credentials are missing.
+This will tell you exactly what's wrong!
 
 ---
 
@@ -84,6 +97,29 @@ Redeploy on Vercel (it will pick up the new environment variable)
 
 ---
 
+## 🚀 Verify Your Setup
+
+After adding credentials, run this verification script:
+
+```bash
+node scripts/verify-firebase-env.js
+```
+
+**Expected output:**
+```
+✅ All environment variables are properly configured!
+
+🚀 You can now:
+   - Sign up new users
+   - Log in to existing accounts
+   - Use the AI assistant
+   - Access admin panel
+```
+
+**If you see errors**, the script will tell you exactly what needs to be fixed.
+
+---
+
 ## ✅ Test Signup
 
 1. Go to `/signup`
@@ -113,6 +149,38 @@ NODE_ENV=development
 
 ## 🐛 Troubleshooting
 
+### Error: "getaddrinfo ENOTFOUND metadata.google.internal"
+
+**Cause:** Your `.env.local` file is not being loaded
+
+**Solutions:**
+
+1. **Check file location:**
+   ```bash
+   # .env.local should be in project root, same folder as package.json
+   ls -la .env.local
+   ```
+
+2. **Check file contents:**
+   ```bash
+   cat .env.local | grep FIREBASE_SERVICE_ACCOUNT_JSON
+   ```
+
+3. **Restart dev server:**
+   ```bash
+   # Kill all node processes
+   killall node
+   # Or on Windows: taskkill /F /IM node.exe
+
+   # Start fresh
+   npm run dev
+   ```
+
+4. **Verify environment variables are loaded:**
+   ```bash
+   node scripts/verify-firebase-env.js
+   ```
+
 ### Still getting the error?
 
 **Check 1: Is the JSON valid?**
@@ -133,8 +201,16 @@ Look for these errors:
 - ❌ "Bad service account JSON" → Missing required fields
 - ✅ No errors → Credentials loaded successfully!
 
-**Check 4: Verify .env.local location**
-Make sure `.env.local` is in your **project root** (same folder as `package.json`)
+**Check 5: Run verification script**
+```bash
+node scripts/verify-firebase-env.js
+```
+This will show you exactly what's wrong!
+
+**Check 6: Test in Node.js directly**
+```bash
+node -e "require('dotenv').config({path:'.env.local'}); console.log('FIREBASE_SERVICE_ACCOUNT_JSON:', process.env.FIREBASE_SERVICE_ACCOUNT_JSON ? 'SET' : 'NOT SET')"
+```
 
 ---
 
@@ -205,7 +281,10 @@ Firebase Console → Project Settings → Service Accounts → Generate new priv
 
 1. ✅ Get service account JSON from Firebase Console
 2. ✅ Add to `.env.local` as `FIREBASE_SERVICE_ACCOUNT_JSON`
-3. ✅ Restart your dev server
-4. ✅ Test signup - should work!
+3. ✅ Run `node scripts/verify-firebase-env.js` to verify
+4. ✅ Restart your dev server
+5. ✅ Test signup - should work!
 
 The error happens because Firebase Admin SDK (server-side) needs these credentials to create user accounts and manage authentication.
+
+**Verification Script:** Run `node scripts/verify-firebase-env.js` anytime to check your setup!

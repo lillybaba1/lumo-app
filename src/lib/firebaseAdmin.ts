@@ -87,12 +87,14 @@ export function getAdminApp(): admin.app.App {
     return global.__FIREBASE_ADMIN_APP__;
   }
 
-  // No explicit credentials, try Application Default Credentials
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  global.__FIREBASE_ADMIN_APP__ = admin.app();
-  return global.__FIREBASE_ADMIN_APP__;
+  // No explicit credentials found - throw helpful error
+  throw new Error(
+    'Firebase Admin credentials not found. Please set one of the following environment variables:\n' +
+    '  - FIREBASE_SERVICE_ACCOUNT_JSON (recommended)\n' +
+    '  - FIREBASE_SERVICE_ACCOUNT_BASE64\n' +
+    '  - GOOGLE_APPLICATION_CREDENTIALS\n\n' +
+    'See FIREBASE_SETUP.md for detailed setup instructions.'
+  );
 }
 
 export const adminAuth = () => getAdminApp().auth();
