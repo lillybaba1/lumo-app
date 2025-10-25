@@ -192,7 +192,27 @@ function Home({ products, categories, theme }: { products: Product[], categories
 
                     <Separator />
 
-                    {/* Category filter removed per request */}
+                    {/* Category Filter */}
+                    <div>
+                      <Label className="text-sm font-semibold mb-3 block">
+                        Category
+                      </Label>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Separator />
 
                     {/* Price Range Filter */}
                     <div>
