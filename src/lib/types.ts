@@ -9,6 +9,15 @@ export interface Product {
   // optional category id / slug for linking
   categoryId?: string;
   stock: number;
+  // Advanced inventory fields
+  sku?: string;
+  barcode?: string;
+  trackInventory?: boolean;
+  reorderPoint?: number; // Min stock level before alert
+  reorderQuantity?: number; // Qty to reorder when below reorder point
+  stockByLocation?: Record<string, number>; // { locationId: quantity }
+  weight?: number; // in kg
+  dimensions?: { length: number; width: number; height: number }; // in cm
 }
 
 export interface Category {
@@ -105,4 +114,134 @@ export interface AnalyticsData {
   topProducts: Array<{ product: Product; sales: number }>;
   revenueByMonth: Array<{ month: string; revenue: number }>;
   ordersByStatus: Record<Order['status'], number>;
+}
+
+// Advanced Inventory Types
+export interface WarehouseLocation {
+  id: string;
+  name: string;
+  address?: string;
+  type: 'warehouse' | 'store' | 'supplier' | 'other';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface InventoryTransaction {
+  id: string;
+  productId: string;
+  productName: string;
+  sku?: string;
+  type: 'purchase' | 'sale' | 'adjustment' | 'transfer' | 'return' | 'damage';
+  quantity: number; // Positive for increases, negative for decreases
+  fromLocationId?: string;
+  toLocationId?: string;
+  orderId?: string; // If related to an order
+  reason?: string;
+  notes?: string;
+  createdBy: string; // Admin user who made the transaction
+  createdAt: string;
+}
+
+export interface StockAlert {
+  id: string;
+  productId: string;
+  productName: string;
+  sku?: string;
+  currentStock: number;
+  reorderPoint: number;
+  locationId?: string;
+  severity: 'critical' | 'warning' | 'info';
+  status: 'active' | 'resolved' | 'ignored';
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+// Email Template Types
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string; // HTML content
+  type: 'order_confirmation' | 'shipping_notification' | 'password_reset' | 'welcome' | 'custom';
+  variables: string[]; // e.g., ['customerName', 'orderNumber', 'trackingNumber']
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Customer Segmentation Types
+export interface CustomerSegment {
+  id: string;
+  name: string;
+  description?: string;
+  rules: SegmentRule[];
+  customerCount?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SegmentRule {
+  field: 'totalSpent' | 'orderCount' | 'lastOrderDate' | 'tags' | 'customField';
+  operator: 'equals' | 'notEquals' | 'greaterThan' | 'lessThan' | 'contains' | 'notContains';
+  value: string | number;
+}
+
+export interface CustomerTag {
+  id: string;
+  name: string;
+  color?: string;
+  createdAt: string;
+}
+
+// Marketing Campaign Types
+export interface Campaign {
+  id: string;
+  name: string;
+  type: 'email' | 'sms';
+  status: 'draft' | 'scheduled' | 'running' | 'completed' | 'paused';
+  templateId?: string;
+  subject?: string;
+  content: string;
+  segmentId?: string; // Target audience
+  scheduledAt?: string;
+  sentAt?: string;
+  stats: {
+    sent: number;
+    delivered: number;
+    opened: number;
+    clicked: number;
+    converted: number;
+  };
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Return/Exchange Types
+export interface ReturnRequest {
+  id: string;
+  orderId: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  items: ReturnItem[];
+  reason: string;
+  type: 'return' | 'exchange';
+  status: 'pending' | 'approved' | 'rejected' | 'received' | 'refunded' | 'exchanged';
+  refundAmount?: number;
+  restockItems: boolean;
+  notes?: string;
+  adminNotes?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ReturnItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  reason: string;
+  condition?: 'new' | 'used' | 'damaged';
 }
