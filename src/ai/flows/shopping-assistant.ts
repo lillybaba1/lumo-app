@@ -2,8 +2,105 @@
 
 import { z } from 'zod';
 import { getProducts } from '@/services/productService';
+import { getOrders } from '@/services/orderService';
+import { getAnalytics } from '@/services/analyticsService';
+import { getSettings } from '@/services/settingsService';
 import { productQuestionAnswering } from './product-question-answering';
 import { getProductRecommendations } from './product-recommendation';
+
+// Admin command handler - provides business insights and data queries
+async function handleAdminCommand(query: string, products: any[]): Promise<string | null> {
+  const q = query.toLowerCase().trim();
+
+  // Low stock products
+  if (q.includes('low stock') || q.includes('running low') || q.includes('inventory alert')) {
+    const settings = await getSettings();
+    const threshold = settings.lowStockThreshold || 10;
+    const lowStockItems = products.filter(p => (p.stock || 0) < threshold);
+
+    if (lowStockItems.length === 0) {
+      return `✅ **Good news!** All products are well-stocked (above ${threshold} units). No inventory alerts at the moment.`;
+    }
+
+    const items = lowStockItems.slice(0, 10).map(p =>
+      `• **${p.name}** - Only ${p.stock || 0} left in stock`
+    ).join('\n');
+
+    return `⚠️ **Low Stock Alert**\n\nFound ${lowStockItems.length} product(s) below the threshold of ${threshold} units:\n\n${items}\n\n${lowStockItems.length > 10 ? `\n...and ${lowStockItems.length - 10} more. Visit the Products page to see all.` : ''}`;
+  }
+
+  // Today's orders
+  if (q.includes('today') && (q.includes('order') || q.includes('sale'))) {
+    const orders = await getOrders();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayOrders = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      return orderDate.getTime() === today.getTime();
+    });
+
+    const revenue = todayOrders
+      .filter(o => o.paymentStatus === 'Paid')
+      .reduce((sum, o) => sum + o.total, 0);
+
+    if (todayOrders.length === 0) {
+      return `📊 **Today's Orders**: No orders received yet today. Keep an eye on the dashboard for updates!`;
+    }
+
+    return `📊 **Today's Orders Summary**\n\n• **Total Orders**: ${todayOrders.length}\n• **Revenue**: $${revenue.toFixed(2)}\n• **Pending**: ${todayOrders.filter(o => o.status === 'Pending').length}\n• **Processing**: ${todayOrders.filter(o => o.status === 'Processing').length}\n\nVisit the Orders page for detailed information.`;
+  }
+
+  // Sales summary / analytics
+  if ((q.includes('sales') || q.includes('revenue') || q.includes('analytics')) &&
+      (q.includes('summary') || q.includes('report') || q.includes('overview'))) {
+    const analytics = await getAnalytics();
+    const settings = await getSettings();
+    const currencySymbol = settings.currency === 'GMD' ? 'D' : '$';
+
+    return `📈 **Sales Summary**\n\n• **Total Revenue**: ${currencySymbol}${analytics.totalRevenue.toFixed(2)}\n• **Total Orders**: ${analytics.totalOrders}\n• **Total Customers**: ${analytics.totalCustomers}\n• **Total Products**: ${analytics.totalProducts}\n\n**Order Status:**\n• Pending: ${analytics.ordersByStatus.Pending}\n• Processing: ${analytics.ordersByStatus.Processing}\n• Shipped: ${analytics.ordersByStatus.Shipped}\n• Delivered: ${analytics.ordersByStatus.Delivered}\n• Cancelled: ${analytics.ordersByStatus.Cancelled}\n\nFor detailed analytics, visit the Analytics Dashboard.`;
+  }
+
+  // Top selling products
+  if (q.includes('top') && (q.includes('product') || q.includes('selling') || q.includes('seller'))) {
+    const analytics = await getAnalytics();
+
+    if (analytics.topProducts.length === 0) {
+      return `📦 No sales data available yet. Once customers start purchasing, I'll show you the top sellers!`;
+    }
+
+    const top = analytics.topProducts.slice(0, 5).map((item, idx) =>
+      `${idx + 1}. **${item.product.name}** - ${item.sales} sales ($${item.product.price})`
+    ).join('\n');
+
+    return `🏆 **Top Selling Products**\n\n${top}\n\nVisit the Analytics page for the complete list and detailed insights.`;
+  }
+
+  // Out of stock products
+  if (q.includes('out of stock') || q.includes('no stock') || q.includes('sold out')) {
+    const outOfStock = products.filter(p => (p.stock || 0) === 0);
+
+    if (outOfStock.length === 0) {
+      return `✅ **Excellent!** No products are out of stock. All items are available for purchase.`;
+    }
+
+    const items = outOfStock.slice(0, 10).map(p => `• **${p.name}**`).join('\n');
+
+    return `⚠️ **Out of Stock Alert**\n\n${outOfStock.length} product(s) are currently out of stock:\n\n${items}\n\n${outOfStock.length > 10 ? `\n...and ${outOfStock.length - 10} more.` : ''}\n\nConsider restocking these items soon!`;
+  }
+
+  // Admin greeting - special response
+  if (q === 'hi' || q === 'hello' || q === 'hey') {
+    const analytics = await getAnalytics();
+    const lowStockItems = products.filter(p => (p.stock || 0) < 10).length;
+
+    return `👋 **Hello, Admin!** I'm Luna, your AI business assistant.\n\n**Quick Overview:**\n• Total Products: ${products.length}\n• Total Orders: ${analytics.totalOrders}\n• Revenue: $${analytics.totalRevenue.toFixed(2)}\n${lowStockItems > 0 ? `• ⚠️ ${lowStockItems} low stock alert(s)\n` : ''}\n**I can help you with:**\n• "Show low stock products"\n• "What are today's orders?"\n• "Sales summary"\n• "Top selling products"\n• "Out of stock items"\n\nWhat would you like to know?`;
+  }
+
+  // No admin command matched
+  return null;
+}
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -13,6 +110,7 @@ const MessageSchema = z.object({
 const ShoppingAssistantInputSchema = z.object({
   query: z.string().describe('The user query for the shopping assistant.'),
   history: z.array(MessageSchema).optional().describe('The conversation history.'),
+  userRole: z.enum(['customer', 'admin']).optional().describe('The role of the user (admin or customer).'),
 });
 export type ShoppingAssistantInput = z.infer<typeof ShoppingAssistantInputSchema>;
 
@@ -25,6 +123,7 @@ export type ShoppingAssistantOutput = z.infer<typeof ShoppingAssistantOutputSche
 // context from Firestore (or mock data via productService fallbacks) and
 // delegates to the productQuestionAnswering flow. For simple "recommend"
 // queries we also try the recommendation flow.
+// ADMIN FEATURES: When userRole is 'admin', provides business insights and data queries.
 export async function shoppingAssistant(
   input: ShoppingAssistantInput
 ): Promise<ShoppingAssistantOutput> {
@@ -33,11 +132,21 @@ export async function shoppingAssistant(
   // runtime doesn't support required libs the flow will throw and we
   // will return a graceful fallback below.
 
-  const { query, history } = input;
+  const { query, history, userRole } = input;
+  const isAdmin = userRole === 'admin';
 
   try {
     // Fetch a list of products to provide context to the model.
     const products = await getProducts();
+
+    // ADMIN-SPECIFIC FEATURES: Handle admin commands
+    if (isAdmin) {
+      const adminResponse = await handleAdminCommand(query, products);
+      if (adminResponse) {
+        return { answer: adminResponse };
+      }
+    }
+
     const maxProducts = 12;
     const slice = products.slice(0, maxProducts);
 
