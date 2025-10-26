@@ -22,12 +22,13 @@ type ProductFormProps = {
     categories: Category[];
 };
 
-function SubmitButton() {
+function SubmitButton({ isSaving }: { isSaving?: boolean }) {
     const { pending } = useFormStatus();
+    const isDisabled = pending || isSaving;
     return (
-        <Button type="submit" disabled={pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {pending ? 'Saving...' : 'Save Product'}
+        <Button type="submit" disabled={isDisabled}>
+            {isDisabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isDisabled ? 'Saving...' : 'Save Product'}
         </Button>
     );
 }
@@ -37,6 +38,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const router = useRouter();
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     const [isUploading, setIsUploading] = React.useState(false);
+    const [isSaving, setIsSaving] = React.useState(false);
     const imageInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,9 +81,38 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const handleRemoveImage = (urlToRemove: string) => {
         setImageUrls(prev => prev.filter(url => url !== urlToRemove));
     }
-    
+
+    const handleSubmit = async (formData: FormData) => {
+        setIsSaving(true);
+        try {
+            const result = await saveProduct(formData);
+
+            if (result && !result.success) {
+                toast({
+                    title: 'Error',
+                    description: result.message || 'Failed to save product',
+                    variant: 'destructive',
+                });
+                setIsSaving(false);
+            } else {
+                toast({
+                    title: 'Success',
+                    description: product ? 'Product updated successfully' : 'Product created successfully',
+                });
+                // Redirect will happen from server action
+            }
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'An unexpected error occurred',
+                variant: 'destructive',
+            });
+            setIsSaving(false);
+        }
+    }
+
     return (
-        <form action={saveProduct}>
+        <form action={handleSubmit}>
             {product && <input type="hidden" name="id" value={product.id} />}
             <input type="hidden" name="imageUrls" value={imageUrls.join(',')} />
 
@@ -121,7 +152,10 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 </div>
 
                 <div className="space-y-4">
-                    <Label>Product Images</Label>
+                    <div>
+                        <Label>Product Images *</Label>
+                        <p className="text-sm text-muted-foreground">At least one image is required. Upload multiple images to showcase your product.</p>
+                    </div>
                     <div className="flex items-center gap-4">
                         <label htmlFor="product-image-upload" className="cursor-pointer">
                             <Button asChild variant="outline" type="button" disabled={isUploading}>
@@ -132,6 +166,9 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                             </Button>
                             <input id="product-image-upload" ref={imageInputRef} type="file" className="sr-only" accept="image/*" onChange={handleImageChange} multiple />
                         </label>
+                        {imageUrls.length > 0 && (
+                            <span className="text-sm text-muted-foreground">{imageUrls.length} image(s) uploaded</span>
+                        )}
                     </div>
                      {imageUrls.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -154,8 +191,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
 
             </CardContent>
             <CardFooter className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <SubmitButton />
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
+                <SubmitButton isSaving={isSaving} />
             </CardFooter>
         </form>
     );
