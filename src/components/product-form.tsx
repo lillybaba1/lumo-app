@@ -83,6 +83,16 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     }
 
     const handleSubmit = async (formData: FormData) => {
+        // Client-side validation: Check if at least one image is uploaded
+        if (imageUrls.length === 0) {
+            toast({
+                title: 'Image Required',
+                description: 'Please upload at least one product image before saving.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         setIsSaving(true);
         try {
             const result = await saveProduct(formData);
