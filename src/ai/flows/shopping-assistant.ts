@@ -90,12 +90,22 @@ async function handleAdminCommand(query: string, products: any[]): Promise<strin
     return `⚠️ **Out of Stock Alert**\n\n${outOfStock.length} product(s) are currently out of stock:\n\n${items}\n\n${outOfStock.length > 10 ? `\n...and ${outOfStock.length - 10} more.` : ''}\n\nConsider restocking these items soon!`;
   }
 
-  // Admin greeting - special response
-  if (q === 'hi' || q === 'hello' || q === 'hey') {
+  // Admin greeting - special response (expanded to catch variations)
+  const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+  if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ','))) {
     const analytics = await getAnalytics();
     const lowStockItems = products.filter(p => (p.stock || 0) < 10).length;
 
     return `👋 **Hello, Admin!** I'm Luna, your AI business assistant.\n\n**Quick Overview:**\n• Total Products: ${products.length}\n• Total Orders: ${analytics.totalOrders}\n• Revenue: $${analytics.totalRevenue.toFixed(2)}\n${lowStockItems > 0 ? `• ⚠️ ${lowStockItems} low stock alert(s)\n` : ''}\n**I can help you with:**\n• "Show low stock products"\n• "What are today's orders?"\n• "Sales summary"\n• "Top selling products"\n• "Out of stock items"\n\nWhat would you like to know?`;
+  }
+
+  // Meta questions about admin status/role
+  if (q.includes('notice') && (q.includes('role') || q.includes('admin'))) {
+    return `✅ **Yes, I recognize you as an Admin!** I have special capabilities to help you manage your business:\n\n• **Inventory Management**: Ask about low stock or out of stock items\n• **Sales Analytics**: Get revenue summaries and top products\n• **Order Tracking**: Check today's orders and their status\n• **Business Insights**: I can provide data-driven insights\n\nTry asking: "Show low stock products" or "What are today's orders?"`;
+  }
+
+  if (q.includes('who am i') || q.includes('what is my role') || (q.includes('am i') && q.includes('admin'))) {
+    return `🔐 **You are an Admin** of the Lumo store. I can provide you with business insights and management tools that regular customers don't have access to. How can I assist you with managing your store today?`;
   }
 
   // No admin command matched
@@ -188,8 +198,9 @@ export async function shoppingAssistant(
     const question = query;
 
     // Format conversation history for the AI to maintain context
+    const roleLabel = isAdmin ? 'Admin' : 'Customer';
     const conversationHistory = history && history.length > 0
-      ? history.map(msg => `${msg.role === 'user' ? 'Customer' : 'Luna'}: ${msg.content}`).join('\n')
+      ? history.map(msg => `${msg.role === 'user' ? roleLabel : 'Luna'}: ${msg.content}`).join('\n')
       : undefined;
 
     try {
@@ -198,10 +209,15 @@ export async function shoppingAssistant(
         productDetails,
         conversationHistory
       });
-      if (res && res.answer) return { answer: res.answer };
+      if (res && res.answer) {
+        console.log('[AI] Gemini response successful');
+        return { answer: res.answer };
+      }
+      console.warn('[AI] Gemini returned empty response, falling back');
       // fallthrough to local fallback below
     } catch (qaErr) {
-      console.error('productQuestionAnswering failed, falling back to local search:', qaErr);
+      const errorMsg = qaErr instanceof Error ? qaErr.message : String(qaErr);
+      console.error('[AI] Gemini failed, falling back to local search. Error:', errorMsg);
       // Continue to a local fallback that can answer simple queries from product data.
     }
 
@@ -209,12 +225,22 @@ export async function shoppingAssistant(
     try {
       const q = query.toLowerCase().trim();
 
-      // Handle greetings
-      const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
-      if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ','))) {
+      // Handle negative responses - user is declining
+      const negatives = ['no', 'nope', 'no thanks', 'not interested', 'nothing', 'never mind'];
+      if (negatives.some(n => q === n || q === n + '.')) {
         return {
-          answer: "Hello! 👋 Welcome to Lumo! I'm Luna, your shopping assistant. I'm here to help you find the perfect products. What are you looking for today?"
+          answer: "No problem! Is there anything else I can help you with? I can help you search for products, answer questions, or provide recommendations."
         };
+      }
+
+      // Handle greetings (only for non-admin, admin greetings handled above)
+      if (!isAdmin) {
+        const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+        if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ','))) {
+          return {
+            answer: "Hello! 👋 Welcome to Lumo! I'm Luna, your shopping assistant. I'm here to help you find the perfect products. What are you looking for today?"
+          };
+        }
       }
 
       // Handle follow-up questions without AI context
