@@ -19,14 +19,16 @@ function formatCurrency(amount: number, currencySymbol: string) {
 export default async function DashboardPage() {
   let settings = null;
   let analytics = null;
-  
+  let error = null;
+
   try {
     [settings, analytics] = await Promise.all([
       getSettings(),
       getAnalytics()
     ]);
-  } catch (error) {
-    console.error('Error loading dashboard data:', error);
+  } catch (err) {
+    console.error('Error loading dashboard data:', err);
+    error = err instanceof Error ? err.message : 'Failed to load dashboard data';
     // Provide default values
     analytics = {
       totalRevenue: 0,
@@ -44,6 +46,11 @@ export default async function DashboardPage() {
         'Cancelled': 0,
       },
     };
+  }
+
+  // Show error message if data failed to load
+  if (error) {
+    console.warn('Dashboard loaded with default data due to error:', error);
   }
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
