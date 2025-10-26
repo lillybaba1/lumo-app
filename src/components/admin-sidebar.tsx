@@ -5,9 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { AuthenticatedUser } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
+type AdminUser = {
+  userId: string;
+  email: string;
+  role: string;
+};
 
 const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -26,7 +30,7 @@ const navItems = [
 ];
 
 type AdminSidebarProps = {
-    user: AuthenticatedUser | null;
+    user: AdminUser;
 }
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {

@@ -15,19 +15,31 @@ export default function Header({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin from session cookie
-    const sessionCookie = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('session='));
-
-    if (sessionCookie) {
+    // Fetch current user info from API to check admin status
+    const checkAdminStatus = async () => {
       try {
-        const sessionData = JSON.parse(decodeURIComponent(sessionCookie.split('=')[1]));
-        setIsAdmin(sessionData.role === 'admin');
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'same-origin',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.authenticated && data.user?.role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        } else {
+          setIsAdmin(false);
+        }
       } catch (error) {
+        console.error('Error checking admin status:', error);
         setIsAdmin(false);
       }
-    }
+    };
+
+    checkAdminStatus();
   }, []);
 
   return (
