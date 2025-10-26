@@ -2,9 +2,11 @@
 import Link from 'next/link';
 import { getPages } from '@/app/admin/pages/actions';
 import * as defaultPagesData from '@/data/pages.json';
+import { checkAdminAccess } from '@/lib/auth-admin';
 
 export default async function Footer() {
   const pages = await getPages() ?? defaultPagesData;
+  const adminUser = await checkAdminAccess();
 
   return (
     <footer className="border-t bg-muted/20">
@@ -39,8 +41,11 @@ export default async function Footer() {
                  <div>
                   <h4 className="font-semibold mb-2 text-foreground">Account</h4>
                    <ul className="space-y-1 text-sm text-foreground/80">
-                      <li><Link href="/admin/dashboard" className="hover:underline">Admin</Link></li>
+                      {adminUser && (
+                        <li><Link href="/admin/dashboard" className="hover:underline">Admin</Link></li>
+                      )}
                       <li><Link href="/cart" className="hover:underline">My Cart</Link></li>
+                      <li><Link href="/wishlist" className="hover:underline">Wishlist</Link></li>
                    </ul>
                 </div>
               </div>
