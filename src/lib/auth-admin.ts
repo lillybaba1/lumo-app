@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserRoleClient } from '@/services/authService';
-import { authAdmin, isFirebaseAdminInitialized } from './firebaseAdmin';
+import { getUserRole } from '@/services/authService';
+import { authAdmin, isFirebaseAdminInitialized, dbAdmin } from './firebaseAdmin';
 
 const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME ?? 'session';
 
@@ -27,8 +27,9 @@ export async function requireAdmin(): Promise<{ userId: string; email: string; r
         const userId = decodedClaims.uid;
         const email = decodedClaims.email || '';
 
-        // Check user role from database
-        const role = await getUserRoleClient(userId);
+        // Check user role from database using Admin SDK
+        const userDoc = await dbAdmin().collection('users').doc(userId).get();
+        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
 
         if (role !== 'admin') {
           redirect('/?error=unauthorized');
@@ -50,7 +51,7 @@ export async function requireAdmin(): Promise<{ userId: string; email: string; r
     }
 
     // Check user role from database
-    const role = await getUserRoleClient(userId);
+    const role = await getUserRole(userId) || 'customer';
 
     if (role !== 'admin') {
       redirect('/?error=unauthorized');
@@ -82,7 +83,10 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
         const decodedClaims = await authAdmin().verifySessionCookie(sessionCookie.value, true);
         const userId = decodedClaims.uid;
         const email = decodedClaims.email || '';
-        const role = await getUserRoleClient(userId);
+
+        // Get role from database using Admin SDK
+        const userDoc = await dbAdmin().collection('users').doc(userId).get();
+        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
 
         if (role !== 'admin') {
           return null;
@@ -102,7 +106,7 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       return null;
     }
 
-    const role = await getUserRoleClient(userId);
+    const role = await getUserRole(userId) || 'customer';
 
     if (role !== 'admin') {
       return null;
@@ -134,9 +138,12 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
         const decodedClaims = await authAdmin().verifySessionCookie(sessionCookie.value, true);
         const userId = decodedClaims.uid;
         const email = decodedClaims.email || '';
-        const role = await getUserRoleClient(userId);
 
-        return { userId, email, role: role || 'customer' };
+        // Get role from database using Admin SDK
+        const userDoc = await dbAdmin().collection('users').doc(userId).get();
+        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
+
+        return { userId, email, role };
       } catch {
         return null;
       }
@@ -150,9 +157,9 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       return null;
     }
 
-    const role = await getUserRoleClient(userId);
+    const role = await getUserRole(userId) || 'customer';
 
-    return { userId, email, role: role || 'customer' };
+    return { userId, email, role };
   } catch (error) {
     console.error('Get user error:', error);
     return null;

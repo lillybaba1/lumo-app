@@ -22,12 +22,13 @@ type ProductFormProps = {
     categories: Category[];
 };
 
-function SubmitButton() {
+function SubmitButton({ isSaving }: { isSaving?: boolean }) {
     const { pending } = useFormStatus();
+    const isDisabled = pending || isSaving;
     return (
-        <Button type="submit" disabled={pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {pending ? 'Saving...' : 'Save Product'}
+        <Button type="submit" disabled={isDisabled}>
+            {isDisabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isDisabled ? 'Saving...' : 'Save Product'}
         </Button>
     );
 }
@@ -37,41 +38,76 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const router = useRouter();
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     const [isUploading, setIsUploading] = React.useState(false);
+    const [isSaving, setIsSaving] = React.useState(false);
     const imageInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (files) {
-            setIsUploading(true);
-            try {
-                const uploadPromises = Array.from(files).map(file => {
-                     if (file.size > 4 * 1024 * 1024) {
-                        toast({
-                            title: `Image "${file.name}" too large`,
-                            description: "Please upload images smaller than 4MB.",
-                            variant: "destructive"
-                        });
-                        return Promise.resolve(null);
-                    }
-                    return uploadImageAndGetUrl(file, `products/${Date.now()}-${file.name}`);
+        if (!files || files.length === 0) {
+            console.log('[Product Form] No files selected');
+            return;
+        }
+
+        console.log('[Product Form] Starting upload for', files.length, 'file(s)');
+        setIsUploading(true);
+
+        try {
+            const uploadPromises = Array.from(files).map(async (file, index) => {
+                if (file.size > 4 * 1024 * 1024) {
+                    console.warn('[Product Form] File too large:', file.name);
+                    toast({
+                        title: `Image "${file.name}" too large`,
+                        description: "Please upload images smaller than 4MB.",
+                        variant: "destructive"
+                    });
+                    return null;
+                }
+
+                console.log(`[Product Form] Uploading file ${index + 1}/${files.length}:`, file.name);
+                try {
+                    const url = await uploadImageAndGetUrl(file, `products/${Date.now()}-${file.name}`);
+                    console.log(`[Product Form] Upload ${index + 1} successful:`, url);
+                    return url;
+                } catch (err) {
+                    console.error(`[Product Form] Upload ${index + 1} failed:`, err);
+                    throw err;
+                }
+            });
+
+            const urls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
+
+            console.log('[Product Form] All uploads complete. URLs:', urls);
+
+            if (urls.length > 0) {
+                setImageUrls(prev => {
+                    const newUrls = [...prev, ...urls];
+                    console.log('[Product Form] Updated image URLs:', newUrls);
+                    return newUrls;
                 });
-
-                const urls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
-                
-                setImageUrls(prev => [...prev, ...urls]);
-                toast({ title: 'Upload successful', description: `${urls.length} image(s) have been uploaded.` });
-
-            } catch (error: any) {
+                toast({
+                    title: 'Upload successful',
+                    description: `${urls.length} image(s) uploaded successfully.`,
+                });
+            } else {
+                console.warn('[Product Form] No images were successfully uploaded');
                 toast({
                     title: 'Upload failed',
-                    description: error.message || 'Could not upload images.',
+                    description: 'No images could be uploaded. Please try again.',
                     variant: 'destructive'
                 });
-            } finally {
-                setIsUploading(false);
-                if (imageInputRef.current) {
-                    imageInputRef.current.value = '';
-                }
+            }
+
+        } catch (error: any) {
+            console.error('[Product Form] Image upload error:', error);
+            toast({
+                title: 'Upload failed',
+                description: error.message || 'Could not upload images. Please check console for details.',
+                variant: 'destructive'
+            });
+        } finally {
+            setIsUploading(false);
+            if (imageInputRef.current) {
+                imageInputRef.current.value = '';
             }
         }
     };
@@ -79,9 +115,48 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const handleRemoveImage = (urlToRemove: string) => {
         setImageUrls(prev => prev.filter(url => url !== urlToRemove));
     }
-    
+
+    const handleSubmit = async (formData: FormData) => {
+        // Client-side validation: Check if at least one image is uploaded
+        if (imageUrls.length === 0) {
+            toast({
+                title: 'Image Required',
+                description: 'Please upload at least one product image before saving.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const result = await saveProduct(formData);
+
+            if (result && !result.success) {
+                toast({
+                    title: 'Error',
+                    description: result.message || 'Failed to save product',
+                    variant: 'destructive',
+                });
+                setIsSaving(false);
+            } else {
+                toast({
+                    title: 'Success',
+                    description: product ? 'Product updated successfully' : 'Product created successfully',
+                });
+                // Redirect will happen from server action
+            }
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'An unexpected error occurred',
+                variant: 'destructive',
+            });
+            setIsSaving(false);
+        }
+    }
+
     return (
-        <form action={saveProduct}>
+        <form action={handleSubmit}>
             {product && <input type="hidden" name="id" value={product.id} />}
             <input type="hidden" name="imageUrls" value={imageUrls.join(',')} />
 
@@ -121,7 +196,10 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 </div>
 
                 <div className="space-y-4">
-                    <Label>Product Images</Label>
+                    <div>
+                        <Label>Product Images *</Label>
+                        <p className="text-sm text-muted-foreground">At least one image is required. Upload multiple images to showcase your product.</p>
+                    </div>
                     <div className="flex items-center gap-4">
                         <label htmlFor="product-image-upload" className="cursor-pointer">
                             <Button asChild variant="outline" type="button" disabled={isUploading}>
@@ -132,6 +210,9 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                             </Button>
                             <input id="product-image-upload" ref={imageInputRef} type="file" className="sr-only" accept="image/*" onChange={handleImageChange} multiple />
                         </label>
+                        {imageUrls.length > 0 && (
+                            <span className="text-sm text-muted-foreground">{imageUrls.length} image(s) uploaded</span>
+                        )}
                     </div>
                      {imageUrls.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -154,8 +235,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
 
             </CardContent>
             <CardFooter className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <SubmitButton />
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
+                <SubmitButton isSaving={isSaving} />
             </CardFooter>
         </form>
     );

@@ -36,11 +36,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
   const [backgroundImage, setBackgroundImage] = useState(theme.backgroundImage);
   const [foregroundImage, setForegroundImage] = useState(theme.foregroundImage);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [fgScale, setFgScale] = useState(theme.foregroundImageScale ?? 100);
   const [fgPosX, setFgPosX] = useState(theme.foregroundImagePositionX ?? 50);
   const [fgPosY, setFgPosY] = useState(theme.foregroundImagePositionY ?? 50);
-  
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -81,6 +82,11 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
           description: result.message,
           variant: result.success ? "default" : "destructive",
       });
+
+      if (result.success) {
+          setHasUnsavedChanges(false);
+      }
+
       setIsSaving(false);
   }
 
@@ -100,7 +106,12 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       try {
         const url = await uploadImageAndGetUrl(file, path);
         imageSetter(url);
-        toast({ title: 'Upload successful', description: 'Image has been uploaded.'});
+        setHasUnsavedChanges(true);
+        toast({
+          title: 'Upload successful',
+          description: 'Image uploaded. Click "Save Changes" below to keep it.',
+          variant: 'default'
+        });
       } catch (error: any) {
         toast({ 
           title: 'Upload failed', 
@@ -115,6 +126,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   
   const handleRemoveImage = (imageSetter: (url: string) => void, inputRef: React.RefObject<HTMLInputElement>) => {
     imageSetter('');
+    setHasUnsavedChanges(true);
     if (inputRef.current) {
         inputRef.current.value = '';
     }
@@ -213,6 +225,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             <CardTitle>Theme Customization</CardTitle>
             <CardDescription>
                 Personalize the look and feel of your storefront.
+                {hasUnsavedChanges && <span className="text-orange-600 font-semibold ml-2">• Unsaved changes</span>}
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
