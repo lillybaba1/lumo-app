@@ -11,6 +11,7 @@ import { getProductRecommendations } from './product-recommendation';
 // Admin command handler - provides business insights and data queries
 async function handleAdminCommand(query: string, products: any[]): Promise<string | null> {
   const q = query.toLowerCase().trim();
+  console.log('[Admin Handler] Checking query:', q);
 
   // Low stock products
   if (q.includes('low stock') || q.includes('running low') || q.includes('inventory alert')) {
@@ -99,16 +100,25 @@ async function handleAdminCommand(query: string, products: any[]): Promise<strin
     return `👋 **Hello, Admin!** I'm Luna, your AI business assistant.\n\n**Quick Overview:**\n• Total Products: ${products.length}\n• Total Orders: ${analytics.totalOrders}\n• Revenue: $${analytics.totalRevenue.toFixed(2)}\n${lowStockItems > 0 ? `• ⚠️ ${lowStockItems} low stock alert(s)\n` : ''}\n**I can help you with:**\n• "Show low stock products"\n• "What are today's orders?"\n• "Sales summary"\n• "Top selling products"\n• "Out of stock items"\n\nWhat would you like to know?`;
   }
 
-  // Meta questions about admin status/role
-  if (q.includes('notice') && (q.includes('role') || q.includes('admin'))) {
+  // Meta questions about admin status/role - EXPANDED PATTERNS
+  if (
+    (q.includes('notice') && (q.includes('role') || q.includes('admin'))) ||
+    (q.includes('know') && q.includes('role')) ||
+    (q.includes('do you') && q.includes('role')) ||
+    q === 'my role' ||
+    q === 'role'
+  ) {
+    console.log('[Admin Handler] MATCHED: Meta-question about admin role');
     return `✅ **Yes, I recognize you as an Admin!** I have special capabilities to help you manage your business:\n\n• **Inventory Management**: Ask about low stock or out of stock items\n• **Sales Analytics**: Get revenue summaries and top products\n• **Order Tracking**: Check today's orders and their status\n• **Business Insights**: I can provide data-driven insights\n\nTry asking: "Show low stock products" or "What are today's orders?"`;
   }
 
   if (q.includes('who am i') || q.includes('what is my role') || (q.includes('am i') && q.includes('admin'))) {
+    console.log('[Admin Handler] MATCHED: Who am I question');
     return `🔐 **You are an Admin** of the Lumo store. I can provide you with business insights and management tools that regular customers don't have access to. How can I assist you with managing your store today?`;
   }
 
   // No admin command matched
+  console.log('[Admin Handler] No admin command matched');
   return null;
 }
 
@@ -145,16 +155,22 @@ export async function shoppingAssistant(
   const { query, history, userRole } = input;
   const isAdmin = userRole === 'admin';
 
+  console.log('[AI Flow] shoppingAssistant called - userRole:', userRole, 'isAdmin:', isAdmin, 'query:', query);
+
   try {
     // Fetch a list of products to provide context to the model.
     const products = await getProducts();
+    console.log('[AI Flow] Products fetched:', products.length);
 
     // ADMIN-SPECIFIC FEATURES: Handle admin commands
     if (isAdmin) {
+      console.log('[AI Flow] User is admin, checking admin commands...');
       const adminResponse = await handleAdminCommand(query, products);
       if (adminResponse) {
+        console.log('[AI Flow] Admin command matched! Response length:', adminResponse.length);
         return { answer: adminResponse };
       }
+      console.log('[AI Flow] No admin command matched, continuing to Gemini AI');
     }
 
     const maxProducts = 12;
