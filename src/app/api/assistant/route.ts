@@ -19,18 +19,26 @@ export async function POST(req: Request) {
     let userRole: 'customer' | 'admin' = 'customer';
     try {
       const user = await getCurrentUser();
+      console.log('[API /assistant] Current user:', user ? { userId: user.userId, role: user.role } : 'null');
       if (user && user.role === 'admin') {
         userRole = 'admin';
+        console.log('[API /assistant] Detected ADMIN user');
+      } else {
+        console.log('[API /assistant] User is customer or not authenticated');
       }
     } catch (error) {
       // User not logged in or error - default to customer
-      console.log('User not authenticated, using customer role');
+      console.log('[API /assistant] Error getting user, defaulting to customer:', error);
     }
+
+    console.log('[API /assistant] Calling shoppingAssistant with userRole:', userRole, 'query:', query);
 
     // Import the server-side assistant (this file runs in Node runtime)
     const { shoppingAssistant } = await import('@/ai/flows/shopping-assistant');
 
     const result = await shoppingAssistant({ query, history, userRole });
+
+    console.log('[API /assistant] Result received, answer length:', result.answer?.length || 0);
 
     return new Response(JSON.stringify(result), {
       status: 200,
