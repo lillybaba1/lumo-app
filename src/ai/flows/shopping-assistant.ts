@@ -162,15 +162,29 @@ export async function shoppingAssistant(
     const products = await getProducts();
     console.log('[AI Flow] Products fetched:', products.length);
 
-    // ADMIN-SPECIFIC FEATURES: Handle admin commands
+    // ADMIN-SPECIFIC FEATURES: Handle SPECIFIC admin commands only
+    // For general questions, let Gemini AI handle with admin context
     if (isAdmin) {
-      console.log('[AI Flow] User is admin, checking admin commands...');
-      const adminResponse = await handleAdminCommand(query, products);
-      if (adminResponse) {
-        console.log('[AI Flow] Admin command matched! Response length:', adminResponse.length);
-        return { answer: adminResponse };
+      console.log('[AI Flow] User is admin, checking for specific admin commands...');
+      const q = query.toLowerCase().trim();
+
+      // Only intercept specific data queries, not general questions
+      const isSpecificCommand =
+        q.includes('low stock') || q.includes('running low') || q.includes('inventory alert') ||
+        (q.includes('today') && (q.includes('order') || q.includes('sale'))) ||
+        ((q.includes('sales') || q.includes('revenue') || q.includes('analytics')) && (q.includes('summary') || q.includes('report') || q.includes('overview'))) ||
+        (q.includes('top') && (q.includes('product') || q.includes('selling') || q.includes('seller'))) ||
+        q.includes('out of stock') || q.includes('no stock') || q.includes('sold out');
+
+      if (isSpecificCommand) {
+        const adminResponse = await handleAdminCommand(query, products);
+        if (adminResponse) {
+          console.log('[AI Flow] Specific admin command matched! Response length:', adminResponse.length);
+          return { answer: adminResponse };
+        }
+      } else {
+        console.log('[AI Flow] Not a specific command, letting Gemini AI handle with admin context');
       }
-      console.log('[AI Flow] No admin command matched, continuing to Gemini AI');
     }
 
     const maxProducts = 12;
@@ -223,7 +237,8 @@ export async function shoppingAssistant(
       const res = await productQuestionAnswering({
         question,
         productDetails,
-        conversationHistory
+        conversationHistory,
+        userRole
       });
       if (res && res.answer) {
         console.log('[AI] Gemini response successful');
