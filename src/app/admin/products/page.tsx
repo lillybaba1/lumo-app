@@ -377,12 +377,12 @@ export default function ProductsPage() {
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Link href="/admin/products/add">
-            <Button>
+          <Button asChild>
+            <Link href="/admin/products/add">
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Product
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
       <div className="border rounded-lg">
