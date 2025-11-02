@@ -4,26 +4,31 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 import { dbAdmin } from '@/lib/firebaseAdmin';
+import { requireAdmin } from '@/lib/auth-admin';
 
 /**
  * Protected endpoint to promote a user to admin.
- * Expects header `x-admin-key` === process.env.ADMIN_API_KEY
+ * Requires authenticated admin session.
  * Runs a Firestore transaction to atomically update the user's role and write an audit record.
  */
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const adminKey = req.headers.get('x-admin-key') || '';
-  if (!process.env.ADMIN_API_KEY) {
-    return NextResponse.json({ success: false, message: 'Server missing ADMIN_API_KEY' }, { status: 500 });
-  }
-
-  if (adminKey !== process.env.ADMIN_API_KEY) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-  }
-
-  const uid = params.id;
-  if (!uid) return NextResponse.json({ success: false, message: 'Missing user id' }, { status: 400 });
-
   try {
+    // SECURITY: Require admin authentication
+    const adminUser = await requireAdmin();
+
+    const uid = params.id;
+    if (!uid) {
+      return NextResponse.json({ success: false, message: 'Missing user id' }, { status: 400 });
+    }
+
+    // Prevent self-promotion (though already admin)
+    if (uid === adminUser.userId) {
+      return NextResponse.json({
+        success: false,
+        message: 'Cannot modify your own admin status'
+      }, { status: 400 });
+    }
+
     const db = dbAdmin();
     const userRef = db.collection('users').doc(uid);
     const auditRef = db.collection('adminActions').doc();
@@ -41,7 +46,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       tx.set(auditRef, {
         action: 'promote-to-admin',
         targetUid: uid,
-        performedBy: 'admin-key',
+        performedBy: adminUser.userId,
+        performedByEmail: adminUser.email,
         performedAt: new Date().toISOString(),
       });
     });
@@ -49,6 +55,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('Failed to promote user:', err);
-    return NextResponse.json({ success: false, message: err.message || 'Failed to promote user' }, { status: 500 });
+
+    const errorMessage = process.env.NODE_ENV === 'development'
+      ? err.message || 'Failed to promote user'
+      : 'Failed to promote user. Please try again.';
+
+    return NextResponse.json({
+      success: false,
+      message: errorMessage
+    }, { status: 500 });
   }
 }
