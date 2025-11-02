@@ -2,7 +2,20 @@
 'use server';
 
 import { saveTheme as saveThemeToDb, getTheme as getThemeFromDb } from '@/services/themeService';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { unstable_cache } from 'next/cache';
+
+// Cache the theme for 1 hour (3600 seconds)
+const getCachedTheme = unstable_cache(
+  async () => {
+    return await getThemeFromDb();
+  },
+  ['app-theme'],
+  {
+    revalidate: 3600, // Cache for 1 hour
+    tags: ['theme'],
+  }
+);
 
 export async function saveTheme(
     formData: FormData
@@ -20,6 +33,9 @@ export async function saveTheme(
     };
 
     await saveThemeToDb(themeToSave);
+
+    // Invalidate theme cache
+    revalidateTag('theme');
     revalidatePath('/', 'layout');
     revalidatePath('/admin/appearance');
 
@@ -32,5 +48,5 @@ export async function saveTheme(
 }
 
 export async function getTheme() {
-    return await getThemeFromDb();
+    return await getCachedTheme();
 }
