@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,88 +22,64 @@ type ProductFormProps = {
     categories: Category[];
 };
 
-function SubmitButton({ isSaving }: { isSaving?: boolean }) {
+function SubmitButton() {
     const { pending } = useFormStatus();
-    const isDisabled = pending || isSaving;
     return (
-        <Button type="submit" disabled={isDisabled}>
-            {isDisabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {isDisabled ? 'Saving...' : 'Save Product'}
+        <Button type="submit" disabled={pending}>
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {pending ? 'Saving...' : 'Save Product'}
         </Button>
     );
 }
 
+const initialState = { success: false, message: '' };
+
 export default function ProductForm({ product = null, categories }: ProductFormProps) {
     const { toast } = useToast();
     const router = useRouter();
+    const [state, formAction] = useFormState(saveProduct, initialState);
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     const [isUploading, setIsUploading] = React.useState(false);
-    const [isSaving, setIsSaving] = React.useState(false);
     const imageInputRef = React.useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+        if (state.success) {
+            toast({
+                title: 'Success',
+                description: product ? 'Product updated successfully' : 'Product created successfully',
+            });
+            router.push('/admin/products');
+        } else if (state.message) {
+            toast({
+                title: 'Error',
+                description: state.message,
+                variant: 'destructive',
+            });
+        }
+    }, [state, product, router, toast]);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (!files || files.length === 0) {
-            console.log('[Product Form] No files selected');
-            return;
-        }
+        if (!files || files.length === 0) return;
 
-        console.log('[Product Form] Starting upload for', files.length, 'file(s)');
         setIsUploading(true);
-
         try {
-            const uploadPromises = Array.from(files).map(async (file, index) => {
+            const uploadPromises = Array.from(files).map(file => {
                 if (file.size > 4 * 1024 * 1024) {
-                    console.warn('[Product Form] File too large:', file.name);
-                    toast({
-                        title: `Image "${file.name}" too large`,
-                        description: "Please upload images smaller than 4MB.",
-                        variant: "destructive"
-                    });
+                    toast({ title: `Image "${file.name}" too large`, description: "Max 4MB.", variant: "destructive" });
                     return null;
                 }
-
-                console.log(`[Product Form] Uploading file ${index + 1}/${files.length}:`, file.name);
-                try {
-                    const url = await uploadImageAndGetUrl(file, `products/${Date.now()}-${file.name}`);
-                    console.log(`[Product Form] Upload ${index + 1} successful:`, url);
-                    return url;
-                } catch (err) {
-                    console.error(`[Product Form] Upload ${index + 1} failed:`, err);
-                    throw err;
-                }
+                return uploadImageAndGetUrl(file, `products/${Date.now()}-${file.name}`);
             });
 
             const urls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
 
-            console.log('[Product Form] All uploads complete. URLs:', urls);
-
             if (urls.length > 0) {
-                setImageUrls(prev => {
-                    const newUrls = [...prev, ...urls];
-                    console.log('[Product Form] Updated image URLs:', newUrls);
-                    return newUrls;
-                });
-                toast({
-                    title: 'Upload successful',
-                    description: `${urls.length} image(s) uploaded successfully.`,
-                });
-            } else {
-                console.warn('[Product Form] No images were successfully uploaded');
-                toast({
-                    title: 'Upload failed',
-                    description: 'No images could be uploaded. Please try again.',
-                    variant: 'destructive'
-                });
+                setImageUrls(prev => [...prev, ...urls]);
+                toast({ title: 'Upload successful', description: `${urls.length} image(s) added.` });
             }
-
         } catch (error: any) {
-            console.error('[Product Form] Image upload error:', error);
-            toast({
-                title: 'Upload failed',
-                description: error.message || 'Could not upload images. Please check console for details.',
-                variant: 'destructive'
-            });
+            toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
         } finally {
             setIsUploading(false);
             if (imageInputRef.current) {
@@ -115,44 +91,13 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const handleRemoveImage = (urlToRemove: string) => {
         setImageUrls(prev => prev.filter(url => url !== urlToRemove));
     }
-
-    const handleSubmit = async (formData: FormData) => {
-        // Client-side validation: Check if at least one image is uploaded
+    
+    const handleSubmit = (formData: FormData) => {
         if (imageUrls.length === 0) {
-            toast({
-                title: 'Image Required',
-                description: 'Please upload at least one product image before saving.',
-                variant: 'destructive',
-            });
+            toast({ title: 'Image Required', description: 'Please upload at least one image.', variant: 'destructive' });
             return;
         }
-
-        setIsSaving(true);
-        try {
-            const result = await saveProduct(formData);
-
-            if (result && !result.success) {
-                toast({
-                    title: 'Error',
-                    description: result.message || 'Failed to save product',
-                    variant: 'destructive',
-                });
-                setIsSaving(false);
-            } else {
-                toast({
-                    title: 'Success',
-                    description: product ? 'Product updated successfully' : 'Product created successfully',
-                });
-                // Redirect will happen from server action
-            }
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: 'An unexpected error occurred',
-                variant: 'destructive',
-            });
-            setIsSaving(false);
-        }
+        formAction(formData);
     }
 
     return (
@@ -161,7 +106,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             <input type="hidden" name="imageUrls" value={imageUrls.join(',')} />
 
             <CardContent className="space-y-6 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="name">Product Name</Label>
                         <Input id="name" name="name" defaultValue={product?.name} required />
@@ -198,13 +143,13 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 <div className="space-y-4">
                     <div>
                         <Label>Product Images *</Label>
-                        <p className="text-sm text-muted-foreground">At least one image is required. Upload multiple images to showcase your product.</p>
+                        <p className="text-sm text-muted-foreground">At least one image is required. Upload multiple images.</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <label htmlFor="product-image-upload" className="cursor-pointer">
                             <Button asChild variant="outline" type="button" disabled={isUploading}>
                                 <div>
-                                    <Upload className="mr-2 h-4 w-4" />
+                                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                                     {isUploading ? 'Uploading...' : 'Upload Images'}
                                 </div>
                             </Button>
@@ -227,7 +172,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                         </div>
                     )}
                     {imageUrls.length === 0 && (
-                         <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50" data-ai-hint="product image placeholder">
+                         <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
                             {isUploading ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Images Uploaded</span>}
                         </div>
                     )}
@@ -235,8 +180,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
 
             </CardContent>
             <CardFooter className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving}>Cancel</Button>
-                <SubmitButton isSaving={isSaving} />
+                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                <SubmitButton />
             </CardFooter>
         </form>
     );

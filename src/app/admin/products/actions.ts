@@ -4,8 +4,6 @@
 import { z } from 'zod';
 import { addProduct, updateProduct, deleteProduct as deleteProductFromDb } from '@/services/productService';
 import { revalidatePath } from 'next/cache';
-import { Product } from '@/lib/types';
-import { redirect } from 'next/navigation';
 
 const productSchema = z.object({
   id: z.string().optional(),
@@ -22,7 +20,13 @@ const productSchema = z.object({
   }, z.array(z.string().url()).min(1, 'At least one image is required')),
 });
 
-export async function saveProduct(formData: FormData) {
+type SaveProductState = {
+  success: boolean;
+  message: string;
+  errors?: z.ZodError['formErrors']['fieldErrors'] | null;
+}
+
+export async function saveProduct(prevState: SaveProductState, formData: FormData): Promise<SaveProductState> {
   const rawFormData = Object.fromEntries(formData.entries());
   const validatedFields = productSchema.safeParse(rawFormData);
 
@@ -45,6 +49,9 @@ export async function saveProduct(formData: FormData) {
     }
     revalidatePath('/admin/products');
     revalidatePath('/products');
+    
+    return { success: true, message: 'Product saved successfully.' };
+
   } catch (error) {
     console.error('Failed to save product:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -53,8 +60,6 @@ export async function saveProduct(formData: FormData) {
         message: `Failed to save product: ${errorMessage}`
     };
   }
-  
-  redirect('/admin/products');
 }
 
 

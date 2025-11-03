@@ -1,99 +1,76 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProductForm from '@/components/product-form';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { Product, Category } from '@/lib/types';
+import { Category, Product } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditProductPage() {
-    const params = useParams();
-    const router = useRouter();
-    const id = params?.id as string;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const params = useParams();
+  const router = useRouter();
+  const { id } = params;
 
-    const [product, setProduct] = useState<Product | null>(null);
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!id) return;
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                setLoading(true);
+    async function fetchData() {
+      try {
+        const [productRes, categoriesRes] = await Promise.all([
+          fetch(`/api/products/${id}`),
+          fetch('/api/categories'),
+        ]);
 
-                // Fetch product and categories in parallel
-                const [productResponse, categoriesResponse] = await Promise.all([
-                    fetch(`/api/products/${id}`),
-                    fetch('/api/categories'),
-                ]);
-
-                if (!productResponse.ok) {
-                    if (productResponse.status === 404) {
-                        router.push('/admin/products');
-                        return;
-                    }
-                    throw new Error('Failed to fetch product');
-                }
-
-                if (!categoriesResponse.ok) {
-                    throw new Error('Failed to fetch categories');
-                }
-
-                const productData = await productResponse.json();
-                const categoriesData = await categoriesResponse.json();
-
-                setProduct(productData.product);
-                setCategories(categoriesData.categories || []);
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load product');
-            } finally {
-                setLoading(false);
-            }
+        if (!productRes.ok) {
+          if (productRes.status === 404) {
+            setError('Product not found.');
+            setTimeout(() => router.push('/admin/products'), 3000);
+          } else {
+            throw new Error('Failed to fetch product');
+          }
+          return;
         }
 
-        if (id) {
-            fetchData();
+        if (!categoriesRes.ok) {
+          throw new Error('Failed to fetch categories');
         }
-    }, [id, router]);
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading product...</p>
-                </div>
-            </div>
-        );
+        const productData = await productRes.json();
+        const categoriesData = await categoriesRes.json();
+
+        setProduct(productData.product);
+        setCategories(categoriesData.categories);
+      } catch (err) {
+        setError('Could not load data. Please try again later.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (error || !product) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle className="text-destructive">Error</CardTitle>
-                        <CardDescription>{error || 'Product not found'}</CardDescription>
-                    </CardHeader>
-                </Card>
-            </div>
-        );
-    }
+    fetchData();
+  }, [id, router]);
 
+  if (loading) {
     return (
-        <div>
-            <div className="mb-6">
-                <h1 className="text-3xl font-headline font-bold">Edit Product</h1>
-                <p className="text-muted-foreground">Update the details for "{product.name}".</p>
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Product Information</CardTitle>
-                    <CardDescription>Update the details and image for your product.</CardDescription>
-                </CardHeader>
-                <ProductForm product={product} categories={categories} />
-            </Card>
-        </div>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
+        <Skeleton className="h-96 w-full" />
+      </div>
     );
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
+
+  if (!product) {
+    return <div className="p-6">Product could not be loaded.</div>;
+  }
+
+  return <ProductForm product={product} categories={categories} />;
 }
