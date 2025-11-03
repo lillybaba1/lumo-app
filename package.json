@@ -10,6 +10,7 @@
   "test:ui": "vitest --ui",
   "test:coverage": "vitest --coverage",
   "verify:upload": "node scripts/verify-upload-setup.js",
+  "setup:firebase": "node scripts/setup-firebase-env.js",
   "postinstall": "patch-package",
   "pages:build": "npx @cloudflare/next-on-pages",
   "pages:deploy": "npm run pages:build && wrangler pages deploy",
