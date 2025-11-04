@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2 } from 'lucide-react';
+import { ShoppingBag, Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -22,6 +22,7 @@ export default function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,7 +120,18 @@ export default function SignupForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="At least 6 characters" required value={password} onChange={e => setPassword(e.target.value)} minLength={6} />
+              <div className="relative">
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="At least 6 characters" required value={password} onChange={e => setPassword(e.target.value)} minLength={6} className="pr-10" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
@@ -127,7 +139,7 @@ export default function SignupForm() {
               {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
             </Button>
              <p className="text-xs text-muted-foreground">
-              Already have an account? <Link href="/admin/login" className="underline">Log in</Link>
+              Already have an account? <Link href="/login" className="underline">Log in</Link>
             </p>
           </CardFooter>
         </form>
