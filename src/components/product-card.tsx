@@ -58,6 +58,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                unoptimized
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
             </div>
