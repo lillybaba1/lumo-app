@@ -24,23 +24,31 @@ export default function LoginForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    console.log('Login form submitted', { email });
     setLoading(true);
     setError(null);
     try {
+      console.log('Attempting Firebase sign in...');
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Firebase sign in successful', cred.user.uid);
       const idToken = await cred.user.getIdToken(true);
+      console.log('ID token retrieved');
 
+      console.log('Creating session cookie...');
       const r = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin', // critical
         body: JSON.stringify({ idToken }),
       });
+      console.log('Session API response:', r.status, r.statusText);
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Failed to set session');
 
+      console.log('Login successful, redirecting to:', next);
       // Hard reload so middleware/server see the new cookie
       window.location.href = next;
     } catch (e: any) {
+      console.error('Login error:', e);
       let errorMessage = 'An unknown error occurred. Please try again.';
        if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
            errorMessage = 'Invalid email or password.';
