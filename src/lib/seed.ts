@@ -9,8 +9,8 @@ const defaultTheme = {
   primaryColor: "#D0BFFF",
   accentColor: "#FFB3C6",
   backgroundColor: "#E8E2FF",
-  backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
+  backgroundImage: "https://picsum.photos/seed/background/1200/800",
+  foregroundImage: "https://picsum.photos/seed/foreground/400/400",
 };
 
 const defaultPages = defaultPagesData;

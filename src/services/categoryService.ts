@@ -68,3 +68,29 @@ export async function deleteCategory(id: string): Promise<void> {
     throw new Error('Could not delete category.');
   }
 }
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    if (typeof window === 'undefined') {
+      const { dbAdmin } = await import('@/lib/firebaseAdmin');
+      const adminDb = dbAdmin();
+      const snapshot = await adminDb.collection('categories').get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Category));
+    }
+
+    const { getDocs, collection } = await import('firebase/firestore');
+    const { getClientDb } = await import('@/lib/firebaseClient');
+    const db = getClientDb();
+    const snapshot = await getDocs(collection(db, 'categories'));
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Category));
+  } catch (error) {
+    console.error('Failed to fetch categories from Firestore:', error);
+    return [];
+  }
+}
