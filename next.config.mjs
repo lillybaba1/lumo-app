@@ -1,9 +1,5 @@
-
-import type {NextConfig} from 'next';
-import { firebaseConfig } from './src/lib/firebaseConfig';
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -34,7 +30,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
         port: '',
-        pathname: `/**`,
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -44,8 +40,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer, nextRuntime }) => {
-    // Only add this rule for the edge runtime
+  webpack: (config, { nextRuntime }) => {
     if (nextRuntime === 'edge') {
       config.experiments = {
         ...config.experiments,
@@ -60,4 +55,5 @@ const nextConfig: NextConfig = {
     return config;
   },
 };
+
 export default nextConfig;
