@@ -1,6 +1,6 @@
 
 import { NextResponse } from "next/server";
-import { bucket } from "@/lib/firebaseAdmin";
+import { bucket, adminStorage } from "@/lib/firebaseAdmin";
 import { requireAdmin } from "@/lib/auth-admin";
 
 export const runtime = "nodejs";
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     console.log("[Upload API] Admin authentication successful");
 
     // Check bucket initialization
-    const bucketInstance = bucket();
+    let bucketInstance = bucket();
     if (!bucketInstance) {
       console.error("[Upload API] Bucket is null or undefined");
       return NextResponse.json({
@@ -65,6 +65,34 @@ export async function POST(req: Request) {
     }
 
     console.log("[Upload API] Bucket name:", bucketInstance.name);
+
+    try {
+      const [exists] = await bucketInstance.exists();
+      if (!exists) {
+        const currentName = bucketInstance.name;
+        const altName = currentName.includes('.firebasestorage.app')
+          ? currentName.replace('.firebasestorage.app', '.appspot.com')
+          : currentName.replace('.appspot.com', '.firebasestorage.app');
+
+        console.warn("[Upload API] Bucket not found:", currentName, "→ trying alternate:", altName);
+        const alternateBucket = adminStorage().bucket(altName);
+        const [altExists] = await alternateBucket.exists();
+
+        if (altExists) {
+          bucketInstance = alternateBucket;
+          console.log("[Upload API] Using alternate bucket:", altName);
+        } else {
+          console.error("[Upload API] Alternate bucket also not found.");
+          return NextResponse.json({
+            error: `Firebase Storage bucket "${currentName}" was not found. ` +
+              `Verify FIREBASE_STORAGE_BUCKET is set to your actual bucket name (e.g. ${currentName.replace('.firebasestorage.app', '.appspot.com')}).`
+          }, { status: 500 });
+        }
+      }
+    } catch (bucketCheckError) {
+      console.error("[Upload API] Failed to verify bucket existence:", bucketCheckError);
+      // Continue; subsequent operations will surface clearer errors.
+    }
 
     const form = await req.formData();
     const file = form.get("file") as File | null;

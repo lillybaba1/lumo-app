@@ -10,12 +10,14 @@ interface LogContext {
 }
 
 class Logger {
-  private isDevelopment: boolean;
   private isServer: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
     this.isServer = typeof window === 'undefined';
+  }
+
+  private get isDevelopment(): boolean {
+    return process.env.NODE_ENV === 'development';
   }
 
   /**

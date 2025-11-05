@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ const initialState = { success: false, message: '' };
 export default function ProductForm({ product = null, categories }: ProductFormProps) {
     const { toast } = useToast();
     const router = useRouter();
-    const [state, formAction] = useFormState(saveProduct, initialState);
+    const [state, formAction] = React.useActionState(saveProduct, initialState);
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     const [isUploading, setIsUploading] = React.useState(false);
     const imageInputRef = React.useRef<HTMLInputElement>(null);

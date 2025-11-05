@@ -24,10 +24,8 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const hasSession = req.cookies.has(COOKIE_NAME);
 
-  if ((pathname === '/login' || pathname === '/signup') && hasSession) {
-    const url = req.nextUrl.clone(); url.pathname = '/';
-    return NextResponse.redirect(url);
-  }
+  // Allow access to login and signup pages even if a stale session cookie exists.
+  // The client-side pages will redirect authenticated users after verifying the cookie.
 
   if (needsAuth(pathname) && !hasSession && !isPublic(pathname)) {
     const url = req.nextUrl.clone();

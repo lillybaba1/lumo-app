@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,34 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function validateSession() {
+      try {
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'same-origin',
+        });
+
+        if (!cancelled && response.ok) {
+          const data = await response.json();
+          if (data.authenticated) {
+            window.location.href = next;
+          }
+        }
+      } catch (error) {
+        console.error('Session pre-check failed:', error);
+      }
+    }
+
+    validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [next]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
