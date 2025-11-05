@@ -25,14 +25,15 @@ export function AIAssistantWidget() {
     if (!query) return;
 
     const userMessage: Message = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedHistory = [...messages, userMessage];
+    setMessages(updatedHistory);
 
     startTransition(async () => {
       try {
         const res = await fetch('/api/assistant', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, history: messages }),
+          body: JSON.stringify({ query, history: updatedHistory }),
         });
         const data = await res.json();
         if (data && typeof data.answer === 'string') {
