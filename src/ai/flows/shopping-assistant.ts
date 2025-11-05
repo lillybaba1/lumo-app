@@ -266,8 +266,8 @@ export async function shoppingAssistant(
 
       // Handle greetings (only for non-admin, admin greetings handled above)
       if (!isAdmin) {
-        const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
-        if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ','))) {
+        const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'how are you'];
+        if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ',') || q.includes(g))) {
           return {
             answer: "Hello! 👋 Welcome to Lumo! I'm Luna, your shopping assistant. I'm here to help you find the perfect products. What are you looking for today?"
           };
