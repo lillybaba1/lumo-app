@@ -1,14 +1,51 @@
+'use client';
 
 import Link from 'next/link';
-import { getCurrentUser } from '@/hooks/use-auth';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import LogoutButton from './logout-button';
+import { useEffect, useState } from 'react';
 
-export default async function AuthMenu() {
-    const user = await getCurrentUser();
+interface User {
+    uid: string;
+    email: string;
+    name?: string;
+    role?: 'admin' | 'customer';
+}
+
+export default function AuthMenu() {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.authenticated && data.user) {
+                        setUser(data.user);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
+    }, []);
+
+    if (loading) {
+        return null; // or a loading skeleton
+    }
 
     if (!user) {
         return (
@@ -17,20 +54,20 @@ export default async function AuthMenu() {
             </Button>
         );
     }
-    
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                        <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-sm font-medium leading-none">{user.name || 'User'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                             {user.email}
                         </p>

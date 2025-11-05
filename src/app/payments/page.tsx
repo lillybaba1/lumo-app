@@ -29,7 +29,7 @@ export default async function PaymentHistoryPage() {
             Sign in to view your payment history.
           </p>
           <Button asChild>
-            <Link href="/auth/signin">Sign In</Link>
+            <Link href="/login">Sign In</Link>
           </Button>
         </div>
       </div>

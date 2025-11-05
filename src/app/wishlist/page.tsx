@@ -33,7 +33,7 @@ export default async function WishlistPage() {
             Sign in to view and manage your wishlist.
           </p>
           <Button asChild>
-            <Link href="/auth/signin">Sign In</Link>
+            <Link href="/login">Sign In</Link>
           </Button>
         </div>
       </div>
