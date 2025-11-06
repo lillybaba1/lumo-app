@@ -87,14 +87,27 @@ export function getAdminApp(): admin.app.App {
     return global.__FIREBASE_ADMIN_APP__;
   }
 
-  // No explicit credentials found - throw helpful error
-  throw new Error(
-    'Firebase Admin credentials not found. Please set one of the following environment variables:\n' +
-    '  - FIREBASE_SERVICE_ACCOUNT_JSON (recommended)\n' +
-    '  - FIREBASE_SERVICE_ACCOUNT_BASE64\n' +
-    '  - GOOGLE_APPLICATION_CREDENTIALS\n\n' +
-    'See FIREBASE_SETUP.md for detailed setup instructions.'
-  );
+  // No explicit credentials found - try using Application Default Credentials (ADC)
+  // This works automatically when deployed to Firebase Hosting, Cloud Functions, or Cloud Run
+  try {
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      });
+    }
+    global.__FIREBASE_ADMIN_APP__ = admin.app();
+    return global.__FIREBASE_ADMIN_APP__;
+  } catch (error) {
+    // If ADC initialization fails, throw helpful error for local development
+    throw new Error(
+      'Firebase Admin credentials not found. Please set one of the following environment variables:\n' +
+      '  - FIREBASE_SERVICE_ACCOUNT_JSON (recommended)\n' +
+      '  - FIREBASE_SERVICE_ACCOUNT_BASE64\n' +
+      '  - GOOGLE_APPLICATION_CREDENTIALS\n\n' +
+      'See FIREBASE_SETUP.md for detailed setup instructions.\n\n' +
+      `Original error: ${error}`
+    );
+  }
 }
 
 export const adminAuth = () => getAdminApp().auth();
