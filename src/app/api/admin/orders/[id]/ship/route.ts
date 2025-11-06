@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import { dbAdmin } from '@/lib/firebaseAdmin';
-import { requireAdmin } from '@/lib/auth-admin';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 
 /**
  * Protected endpoint to mark an order as shipped.
@@ -11,7 +11,7 @@ import { requireAdmin } from '@/lib/auth-admin';
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     // SECURITY: Require admin authentication
-    const adminUser = await requireAdmin();
+    const adminUser = await requireAdmin({ redirect: false });
 
     const orderId = params.id;
     if (!orderId) {
@@ -37,6 +37,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
+    if (err instanceof UnauthorizedError) {
+      return NextResponse.json({
+        ok: false,
+        error: err.message || 'Admin authentication required'
+      }, { status: err.statusCode ?? 401 });
+    }
+
     console.error('Failed to ship order:', err);
 
     const errorMessage = process.env.NODE_ENV === 'development'

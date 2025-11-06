@@ -1,5 +1,3 @@
-'use server';
-
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/services/authService';
@@ -7,16 +5,45 @@ import { authAdmin, isFirebaseAdminInitialized, dbAdmin } from './firebaseAdmin'
 
 const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME ?? 'session';
 
+export class UnauthorizedError extends Error {
+  statusCode: number;
+
+  constructor(message = 'Admin authentication required') {
+    super(message);
+    this.name = 'UnauthorizedError';
+    this.statusCode = 401;
+  }
+}
+
+export type RequireAdminOptions = {
+  redirect?: boolean;
+  loginRedirect?: string;
+  unauthorizedRedirect?: string;
+};
+
 /**
  * Server-side authentication helper for admin routes
  * Checks if user is authenticated and has admin role
  */
-export async function requireAdmin(): Promise<{ userId: string; email: string; role: string }> {
+export async function requireAdmin(
+  options: RequireAdminOptions = {}
+): Promise<{ userId: string; email: string; role: string }> {
+  const redirectOnFail = options.redirect !== false;
+  const loginRedirectPath = options.loginRedirect ?? '/admin/login?redirect=/admin/dashboard';
+  const unauthorizedRedirectPath = options.unauthorizedRedirect ?? '/?error=unauthorized';
+
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(COOKIE_NAME);
 
+  const fail = (message: string, redirectTo: 'login' | 'unauthorized' = 'login'): never => {
+    if (redirectOnFail) {
+      redirect(redirectTo === 'login' ? loginRedirectPath : unauthorizedRedirectPath);
+    }
+    throw new UnauthorizedError(message);
+  };
+
   if (!sessionCookie || !sessionCookie.value) {
-    redirect('/admin/login?redirect=/admin/dashboard');
+    fail('Not authenticated', 'login');
   }
 
   try {
@@ -32,13 +59,13 @@ export async function requireAdmin(): Promise<{ userId: string; email: string; r
         const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
 
         if (role !== 'admin') {
-          redirect('/?error=unauthorized');
+          fail('Admin role required', 'unauthorized');
         }
 
         return { userId, email, role };
       } catch (verifyError) {
         console.error('Session verification failed:', verifyError);
-        redirect('/admin/login?redirect=/admin/dashboard');
+        fail('Session verification failed', 'login');
       }
     }
 
@@ -47,20 +74,24 @@ export async function requireAdmin(): Promise<{ userId: string; email: string; r
     const { userId, email } = session;
 
     if (!userId) {
-      redirect('/admin/login?redirect=/admin/dashboard');
+      fail('Session missing user id', 'login');
     }
 
     // Check user role from database
-    const role = await getUserRole(userId) || 'customer';
+    const role = (await getUserRole(userId)) || 'customer';
 
     if (role !== 'admin') {
-      redirect('/?error=unauthorized');
+      fail('Admin role required', 'unauthorized');
     }
 
     return { userId, email, role };
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      throw error;
+    }
+
     console.error('Auth error:', error);
-    redirect('/admin/login?redirect=/admin/dashboard');
+    fail('Authentication failed', 'login');
   }
 }
 

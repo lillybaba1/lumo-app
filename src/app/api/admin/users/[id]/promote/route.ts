@@ -4,7 +4,7 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 import { dbAdmin } from '@/lib/firebaseAdmin';
-import { requireAdmin } from '@/lib/auth-admin';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 
 /**
  * Protected endpoint to promote a user to admin.
@@ -14,7 +14,7 @@ import { requireAdmin } from '@/lib/auth-admin';
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     // SECURITY: Require admin authentication
-    const adminUser = await requireAdmin();
+    const adminUser = await requireAdmin({ redirect: false });
 
     const uid = params.id;
     if (!uid) {
@@ -54,6 +54,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    if (err instanceof UnauthorizedError) {
+      return NextResponse.json({
+        success: false,
+        message: err.message || 'Admin authentication required'
+      }, { status: err.statusCode ?? 401 });
+    }
+
     console.error('Failed to promote user:', err);
 
     const errorMessage = process.env.NODE_ENV === 'development'

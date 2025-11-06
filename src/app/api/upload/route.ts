@@ -1,7 +1,7 @@
 
 import { NextResponse } from "next/server";
 import { bucket, adminStorage } from "@/lib/firebaseAdmin";
-import { requireAdmin } from "@/lib/auth-admin";
+import { requireAdmin, UnauthorizedError } from "@/lib/auth-admin";
 
 export const runtime = "nodejs";
 
@@ -52,8 +52,8 @@ export async function POST(req: Request) {
 
   try {
     // SECURITY: Require admin authentication
-    await requireAdmin();
-    console.log("[Upload API] Admin authentication successful");
+    const adminUser = await requireAdmin({ redirect: false });
+    console.log("[Upload API] Admin authentication successful", { adminId: adminUser.userId });
 
     // Check bucket initialization
     let bucketInstance = bucket();
@@ -150,6 +150,13 @@ export async function POST(req: Request) {
     });
 
   } catch (err: any) {
+    if (err instanceof UnauthorizedError) {
+      console.warn("[Upload API] Unauthorized upload attempt:", err.message);
+      return NextResponse.json({
+        error: err.message || "Admin authentication required."
+      }, { status: err.statusCode ?? 401 });
+    }
+
     console.error("[Upload API] Upload failed:", err);
     console.error("[Upload API] Error details:", {
       message: err?.message,
