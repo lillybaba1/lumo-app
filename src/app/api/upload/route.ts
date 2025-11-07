@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     if (!bucketInstance) {
       console.error("[Upload API] Bucket is null or undefined");
       return NextResponse.json({
-        error: "Firebase Storage bucket not available. Please check FIREBASE_STORAGE_BUCKET environment variable."
+        error: "Firebase Storage bucket not available. Please check STORAGE_BUCKET environment variable."
       }, { status: 500 });
     }
 
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
           console.error("[Upload API] Alternate bucket also not found.");
           return NextResponse.json({
             error: `Firebase Storage bucket "${currentName}" was not found. ` +
-              `Verify FIREBASE_STORAGE_BUCKET is set to your actual bucket name (e.g. ${currentName.replace('.firebasestorage.app', '.appspot.com')}).`
+              `Verify STORAGE_BUCKET is set to your actual bucket name (e.g. ${currentName.replace('.firebasestorage.app', '.appspot.com')}).`
           }, { status: 500 });
         }
       }

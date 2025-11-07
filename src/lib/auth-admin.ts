@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getUserRole } from '@/services/authService';
 import { authAdmin, isFirebaseAdminInitialized, dbAdmin } from './firebaseAdmin';
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME ?? 'session';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'session';
 
 export class UnauthorizedError extends Error {
   statusCode: number;

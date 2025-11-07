@@ -84,7 +84,7 @@ export async function GET() {
         details: 'Firebase Admin SDK is not initialized',
       };
       diagnostics.recommendations.push(
-        'Firebase Admin SDK is not initialized. Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable with your service account credentials.'
+        'Firebase Admin SDK is not initialized. Set SERVICE_ACCOUNT_JSON or SERVICE_ACCOUNT_BASE64 environment variable with your service account credentials.'
       );
     }
   } catch (error) {
@@ -108,7 +108,7 @@ export async function GET() {
         details: 'Storage bucket is not configured',
       };
       diagnostics.recommendations.push(
-        'Firebase Storage bucket is not configured. Set FIREBASE_STORAGE_BUCKET environment variable.'
+        'Firebase Storage bucket is not configured. Set STORAGE_BUCKET environment variable.'
       );
     }
   } catch (error) {
@@ -118,7 +118,7 @@ export async function GET() {
     };
     if (error instanceof Error && error.message.includes('credentials')) {
       diagnostics.recommendations.push(
-        'Firebase Admin credentials are missing or invalid. Check FIREBASE_SERVICE_ACCOUNT_JSON environment variable.'
+        'Firebase Admin credentials are missing or invalid. Check SERVICE_ACCOUNT_JSON environment variable.'
       );
     }
   }

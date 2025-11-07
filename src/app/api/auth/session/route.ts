@@ -4,7 +4,7 @@ import { authAdmin } from '@/lib/firebaseAdmin';
 
 export const runtime = 'nodejs';
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME ?? 'session';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'session';
 
 function cookiePolicyFromHost(hostname: string | null) {
   const h = hostname || 'localhost';

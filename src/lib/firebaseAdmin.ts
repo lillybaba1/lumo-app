@@ -17,14 +17,14 @@ declare global {
 }
 
 function readSvcFromEnv(): any | null {
-  const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  const json = process.env.SERVICE_ACCOUNT_JSON;
+  const b64 = process.env.SERVICE_ACCOUNT_BASE64;
   const path = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (json) {
     try {
       return JSON.parse(json);
     } catch (e) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON contains invalid JSON');
+      throw new Error('SERVICE_ACCOUNT_JSON contains invalid JSON');
     }
   }
   if (b64) {
@@ -32,7 +32,7 @@ function readSvcFromEnv(): any | null {
       const raw = Buffer.from(b64, 'base64').toString('utf8');
       return JSON.parse(raw);
     } catch (e) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 is not valid base64 JSON');
+      throw new Error('SERVICE_ACCOUNT_BASE64 is not valid base64 JSON');
     }
   }
   if (path) return { __path: path };
@@ -80,7 +80,7 @@ export function getAdminApp(): admin.app.App {
       admin.initializeApp({
         credential: admin.credential.cert(certObj as admin.ServiceAccount),
         // optional: set storageBucket if needed
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${normalized.projectId}.appspot.com`,
+        storageBucket: process.env.STORAGE_BUCKET || `${normalized.projectId}.appspot.com`,
       });
     }
     global.__FIREBASE_ADMIN_APP__ = admin.app();
@@ -92,7 +92,7 @@ export function getAdminApp(): admin.app.App {
   try {
     if (!admin.apps.length) {
       admin.initializeApp({
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+        storageBucket: process.env.STORAGE_BUCKET,
       });
     }
     global.__FIREBASE_ADMIN_APP__ = admin.app();
@@ -101,8 +101,8 @@ export function getAdminApp(): admin.app.App {
     // If ADC initialization fails, throw helpful error for local development
     throw new Error(
       'Firebase Admin credentials not found. Please set one of the following environment variables:\n' +
-      '  - FIREBASE_SERVICE_ACCOUNT_JSON (recommended)\n' +
-      '  - FIREBASE_SERVICE_ACCOUNT_BASE64\n' +
+      '  - SERVICE_ACCOUNT_JSON (recommended)\n' +
+      '  - SERVICE_ACCOUNT_BASE64\n' +
       '  - GOOGLE_APPLICATION_CREDENTIALS\n\n' +
       'See FIREBASE_SETUP.md for detailed setup instructions.\n\n' +
       `Original error: ${error}`

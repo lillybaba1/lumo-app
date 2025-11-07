@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'session';
 
 function cookiePolicy(url: URL) {
   const h = url.hostname;

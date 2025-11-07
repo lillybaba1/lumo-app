@@ -11,7 +11,7 @@ export interface AuthenticatedUser extends DecodedIdToken {
 
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   const jar = await cookies(); // Next 15 requires await
-  const session = jar.get(process.env.FIREBASE_COOKIE_NAME || 'session')?.value || '';
+  const session = jar.get(process.env.SESSION_COOKIE_NAME || 'session')?.value || '';
   if (!session) return null;
   
   try {

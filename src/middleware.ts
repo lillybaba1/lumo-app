@@ -2,7 +2,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'session';
 
 const PUBLIC_PATHS = [
   '/', '/login', '/signup', '/favicon.ico', '/icon.svg',

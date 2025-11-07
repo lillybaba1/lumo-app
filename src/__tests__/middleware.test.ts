@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 
 import { middleware } from '../../middleware';
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'session';
 
 function buildRequest(path: string, includeSession = false) {
   const headers: Record<string, string> = {};
