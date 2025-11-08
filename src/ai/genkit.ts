@@ -2,11 +2,18 @@ import {genkit} from 'genkit';
 import openAI, { gpt4o } from 'genkitx-openai';
 
 // Check if OpenAI API key is configured
-if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== 'production') {
-  console.warn(
-    '⚠️  WARNING: OPENAI_API_KEY is not set. AI assistant will not work.\n' +
+const hasApiKey = !!process.env.OPENAI_API_KEY;
+const apiKeyLength = process.env.OPENAI_API_KEY?.length || 0;
+
+console.log('[Genkit Init] Environment:', process.env.NODE_ENV);
+console.log('[Genkit Init] OPENAI_API_KEY present:', hasApiKey);
+console.log('[Genkit Init] OPENAI_API_KEY length:', apiKeyLength);
+
+if (!hasApiKey) {
+  console.error(
+    '❌ ERROR: OPENAI_API_KEY is not set. AI assistant will use fallback mode.\n' +
     '   Get your API key from: https://platform.openai.com/api-keys\n' +
-    '   Then add it to your .env.local file: OPENAI_API_KEY=your_key_here'
+    '   For production: Set secret in Firebase App Hosting'
   );
 }
 
