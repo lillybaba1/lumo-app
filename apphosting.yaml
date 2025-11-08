@@ -21,6 +21,8 @@ env:
     value: lumo-app-183f5.firebasestorage.app
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
+    availability:
+      - RUNTIME
 
 # This application is a dynamic Next.js app, not a static site.
 # serveStatic: false tells App Hosting to run the 'start' script.
