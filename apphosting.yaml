@@ -22,6 +22,7 @@ env:
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
     availability:
+      - BUILD
       - RUNTIME
 
 # This application is a dynamic Next.js app, not a static site.
