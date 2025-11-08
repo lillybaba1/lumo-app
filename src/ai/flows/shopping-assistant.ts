@@ -255,8 +255,8 @@ export async function shoppingAssistant(
       if (qaErr instanceof Error && qaErr.stack) {
         console.error('[AI] Stack trace:', qaErr.stack);
       }
-      console.error('[AI] API Key present:', !!process.env.GOOGLE_API_KEY);
-      console.error('[AI] API Key length:', process.env.GOOGLE_API_KEY?.length || 0);
+      console.error('[AI] API Key present:', !!process.env.OPENAI_API_KEY);
+      console.error('[AI] API Key length:', process.env.OPENAI_API_KEY?.length || 0);
       console.error('[AI] ====================================');
       // Continue to a local fallback that can answer simple queries from product data.
     }
