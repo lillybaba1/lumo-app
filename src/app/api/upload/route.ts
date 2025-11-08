@@ -4,6 +4,7 @@ import { bucket, adminStorage } from "@/lib/firebaseAdmin";
 import { requireAdmin, UnauthorizedError } from "@/lib/auth-admin";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // Maximum execution time in seconds
 
 // File upload constraints
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -157,21 +158,41 @@ export async function POST(req: Request) {
       }, { status: err.statusCode ?? 401 });
     }
 
+    // Enhanced error logging for production debugging
     console.error("[Upload API] Upload failed:", err);
     console.error("[Upload API] Error details:", {
       message: err?.message,
       code: err?.code,
-      stack: process.env.NODE_ENV === 'development' ? err?.stack : 'hidden in production'
+      name: err?.name,
+      stack: err?.stack
     });
 
-    // Don't expose internal errors in production
-    const errorMessage = process.env.NODE_ENV === 'development'
-      ? err?.message ?? "An unknown error occurred during upload."
-      : "Failed to upload file. Please try again.";
+    // Log environment info for debugging
+    console.error("[Upload API] Environment check:", {
+      hasServiceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON || !!process.env.SERVICE_ACCOUNT_JSON,
+      hasStorageBucket: !!process.env.FIREBASE_STORAGE_BUCKET || !!process.env.STORAGE_BUCKET,
+      nodeEnv: process.env.NODE_ENV
+    });
+
+    // Provide more helpful error messages while protecting sensitive data
+    let errorMessage = "Failed to upload file. Please try again.";
+
+    if (err?.code === 'storage/unauthorized' || err?.message?.includes('permission')) {
+      errorMessage = "Storage permission error. Please check Firebase Storage rules.";
+    } else if (err?.message?.includes('bucket') || err?.code === 'storage/bucket-not-found') {
+      errorMessage = "Storage bucket configuration error. Please contact support.";
+    } else if (err?.message?.includes('service account') || err?.message?.includes('credentials')) {
+      errorMessage = "Authentication error. Please contact support.";
+    } else if (process.env.NODE_ENV === 'development') {
+      errorMessage = err?.message ?? "An unknown error occurred during upload.";
+    }
 
     return NextResponse.json({
       error: errorMessage,
-      ...(process.env.NODE_ENV === 'development' && { details: err?.stack })
+      ...(process.env.NODE_ENV === 'development' && {
+        details: err?.stack,
+        errorCode: err?.code
+      })
     }, { status: 500 });
   }
 }

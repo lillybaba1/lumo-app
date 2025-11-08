@@ -17,8 +17,9 @@ declare global {
 }
 
 function readSvcFromEnv(): any | null {
-  const json = process.env.SERVICE_ACCOUNT_JSON;
-  const b64 = process.env.SERVICE_ACCOUNT_BASE64;
+  // Check both FIREBASE_ prefixed and non-prefixed versions for compatibility
+  const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.SERVICE_ACCOUNT_JSON;
+  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || process.env.SERVICE_ACCOUNT_BASE64;
   const path = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (json) {
     try {
@@ -80,7 +81,7 @@ export function getAdminApp(): admin.app.App {
       admin.initializeApp({
         credential: admin.credential.cert(certObj as admin.ServiceAccount),
         // optional: set storageBucket if needed
-        storageBucket: process.env.STORAGE_BUCKET || `${normalized.projectId}.appspot.com`,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.STORAGE_BUCKET || `${normalized.projectId}.appspot.com`,
       });
     }
     global.__FIREBASE_ADMIN_APP__ = admin.app();
@@ -92,7 +93,7 @@ export function getAdminApp(): admin.app.App {
   try {
     if (!admin.apps.length) {
       admin.initializeApp({
-        storageBucket: process.env.STORAGE_BUCKET,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.STORAGE_BUCKET,
       });
     }
     global.__FIREBASE_ADMIN_APP__ = admin.app();

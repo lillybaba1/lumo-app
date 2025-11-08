@@ -44,6 +44,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const isOutOfStock = product.stock === 0;
 
+  // Use productImages if available, otherwise fall back to imageUrls for backwards compatibility
+  const displayImages = product.productImages && product.productImages.length > 0
+    ? product.productImages
+    : product.imageUrls;
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
@@ -52,7 +57,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <Card className="overflow-hidden">
             <Carousel className="w-full">
               <CarouselContent>
-                {product.imageUrls.map((url, index) => (
+                {displayImages.map((url, index) => (
                   <CarouselItem key={index}>
                     <div className="aspect-square relative bg-muted">
                       <Image
@@ -68,7 +73,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              {product.imageUrls.length > 1 && (
+              {displayImages.length > 1 && (
                 <>
                   <CarouselPrevious className="left-4" />
                   <CarouselNext className="right-4" />

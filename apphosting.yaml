@@ -4,7 +4,14 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  maxInstances: 1
+  maxInstances: 3
+  # Minimum instances to keep warm
+  minInstances: 1
+  # Increase CPU and memory for file upload handling
+  cpu: 1
+  memoryMiB: 1024
+  # Increase timeout for file uploads (max 60 minutes)
+  timeoutSeconds: 300
 
 # This application is a dynamic Next.js app, not a static site.
 # serveStatic: false tells App Hosting to run the 'start' script.

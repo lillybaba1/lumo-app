@@ -4,7 +4,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  imageUrls: string[];
+  imageUrls: string[]; // Legacy field - kept for backwards compatibility
+  productImages?: string[]; // Main product photos shown in carousel
+  foregroundImages?: string[]; // Foreground elements for admin/editing
+  backgroundImages?: string[]; // Background elements for admin/editing
   category: string;
   // optional category id / slug for linking
   categoryId?: string;

@@ -60,5 +60,23 @@ service firebase.storage {
       allow read: if true;
       allow write: if isAdmin() && isValidImageType() && isValidFileSize(5);
     }
+
+    // Foreground images - admin only write, public read
+    match /foreground/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageType() && isValidFileSize(10);
+    }
+
+    // Background images - admin only write, public read
+    match /background/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImageType() && isValidFileSize(10);
+    }
+
+    // Theme images - admin only write, public read
+    match /theme/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidFileSize(10);
+    }
   }
 }

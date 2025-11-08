@@ -14,10 +14,35 @@ const productSchema = z.object({
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
   imageUrls: z.preprocess((arg) => {
     if (typeof arg === 'string') {
-      return arg.split(',');
+      return arg.split(',').filter(url => url.length > 0);
     }
     return arg;
-  }, z.array(z.string().url()).min(1, 'At least one image is required')),
+  }, z.array(z.string().url()).optional()),
+  productImages: z.preprocess((arg) => {
+    if (typeof arg === 'string') {
+      return arg.split(',').filter(url => url.length > 0);
+    }
+    return arg;
+  }, z.array(z.string().url()).optional()),
+  foregroundImages: z.preprocess((arg) => {
+    if (typeof arg === 'string') {
+      return arg.split(',').filter(url => url.length > 0);
+    }
+    return arg;
+  }, z.array(z.string().url()).optional()),
+  backgroundImages: z.preprocess((arg) => {
+    if (typeof arg === 'string') {
+      return arg.split(',').filter(url => url.length > 0);
+    }
+    return arg;
+  }, z.array(z.string().url()).optional()),
+}).refine((data) => {
+  // Ensure at least one product image exists (either in imageUrls or productImages)
+  const hasImages = (data.imageUrls && data.imageUrls.length > 0) || (data.productImages && data.productImages.length > 0);
+  return hasImages;
+}, {
+  message: 'At least one product image is required',
+  path: ['productImages'],
 });
 
 type SaveProductState = {

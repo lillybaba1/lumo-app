@@ -416,7 +416,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell>
                   <Image
-                    src={product.imageUrls[0]}
+                    src={(product.productImages && product.productImages.length > 0 ? product.productImages[0] : product.imageUrls[0])}
                     alt={product.name}
                     width={50}
                     height={50}
