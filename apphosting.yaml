@@ -19,6 +19,8 @@ env:
     value: lumo-app-183f5.firebasestorage.app
   - variable: STORAGE_BUCKET
     value: lumo-app-183f5.firebasestorage.app
+  - variable: GOOGLE_API_KEY
+    value: AIzaSyAMjqMK7DF89wwcDl-o49xXpIWypd8vgbI
 
 # This application is a dynamic Next.js app, not a static site.
 # serveStatic: false tells App Hosting to run the 'start' script.

@@ -247,8 +247,17 @@ export async function shoppingAssistant(
       console.warn('[AI] Gemini returned empty response, falling back');
       // fallthrough to local fallback below
     } catch (qaErr) {
-      const errorMsg = qaErr instanceof Error ? qaErr.message : String(qaErr);
-      console.error('[AI] Gemini failed, falling back to local search. Error:', errorMsg);
+      // Enhanced error logging for debugging
+      console.error('[AI] ========== GEMINI ERROR ==========');
+      console.error('[AI] Error type:', qaErr instanceof Error ? qaErr.constructor.name : typeof qaErr);
+      console.error('[AI] Error message:', qaErr instanceof Error ? qaErr.message : String(qaErr));
+      console.error('[AI] Full error:', qaErr);
+      if (qaErr instanceof Error && qaErr.stack) {
+        console.error('[AI] Stack trace:', qaErr.stack);
+      }
+      console.error('[AI] API Key present:', !!process.env.GOOGLE_API_KEY);
+      console.error('[AI] API Key length:', process.env.GOOGLE_API_KEY?.length || 0);
+      console.error('[AI] ====================================');
       // Continue to a local fallback that can answer simple queries from product data.
     }
 

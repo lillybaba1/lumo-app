@@ -23,7 +23,13 @@ const ProductQuestionAnsweringOutputSchema = z.object({
 export type ProductQuestionAnsweringOutput = z.infer<typeof ProductQuestionAnsweringOutputSchema>;
 
 export async function productQuestionAnswering(input: ProductQuestionAnsweringInput): Promise<ProductQuestionAnsweringOutput> {
-  return productQuestionAnsweringFlow(input);
+  // Pre-process input to add computed boolean for admin role
+  const processedInput = {
+    ...input,
+    isAdmin: input.userRole === 'admin',
+    isCustomer: input.userRole === 'customer',
+  };
+  return productQuestionAnsweringFlow(processedInput as any);
 }
 
 const productQuestionAnsweringPrompt = ai.definePrompt({
@@ -34,7 +40,9 @@ const productQuestionAnsweringPrompt = ai.definePrompt({
 
 {{#if userRole}}
 USER ROLE: {{userRole}}
-{{#if (eq userRole "admin")}}
+{{/if}}
+
+{{#if isAdmin}}
 🔐 **IMPORTANT**: This user is an ADMIN of the store. You have access to special capabilities:
 
 ADMIN-SPECIFIC RESPONSES:
@@ -50,10 +58,10 @@ ADMIN CAPABILITIES YOU CAN MENTION:
 • Order tracking and management
 • Business performance insights
 • Product and customer data
-
-{{else}}
-This user is a CUSTOMER. Focus on helping them shop and find products.
 {{/if}}
+
+{{#if isCustomer}}
+This user is a CUSTOMER. Focus on helping them shop and find products.
 {{/if}}
 
 PERSONALITY & TONE:
