@@ -16,7 +16,10 @@
     "pages:deploy": "npm run pages:build && wrangler pages deploy",
     "pages:dev": "npx @cloudflare/next-on-pages --experimental-minify",
     "emulator:start": "firebase emulators:start --only firestore,auth,storage",
-    "emulator:build": "npm run emulator:start -- --export-on-exit && npm run build"
+    "emulator:build": "npm run emulator:start -- --export-on-exit && npm run build",
+    "backup": "node scripts/backup-firestore.js",
+    "restore": "node scripts/restore-firestore.js",
+    "sync:users": "node scripts/sync-auth-to-firestore.js"
   },
   "dependencies": {
     "@genkit-ai/firebase": "1.16.1",
