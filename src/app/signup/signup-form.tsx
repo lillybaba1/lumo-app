@@ -139,6 +139,8 @@ export default function SignupForm() {
         errorMessage = 'Too many verification attempts. Please try again later or use a different phone number.';
       } else if (error.code === 'auth/quota-exceeded') {
         errorMessage = 'SMS quota exceeded. Please try again later or contact support.';
+      } else if (error.code === 'auth/captcha-check-failed') {
+        errorMessage = 'reCAPTCHA verification failed. The domain may not be authorized. Please contact support.';
       } else if (error.message) {
         errorMessage = error.message;
       }

@@ -122,6 +122,8 @@ export default function LoginForm() {
            errorMessage = 'Too many login attempts. Please try again later or use a different phone number.';
        } else if (e.code === 'auth/quota-exceeded') {
            errorMessage = 'SMS quota exceeded. Please try again later or contact support.';
+       } else if (e.code === 'auth/captcha-check-failed') {
+           errorMessage = 'reCAPTCHA verification failed. The domain may not be authorized. Please contact support.';
        } else if (e.message) {
            errorMessage = e.message;
        }
