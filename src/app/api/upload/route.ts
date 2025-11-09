@@ -111,10 +111,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Generate safe file path
+    // Generate safe file path with timestamp to prevent caching issues
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const path = customPath || `uploads/${timestamp}_${safeName}`;
+    const path = customPath
+      ? `${customPath}/${timestamp}_${safeName}`
+      : `uploads/${timestamp}_${safeName}`;
 
     console.log("[Upload API] Uploading file:", {
       name: file.name,

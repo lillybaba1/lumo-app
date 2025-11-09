@@ -105,7 +105,9 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       setIsUploading(true);
       try {
         const url = await uploadImageAndGetUrl(file, path);
-        imageSetter(url);
+        // Add cache-busting query parameter to force browser to fetch new image
+        const cacheBustedUrl = `${url}?t=${Date.now()}`;
+        imageSetter(cacheBustedUrl);
         setHasUnsavedChanges(true);
         toast({
           title: 'Upload successful',
@@ -113,9 +115,9 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
           variant: 'default'
         });
       } catch (error: any) {
-        toast({ 
-          title: 'Upload failed', 
-          description: error.message || 'Could not upload image.', 
+        toast({
+          title: 'Upload failed',
+          description: error.message || 'Could not upload image.',
           variant: 'destructive'
         });
       } finally {
