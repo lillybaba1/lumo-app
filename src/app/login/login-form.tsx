@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,30 @@ export default function LoginForm() {
   const [step, setStep] = useState<'login' | 'verify'>('login');
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/';
+
+  // Use ref to store recaptchaVerifier to ensure singleton pattern
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Initialize RecaptchaVerifier only once
+  const getRecaptchaVerifier = () => {
+    if (!recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved - user verified
+          console.log('reCAPTCHA verified');
+        },
+        'expired-callback': () => {
+          // reCAPTCHA expired - reset it
+          console.log('reCAPTCHA expired');
+          recaptchaVerifierRef.current = null;
+        }
+      });
+    }
+    return recaptchaVerifierRef.current;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -49,23 +70,13 @@ export default function LoginForm() {
       }
     }
 
-    // Initialize RecaptchaVerifier
-    if (!recaptchaVerifier) {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          // reCAPTCHA solved
-        }
-      });
-      setRecaptchaVerifier(verifier);
-    }
-
     validateSession();
 
     return () => {
       cancelled = true;
-      if (recaptchaVerifier) {
-        recaptchaVerifier.clear();
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
       }
     };
   }, [next]);
@@ -93,9 +104,7 @@ export default function LoginForm() {
       setPhoneNumber(user.phoneNumber);
 
       // Send SMS verification code
-      if (!recaptchaVerifier) {
-        throw new Error('RecaptchaVerifier not initialized');
-      }
+      const recaptchaVerifier = getRecaptchaVerifier();
 
       const phoneProvider = new PhoneAuthProvider(auth);
       const verificationIdResult = await phoneProvider.verifyPhoneNumber(user.phoneNumber, recaptchaVerifier);
@@ -109,6 +118,10 @@ export default function LoginForm() {
       let errorMessage = 'An unknown error occurred. Please try again.';
        if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
            errorMessage = 'Invalid email or password.';
+       } else if (e.code === 'auth/too-many-requests') {
+           errorMessage = 'Too many login attempts. Please try again later or use a different phone number.';
+       } else if (e.code === 'auth/quota-exceeded') {
+           errorMessage = 'SMS quota exceeded. Please try again later or contact support.';
        } else if (e.message) {
            errorMessage = e.message;
        }

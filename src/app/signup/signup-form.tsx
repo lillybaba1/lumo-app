@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,23 +27,35 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
-  useEffect(() => {
-    // Initialize RecaptchaVerifier
-    if (!recaptchaVerifier) {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+  // Use ref to store recaptchaVerifier to ensure singleton pattern
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Initialize RecaptchaVerifier only once
+  const getRecaptchaVerifier = () => {
+    if (!recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
         callback: () => {
-          // reCAPTCHA solved
+          // reCAPTCHA solved - user verified
+          console.log('reCAPTCHA verified');
+        },
+        'expired-callback': () => {
+          // reCAPTCHA expired - reset it
+          console.log('reCAPTCHA expired');
+          recaptchaVerifierRef.current = null;
         }
       });
-      setRecaptchaVerifier(verifier);
     }
+    return recaptchaVerifierRef.current;
+  };
 
+  useEffect(() => {
+    // Cleanup on unmount
     return () => {
-      if (recaptchaVerifier) {
-        recaptchaVerifier.clear();
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
       }
     };
   }, []);
@@ -81,9 +93,7 @@ export default function SignupForm() {
 
       // Step 2: Send SMS verification code
       try {
-        if (!recaptchaVerifier) {
-          throw new Error('RecaptchaVerifier not initialized');
-        }
+        const recaptchaVerifier = getRecaptchaVerifier();
 
         const phoneProvider = new PhoneAuthProvider(auth);
         const verificationIdResult = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
@@ -125,6 +135,10 @@ export default function SignupForm() {
         errorMessage = 'Invalid phone number. Include country code (e.g., +1234567890).';
       } else if (error.code === 'auth/operation-not-allowed') {
         errorMessage = 'Phone authentication is not enabled. Please contact support.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many verification attempts. Please try again later or use a different phone number.';
+      } else if (error.code === 'auth/quota-exceeded') {
+        errorMessage = 'SMS quota exceeded. Please try again later or contact support.';
       } else if (error.message) {
         errorMessage = error.message;
       }
