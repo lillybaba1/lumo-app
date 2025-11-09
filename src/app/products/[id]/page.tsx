@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AddToCartButton from './add-to-cart-button';
 import { WishlistButton } from '@/components/wishlist-button';
+import { getCurrentUser } from '@/lib/auth-admin';
+import { getUserById } from '@/services/userService';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
     if (!currencyCode) return '$';
@@ -36,9 +38,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const currencySymbol = await getCurrencySymbol(settings?.currency);
 
-  // TODO: Get current user info from auth context
-  const currentUserId = undefined;
-  const currentUserName = undefined;
+  // Get current user info
+  const currentUser = await getCurrentUser();
+  const currentUserId = currentUser?.userId;
+  const currentUserName = currentUser?.userId ? (await getUserById(currentUser.userId))?.name : undefined;
   const userReview = currentUserId ? await getUserReviewForProduct(currentUserId, id) : null;
 
   const isLowStock = product.stock > 0 && product.stock <= 5;
