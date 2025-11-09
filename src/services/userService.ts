@@ -12,22 +12,31 @@ import type { User } from '@/lib/types';
 export async function createUserDocument(
   uid: string,
   email: string,
-  name: string
+  name: string,
+  phoneNumber?: string
 ): Promise<{ success: boolean; role?: string; message?: string }> {
   try {
     // Always create users with safe default role 'customer'.
     // Manual promotion to 'admin' must be done via a protected server-side API.
     const role = 'customer';
+    const userData = {
+      uid,
+      email,
+      name,
+      role,
+      createdAt: new Date().toISOString(),
+      ...(phoneNumber && { phoneNumber, phoneVerified: true })
+    };
 
     // Create user document in Firestore (prefer Admin SDK on server)
     if (typeof window === 'undefined') {
       const { dbAdmin } = await import('@/lib/firebaseAdmin');
       const adminDb = dbAdmin();
-      await adminDb.collection('users').doc(uid).set({ uid, email, name, role, createdAt: new Date().toISOString() });
+      await adminDb.collection('users').doc(uid).set(userData);
     } else {
       const { getClientDb } = await import('@/lib/firebaseClient');
       const db = getClientDb();
-      await firestoreSetDoc(firestoreDoc(db, 'users', uid), { uid, email, name, role, createdAt: new Date().toISOString() });
+      await firestoreSetDoc(firestoreDoc(db, 'users', uid), userData);
     }
 
     return { success: true, role };

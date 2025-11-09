@@ -65,6 +65,8 @@ export interface User {
     uid: string;
     email: string;
     name: string;
+    phoneNumber: string;
+    phoneVerified?: boolean;
     createdAt: string;
     role: 'admin' | 'customer';
 }
