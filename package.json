@@ -19,7 +19,9 @@
     "emulator:build": "npm run emulator:start -- --export-on-exit && npm run build",
     "backup": "node scripts/backup-firestore.js",
     "restore": "node scripts/restore-firestore.js",
-    "sync:users": "node scripts/sync-auth-to-firestore.js"
+    "sync:users": "node scripts/sync-auth-to-firestore.js",
+    "seed:categories": "node scripts/seed-categories.js",
+    "create:admin": "node scripts/create-admin-user.js"
   },
   "dependencies": {
     "@genkit-ai/firebase": "1.16.1",
