@@ -5,14 +5,14 @@ import { saveTheme as saveThemeToDb, getTheme as getThemeFromDb } from '@/servic
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { unstable_cache } from 'next/cache';
 
-// Cache the theme for 1 hour (3600 seconds)
+// Cache the theme for 60 seconds for faster updates across devices
 const getCachedTheme = unstable_cache(
   async () => {
     return await getThemeFromDb();
   },
   ['app-theme'],
   {
-    revalidate: 3600, // Cache for 1 hour
+    revalidate: 60, // Cache for 60 seconds
     tags: ['theme'],
   }
 );

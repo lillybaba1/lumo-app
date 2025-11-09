@@ -11,6 +11,7 @@ type Hero3DProps = {
     foregroundImageScale?: number;
     foregroundImagePositionX?: number;
     foregroundImagePositionY?: number;
+    updatedAt?: string;
   };
 };
 
@@ -60,6 +61,14 @@ export default function Hero3D({ theme }: Hero3DProps) {
     transition: 'transform 0.1s ease',
   };
 
+  // Add cache-busting query parameter based on theme update time
+  const addCacheBuster = (url: string) => {
+    if (!url) return url;
+    const timestamp = theme.updatedAt ? new Date(theme.updatedAt).getTime() : Date.now();
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${timestamp}`;
+  };
+
   return (
     <div style={{ perspective: '1000px' }} className="w-full min-h-[70vh] md:min-h-[60vh] flex items-center justify-center p-4">
       <section
@@ -68,13 +77,13 @@ export default function Hero3D({ theme }: Hero3DProps) {
       >
         {theme.backgroundImage ? (
           <Image
-            src={theme.backgroundImage}
+            src={addCacheBuster(theme.backgroundImage)}
             alt="Background"
             fill
             className="object-cover z-0 transform-gpu"
             sizes="100vw"
             priority
-            
+
             unoptimized
             data-ai-hint="modern room"
           />
@@ -92,7 +101,7 @@ export default function Hero3D({ theme }: Hero3DProps) {
               <div style={foregroundContainerStyle}>
                 <div className="relative w-full h-auto" style={{...foregroundImageStyle, paddingTop: '100%'}}>
                     <Image
-                    src={theme.foregroundImage}
+                    src={addCacheBuster(theme.foregroundImage)}
                     alt="Featured Product"
                     fill
                     className="object-contain drop-shadow-2xl transform-gpu"

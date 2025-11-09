@@ -105,9 +105,8 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       setIsUploading(true);
       try {
         const url = await uploadImageAndGetUrl(file, path);
-        // Add cache-busting query parameter to force browser to fetch new image
-        const cacheBustedUrl = `${url}?t=${Date.now()}`;
-        imageSetter(cacheBustedUrl);
+        // Set the URL without query parameters (filename already has timestamp for uniqueness)
+        imageSetter(url);
         setHasUnsavedChanges(true);
         toast({
           title: 'Upload successful',
