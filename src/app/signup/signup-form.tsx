@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2, Eye, EyeOff, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential, deleteUser } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 import { createUserDocument } from '@/services/userService';
 
@@ -72,28 +72,44 @@ export default function SignupForm() {
 
     setLoading(true);
 
+    let userCredential = null;
+
     try {
       // Step 1: Create user with email/password
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Step 2: Send SMS verification code
-      if (!recaptchaVerifier) {
-        throw new Error('RecaptchaVerifier not initialized');
+      try {
+        if (!recaptchaVerifier) {
+          throw new Error('RecaptchaVerifier not initialized');
+        }
+
+        const phoneProvider = new PhoneAuthProvider(auth);
+        const verificationIdResult = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
+
+        setVerificationId(verificationIdResult);
+        setStep('verify');
+
+        toast({
+          title: 'Verification Code Sent',
+          description: `A 6-digit code has been sent to ${phoneNumber}`,
+        });
+
+        setLoading(false);
+      } catch (phoneError: any) {
+        // Phone verification failed - delete the user we just created
+        console.error('Phone verification failed, cleaning up user:', phoneError);
+        try {
+          await deleteUser(user);
+          console.log('Partially created user deleted');
+        } catch (deleteError) {
+          console.error('Failed to delete partially created user:', deleteError);
+        }
+
+        // Re-throw the original phone error
+        throw phoneError;
       }
-
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const verificationIdResult = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
-
-      setVerificationId(verificationIdResult);
-      setStep('verify');
-
-      toast({
-        title: 'Verification Code Sent',
-        description: `A 6-digit code has been sent to ${phoneNumber}`,
-      });
-
-      setLoading(false);
     } catch (error: any) {
       console.error('Signup error:', error);
 
@@ -107,6 +123,8 @@ export default function SignupForm() {
         errorMessage = 'Password is too weak. Use at least 6 characters.';
       } else if (error.code === 'auth/invalid-phone-number') {
         errorMessage = 'Invalid phone number. Include country code (e.g., +1234567890).';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Phone authentication is not enabled. Please contact support.';
       } else if (error.message) {
         errorMessage = error.message;
       }
