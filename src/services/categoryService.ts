@@ -1,96 +1,112 @@
 "use server";
 
 import { Category } from '@/lib/types';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { categories as mockCategories } from '@/lib/mock-data';
 
+/**
+ * Add a new category
+ */
 export async function addCategory(category: Omit<Category, 'id'>): Promise<Category> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const adminDb = dbAdmin();
-      const ref = await adminDb.collection('categories').add({
-        ...category,
-        createdAt: new Date().toISOString(),
-      });
-      return { id: ref.id, ...category };
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .insert({
+        name: category.name,
+        slug: category.name.toLowerCase().replace(/\s+/g, '-'),
+        description: null,
+        image_url: null,
+        parent_id: null,
+        display_order: 0,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to add category:', error);
+      throw new Error('Could not save category.');
     }
 
-    const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const ref = await addDoc(collection(db, 'categories'), {
-      ...category,
-      createdAt: serverTimestamp(),
-    });
-    return { id: ref.id, ...category };
+    return {
+      id: data.id,
+      name: data.name,
+    };
   } catch (error) {
-    console.error('Failed to add category to Firestore:', error);
+    console.error('Failed to add category:', error);
     throw new Error('Could not save category.');
   }
 }
 
+/**
+ * Update an existing category
+ */
 export async function updateCategory(category: Category): Promise<void> {
   try {
-    const { id, ...rest } = category;
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('categories').doc(id).set({
-        ...rest,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      return;
+    const { error } = await supabaseAdmin
+      .from('categories')
+      .update({
+        name: category.name,
+        slug: category.name.toLowerCase().replace(/\s+/g, '-'),
+      })
+      .eq('id', category.id);
+
+    if (error) {
+      console.error(`Failed to update category ${category.id}:`, error);
+      throw new Error('Could not update category.');
     }
-    const { updateDoc, doc, serverTimestamp } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await updateDoc(doc(db, 'categories', id), {
-      ...rest,
-      updatedAt: serverTimestamp(),
-    });
   } catch (error) {
-    console.error(`Failed to update category ${category.id} in Firestore:`, error);
+    console.error(`Failed to update category ${category.id}:`, error);
     throw new Error('Could not update category.');
   }
 }
 
+/**
+ * Delete a category
+ */
 export async function deleteCategory(id: string): Promise<void> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('categories').doc(id).delete();
-      return;
+    const { error } = await supabaseAdmin
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Failed to delete category ${id}:`, error);
+      throw new Error('Could not delete category.');
     }
-    const { deleteDoc, doc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await deleteDoc(doc(db, 'categories', id));
   } catch (error) {
-    console.error(`Failed to delete category ${id} from Firestore:`, error);
+    console.error(`Failed to delete category ${id}:`, error);
     throw new Error('Could not delete category.');
   }
 }
 
+/**
+ * Get all categories
+ */
 export async function getCategories(): Promise<Category[]> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const adminDb = dbAdmin();
-      const snapshot = await adminDb.collection('categories').get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Category));
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+
+    if (error) {
+      console.error('Failed to fetch categories from Supabase:', error);
+      return mockCategories;
     }
 
-    const { getDocs, collection } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const snapshot = await getDocs(collection(db, 'categories'));
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Category));
+    if (!data || data.length === 0) {
+      return mockCategories;
+    }
+
+    return data.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+    }));
   } catch (error) {
-    console.error('Failed to fetch categories from Firestore:', error);
-    return [];
+    console.error('Failed to fetch categories:', error);
+    return mockCategories;
   }
 }
