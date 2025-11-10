@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { auth } from '@/lib/firebaseClient';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -28,16 +27,11 @@ export default function LoginForm() {
 
     async function validateSession() {
       try {
-        const response = await fetch('/api/auth/me', {
-          method: 'GET',
-          credentials: 'same-origin',
-        });
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!cancelled && response.ok) {
-          const data = await response.json();
-          if (data.authenticated) {
-            window.location.href = next;
-          }
+        if (!cancelled && session) {
+          window.location.href = next;
         }
       } catch (error) {
         console.error('Session pre-check failed:', error);
@@ -59,12 +53,26 @@ export default function LoginForm() {
     setNeedsVerification(false);
 
     try {
-      console.log('Attempting Firebase sign in...');
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Firebase sign in successful', cred.user.uid);
+      console.log('Attempting Supabase sign in...');
+      const supabase = createClient();
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      if (!data.user) {
+        throw new Error('Failed to sign in');
+      }
+
+      console.log('Supabase sign in successful', data.user.id);
 
       // Check if email is verified
-      if (!cred.user.emailVerified) {
+      if (!data.user.email_confirmed_at) {
         console.log('Email not verified');
         setNeedsVerification(true);
         setError('Please verify your email before logging in. Check your inbox for the verification link.');
@@ -72,30 +80,17 @@ export default function LoginForm() {
         return;
       }
 
-      // Email is verified - create session
-      const idToken = await cred.user.getIdToken(true);
-      console.log('ID token retrieved');
-
-      console.log('Creating session cookie...');
-      const r = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ idToken }),
-      });
-      console.log('Session API response:', r.status, r.statusText);
-      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
-
-      console.log('Login successful, redirecting to:', next);
-      // Hard reload so middleware/server see the new cookie
+      console.log('Email verified, redirecting to:', next);
+      // Supabase handles sessions automatically via cookies
       window.location.href = next;
     } catch (e: any) {
       console.error('Login error:', e);
       let errorMessage = 'An unknown error occurred. Please try again.';
-       if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+       if (e.message?.includes('Invalid login credentials')) {
            errorMessage = 'Invalid email or password.';
-       } else if (e.code === 'auth/too-many-requests') {
-           errorMessage = 'Too many login attempts. Please try again later.';
+       } else if (e.message?.includes('Email not confirmed')) {
+           errorMessage = 'Please verify your email before logging in.';
+           setNeedsVerification(true);
        } else if (e.message) {
            errorMessage = e.message;
        }
@@ -106,11 +101,21 @@ export default function LoginForm() {
 
   async function handleResendVerification() {
     try {
-      const user = auth.currentUser;
-      if (user) {
-        await sendEmailVerification(user);
-        setError('Verification email has been resent. Please check your inbox.');
+      const supabase = createClient();
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        throw error;
       }
+
+      setError('Verification email has been resent. Please check your inbox.');
     } catch (e: any) {
       console.error('Resend verification error:', e);
       setError('Failed to resend verification email. Please try again.');

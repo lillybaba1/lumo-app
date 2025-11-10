@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth-admin';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
@@ -9,18 +9,28 @@ export const runtime = 'nodejs';
  */
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const supabase = await createClient();
 
-    if (!user) {
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
       return NextResponse.json({ authenticated: false, user: null }, { status: 200 });
     }
+
+    // Get user profile from public.users table
+    const { data: profile } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
     return NextResponse.json({
       authenticated: true,
       user: {
-        userId: user.userId,
+        userId: user.id,
         email: user.email,
-        role: user.role,
+        role: profile?.role || 'customer',
+        name: profile?.name,
       },
     });
   } catch (error) {

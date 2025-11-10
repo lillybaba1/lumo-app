@@ -11,9 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from 'firebase/auth';
-import { auth } from '@/lib/firebaseClient';
-import { createUserDocument } from '@/services/userService';
+import { createClient } from '@/lib/supabase/client';
 
 
 export default function SignupForm() {
@@ -42,37 +40,54 @@ export default function SignupForm() {
 
     setLoading(true);
 
-    let userCredential = null;
-
     try {
-      // Step 1: Create user with email/password
-      userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const supabase = createClient();
 
-      // Step 2: Send email verification
-      try {
-        await sendEmailVerification(user);
-        console.log('Email verification sent to:', email);
-      } catch (emailError: any) {
-        console.error('Failed to send verification email:', emailError);
-        // Don't block signup if email sending fails
-      }
-
-      // Step 3: Create user document with phone number (if provided)
+      // Step 1: Sign up with Supabase Auth
       const fullPhoneNumber = phoneNumber ? `${countryCode}${phoneNumber}` : undefined;
-      const result = await createUserDocument(user.uid, email, name, fullPhoneNumber);
 
-      if (!result.success) {
-        // If user document creation fails, delete the auth user
-        try {
-          await deleteUser(user);
-        } catch (deleteError) {
-          console.error('Failed to delete user after document creation failure:', deleteError);
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            name,
+            phone_number: fullPhoneNumber,
+          }
         }
-        throw new Error(result.message || 'Failed to create user profile');
+      });
+
+      if (signUpError) {
+        throw signUpError;
       }
 
-      // Step 4: Show email verification screen
+      if (!data.user) {
+        throw new Error('Failed to create user account');
+      }
+
+      // Step 2: Create user profile in public.users table
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          email: email,
+          name: name,
+          phone_number: fullPhoneNumber || null,
+          role: 'customer',
+        });
+
+      if (profileError) {
+        console.error('Failed to create user profile:', profileError);
+        // Continue anyway - the user is created in auth
+      }
+
+      toast({
+        title: 'Verification Email Sent',
+        description: `Please check your inbox at ${email}`,
+      });
+
+      // Step 3: Show email verification screen
       setStep('verify');
       setLoading(false);
 
@@ -81,11 +96,11 @@ export default function SignupForm() {
 
       let errorMessage = 'An unknown error occurred.';
 
-      if (error.code === 'auth/email-already-in-use') {
+      if (error.message?.includes('already registered')) {
         errorMessage = 'An account with this email already exists.';
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error.message?.includes('Invalid email')) {
         errorMessage = 'Invalid email address.';
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error.message?.includes('Password')) {
         errorMessage = 'Password is too weak. Use at least 6 characters.';
       } else if (error.message) {
         errorMessage = error.message;
@@ -101,54 +116,36 @@ export default function SignupForm() {
     }
   };
 
-  const handleContinue = async () => {
+  const handleResendEmail = async () => {
     setLoading(true);
 
     try {
-      const user = auth.currentUser;
+      const supabase = createClient();
 
-      if (!user) {
-        throw new Error('User not authenticated');
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Reload user to get latest emailVerified status
-      await user.reload();
-
-      if (!user.emailVerified) {
-        toast({
-          title: 'Email Not Verified',
-          description: 'Please check your email and click the verification link before continuing.',
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Email is verified - create session and login
       toast({
-        title: 'Email Verified',
-        description: 'Your account is ready!',
+        title: 'Email Resent',
+        description: `A new verification email has been sent to ${email}`,
       });
 
-      // Create a server-side session cookie
-      const idToken = await user.getIdToken(true);
-      const r = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ idToken }),
-      });
-      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
-
-      // Redirect to home
-      router.push('/');
-      router.refresh();
+      setLoading(false);
     } catch (error: any) {
-      console.error('Continue error:', error);
+      console.error('Resend email error:', error);
 
       toast({
-        title: 'Error',
-        description: error.message || 'An error occurred. Please try again.',
+        title: 'Failed to Resend',
+        description: error.message || 'Could not resend verification email. Please try again.',
         variant: 'destructive',
       });
 
@@ -156,30 +153,6 @@ export default function SignupForm() {
     }
   };
 
-  const handleResendEmail = async () => {
-    try {
-      const user = auth.currentUser;
-
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      await sendEmailVerification(user);
-
-      toast({
-        title: 'Email Sent',
-        description: 'Verification email has been resent. Please check your inbox.',
-      });
-    } catch (error: any) {
-      console.error('Resend email error:', error);
-
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to resend email.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   // Popular country codes
   const countryCodes = [

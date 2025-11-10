@@ -1,34 +1,17 @@
 
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 
-const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'session';
+export async function POST() {
+  try {
+    const supabase = await createClient();
 
-function cookiePolicy(url: URL) {
-  const h = url.hostname;
-  const isLocal =
-    h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local');
-  return {
-    sameSite: (isLocal ? 'lax' : 'none') as 'lax' | 'none',
-    secure: !isLocal,
-  };
-}
+    // Sign out from Supabase (clears cookies automatically)
+    await supabase.auth.signOut();
 
-
-export async function POST(req: Request) {
-  const res = NextResponse.json({ ok: true });
-  const { sameSite, secure } = cookiePolicy(new URL(req.url));
-  
-  // Clear the session cookie
-  (await
-    // Clear the session cookie
-    cookies()).set(COOKIE_NAME, "", { 
-      httpOnly: true, 
-      secure,
-      sameSite,
-      path: "/", 
-      maxAge: 0 
-  });
-
-  return res;
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return NextResponse.json({ ok: false, error: 'Logout failed' }, { status: 500 });
+  }
 }
