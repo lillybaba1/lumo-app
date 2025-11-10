@@ -1,7 +1,6 @@
-
 'use server';
 
-import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export interface Settings {
     // General Store Info
@@ -55,32 +54,45 @@ const defaultSettings: Settings = {
 };
 
 export async function getSettings(): Promise<Settings> {
-    if (!isFirebaseAdminInitialized() || !dbAdmin) {
-        return defaultSettings;
-    }
     try {
-        const settingsDocRef = dbAdmin().collection('settings').doc('storeConfig');
-        const docSnap = await settingsDocRef.get();
-        if (docSnap.exists) {
-            return { ...defaultSettings, ...docSnap.data() } as Settings;
+        const { data, error } = await supabaseAdmin
+            .from('settings')
+            .select('*')
+            .eq('key', 'storeConfig')
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No settings found, return default
+                return defaultSettings;
+            }
+            throw error;
         }
-        return defaultSettings;
+
+        return { ...defaultSettings, ...(data?.value as Settings) } as Settings;
     } catch (error) {
-        console.error('Failed to get settings from Firestore:', error);
+        console.error('Failed to get settings:', error);
         return defaultSettings;
     }
 }
 
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
-    if (!isFirebaseAdminInitialized() || !dbAdmin) {
-        console.error('Failed to save settings. Firebase Admin SDK not initialized.');
-         throw new Error('Failed to save settings. Firebase not configured.');
-    }
     try {
-       const settingsDocRef = dbAdmin().collection('settings').doc('storeConfig');
-       await settingsDocRef.set(settings, { merge: true });
+        const { error } = await supabaseAdmin
+            .from('settings')
+            .upsert({
+                key: 'storeConfig',
+                value: settings,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'key'
+            });
+
+        if (error) {
+            throw error;
+        }
     } catch (error) {
-         console.error('Failed to save settings to Firestore.', error);
-         throw new Error('Failed to save settings. Ensure Firestore is set up correctly.');
+        console.error('Failed to save settings:', error);
+        throw new Error('Failed to save settings. Ensure database is set up correctly.');
     }
 }

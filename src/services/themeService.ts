@@ -1,7 +1,7 @@
 
 'use server';
 
-import { dbAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface Theme {
     primaryColor: string;
@@ -16,36 +16,50 @@ interface Theme {
 }
 
 export async function getTheme(): Promise<Theme | null> {
-    if (!isFirebaseAdminInitialized() || !dbAdmin) {
-        return null;
-    }
     try {
-        const themeDocRef = dbAdmin().collection('settings').doc('theme');
-        const docSnap = await themeDocRef.get();
-        if (docSnap.exists) {
-            return docSnap.data() as Theme;
+        const { data, error } = await supabaseAdmin
+            .from('settings')
+            .select('*')
+            .eq('key', 'theme')
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No theme found
+                return null;
+            }
+            throw error;
         }
-        return null;
+
+        return data?.value as Theme || null;
     } catch (error) {
-        console.error('Failed to get theme from Firestore:', error);
+        console.error('Failed to get theme:', error);
         return null;
     }
 }
 
 export async function saveTheme(theme: Partial<Theme>): Promise<void> {
-    if (!isFirebaseAdminInitialized() || !dbAdmin) {
-        console.error('Failed to save theme. Firebase Admin SDK not initialized.');
-        throw new Error('Failed to save theme. Firebase not configured.');
-    }
     try {
-       const themeDocRef = dbAdmin().collection('settings').doc('theme');
-       const themeWithTimestamp = {
-           ...theme,
-           updatedAt: new Date().toISOString()
-       };
-       await themeDocRef.set(themeWithTimestamp, { merge: true });
+        const themeWithTimestamp = {
+            ...theme,
+            updatedAt: new Date().toISOString()
+        };
+
+        const { error } = await supabaseAdmin
+            .from('settings')
+            .upsert({
+                key: 'theme',
+                value: themeWithTimestamp,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'key'
+            });
+
+        if (error) {
+            throw error;
+        }
     } catch (error) {
-         console.error('Failed to save theme to Firestore.', error);
-         throw new Error('Failed to save theme. Ensure Firestore is set up correctly.');
+        console.error('Failed to save theme:', error);
+        throw new Error('Failed to save theme. Ensure database is set up correctly.');
     }
 }
