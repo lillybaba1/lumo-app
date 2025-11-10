@@ -34,7 +34,7 @@ export default function LoginForm() {
   const getRecaptchaVerifier = () => {
     if (!recaptchaVerifierRef.current) {
       recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
+        size: 'normal',
         callback: () => {
           // reCAPTCHA solved - user verified
           console.log('reCAPTCHA verified');
@@ -249,7 +249,9 @@ export default function LoginForm() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <div id="recaptcha-container"></div>
+              <div className="w-full flex justify-center">
+                <div id="recaptcha-container"></div>
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : 'Continue'}
               </Button>
