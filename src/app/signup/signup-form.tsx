@@ -27,6 +27,7 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
+  const [phoneVerificationFailed, setPhoneVerificationFailed] = useState(false);
 
   // Use ref to store recaptchaVerifier to ensure singleton pattern
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
@@ -72,8 +73,8 @@ export default function SignupForm() {
       return;
     }
 
-    // Validate phone number format (basic check)
-    if (!phoneNumber.match(/^\+?[1-9]\d{1,14}$/)) {
+    // Validate phone number format only if provided (basic check)
+    if (phoneNumber && !phoneNumber.match(/^\+?[1-9]\d{1,14}$/)) {
       toast({
         title: 'Invalid Phone Number',
         description: 'Please enter a valid phone number with country code (e.g., +1234567890)',
@@ -91,7 +92,43 @@ export default function SignupForm() {
       userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Step 2: Send SMS verification code
+      // Step 2: Send SMS verification code (if phone number provided)
+      if (!phoneNumber) {
+        // No phone number provided - complete signup without phone verification
+        const result = await createUserDocument(user.uid, email, name);
+
+        if (!result.success) {
+          // If user document creation fails, delete the auth user
+          try {
+            await deleteUser(user);
+          } catch (deleteError) {
+            console.error('Failed to delete user after document creation failure:', deleteError);
+          }
+          throw new Error(result.message || 'Failed to create user profile');
+        }
+
+        toast({
+          title: 'Account Created',
+          description: 'Welcome to Lumo!',
+        });
+
+        // Create a server-side session cookie
+        const idToken = await user.getIdToken(true);
+        const r = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ idToken }),
+        });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
+
+        // Redirect to home
+        router.push('/');
+        router.refresh();
+        setLoading(false);
+        return;
+      }
+
       try {
         const recaptchaVerifier = getRecaptchaVerifier();
 
@@ -108,17 +145,46 @@ export default function SignupForm() {
 
         setLoading(false);
       } catch (phoneError: any) {
-        // Phone verification failed - delete the user we just created
-        console.error('Phone verification failed, cleaning up user:', phoneError);
-        try {
-          await deleteUser(user);
-          console.log('Partially created user deleted');
-        } catch (deleteError) {
-          console.error('Failed to delete partially created user:', deleteError);
+        // Phone verification failed - but allow signup to continue without phone verification
+        console.error('Phone verification failed, proceeding without phone verification:', phoneError);
+
+        // Don't delete the user - instead complete signup without phone verification
+        setPhoneVerificationFailed(true);
+
+        // Create user document without phone number
+        const result = await createUserDocument(user.uid, email, name);
+
+        if (!result.success) {
+          // If user document creation fails, delete the auth user
+          try {
+            await deleteUser(user);
+          } catch (deleteError) {
+            console.error('Failed to delete user after document creation failure:', deleteError);
+          }
+          throw new Error(result.message || 'Failed to create user profile');
         }
 
-        // Re-throw the original phone error
-        throw phoneError;
+        toast({
+          title: 'Account Created',
+          description: 'Welcome to Lumo! Phone verification failed but your account was created.',
+          variant: 'default',
+        });
+
+        // Create a server-side session cookie
+        const idToken = await user.getIdToken(true);
+        const r = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ idToken }),
+        });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
+
+        // Redirect to home
+        router.push('/');
+        router.refresh();
+        setLoading(false);
+        return; // Exit early since we're done
       }
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -274,22 +340,21 @@ export default function SignupForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="+1234567890"
-                    required
+                    placeholder="+1234567890 (optional)"
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value)}
                     autoComplete="tel"
                     className="pl-10"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Include country code (e.g., +1 for USA)</p>
+                <p className="text-xs text-muted-foreground">Optional: Include country code (e.g., +1 for USA)</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -325,7 +390,7 @@ export default function SignupForm() {
                 <div id="recaptcha-container"></div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Send Verification Code'}
+                {loading ? <Loader2 className="animate-spin" /> : (phoneNumber ? 'Send Verification Code' : 'Create Account')}
               </Button>
                <p className="text-xs text-muted-foreground">
                 Already have an account? <Link href="/login" className="underline">Log in</Link>

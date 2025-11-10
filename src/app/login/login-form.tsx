@@ -91,27 +91,62 @@ export default function LoginForm() {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       console.log('Firebase sign in successful', cred.user.uid);
 
-      // Sign out immediately - we'll only complete login after phone verification
-      await auth.signOut();
-
       // Get user's phone number from Firestore
       const user = await getUserById(cred.user.uid);
 
       if (!user?.phoneNumber) {
-        throw new Error('No phone number registered. Please contact support.');
+        // No phone number registered - complete login without phone verification
+        console.log('No phone number registered, completing login without phone verification');
+
+        const idToken = await cred.user.getIdToken(true);
+        const r = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ idToken }),
+        });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
+
+        console.log('Login successful, redirecting to:', next);
+        window.location.href = next;
+        return;
       }
+
+      // Sign out - we'll only complete login after phone verification
+      await auth.signOut();
 
       setPhoneNumber(user.phoneNumber);
 
       // Send SMS verification code
-      const recaptchaVerifier = getRecaptchaVerifier();
+      try {
+        const recaptchaVerifier = getRecaptchaVerifier();
 
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const verificationIdResult = await phoneProvider.verifyPhoneNumber(user.phoneNumber, recaptchaVerifier);
+        const phoneProvider = new PhoneAuthProvider(auth);
+        const verificationIdResult = await phoneProvider.verifyPhoneNumber(user.phoneNumber, recaptchaVerifier);
 
-      setVerificationId(verificationIdResult);
-      setStep('verify');
-      setLoading(false);
+        setVerificationId(verificationIdResult);
+        setStep('verify');
+        setLoading(false);
+      } catch (phoneError: any) {
+        // Phone verification failed - re-authenticate and complete login without phone verification
+        console.error('Phone verification failed, completing login without phone verification:', phoneError);
+
+        // Re-authenticate to get a valid credential
+        const reAuthCred = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await reAuthCred.user.getIdToken(true);
+
+        const r = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ idToken }),
+        });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
+
+        console.log('Login successful (without phone verification), redirecting to:', next);
+        window.location.href = next;
+        return;
+      }
 
     } catch (e: any) {
       console.error('Login error:', e);
