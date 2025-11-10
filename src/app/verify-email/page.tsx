@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { auth } from '@/lib/firebaseClient';
 import { sendEmailVerification } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -168,5 +168,21 @@ export default function VerifyEmailPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
