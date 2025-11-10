@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendEmailVerification, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,6 +49,46 @@ export default function LoginForm() {
     }
 
     validateSession();
+
+    // If this page was opened via a sign-in email link, handle it.
+    async function handleEmailLinkSignIn() {
+      try {
+        const href = typeof window !== 'undefined' ? window.location.href : '';
+        if (isSignInWithEmailLink(auth, href)) {
+          // Try to get email from localStorage (set when link was requested) or from the URL param
+          const storedEmail = typeof window !== 'undefined' ? window.localStorage.getItem('emailForSignIn') : null;
+          const emailFromParam = searchParams.get('email') || '';
+          const signInEmail = storedEmail || emailFromParam || email;
+          if (!signInEmail) {
+            // Can't complete sign-in without the email; prompt the user to enter it in the form.
+            console.warn('Sign-in link present but no email available to complete sign-in.');
+            return;
+          }
+
+          const cred = await signInWithEmailLink(auth, signInEmail, href);
+          // Remove stored email after successful sign-in
+          if (typeof window !== 'undefined') window.localStorage.removeItem('emailForSignIn');
+
+          // Proceed with session creation similar to password flow
+          await cred.user.reload();
+          const idToken = await cred.user.getIdToken(true);
+          const r = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ idToken }),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
+          // Redirect to next
+          window.location.href = next;
+        }
+      } catch (err) {
+        console.error('Email-link sign-in failed:', err);
+        // Let the normal flow handle it; user can sign in with password.
+      }
+    }
+
+    handleEmailLinkSignIn();
 
     return () => {
       cancelled = true;
@@ -132,6 +172,27 @@ export default function LoginForm() {
       });
     } finally {
       setResendingEmail(false);
+    }
+  }
+
+  // Send a magic link (email sign-in) to the provided email
+  async function handleSendSignInLink() {
+    if (!email) {
+      toast({ title: 'Enter email', description: 'Please enter your email to receive a sign-in link.' });
+      return;
+    }
+    try {
+      const actionCodeSettings = {
+        url: window.location.origin + '/login?email=' + encodeURIComponent(email),
+        handleCodeInApp: true,
+      };
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      // Save the email so we can complete sign-in when the link is clicked
+      if (typeof window !== 'undefined') window.localStorage.setItem('emailForSignIn', email);
+      toast({ title: 'Sign-in link sent', description: 'Check your email to complete sign-in.' });
+    } catch (err: any) {
+      console.error('Send sign-in link failed:', err);
+      toast({ title: 'Error', description: 'Failed to send sign-in link. Please try again.', variant: 'destructive' });
     }
   }
 
@@ -221,6 +282,10 @@ export default function LoginForm() {
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : 'Login'}
+            </Button>
+
+            <Button type="button" variant="outline" className="w-full" onClick={handleSendSignInLink}>
+              Send sign-in link
             </Button>
             <p className="text-xs text-muted-foreground">
               Don't have an account? <Link href="/signup" className="underline">Sign up</Link>

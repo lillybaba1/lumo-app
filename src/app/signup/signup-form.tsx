@@ -56,9 +56,9 @@ export default function SignupForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Step 2: Send email verification
+      // Step 2: Send email verification (link will land on /verify-email with email prefilled)
       await sendEmailVerification(user, {
-        url: window.location.origin + '/login',
+        url: window.location.origin + '/verify-email?email=' + encodeURIComponent(email),
         handleCodeInApp: false,
       });
 
