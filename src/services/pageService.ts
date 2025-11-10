@@ -6,8 +6,9 @@ import * as defaultPagesData from '@/data/pages.json';
 
 export async function getPages(): Promise<Pages | null> {
     try {
+        // Get pages from site_settings table where they're stored as JSON
         const { data, error } = await supabaseAdmin
-            .from('content')
+            .from('site_settings')
             .select('*')
             .eq('key', 'pages')
             .single();
@@ -29,8 +30,9 @@ export async function getPages(): Promise<Pages | null> {
 
 export async function savePages(pages: Pages): Promise<void> {
     try {
+        // Store pages as JSON in site_settings table
         const { error } = await supabaseAdmin
-            .from('content')
+            .from('site_settings')
             .upsert({
                 key: 'pages',
                 value: pages,

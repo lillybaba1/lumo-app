@@ -56,7 +56,7 @@ const defaultSettings: Settings = {
 export async function getSettings(): Promise<Settings> {
     try {
         const { data, error } = await supabaseAdmin
-            .from('settings')
+            .from('site_settings')
             .select('*')
             .eq('key', 'storeConfig')
             .single();
@@ -79,7 +79,7 @@ export async function getSettings(): Promise<Settings> {
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
     try {
         const { error } = await supabaseAdmin
-            .from('settings')
+            .from('site_settings')
             .upsert({
                 key: 'storeConfig',
                 value: settings,
