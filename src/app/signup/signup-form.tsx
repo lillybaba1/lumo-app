@@ -174,6 +174,49 @@ export default function SignupForm() {
     { code: '+27', name: 'South Africa' },
   ];
 
+  // Handle "Continue" after email verification
+  const handleContinue = async () => {
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+
+      // Check if the user has verified their email
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        throw error;
+      }
+
+      if (session) {
+        // User is verified and logged in
+        toast({
+          title: 'Email Verified!',
+          description: 'Your account is now active.',
+        });
+        router.push('/');
+      } else {
+        // User hasn't verified yet
+        toast({
+          title: 'Email Not Verified Yet',
+          description: 'Please click the verification link in your email before continuing.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+      }
+    } catch (error: any) {
+      console.error('Continue error:', error);
+
+      toast({
+        title: 'Error',
+        description: 'Failed to check verification status. Please try again.',
+        variant: 'destructive',
+      });
+
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
        <div className="absolute top-4 left-4">
@@ -300,16 +343,25 @@ export default function SignupForm() {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Check your email</p>
                     <p className="text-xs text-muted-foreground">
-                      Click the verification link we sent to {email}
+                      We sent a verification link to <strong>{email}</strong>
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Return here</p>
+                    <p className="text-sm font-medium">Click the verification link</p>
                     <p className="text-xs text-muted-foreground">
-                      After clicking the link, come back and click Continue
+                      Open your email and click the confirmation link
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Return and continue</p>
+                    <p className="text-xs text-muted-foreground">
+                      After verifying, come back here and click Continue below
                     </p>
                   </div>
                 </div>
@@ -334,7 +386,8 @@ export default function SignupForm() {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  auth.signOut();
+                  const supabase = createClient();
+                  supabase.auth.signOut();
                   setStep('signup');
                 }}
                 disabled={loading}
