@@ -1,16 +1,17 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2, Eye, EyeOff, Phone } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 import { createUserDocument } from '@/services/userService';
 
@@ -21,45 +22,11 @@ export default function SignupForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [verificationId, setVerificationId] = useState<string | null>(null);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
-  const [phoneVerificationFailed, setPhoneVerificationFailed] = useState(false);
-
-  // Use ref to store recaptchaVerifier to ensure singleton pattern
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
-  // Initialize RecaptchaVerifier only once
-  const getRecaptchaVerifier = () => {
-    if (!recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'normal',
-        callback: () => {
-          // reCAPTCHA solved - user verified
-          console.log('reCAPTCHA verified');
-        },
-        'expired-callback': () => {
-          // reCAPTCHA expired - reset it
-          console.log('reCAPTCHA expired');
-          recaptchaVerifierRef.current = null;
-        }
-      });
-    }
-    return recaptchaVerifierRef.current;
-  };
-
-  useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        recaptchaVerifierRef.current = null;
-      }
-    };
-  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,16 +35,6 @@ export default function SignupForm() {
       toast({
         title: 'Password Too Short',
         description: 'Password must be at least 6 characters.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Validate phone number format only if provided (basic check)
-    if (phoneNumber && !phoneNumber.match(/^\+?[1-9]\d{1,14}$/)) {
-      toast({
-        title: 'Invalid Phone Number',
-        description: 'Please enter a valid phone number with country code (e.g., +1234567890)',
         variant: 'destructive',
       });
       return;
@@ -92,100 +49,33 @@ export default function SignupForm() {
       userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Step 2: Send SMS verification code (if phone number provided)
-      if (!phoneNumber) {
-        // No phone number provided - complete signup without phone verification
-        const result = await createUserDocument(user.uid, email, name);
-
-        if (!result.success) {
-          // If user document creation fails, delete the auth user
-          try {
-            await deleteUser(user);
-          } catch (deleteError) {
-            console.error('Failed to delete user after document creation failure:', deleteError);
-          }
-          throw new Error(result.message || 'Failed to create user profile');
-        }
-
-        toast({
-          title: 'Account Created',
-          description: 'Welcome to Lumo!',
-        });
-
-        // Create a server-side session cookie
-        const idToken = await user.getIdToken(true);
-        const r = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ idToken }),
-        });
-        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
-
-        // Redirect to home
-        router.push('/');
-        router.refresh();
-        setLoading(false);
-        return;
-      }
-
+      // Step 2: Send email verification
       try {
-        const recaptchaVerifier = getRecaptchaVerifier();
-
-        const phoneProvider = new PhoneAuthProvider(auth);
-        const verificationIdResult = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
-
-        setVerificationId(verificationIdResult);
-        setStep('verify');
-
-        toast({
-          title: 'Verification Code Sent',
-          description: `A 6-digit code has been sent to ${phoneNumber}`,
-        });
-
-        setLoading(false);
-      } catch (phoneError: any) {
-        // Phone verification failed - but allow signup to continue without phone verification
-        console.error('Phone verification failed, proceeding without phone verification:', phoneError);
-
-        // Don't delete the user - instead complete signup without phone verification
-        setPhoneVerificationFailed(true);
-
-        // Create user document without phone number
-        const result = await createUserDocument(user.uid, email, name);
-
-        if (!result.success) {
-          // If user document creation fails, delete the auth user
-          try {
-            await deleteUser(user);
-          } catch (deleteError) {
-            console.error('Failed to delete user after document creation failure:', deleteError);
-          }
-          throw new Error(result.message || 'Failed to create user profile');
-        }
-
-        toast({
-          title: 'Account Created',
-          description: 'Welcome to Lumo! Phone verification failed but your account was created.',
-          variant: 'default',
-        });
-
-        // Create a server-side session cookie
-        const idToken = await user.getIdToken(true);
-        const r = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ idToken }),
-        });
-        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Failed to set session');
-
-        // Redirect to home
-        router.push('/');
-        router.refresh();
-        setLoading(false);
-        return; // Exit early since we're done
+        await sendEmailVerification(user);
+        console.log('Email verification sent to:', email);
+      } catch (emailError: any) {
+        console.error('Failed to send verification email:', emailError);
+        // Don't block signup if email sending fails
       }
+
+      // Step 3: Create user document with phone number (if provided)
+      const fullPhoneNumber = phoneNumber ? `${countryCode}${phoneNumber}` : undefined;
+      const result = await createUserDocument(user.uid, email, name, fullPhoneNumber);
+
+      if (!result.success) {
+        // If user document creation fails, delete the auth user
+        try {
+          await deleteUser(user);
+        } catch (deleteError) {
+          console.error('Failed to delete user after document creation failure:', deleteError);
+        }
+        throw new Error(result.message || 'Failed to create user profile');
+      }
+
+      // Step 4: Show email verification screen
+      setStep('verify');
+      setLoading(false);
+
     } catch (error: any) {
       console.error('Signup error:', error);
 
@@ -197,16 +87,6 @@ export default function SignupForm() {
         errorMessage = 'Invalid email address.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Password is too weak. Use at least 6 characters.';
-      } else if (error.code === 'auth/invalid-phone-number') {
-        errorMessage = 'Invalid phone number. Include country code (e.g., +1234567890).';
-      } else if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = 'Phone authentication is not enabled. Please contact support.';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many verification attempts. Please try again later or use a different phone number.';
-      } else if (error.code === 'auth/quota-exceeded') {
-        errorMessage = 'SMS quota exceeded. Please try again later or contact support.';
-      } else if (error.code === 'auth/captcha-check-failed') {
-        errorMessage = 'reCAPTCHA verification failed. The domain may not be authorized. Please contact support.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -221,42 +101,33 @@ export default function SignupForm() {
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!verificationId || !verificationCode) {
-      toast({
-        title: 'Invalid Code',
-        description: 'Please enter the verification code.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const handleContinue = async () => {
     setLoading(true);
 
     try {
-      // Verify the SMS code
-      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
       const user = auth.currentUser;
 
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      // Link phone credential to the user account
-      await linkWithCredential(user, credential);
+      // Reload user to get latest emailVerified status
+      await user.reload();
 
-      // Create user document in Firestore with phone number
-      const result = await createUserDocument(user.uid, email, name, phoneNumber);
-
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to create user profile');
+      if (!user.emailVerified) {
+        toast({
+          title: 'Email Not Verified',
+          description: 'Please check your email and click the verification link before continuing.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
       }
 
+      // Email is verified - create session and login
       toast({
-        title: 'Account Created',
-        description: "Welcome to Lumo! Your phone is verified.",
+        title: 'Email Verified',
+        description: 'Your account is ready!',
       });
 
       // Create a server-side session cookie
@@ -273,27 +144,62 @@ export default function SignupForm() {
       router.push('/');
       router.refresh();
     } catch (error: any) {
-      console.error('Verification error:', error);
-
-      let errorMessage = 'Verification failed.';
-
-      if (error.code === 'auth/invalid-verification-code') {
-        errorMessage = 'Invalid verification code. Please try again.';
-      } else if (error.code === 'auth/code-expired') {
-        errorMessage = 'Verification code expired. Please request a new one.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
+      console.error('Continue error:', error);
 
       toast({
-        title: 'Verification Failed',
-        description: errorMessage,
+        title: 'Error',
+        description: error.message || 'An error occurred. Please try again.',
         variant: 'destructive',
       });
 
       setLoading(false);
     }
   };
+
+  const handleResendEmail = async () => {
+    try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      await sendEmailVerification(user);
+
+      toast({
+        title: 'Email Sent',
+        description: 'Verification email has been resent. Please check your inbox.',
+      });
+    } catch (error: any) {
+      console.error('Resend email error:', error);
+
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to resend email.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Popular country codes
+  const countryCodes = [
+    { code: '+1', name: 'US/Canada' },
+    { code: '+44', name: 'UK' },
+    { code: '+91', name: 'India' },
+    { code: '+86', name: 'China' },
+    { code: '+81', name: 'Japan' },
+    { code: '+49', name: 'Germany' },
+    { code: '+33', name: 'France' },
+    { code: '+61', name: 'Australia' },
+    { code: '+55', name: 'Brazil' },
+    { code: '+52', name: 'Mexico' },
+    { code: '+34', name: 'Spain' },
+    { code: '+39', name: 'Italy' },
+    { code: '+7', name: 'Russia' },
+    { code: '+82', name: 'South Korea' },
+    { code: '+62', name: 'Indonesia' },
+    { code: '+27', name: 'South Africa' },
+  ];
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -341,20 +247,31 @@ export default function SignupForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number (Optional)</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <div className="flex gap-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map(({ code, name }) => (
+                        <SelectItem key={code} value={code}>
+                          {code} {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="+1234567890 (optional)"
+                    placeholder="5551234567"
                     value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
+                    onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                     autoComplete="tel"
-                    className="pl-10"
+                    className="flex-1"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Optional: Include country code (e.g., +1 for USA)</p>
+                <p className="text-xs text-muted-foreground">Optional: For order updates</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -386,11 +303,8 @@ export default function SignupForm() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <div className="w-full flex justify-center">
-                <div id="recaptcha-container"></div>
-              </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : (phoneNumber ? 'Send Verification Code' : 'Create Account')}
+                {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
               </Button>
                <p className="text-xs text-muted-foreground">
                 Already have an account? <Link href="/login" className="underline">Log in</Link>
@@ -398,49 +312,66 @@ export default function SignupForm() {
             </CardFooter>
           </form>
         ) : (
-          <form onSubmit={handleVerifyCode}>
+          <div>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                   <Phone className="h-8 w-8 text-primary" />
+                   <Mail className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
-              <CardDescription>Enter the 6-digit code sent to {phoneNumber}</CardDescription>
+              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
+              <CardDescription>We've sent a verification link to {email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="verification-code">Verification Code</Label>
-                <Input
-                  id="verification-code"
-                  name="verification-code"
-                  type="text"
-                  placeholder="123456"
-                  required
-                  value={verificationCode}
-                  onChange={e => setVerificationCode(e.target.value)}
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  autoComplete="one-time-code"
-                />
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Check your email</p>
+                    <p className="text-xs text-muted-foreground">
+                      Click the verification link we sent to {email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Return here</p>
+                    <p className="text-xs text-muted-foreground">
+                      After clicking the link, come back and click Continue
+                    </p>
+                  </div>
+                </div>
               </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Didn't receive the email? Check your spam folder or{' '}
+                <button
+                  onClick={handleResendEmail}
+                  className="underline hover:text-primary"
+                  type="button"
+                >
+                  resend
+                </button>
+              </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Verify & Create Account'}
+              <Button onClick={handleContinue} className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : 'Continue'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => setStep('signup')}
+                onClick={() => {
+                  auth.signOut();
+                  setStep('signup');
+                }}
                 disabled={loading}
               >
                 Back
               </Button>
             </CardFooter>
-          </form>
+          </div>
         )}
       </Card>
     </div>
   );
 }
-
