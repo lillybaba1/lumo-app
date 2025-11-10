@@ -25,7 +25,8 @@ export async function createUserDocument(
       name,
       role,
       createdAt: new Date().toISOString(),
-      ...(phoneNumber && { phoneNumber, phoneVerified: true })
+      emailVerified: false, // Will be updated when user verifies email
+      ...(phoneNumber && { phoneNumber })
     };
 
     // Create user document in Firestore (prefer Admin SDK on server)
