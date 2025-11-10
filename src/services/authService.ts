@@ -1,81 +1,126 @@
 "use server";
 
-import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
+import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
-  if (!isFirebaseAdminInitialized()) {
-    return { success: false, message: "User creation is not available. Please configure Firebase Admin SDK." };
-  }
-  
   try {
-    const usersSnapshot = await dbAdmin().collection('users').limit(1).get();
-    const role = usersSnapshot.empty ? 'admin' : 'customer';
+    const supabase = await createClient();
+    
+    // Check if this is the first user
+    const { count } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true });
+    
+    const role = count === 0 ? 'admin' : 'customer';
 
-    const userRecord = await authAdmin().createUser({
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      displayName: name,
+      options: {
+        data: {
+          name: name,
+        },
+      },
     });
 
-    await dbAdmin().collection('users').doc(userRecord.uid).set({
-      uid: userRecord.uid,
-      email: userRecord.email,
-      name: name,
-      createdAt: new Date().toISOString(),
-      role: role,
-    });
+    if (authError) {
+      if (authError.message.includes('weak')) {
+        return { success: false, message: 'Password is too weak. Please use at least 6 characters.' };
+      }
+      if (authError.message.includes('already registered')) {
+        return { success: false, message: 'An account with this email already exists.' };
+      }
+      return { success: false, message: authError.message };
+    }
 
-    return { success: true, data: { uid: userRecord.uid, email: userRecord.email } };
+    if (!authData.user) {
+      return { success: false, message: 'Failed to create user account.' };
+    }
+
+    // Create user profile (should be handled by trigger, but we can do it explicitly)
+    const { error: profileError } = await supabase
+      .from('users')
+      .insert({
+        id: authData.user.id,
+        email: authData.user.email,
+        name: name,
+        role: role,
+      });
+
+    if (profileError && !profileError.message.includes('duplicate')) {
+      console.error('Error creating user profile:', profileError);
+      // Don't fail the signup if profile creation fails (might be handled by trigger)
+    }
+
+    return { 
+      success: true, 
+      data: { 
+        uid: authData.user.id, 
+        email: authData.user.email 
+      } 
+    };
   } catch (error: any) {
-    if (error.code === 'auth/weak-password') {
-      return { success: false, message: 'Password is too weak. Please use at least 6 characters.' };
-    }
-    if (error.code === 'auth/email-already-exists') {
-      return { success: false, message: 'An account with this email already exists.' };
-    }
+    console.error('Error in createUser:', error);
     return { success: false, message: error.message || 'An unknown error occurred during signup.' };
   }
 }
 
 
 export async function getUsers(): Promise<User[]> {
-  if (!isFirebaseAdminInitialized()) {
-    console.warn("Cannot get users, Firebase Admin not initialized.");
-    return [];
-  }
   try {
-    const userRecords = await authAdmin().listUsers();
-    const users: User[] = await Promise.all(userRecords.users.map(async (userRecord: any) => {
-      const firestoreUserDoc = await dbAdmin().collection('users').doc(userRecord.uid).get();
-      const firestoreUserData = firestoreUserDoc.data();
-      return {
-        uid: userRecord.uid,
-        email: userRecord.email || '',
-        name: firestoreUserData?.name || userRecord.displayName || 'N/A',
-        createdAt: userRecord.metadata.creationTime,
-        role: firestoreUserData?.role || 'customer',
-      };
+    const supabase = await createClient();
+    
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch users:', error);
+      return [];
+    }
+
+    return users.map((user: any) => ({
+      uid: user.id,
+      email: user.email || '',
+      name: user.name || 'N/A',
+      createdAt: user.created_at,
+      role: user.role || 'customer',
+      phoneNumber: user.phone || null,
     }));
-    return users;
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return [];
   }
 }
 
+
 export async function deleteUser(uid: string) {
-   if (!isFirebaseAdminInitialized()) {
-    const message = "User deletion is not available. Please configure Firebase Admin SDK.";
-    console.error(message);
-    return { success: false, message };
-  }
   try {
-    // Use the Admin SDK to delete the auth user and their Firestore document
-    await authAdmin().deleteUser(uid);
-    await dbAdmin().collection('users').doc(uid).delete();
+    const supabase = await createClient();
+    
+    // Delete from auth.users (this will cascade to users table if set up properly)
+    const { error: authError } = await supabase.auth.admin.deleteUser(uid);
+    
+    if (authError) {
+      console.error("Error deleting user from auth:", authError);
+      return { success: false, message: authError.message };
+    }
+
+    // Also delete from users table explicitly
+    const { error: dbError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', uid);
+
+    if (dbError) {
+      console.error("Error deleting user from database:", dbError);
+      // Don't fail if already deleted by cascade
+    }
 
     revalidatePath('/admin/customers');
     
@@ -86,18 +131,23 @@ export async function deleteUser(uid: string) {
   }
 }
 
+
 export async function getUserRole(userId: string): Promise<string | null> {
-  if (!isFirebaseAdminInitialized()) {
-    // This will be the case in client-side components.
-    // We will need a client-callable wrapper.
-    return null;
-  }
   try {
-    const userDoc = await dbAdmin().collection('users').doc(userId).get();
-    if (userDoc.exists) {
-      return userDoc.data()?.role || null;
+    const supabase = await createClient();
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !user) {
+      console.error("Error getting user role:", error);
+      return null;
     }
-    return null;
+    
+    return user.role || 'customer';
   } catch (error) {
     console.error("Error getting user role:", error);
     return null;
@@ -106,19 +156,24 @@ export async function getUserRole(userId: string): Promise<string | null> {
 
 // Client-callable function to get role
 export async function getUserRoleClient(userId: string): Promise<string | null> {
-    try {
-    const firestore = await import('firebase/firestore');
-    const { doc, getDoc } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists()) {
-      return userDoc.data()?.role || 'customer';
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !user) {
+      console.error("Error fetching user role on client:", error);
+      return 'customer';
     }
+    
+    return user.role || 'customer';
+  } catch (error) {
+    console.error("Error fetching user role on client:", error);
     return 'customer';
-    } catch (error) {
-        console.error("Error fetching user role on client:", error);
-        return 'customer';
-    }
+  }
 }

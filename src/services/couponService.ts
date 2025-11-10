@@ -1,74 +1,71 @@
 'use server';
 
 import { Coupon } from '@/lib/types';
-
-function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
-  const out: Record<string, any> = {};
-  for (const key in obj) {
-    const value = obj[key];
-    if (value && typeof value.toDate === 'function') {
-      try {
-        out[key] = value.toDate().toISOString();
-        continue;
-      } catch (e) {
-        // fallthrough
-      }
-    }
-
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      out[key] = serializeTimestamps(value);
-    } else {
-      out[key] = value;
-    }
-  }
-  return out;
-}
+import { createClient } from '@/lib/supabase/server';
 
 export async function getCoupons(): Promise<Coupon[]> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const snap = await dbAdmin().collection('coupons').get();
-      if (!snap || snap.empty) return [];
-      return snap.docs.map((d: any) => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Coupon));
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch coupons:', error);
+      return [];
     }
 
-    const firestore = await import('firebase/firestore');
-    const { collection, getDocs } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const snap = await getDocs(collection(db, 'coupons'));
-    if (snap.empty) return [];
-    return snap.docs.map(d => {
-      const data = serializeTimestamps(d.data() || {});
-      return { id: d.id, ...data } as Coupon;
-    });
+    return (data || []).map(coupon => ({
+      id: coupon.id,
+      code: coupon.code,
+      type: coupon.discount_type,
+      value: coupon.discount_value,
+      minOrderAmount: coupon.min_order_amount,
+      maxDiscount: coupon.max_discount_amount,
+      usageLimit: coupon.usage_limit,
+      usedCount: coupon.used_count || 0,
+      isActive: coupon.is_active,
+      expiresAt: coupon.expires_at,
+      createdAt: coupon.created_at,
+    }));
   } catch (error) {
-    console.error('Failed to fetch coupons from Firestore:', error);
+    console.error('Failed to fetch coupons:', error);
     return [];
   }
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const snap = await dbAdmin().collection('coupons').where('code', '==', code.toUpperCase()).get();
-      if (!snap || snap.empty) return null;
-      const d = snap.docs[0];
-      return { id: d.id, ...serializeTimestamps(d.data() || {}) } as Coupon;
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
+      }
+      console.error(`Failed to fetch coupon ${code}:`, error);
+      return null;
     }
 
-    const firestore = await import('firebase/firestore');
-    const { collection, getDocs, query, where } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const q = query(collection(db, 'coupons'), where('code', '==', code.toUpperCase()));
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-    const doc = snap.docs[0];
-    const data = serializeTimestamps(doc.data() || {});
-    return { id: doc.id, ...data } as Coupon;
+    return {
+      id: data.id,
+      code: data.code,
+      type: data.discount_type,
+      value: data.discount_value,
+      minOrderAmount: data.min_order_amount,
+      maxDiscount: data.max_discount_amount,
+      usageLimit: data.usage_limit,
+      usedCount: data.used_count || 0,
+      isActive: data.is_active,
+      expiresAt: data.expires_at,
+      createdAt: data.created_at,
+    };
   } catch (error) {
     console.error(`Failed to fetch coupon ${code}:`, error);
     return null;
@@ -107,33 +104,41 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
 
 export async function createCoupon(coupon: Omit<Coupon, 'id' | 'createdAt' | 'usedCount'>): Promise<Coupon> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const ref = await dbAdmin().collection('coupons').add({
-        ...coupon,
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('coupons')
+      .insert([{
         code: coupon.code.toUpperCase(),
-        usedCount: 0,
-        createdAt: new Date(),
-      });
-      return { id: ref.id, ...coupon, usedCount: 0, createdAt: new Date().toISOString() } as Coupon;
+        discount_type: coupon.type,
+        discount_value: coupon.value,
+        min_order_amount: coupon.minOrderAmount,
+        max_discount_amount: coupon.maxDiscount,
+        usage_limit: coupon.usageLimit,
+        used_count: 0,
+        is_active: coupon.isActive,
+        expires_at: coupon.expiresAt,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to create coupon:', error);
+      throw new Error('Could not create coupon.');
     }
 
-    const firestore = await import('firebase/firestore');
-    const { addDoc, collection, serverTimestamp } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const ref = await addDoc(collection(db, 'coupons'), {
-      ...coupon,
-      code: coupon.code.toUpperCase(),
-      usedCount: 0,
-      createdAt: serverTimestamp(),
-    });
     return {
-      id: ref.id,
-      ...coupon,
-      usedCount: 0,
-      createdAt: new Date().toISOString()
-    } as Coupon;
+      id: data.id,
+      code: data.code,
+      type: data.discount_type,
+      value: data.discount_value,
+      minOrderAmount: data.min_order_amount,
+      maxDiscount: data.max_discount_amount,
+      usageLimit: data.usage_limit,
+      usedCount: data.used_count || 0,
+      isActive: data.is_active,
+      expiresAt: data.expires_at,
+      createdAt: data.created_at,
+    };
   } catch (error) {
     console.error('Failed to create coupon:', error);
     throw new Error('Could not create coupon.');
@@ -142,17 +147,27 @@ export async function createCoupon(coupon: Omit<Coupon, 'id' | 'createdAt' | 'us
 
 export async function updateCoupon(id: string, updates: Partial<Coupon>): Promise<void> {
   try {
-    const { id: _id, createdAt, usedCount, ...rest } = updates as any;
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('coupons').doc(id).set(rest, { merge: true });
-      return;
-    }
+    const supabase = await createClient();
+    const updateData: Record<string, any> = {};
 
-    const { updateDoc, doc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await updateDoc(doc(db, 'coupons', id), rest);
+    if (updates.code !== undefined) updateData.code = updates.code.toUpperCase();
+    if (updates.type !== undefined) updateData.discount_type = updates.type;
+    if (updates.value !== undefined) updateData.discount_value = updates.value;
+    if (updates.minOrderAmount !== undefined) updateData.min_order_amount = updates.minOrderAmount;
+    if (updates.maxDiscount !== undefined) updateData.max_discount_amount = updates.maxDiscount;
+    if (updates.usageLimit !== undefined) updateData.usage_limit = updates.usageLimit;
+    if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+    if (updates.expiresAt !== undefined) updateData.expires_at = updates.expiresAt;
+
+    const { error } = await supabase
+      .from('coupons')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Failed to update coupon ${id}:`, error);
+      throw new Error('Could not update coupon.');
+    }
   } catch (error) {
     console.error(`Failed to update coupon ${id}:`, error);
     throw new Error('Could not update coupon.');
@@ -161,16 +176,16 @@ export async function updateCoupon(id: string, updates: Partial<Coupon>): Promis
 
 export async function deleteCoupon(id: string): Promise<void> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('coupons').doc(id).delete();
-      return;
-    }
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('coupons')
+      .delete()
+      .eq('id', id);
 
-    const { deleteDoc, doc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await deleteDoc(doc(db, 'coupons', id));
+    if (error) {
+      console.error(`Failed to delete coupon ${id}:`, error);
+      throw new Error('Could not delete coupon.');
+    }
   } catch (error) {
     console.error(`Failed to delete coupon ${id}:`, error);
     throw new Error('Could not delete coupon.');
@@ -182,21 +197,15 @@ export async function incrementCouponUsage(code: string): Promise<void> {
     const coupon = await getCouponByCode(code);
     if (!coupon) return;
 
-    if (typeof window === 'undefined') {
-      const admin = await import('firebase-admin');
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('coupons').doc(coupon.id).update({
-        usedCount: admin.firestore.FieldValue.increment(1),
-      });
-      return;
-    }
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('coupons')
+      .update({ used_count: (coupon.usedCount || 0) + 1 })
+      .eq('id', coupon.id);
 
-    const { updateDoc, doc, increment } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await updateDoc(doc(db, 'coupons', coupon.id), {
-      usedCount: increment(1),
-    });
+    if (error) {
+      console.error(`Failed to increment coupon usage for ${code}:`, error);
+    }
   } catch (error) {
     console.error(`Failed to increment coupon usage for ${code}:`, error);
   }

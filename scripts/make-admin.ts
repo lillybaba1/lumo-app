@@ -1,207 +1,219 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 
 /**
- * Script to promote a user to admin role
- * Usage: npx tsx scripts/make-admin.ts user@example.com
+ * Admin Role Management Script
+ * 
+ * Usage:
+ *   npx tsx scripts/make-admin.ts promote email@example.com
+ *   npx tsx scripts/make-admin.ts revoke email@example.com
+ *   npx tsx scripts/make-admin.ts list
  */
 
 import { createClient } from '@supabase/supabase-js';
-import * as readline from 'readline';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Error: Missing Supabase environment variables');
-  console.error('Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set');
+  console.error('Please ensure these are set in your .env.local file:');
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL');
+  console.error('  - SUPABASE_SERVICE_ROLE_KEY');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
-async function makeAdmin(email: string) {
-  try {
-    console.log(`\n🔍 Looking for user: ${email}`);
+async function promoteToAdmin(email: string) {
+  console.log(`\n🔍 Looking for user: ${email}...`);
 
-    // Find user by email
-    const { data: users, error: userError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('email', email)
-      .single();
+  // Find user in user_profiles table
+  const { data: user, error: fetchError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('email', email)
+    .single();
 
-    if (userError) {
-      if (userError.code === 'PGRST116') {
-        console.error(`❌ User not found: ${email}`);
-        console.error('Please make sure the user has registered an account first.');
-        process.exit(1);
-      }
-      throw userError;
-    }
-
-    console.log(`✅ Found user: ${users.name || email}`);
-    console.log(`   Current role: ${users.role || 'user'}`);
-
-    if (users.role === 'admin') {
-      console.log('ℹ️  User is already an admin!');
-      return;
-    }
-
-    // Update to admin
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ 
-        role: 'admin',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', users.id);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log(`✅ Successfully promoted ${email} to admin!`);
-    console.log(`\n🎉 ${users.name || email} is now an administrator`);
-
-  } catch (error: any) {
-    console.error('❌ Error:', error.message);
+  if (fetchError || !user) {
+    console.error('❌ User not found. Make sure they have registered first.');
+    console.log('\n💡 The user needs to sign up at:');
+    console.log('   https://lumo-app-heiliges-projects.vercel.app/signup');
     process.exit(1);
   }
+
+  console.log(`✅ Found user: ${user.name || 'Unknown'}`);
+  console.log(`   Current role: ${user.role || 'user'}`);
+
+  if (user.role === 'admin') {
+    console.log('⚠️  User is already an admin!');
+    return;
+  }
+
+  // Update role to admin
+  const { error: updateError } = await supabase
+    .from('user_profiles')
+    .update({ 
+      role: 'admin',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error('❌ Failed to promote user:', updateError.message);
+    process.exit(1);
+  }
+
+  console.log('🎉 Success! User promoted to admin.');
+  console.log(`   ${email} is now an administrator.`);
 }
 
 async function revokeAdmin(email: string) {
-  try {
-    console.log(`\n🔍 Looking for admin: ${email}`);
+  console.log(`\n🔍 Looking for admin: ${email}...`);
 
-    // Find user by email
-    const { data: users, error: userError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('email', email)
-      .single();
+  const { data: user, error: fetchError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('email', email)
+    .single();
 
-    if (userError) {
-      if (userError.code === 'PGRST116') {
-        console.error(`❌ User not found: ${email}`);
-        process.exit(1);
-      }
-      throw userError;
-    }
-
-    console.log(`✅ Found user: ${users.name || email}`);
-    console.log(`   Current role: ${users.role || 'user'}`);
-
-    if (users.role !== 'admin') {
-      console.log('ℹ️  User is not an admin.');
-      return;
-    }
-
-    // Revoke admin
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ 
-        role: 'user',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', users.id);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log(`✅ Successfully revoked admin role from ${email}`);
-
-  } catch (error: any) {
-    console.error('❌ Error:', error.message);
+  if (fetchError || !user) {
+    console.error('❌ User not found.');
     process.exit(1);
   }
+
+  console.log(`✅ Found user: ${user.name || 'Unknown'}`);
+  console.log(`   Current role: ${user.role || 'user'}`);
+
+  if (user.role !== 'admin') {
+    console.log('⚠️  User is not an admin.');
+    return;
+  }
+
+  // Update role to user
+  const { error: updateError } = await supabase
+    .from('user_profiles')
+    .update({ 
+      role: 'user',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error('❌ Failed to revoke admin access:', updateError.message);
+    process.exit(1);
+  }
+
+  console.log('✅ Admin access revoked.');
+  console.log(`   ${email} is now a regular user.`);
 }
 
 async function listAdmins() {
-  try {
-    console.log('\n📋 Current Admins:\n');
+  console.log('\n📋 Fetching all administrators...\n');
 
-    const { data: admins, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('role', 'admin')
-      .order('created_at', { ascending: true });
+  const { data: admins, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('role', 'admin')
+    .order('created_at', { ascending: false });
 
-    if (error) throw error;
-
-    if (!admins || admins.length === 0) {
-      console.log('   No admins found.');
-      return;
-    }
-
-    admins.forEach((admin, index) => {
-      console.log(`   ${index + 1}. ${admin.name || 'N/A'}`);
-      console.log(`      Email: ${admin.email}`);
-      console.log(`      ID: ${admin.id}`);
-      console.log(`      Created: ${new Date(admin.created_at).toLocaleDateString()}\n`);
-    });
-
-  } catch (error: any) {
-    console.error('❌ Error:', error.message);
+  if (error) {
+    console.error('❌ Failed to fetch admins:', error.message);
     process.exit(1);
   }
+
+  if (!admins || admins.length === 0) {
+    console.log('⚠️  No administrators found.');
+    console.log('\n💡 To create an admin, run:');
+    console.log('   npx tsx scripts/make-admin.ts promote email@example.com');
+    return;
+  }
+
+  console.log(`Found ${admins.length} administrator(s):\n`);
+  
+  admins.forEach((admin, index) => {
+    console.log(`${index + 1}. ${admin.name || 'Unnamed'}`);
+    console.log(`   📧 ${admin.email}`);
+    console.log(`   🆔 ${admin.id}`);
+    console.log(`   📅 Created: ${new Date(admin.created_at).toLocaleDateString()}`);
+    console.log('');
+  });
 }
 
-// Main function
-async function main() {
-  const args = process.argv.slice(2);
-  const command = args[0];
-
-  if (!command) {
-    console.log(`
-╔════════════════════════════════════════════════════════════╗
-║              Lumo Admin Management Script                  ║
-╚════════════════════════════════════════════════════════════╝
+function showHelp() {
+  console.log(`
+🔧 Admin Role Management Script
 
 Usage:
   npx tsx scripts/make-admin.ts <command> [email]
 
 Commands:
   promote <email>    Promote a user to admin
-  revoke <email>     Revoke admin privileges from a user
-  list               List all current admins
+  revoke <email>     Remove admin access from a user
+  list              List all administrators
+  help              Show this help message
 
 Examples:
-  npx tsx scripts/make-admin.ts promote user@example.com
-  npx tsx scripts/make-admin.ts revoke admin@example.com
+  npx tsx scripts/make-admin.ts promote john@example.com
+  npx tsx scripts/make-admin.ts revoke jane@example.com
   npx tsx scripts/make-admin.ts list
-    `);
+
+Notes:
+  - Users must register first before being promoted
+  - Requires SUPABASE_SERVICE_ROLE_KEY environment variable
+  `);
+}
+
+async function main() {
+  const command = process.argv[2];
+  const email = process.argv[3];
+
+  if (!command) {
+    showHelp();
     process.exit(0);
   }
 
-  switch (command) {
+  switch (command.toLowerCase()) {
     case 'promote':
-      if (!args[1]) {
-        console.error('❌ Error: Email required');
-        console.log('Usage: npx tsx scripts/make-admin.ts promote user@example.com');
+      if (!email) {
+        console.error('❌ Error: Email address required');
+        console.log('Usage: npx tsx scripts/make-admin.ts promote email@example.com');
         process.exit(1);
       }
-      await makeAdmin(args[1]);
+      await promoteToAdmin(email);
       break;
 
     case 'revoke':
-      if (!args[1]) {
-        console.error('❌ Error: Email required');
-        console.log('Usage: npx tsx scripts/make-admin.ts revoke user@example.com');
+      if (!email) {
+        console.error('❌ Error: Email address required');
+        console.log('Usage: npx tsx scripts/make-admin.ts revoke email@example.com');
         process.exit(1);
       }
-      await revokeAdmin(args[1]);
+      await revokeAdmin(email);
       break;
 
     case 'list':
       await listAdmins();
       break;
 
+    case 'help':
+    case '--help':
+    case '-h':
+      showHelp();
+      break;
+
     default:
       console.error(`❌ Unknown command: ${command}`);
-      console.log('Valid commands: promote, revoke, list');
+      showHelp();
       process.exit(1);
   }
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error('❌ Unexpected error:', error.message);
+  process.exit(1);
+});

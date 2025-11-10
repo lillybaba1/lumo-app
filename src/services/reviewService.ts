@@ -1,39 +1,31 @@
 'use server';
 
-import { Timestamp } from 'firebase/firestore';
 import { Review, ProductStats } from '@/lib/types';
-
-function serializeTimestamps(obj: Record<string, any>): Record<string, any> {
-  const out: Record<string, any> = {};
-  for (const key in obj) {
-    const value = obj[key];
-    if (value instanceof Timestamp) {
-      out[key] = value.toDate().toISOString();
-    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-      out[key] = serializeTimestamps(value);
-    } else {
-      out[key] = value;
-    }
-  }
-  return out;
-}
+import { createClient } from '@/lib/supabase/server';
 
 export async function getAllReviews(): Promise<Review[]> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const snap = await dbAdmin().collection('reviews').orderBy('createdAt', 'desc').get();
-      if (!snap || snap.empty) return [];
-      return snap.docs.map((d: any) => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Review));
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch all reviews:', error);
+      return [];
     }
-    const firestore = await import('firebase/firestore');
-    const { collection, getDocs, query, orderBy } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
-    if (snap.empty) return [];
-    return snap.docs.map(d => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Review));
+
+    return (data || []).map(review => ({
+      id: review.id,
+      productId: review.product_id,
+      userId: review.user_id,
+      userName: review.user_name,
+      rating: review.rating,
+      comment: review.comment,
+      helpful: review.helpful || 0,
+      createdAt: review.created_at,
+    }));
   } catch (error) {
     console.error('Failed to fetch all reviews:', error);
     return [];
@@ -42,20 +34,28 @@ export async function getAllReviews(): Promise<Review[]> {
 
 export async function getReviewsByProduct(productId: string): Promise<Review[]> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const snap = await dbAdmin().collection('reviews').where('productId', '==', productId).orderBy('createdAt', 'desc').get();
-      if (!snap || snap.empty) return [];
-      return snap.docs.map((d: any) => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Review));
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(`Failed to fetch reviews for product ${productId}:`, error);
+      return [];
     }
-    const firestore = await import('firebase/firestore');
-    const { collection, getDocs, query, where, orderBy } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const q = query(collection(db, 'reviews'), where('productId', '==', productId), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
-    if (snap.empty) return [];
-    return snap.docs.map(d => ({ id: d.id, ...serializeTimestamps(d.data() || {}) } as Review));
+
+    return (data || []).map(review => ({
+      id: review.id,
+      productId: review.product_id,
+      userId: review.user_id,
+      userName: review.user_name,
+      rating: review.rating,
+      comment: review.comment,
+      helpful: review.helpful || 0,
+      createdAt: review.created_at,
+    }));
   } catch (error) {
     console.error(`Failed to fetch reviews for product ${productId}:`, error);
     return [];
@@ -94,17 +94,35 @@ export async function getProductStats(productId: string): Promise<ProductStats> 
 
 export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'helpful'>): Promise<Review> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const ref = await dbAdmin().collection('reviews').add({ ...review, helpful: 0, createdAt: new Date() });
-      return { id: ref.id, ...review, helpful: 0, createdAt: new Date().toISOString() };
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert([{
+        product_id: review.productId,
+        user_id: review.userId,
+        user_name: review.userName,
+        rating: review.rating,
+        comment: review.comment,
+        helpful: 0,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to create review:', error);
+      throw new Error('Could not create review.');
     }
-    const firestore = await import('firebase/firestore');
-    const { addDoc, collection, serverTimestamp } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const ref = await addDoc(collection(db, 'reviews'), { ...review, helpful: 0, createdAt: serverTimestamp() });
-    return { id: ref.id, ...review, helpful: 0, createdAt: new Date().toISOString() };
+
+    return {
+      id: data.id,
+      productId: data.product_id,
+      userId: data.user_id,
+      userName: data.user_name,
+      rating: data.rating,
+      comment: data.comment,
+      helpful: data.helpful || 0,
+      createdAt: data.created_at,
+    };
   } catch (error) {
     console.error('Failed to create review:', error);
     throw new Error('Could not create review.');
@@ -113,16 +131,22 @@ export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'he
 
 export async function updateReview(id: string, updates: Partial<Review>): Promise<void> {
   try {
-    const { id: _id, createdAt, helpful, ...rest } = updates as any;
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('reviews').doc(id).set(rest, { merge: true });
-      return;
+    const supabase = await createClient();
+    const updateData: Record<string, any> = {};
+    
+    if (updates.rating !== undefined) updateData.rating = updates.rating;
+    if (updates.comment !== undefined) updateData.comment = updates.comment;
+    if (updates.userName !== undefined) updateData.user_name = updates.userName;
+
+    const { error } = await supabase
+      .from('reviews')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Failed to update review ${id}:`, error);
+      throw new Error('Could not update review.');
     }
-    const { updateDoc, doc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await updateDoc(doc(db, 'reviews', id), rest);
   } catch (error) {
     console.error(`Failed to update review ${id}:`, error);
     throw new Error('Could not update review.');
@@ -131,15 +155,16 @@ export async function updateReview(id: string, updates: Partial<Review>): Promis
 
 export async function deleteReview(id: string): Promise<void> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('reviews').doc(id).delete();
-      return;
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Failed to delete review ${id}:`, error);
+      throw new Error('Could not delete review.');
     }
-    const { deleteDoc, doc } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await deleteDoc(doc(db, 'reviews', id));
   } catch (error) {
     console.error(`Failed to delete review ${id}:`, error);
     throw new Error('Could not delete review.');
@@ -148,16 +173,30 @@ export async function deleteReview(id: string): Promise<void> {
 
 export async function markReviewHelpful(id: string): Promise<void> {
   try {
-    if (typeof window === 'undefined') {
-      const admin = await import('firebase-admin');
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      await dbAdmin().collection('reviews').doc(id).update({ helpful: admin.firestore.FieldValue.increment(1) });
-      return;
+    const supabase = await createClient();
+    
+    // Get current helpful count
+    const { data: review, error: fetchError } = await supabase
+      .from('reviews')
+      .select('helpful')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error(`Failed to fetch review ${id}:`, fetchError);
+      throw new Error('Could not fetch review.');
     }
-    const { updateDoc, doc, increment } = await import('firebase/firestore');
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    await updateDoc(doc(db, 'reviews', id), { helpful: increment(1) });
+
+    // Increment helpful count
+    const { error: updateError } = await supabase
+      .from('reviews')
+      .update({ helpful: (review.helpful || 0) + 1 })
+      .eq('id', id);
+
+    if (updateError) {
+      console.error(`Failed to mark review ${id} as helpful:`, updateError);
+      throw new Error('Could not update review.');
+    }
   } catch (error) {
     console.error(`Failed to mark review ${id} as helpful:`, error);
     throw new Error('Could not update review.');
@@ -166,23 +205,35 @@ export async function markReviewHelpful(id: string): Promise<void> {
 
 export async function getUserReviewForProduct(userId: string, productId: string): Promise<Review | null> {
   try {
-    if (typeof window === 'undefined') {
-      const { dbAdmin } = await import('@/lib/firebaseAdmin');
-      const snap = await dbAdmin().collection('reviews').where('userId', '==', userId).where('productId', '==', productId).get();
-      if (!snap || snap.empty) return null;
-      return { id: snap.docs[0].id, ...serializeTimestamps(snap.docs[0].data() || {}) } as Review;
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('product_id', productId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
+      }
+      console.error('Failed to get user review:', error);
+      return null;
     }
-    const firestore = await import('firebase/firestore');
-    const { collection, getDocs, query, where } = firestore;
-    const { getClientDb } = await import('@/lib/firebaseClient');
-    const db = getClientDb();
-    const q = query(collection(db, 'reviews'), where('userId', '==', userId), where('productId', '==', productId));
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-    const data = serializeTimestamps(snap.docs[0].data() || {});
-    return { id: snap.docs[0].id, ...data } as Review;
+
+    return {
+      id: data.id,
+      productId: data.product_id,
+      userId: data.user_id,
+      userName: data.user_name,
+      rating: data.rating,
+      comment: data.comment,
+      helpful: data.helpful || 0,
+      createdAt: data.created_at,
+    };
   } catch (error) {
-    console.error(`Failed to get user review:`, error);
+    console.error('Failed to get user review:', error);
     return null;
   }
 }
