@@ -18,7 +18,7 @@ interface Theme {
 export async function getTheme(): Promise<Theme | null> {
     try {
         const { data, error } = await supabaseAdmin
-            .from('settings')
+            .from('site_settings')
             .select('*')
             .eq('key', 'theme')
             .single();
@@ -46,7 +46,7 @@ export async function saveTheme(theme: Partial<Theme>): Promise<void> {
         };
 
         const { error } = await supabaseAdmin
-            .from('settings')
+            .from('site_settings')
             .upsert({
                 key: 'theme',
                 value: themeWithTimestamp,
