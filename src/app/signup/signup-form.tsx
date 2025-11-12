@@ -30,6 +30,15 @@ export default function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!phoneNumber) {
       toast({
         title: 'Phone Required',
@@ -53,16 +62,16 @@ export default function SignupForm() {
     try {
       const supabase = createClient();
 
-      // Step 1: Sign up with Supabase Auth using phone
+      // Step 1: Sign up with Supabase Auth using email and phone
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email,
         phone: fullPhoneNumber,
         password,
         options: {
           data: {
             name,
-            email: email || null,
           }
         }
       });
@@ -80,7 +89,7 @@ export default function SignupForm() {
         .from('users')
         .insert({
           id: data.user.id,
-          email: email || null,
+          email: email,
           name: name,
           phone_number: fullPhoneNumber,
           role: 'customer',
@@ -265,20 +274,21 @@ export default function SignupForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email (Optional)</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@lumo.com (optional)"
+                  placeholder="you@lumo.com"
+                  required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   autoComplete="email"
                 />
-                <p className="text-xs text-muted-foreground">Optional: For order confirmations</p>
+                <p className="text-xs text-muted-foreground">Required for login and order confirmations</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number (Required)</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode}>
                     <SelectTrigger className="w-[120px]">
