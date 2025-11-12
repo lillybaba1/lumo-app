@@ -25,9 +25,19 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
+  const [verificationCode, setVerificationCode] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!phoneNumber) {
+      toast({
+        title: 'Phone Required',
+        description: 'Please enter your phone number.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (password.length < 6) {
       toast({
@@ -43,17 +53,16 @@ export default function SignupForm() {
     try {
       const supabase = createClient();
 
-      // Step 1: Sign up with Supabase Auth
-      const fullPhoneNumber = phoneNumber ? `${countryCode}${phoneNumber}` : undefined;
+      // Step 1: Sign up with Supabase Auth using phone
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        phone: fullPhoneNumber,
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
           data: {
             name,
-            phone_number: fullPhoneNumber,
+            email: email || null,
           }
         }
       });
@@ -71,9 +80,9 @@ export default function SignupForm() {
         .from('users')
         .insert({
           id: data.user.id,
-          email: email,
+          email: email || null,
           name: name,
-          phone_number: fullPhoneNumber || null,
+          phone_number: fullPhoneNumber,
           role: 'customer',
         });
 
@@ -83,11 +92,11 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Verification Email Sent',
-        description: `Please check your inbox at ${email}`,
+        title: 'Verification Code Sent',
+        description: `Please check your phone at ${fullPhoneNumber}`,
       });
 
-      // Step 3: Show email verification screen
+      // Step 3: Show phone verification screen
       setStep('verify');
       setLoading(false);
 
@@ -97,9 +106,9 @@ export default function SignupForm() {
       let errorMessage = 'An unknown error occurred.';
 
       if (error.message?.includes('already registered')) {
-        errorMessage = 'An account with this email already exists.';
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = 'Invalid email address.';
+        errorMessage = 'An account with this phone number already exists.';
+      } else if (error.message?.includes('Invalid phone')) {
+        errorMessage = 'Invalid phone number.';
       } else if (error.message?.includes('Password')) {
         errorMessage = 'Password is too weak. Use at least 6 characters.';
       } else if (error.message) {
@@ -116,18 +125,16 @@ export default function SignupForm() {
     }
   };
 
-  const handleResendEmail = async () => {
+  const handleResendCode = async () => {
     setLoading(true);
 
     try {
       const supabase = createClient();
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
-        }
+        type: 'sms',
+        phone: fullPhoneNumber,
       });
 
       if (error) {
@@ -135,17 +142,17 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Email Resent',
-        description: `A new verification email has been sent to ${email}`,
+        title: 'Code Resent',
+        description: `A new verification code has been sent to ${fullPhoneNumber}`,
       });
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Resend email error:', error);
+      console.error('Resend code error:', error);
 
       toast({
         title: 'Failed to Resend',
-        description: error.message || 'Could not resend verification email. Please try again.',
+        description: error.message || 'Could not resend verification code. Please try again.',
         variant: 'destructive',
       });
 
@@ -174,42 +181,51 @@ export default function SignupForm() {
     { code: '+27', name: 'South Africa' },
   ];
 
-  // Handle "Continue" after email verification
-  const handleContinue = async () => {
+  // Handle phone verification
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast({
+        title: 'Invalid Code',
+        description: 'Please enter the 6-digit verification code.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const supabase = createClient();
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
-      // Check if the user has verified their email
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Verify the OTP code
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: fullPhoneNumber,
+        token: verificationCode,
+        type: 'sms'
+      });
 
       if (error) {
         throw error;
       }
 
-      if (session) {
-        // User is verified and logged in
+      if (data.session) {
         toast({
-          title: 'Email Verified!',
+          title: 'Phone Verified!',
           description: 'Your account is now active.',
         });
         router.push('/');
       } else {
-        // User hasn't verified yet
-        toast({
-          title: 'Email Not Verified Yet',
-          description: 'Please click the verification link in your email before continuing.',
-          variant: 'destructive',
-        });
-        setLoading(false);
+        throw new Error('Verification failed');
       }
     } catch (error: any) {
-      console.error('Continue error:', error);
+      console.error('Verification error:', error);
 
       toast({
-        title: 'Error',
-        description: 'Failed to check verification status. Please try again.',
+        title: 'Verification Failed',
+        description: error.message || 'Invalid or expired code. Please try again.',
         variant: 'destructive',
       });
 
@@ -249,20 +265,20 @@ export default function SignupForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email (Optional)</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@lumo.com"
-                  required
+                  placeholder="you@lumo.com (optional)"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   autoComplete="email"
                 />
+                <p className="text-xs text-muted-foreground">Optional: For order confirmations</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number (Optional)</Label>
+                <Label htmlFor="phone">Phone Number (Required)</Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode}>
                     <SelectTrigger className="w-[120px]">
@@ -281,13 +297,14 @@ export default function SignupForm() {
                     name="phone"
                     type="tel"
                     placeholder="5551234567"
+                    required
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                     autoComplete="tel"
                     className="flex-1"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Optional: For order updates</p>
+                <p className="text-xs text-muted-foreground">We'll send a verification code to this number</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -328,58 +345,47 @@ export default function SignupForm() {
             </CardFooter>
           </form>
         ) : (
-          <div>
+          <form onSubmit={handleVerifyCode}>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                    <Mail className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
-              <CardDescription>We've sent a verification link to {email}</CardDescription>
+              <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
+              <CardDescription>We've sent a code to {countryCode}{phoneNumber}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Check your email</p>
-                    <p className="text-xs text-muted-foreground">
-                      We sent a verification link to <strong>{email}</strong>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Click the verification link</p>
-                    <p className="text-xs text-muted-foreground">
-                      Open your email and click the confirmation link
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Return and continue</p>
-                    <p className="text-xs text-muted-foreground">
-                      After verifying, come back here and click Continue below
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="code">Verification Code</Label>
+                <Input
+                  id="code"
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  className="text-center text-2xl tracking-widest"
+                  autoFocus
+                  required
+                />
+                <p className="text-xs text-muted-foreground text-center">
+                  Enter the 6-digit code sent to your phone
+                </p>
               </div>
               <p className="text-xs text-center text-muted-foreground">
-                Didn't receive the email? Check your spam folder or{' '}
+                Didn't receive the code?{' '}
                 <button
-                  onClick={handleResendEmail}
+                  onClick={handleResendCode}
                   className="underline hover:text-primary"
                   type="button"
+                  disabled={loading}
                 >
                   resend
                 </button>
               </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button onClick={handleContinue} className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Continue'}
+              <Button type="submit" className="w-full" disabled={loading || verificationCode.length !== 6}>
+                {loading ? <Loader2 className="animate-spin" /> : 'Verify & Continue'}
               </Button>
               <Button
                 type="button"
@@ -389,13 +395,14 @@ export default function SignupForm() {
                   const supabase = createClient();
                   supabase.auth.signOut();
                   setStep('signup');
+                  setVerificationCode('');
                 }}
                 disabled={loading}
               >
                 Back
               </Button>
             </CardFooter>
-          </div>
+          </form>
         )}
       </Card>
     </div>
