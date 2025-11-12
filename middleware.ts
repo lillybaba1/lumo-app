@@ -1,40 +1,20 @@
 
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { updateSession } from '@/lib/supabase/middleware'
+import type { NextRequest } from 'next/server'
 
-const COOKIE_NAME = process.env.FIREBASE_COOKIE_NAME || 'session';
-
-const PUBLIC_PATHS = [
-  '/', '/login', '/signup', '/favicon.ico',
-  '/_next', '/images', '/api/session' // allow login API
-];
-
-function isPublic(path: string) {
-  // Allow product detail pages and static pages to be public
-  if (path.startsWith('/products/') || path.startsWith('/pages/')) {
-    return true;
-  }
-  return PUBLIC_PATHS.some(p => path === p || path.startsWith(p + '/'));
-}
-function needsAuth(path: string) {
-  return path.startsWith('/admin') || path.startsWith('/account');
+export async function middleware(request: NextRequest) {
+  return await updateSession(request)
 }
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const hasSession = req.cookies.has(COOKIE_NAME);
-
-  // Allow access to login and signup pages even if a stale session cookie exists.
-  // The client-side pages will redirect authenticated users after verifying the cookie.
-
-  if (needsAuth(pathname) && !hasSession && !isPublic(pathname)) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('next', pathname);
-    return NextResponse.redirect(url);
-  }
-
-  return NextResponse.next();
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
-
-export const config = { matcher: ['/((?!api/health|_next/static|favicon.ico).*)'] };
