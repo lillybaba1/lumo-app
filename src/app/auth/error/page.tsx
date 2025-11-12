@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const message = searchParams.get('message') || 'unknown_error';
 
@@ -52,5 +53,24 @@ export default function AuthErrorPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="h-12 w-12 text-gray-400" />
+            </div>
+            <CardTitle className="font-headline text-2xl">Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
