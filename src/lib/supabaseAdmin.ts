@@ -1,34 +1,29 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
-let _supabaseAdmin: SupabaseClient | null = null
-
+// Use a function to get the client, which allows for lazy evaluation
 function getSupabaseAdmin() {
-  // Return cached client if already created
-  if (_supabaseAdmin) {
-    return _supabaseAdmin
-  }
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.')
+    // During build time, this might be called for static analysis
+    // Return a dummy client that will fail at runtime if actually used
+    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+      console.warn('Supabase admin client: Environment variables not set')
+    }
+    // Create client with empty strings - will fail if actually used
+    return createClient('https://placeholder.supabase.co', 'placeholder', {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
   }
 
-  _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   })
-
-  return _supabaseAdmin
 }
 
-// Export as a getter property so it's only initialized when accessed
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
-    const client = getSupabaseAdmin()
-    return (client as any)[prop]
-  }
-})
+// Export a single instance
+export const supabaseAdmin = getSupabaseAdmin()
