@@ -28,11 +28,22 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const [settings, setSettings] = useState<Settings>({});
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const imageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://placehold.co/600x600.png';
 
 
   useEffect(() => {
     getSettings().then(s => setSettings(s || {}));
+
+    // Fetch current user
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated && data.user) {
+          setCurrentUserId(data.user.uid);
+        }
+      })
+      .catch(err => console.error('Error fetching user:', err));
   }, []);
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
@@ -66,7 +77,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <WishlistButton
                 productId={product.id}
                 productName={product.name}
-                currentUserId={undefined}
+                currentUserId={currentUserId}
                 isInWishlist={false}
               />
             </div>

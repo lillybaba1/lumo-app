@@ -28,10 +28,10 @@ export async function GET() {
     return NextResponse.json({
       authenticated: true,
       user: {
-        userId: user.id,
-        email: user.email,
+        uid: user.id,
+        email: user.email || user.phone || '',
         role: profile?.role || 'customer',
-        name: profile?.name,
+        name: profile?.name || 'User',
       },
     });
   } catch (error) {
