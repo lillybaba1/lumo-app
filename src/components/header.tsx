@@ -2,21 +2,29 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, Heart, Shield } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useEffect, useState } from "react";
 
+interface UserData {
+  uid: string;
+  email: string;
+  role: string;
+  name: string;
+}
+
 export default function Header({ children }: { children: React.ReactNode }) {
   const { state } = useCart();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Fetch current user info from API to check admin status
-    const checkAdminStatus = async () => {
+    // Fetch current user info from API
+    const fetchUserData = async () => {
       try {
         const response = await fetch('/api/auth/me', {
           method: 'GET',
@@ -25,21 +33,25 @@ export default function Header({ children }: { children: React.ReactNode }) {
 
         if (response.ok) {
           const data = await response.json();
-          if (data.authenticated && data.user?.role === 'admin') {
-            setIsAdmin(true);
+          if (data.authenticated && data.user) {
+            setUser(data.user);
+            setIsAuthenticated(true);
           } else {
-            setIsAdmin(false);
+            setUser(null);
+            setIsAuthenticated(false);
           }
         } else {
-          setIsAdmin(false);
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
+        console.error('Error fetching user data:', error);
+        setUser(null);
+        setIsAuthenticated(false);
       }
     };
 
-    checkAdminStatus();
+    fetchUserData();
   }, []);
 
   return (
@@ -55,7 +67,17 @@ export default function Header({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
             {children}
-            {isAdmin && (
+            {isAuthenticated && user && (
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">{user.name}</span>
+                  </Link>
+                </Button>
+              </div>
+            )}
+            {user?.role === 'admin' && (
               <Button variant="outline" asChild>
                 <Link href="/admin/dashboard">
                   <Shield className="h-4 w-4 md:mr-2" />
