@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyOTP } from '@/lib/otp-service';
 import { getClientIdentifier } from '@/lib/rate-limiter';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // First verify the OTP code
+    // First verify the OTP code using custom verification system
     const result = await verifyOTP(phone, code, clientId);
 
     if (!result.success) {
@@ -49,31 +50,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Now create a Supabase session by verifying OTP with Supabase Auth
+    // OTP verified successfully - now create an authenticated session
     const supabase = await createClient();
 
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
-      phone,
-      token: code,
-      type: 'sms',
-    });
+    // First, get the user from the database
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('phone_number', phone)
+      .single();
 
-    if (verifyError) {
-      console.error('Supabase OTP verification error:', verifyError);
+    if (userError || !userData) {
+      console.error('Failed to find user:', userError);
       return NextResponse.json(
-        { error: 'Failed to verify OTP and create session.' },
-        { status: 400 }
+        { error: 'User not found. Please sign up again.' },
+        { status: 404 }
       );
     }
 
-    if (!data.session) {
-      return NextResponse.json(
-        { error: 'Failed to create authenticated session.' },
-        { status: 400 }
-      );
-    }
-
-    // Update user verification status
+    // Update phone verification status in database
     const { error: updateError } = await supabase
       .from('users')
       .update({ phone_verified: true })
@@ -81,13 +76,64 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Failed to update phone verification status:', updateError);
-      // Continue anyway - user is authenticated
+    }
+
+    // Use admin client to update user's phone confirmation in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+      userData.id,
+      { phone_confirm: true }
+    );
+
+    if (authError) {
+      console.error('Failed to confirm phone in Supabase Auth:', authError);
+    }
+
+    // Generate a session for the user using admin API
+    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: userData.email,
+    });
+
+    if (sessionError || !sessionData) {
+      console.error('Failed to generate session:', sessionError);
+      return NextResponse.json(
+        { error: 'Failed to create session. Please try logging in with your email and password.' },
+        { status: 500 }
+      );
+    }
+
+    // Extract the hashed token from the magic link
+    const url = new URL(sessionData.properties.action_link);
+    const token = url.searchParams.get('token');
+    const tokenHash = url.searchParams.get('token_hash');
+    const type = url.searchParams.get('type');
+
+    if (!token || !tokenHash || !type) {
+      console.error('Invalid magic link generated');
+      return NextResponse.json(
+        { error: 'Failed to create session. Please try logging in with your email and password.' },
+        { status: 500 }
+      );
+    }
+
+    // Verify the OTP token to create a session
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'magiclink',
+    });
+
+    if (verifyError || !verifyData.session) {
+      console.error('Failed to verify magic link token:', verifyError);
+      return NextResponse.json(
+        { error: 'Failed to create session. Please try logging in with your email and password.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
       message: 'Phone number verified successfully! You are now logged in.',
-      user: data.user,
+      user: verifyData.user,
     });
   } catch (error: any) {
     console.error('OTP verification error:', error);
