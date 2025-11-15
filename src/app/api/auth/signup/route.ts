@@ -4,6 +4,7 @@ import { validateEmail } from '@/lib/email-validation';
 import { validatePhoneNumber, normalizePhoneNumber } from '@/lib/phone-validation';
 import { sendOTP, checkEmailExists, checkPhoneExists } from '@/lib/otp-service';
 import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limiter';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -151,16 +152,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user profile in public.users table
-    const { error: profileError } = await supabase.from('users').insert({
-      id: data.user.id,
-      email: email.toLowerCase().trim(),
-      name: name.trim(),
-      phone_number: phoneValidation.normalized,
-      role: 'customer',
-      email_verified: false,
-      phone_verified: false,
-    });
+    // Create user profile in public.users table (use admin client to bypass RLS)
+    const { error: profileError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: data.user.id,
+        email: email.toLowerCase().trim(),
+        name: name.trim(),
+        phone_number: phoneValidation.normalized,
+        role: 'customer',
+        email_verified: false,
+        phone_verified: false,
+      });
 
     if (profileError) {
       console.error('Failed to create user profile:', profileError);

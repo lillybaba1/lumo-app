@@ -15,6 +15,7 @@ interface VerifyOTPRequest {
 /**
  * POST /api/auth/verify-otp
  * Verify SMS OTP code and create authenticated session
+ * Uses admin client to bypass RLS policies
  */
 export async function POST(request: NextRequest) {
   try {
