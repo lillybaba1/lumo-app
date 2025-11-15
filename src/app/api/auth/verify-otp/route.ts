@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
     // OTP verified successfully - now create an authenticated session
     const supabase = await createClient();
 
-    // First, get the user from the database
-    const { data: userData, error: userError } = await supabase
+    // Use admin client to bypass RLS and get the user from the database
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, email')
       .eq('phone_number', phone)
@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update phone verification status in database
-    const { error: updateError } = await supabase
+    // Update phone verification status in database using admin client
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ phone_verified: true })
       .eq('phone_number', phone);
