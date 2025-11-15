@@ -87,27 +87,29 @@ export function validatePhoneForCountry(localNumber: string, countryCode: string
 export function normalizePhoneNumber(phone: string, defaultCountryCode: string = '+1'): string {
   const sanitized = sanitizePhoneNumber(phone);
 
-  // Already has country code
-  if (sanitized.startsWith('+') || phone.startsWith('+')) {
+  // Already has country code (starts with +)
+  if (phone.startsWith('+')) {
     const parsed = parsePhoneNumber(phone);
     if (parsed) {
       return `${parsed.countryCode}${parsed.localNumber}`;
     }
   }
 
-  // Try parsing with + prefix
+  // Try parsing with + prefix to see if it's a complete international number without the +
   const withPlus = '+' + sanitized;
   const parsed = parsePhoneNumber(withPlus);
-  if (parsed) {
-    return `${parsed.countryCode}${parsed.localNumber}`;
+
+  // Only use the parsed result if it matches a known country code pattern
+  // AND the number is the right length for that country
+  if (parsed && parsed.countryCode !== defaultCountryCode) {
+    const isValidLength = validatePhoneForCountry(parsed.localNumber, parsed.countryCode);
+    if (isValidLength) {
+      return `${parsed.countryCode}${parsed.localNumber}`;
+    }
   }
 
-  // Assume default country code
-  const defaultCodeDigits = sanitizePhoneNumber(defaultCountryCode);
-  if (sanitized.startsWith(defaultCodeDigits)) {
-    return `${defaultCountryCode}${sanitized.slice(defaultCodeDigits.length)}`;
-  }
-
+  // Otherwise, assume it's a local number for the default country code
+  // Don't strip any digits - just prepend the country code
   return `${defaultCountryCode}${sanitized}`;
 }
 
