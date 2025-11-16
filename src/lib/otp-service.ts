@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimiter, RATE_LIMITS } from '@/lib/rate-limiter';
 
 export interface OTPResult {
@@ -242,9 +243,8 @@ export async function resendOTP(phoneNumber: string, ip: string): Promise<OTPRes
  */
 export async function checkPhoneExists(phoneNumber: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    // Use admin client to bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('phone_number', phoneNumber)
@@ -261,9 +261,8 @@ export async function checkPhoneExists(phoneNumber: string): Promise<boolean> {
  */
 export async function checkEmailExists(email: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    // Use admin client to bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', email.toLowerCase())
