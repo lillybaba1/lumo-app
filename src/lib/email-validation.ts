@@ -123,13 +123,19 @@ export async function verifyDomainMX(domain: string): Promise<boolean> {
     return true;
   }
 
+  // Skip DNS checks in serverless environments (Vercel, etc.) where DNS module may be unreliable
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return true;
+  }
+
   try {
     // Only import dns in server environment
-    const { promises: dns } = require('dns');
-    const records = await dns.resolveMx(domain);
+    const dns = await import('dns');
+    const records = await dns.promises.resolveMx(domain);
     return records && records.length > 0;
   } catch (error) {
     // If DNS lookup fails or module not available, be permissive
+    console.warn('DNS MX lookup failed for domain:', domain, error);
     return true;
   }
 }

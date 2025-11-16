@@ -82,15 +82,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate email
-    const emailValidation = await validateEmail(email);
-    if (!emailValidation.valid) {
-      return NextResponse.json(
-        {
-          error: emailValidation.error,
-          suggestions: emailValidation.suggestions,
-        },
-        { status: 400 }
-      );
+    let emailValidation;
+    try {
+      emailValidation = await validateEmail(email);
+      if (!emailValidation.valid) {
+        return NextResponse.json(
+          {
+            error: emailValidation.error,
+            suggestions: emailValidation.suggestions,
+          },
+          { status: 400 }
+        );
+      }
+    } catch (emailError: any) {
+      console.error('Email validation error:', emailError);
+      // Continue with basic format validation if advanced validation fails
+      if (!email.includes('@')) {
+        return NextResponse.json(
+          { error: 'Invalid email format. Please check your email address.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate phone number
@@ -214,6 +226,21 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('Signup error:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
+
+    // Check for specific error types
+    if (error?.message?.includes('placeholder')) {
+      console.error('CRITICAL: Supabase admin client not properly configured. Check environment variables.');
+      return NextResponse.json(
+        { error: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }

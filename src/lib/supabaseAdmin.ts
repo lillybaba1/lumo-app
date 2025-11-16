@@ -8,10 +8,19 @@ function getSupabaseAdmin() {
   if (!supabaseUrl || !serviceRoleKey) {
     // During build time, this might be called for static analysis
     // Return a dummy client that will fail at runtime if actually used
-    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-      console.warn('Supabase admin client: Environment variables not set')
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || process.env.NEXT_PHASE === 'phase-development-build'
+
+    if (typeof window === 'undefined' && !isBuildTime) {
+      console.error('CRITICAL: Supabase admin client environment variables not set!')
+      console.error('Missing:', {
+        NEXT_PUBLIC_SUPABASE_URL: !supabaseUrl ? 'MISSING' : 'OK',
+        SUPABASE_SERVICE_ROLE_KEY: !serviceRoleKey ? 'MISSING' : 'OK'
+      })
+    } else if (!isBuildTime) {
+      console.warn('Supabase admin client: Environment variables not set (build time)')
     }
-    // Create client with empty strings - will fail if actually used
+
+    // Create client with placeholder values - will fail if actually used at runtime
     return createClient('https://placeholder.supabase.co', 'placeholder', {
       auth: { autoRefreshToken: false, persistSession: false }
     })
