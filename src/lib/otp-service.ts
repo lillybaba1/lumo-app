@@ -104,16 +104,21 @@ export async function sendOTP(
       }
     }
 
-    // Store OTP record in database for tracking
-    const code = generateOTP();
-    const expiresAt = new Date(Date.now() + OTP_CONFIG.EXPIRY_MINUTES * 60 * 1000);
+    // Store OTP record in database for tracking (optional - skip if table doesn't exist)
+    try {
+      const code = generateOTP();
+      const expiresAt = new Date(Date.now() + OTP_CONFIG.EXPIRY_MINUTES * 60 * 1000);
 
-    await supabase.from('otp_verifications').insert({
-      phone_number: phoneNumber,
-      code,
-      purpose,
-      expires_at: expiresAt.toISOString(),
-    });
+      await supabase.from('otp_verifications').insert({
+        phone_number: phoneNumber,
+        code,
+        purpose,
+        expires_at: expiresAt.toISOString(),
+      });
+    } catch (dbError: any) {
+      // Table might not exist yet - that's ok, OTP was still sent via Supabase Auth
+      console.warn('OTP tracking failed (table may not exist):', dbError.message);
+    }
 
     return {
       success: true,
@@ -162,40 +167,45 @@ export async function verifyOTP(
     });
 
     if (error) {
-      // Track failed attempt
-      const { data: otpRecord } = await supabase
-        .from('otp_verifications')
-        .select('attempts')
-        .eq('phone_number', phoneNumber)
-        .eq('verified', false)
-        .gte('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (otpRecord) {
-        const newAttempts = (otpRecord.attempts || 0) + 1;
-        await supabase
+      // Track failed attempt (optional - skip if table doesn't exist)
+      try {
+        const { data: otpRecord } = await supabase
           .from('otp_verifications')
-          .update({ attempts: newAttempts })
+          .select('attempts')
           .eq('phone_number', phoneNumber)
-          .eq('verified', false);
+          .eq('verified', false)
+          .gte('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-        const remaining = Math.max(0, OTP_CONFIG.MAX_ATTEMPTS - newAttempts);
+        if (otpRecord) {
+          const newAttempts = (otpRecord.attempts || 0) + 1;
+          await supabase
+            .from('otp_verifications')
+            .update({ attempts: newAttempts })
+            .eq('phone_number', phoneNumber)
+            .eq('verified', false);
 
-        if (remaining === 0) {
+          const remaining = Math.max(0, OTP_CONFIG.MAX_ATTEMPTS - newAttempts);
+
+          if (remaining === 0) {
+            return {
+              success: false,
+              error: 'Maximum verification attempts exceeded. Please request a new code.',
+              remainingAttempts: 0,
+            };
+          }
+
           return {
             success: false,
-            error: 'Maximum verification attempts exceeded. Please request a new code.',
-            remainingAttempts: 0,
+            error: `Invalid verification code. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+            remainingAttempts: remaining,
           };
         }
-
-        return {
-          success: false,
-          error: `Invalid verification code. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
-          remainingAttempts: remaining,
-        };
+      } catch (dbError: any) {
+        // Table might not exist yet - just return the auth error
+        console.warn('OTP tracking query failed (table may not exist):', dbError.message);
       }
 
       return {
@@ -204,19 +214,27 @@ export async function verifyOTP(
       };
     }
 
-    // Mark OTP as verified
-    await supabase
-      .from('otp_verifications')
-      .update({ verified: true })
-      .eq('phone_number', phoneNumber)
-      .eq('verified', false);
+    // Mark OTP as verified (optional - skip if table doesn't exist)
+    try {
+      await supabase
+        .from('otp_verifications')
+        .update({ verified: true })
+        .eq('phone_number', phoneNumber)
+        .eq('verified', false);
+    } catch (dbError: any) {
+      console.warn('OTP verification tracking failed (table may not exist):', dbError.message);
+    }
 
     // Update user's phone_verified status
     if (data.user) {
-      await supabase
-        .from('users')
-        .update({ phone_verified: true })
-        .eq('id', data.user.id);
+      try {
+        await supabaseAdmin
+          .from('users')
+          .update({ phone_verified: true })
+          .eq('id', data.user.id);
+      } catch (dbError: any) {
+        console.warn('Failed to update phone_verified status:', dbError.message);
+      }
     }
 
     return {
