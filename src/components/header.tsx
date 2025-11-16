@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface UserData {
   uid: string;
@@ -18,6 +19,7 @@ interface UserData {
 
 export default function Header({ children }: { children: React.ReactNode }) {
   const { state } = useCart();
+  const pathname = usePathname();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,6 +31,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/auth/me', {
           method: 'GET',
           credentials: 'same-origin',
+          cache: 'no-store',
         });
 
         if (response.ok) {
@@ -52,7 +55,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
     };
 
     fetchUserData();
-  }, []);
+  }, [pathname]); // Re-fetch when pathname changes
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

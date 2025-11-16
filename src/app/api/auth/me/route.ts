@@ -18,20 +18,35 @@ export async function GET() {
       return NextResponse.json({ authenticated: false, user: null }, { status: 200 });
     }
 
-    // Get user profile from public.users table
-    const { data: profile } = await supabase
-      .from('users')
+    // Get user profile from user_profiles table (or fallback to users table)
+    let profile = null;
+    
+    // Try user_profiles first (Supabase migration)
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
       .select('*')
       .eq('id', user.id)
       .single();
+    
+    if (userProfile) {
+      profile = userProfile;
+    } else {
+      // Fallback to users table
+      const { data: userData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      profile = userData;
+    }
 
     return NextResponse.json({
       authenticated: true,
       user: {
         uid: user.id,
         email: user.email || user.phone || '',
-        role: profile?.role || 'customer',
-        name: profile?.name || 'User',
+        role: profile?.role || 'user',
+        name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
       },
     });
   } catch (error) {

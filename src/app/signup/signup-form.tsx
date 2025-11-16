@@ -220,12 +220,38 @@ export default function SignupForm() {
         throw error;
       }
 
-      if (data.session) {
+      if (data.session && data.user) {
+        // Ensure user profile exists in database
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            name: name,
+            phone: fullPhoneNumber,
+            role: 'user',
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id'
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Continue anyway - user is authenticated
+        }
+
         toast({
-          title: 'Phone Verified!',
-          description: 'Your account is now active.',
+          title: '✅ Account Verified!',
+          description: `Welcome ${name}! Your account is now active.`,
         });
-        router.push('/');
+
+        // Force router refresh to update auth state
+        router.refresh();
+        
+        // Small delay to ensure state updates, then redirect
+        setTimeout(() => {
+          router.push('/');
+        }, 500);
       } else {
         throw new Error('Verification failed');
       }
