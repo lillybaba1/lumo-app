@@ -24,23 +24,10 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
-  const [verificationCode, setVerificationCode] = useState('');
 
-  // Password validation function
-  const validatePassword = (pwd: string): { valid: boolean; message: string } => {
-    if (pwd.length < 8) {
-      return { valid: false, message: 'Password must be at least 8 characters long.' };
-    }
-    if (!/[A-Z]/.test(pwd)) {
-      return { valid: false, message: 'Password must contain at least one uppercase letter.' };
-    }
-    if (!/[a-z]/.test(pwd)) {
-      return { valid: false, message: 'Password must contain at least one lowercase letter.' };
-    }
-    if (!/[0-9]/.test(pwd)) {
-      return { valid: false, message: 'Password must contain at least one number.' };
-    }
-    return { valid: true, message: 'Password is strong.' };
+  const isStrongPassword = (value: string) => {
+    // At least 8 chars, one uppercase, one lowercase
+    return /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(value);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -64,12 +51,10 @@ export default function SignupForm() {
       return;
     }
 
-    // Validate password strength
-    const passwordCheck = validatePassword(password);
-    if (!passwordCheck.valid) {
+    if (!isStrongPassword(password)) {
       toast({
         title: 'Weak Password',
-        description: passwordCheck.message,
+        description: 'Password must be at least 8 characters and include both uppercase and lowercase letters.',
         variant: 'destructive',
       });
       return;
@@ -81,14 +66,15 @@ export default function SignupForm() {
       const supabase = createClient();
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
-      // Step 1: Sign up with Supabase Auth using phone
+      // Step 1: Sign up with email (Supabase email verification is free and works out of the box)
       const { data, error: signUpError } = await supabase.auth.signUp({
-        phone: fullPhoneNumber,
+        email: email,
         password,
         options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
           data: {
             name,
-            email,
+            phone_number: fullPhoneNumber,
           }
         }
       });
@@ -118,11 +104,11 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Verification Code Sent',
-        description: `Please check your phone at ${fullPhoneNumber}`,
+        title: 'Verification Email Sent',
+        description: `Please check your inbox at ${email}. We've also saved your phone number.`,
       });
 
-      // Step 3: Show phone verification screen
+      // Step 3: Show email verification screen
       setStep('verify');
       setLoading(false);
 
@@ -156,11 +142,13 @@ export default function SignupForm() {
 
     try {
       const supabase = createClient();
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { error } = await supabase.auth.resend({
-        type: 'sms',
-        phone: fullPhoneNumber,
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
+        }
       });
 
       if (error) {
@@ -168,95 +156,17 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Code Resent',
-        description: `A new verification code has been sent to ${fullPhoneNumber}`,
+        title: 'Email Resent',
+        description: `A new verification email has been sent to ${email}`,
       });
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Resend SMS error:', error);
+      console.error('Resend email error:', error);
 
       toast({
         title: 'Failed to Resend',
-        description: error.message || 'Could not resend verification code. Please try again.',
-        variant: 'destructive',
-      });
-
-      setLoading(false);
-    }
-  };
-
-  // Handle phone verification
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!verificationCode || verificationCode.length !== 6) {
-      toast({
-        title: 'Invalid Code',
-        description: 'Please enter the 6-digit verification code.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-
-      // Verify the OTP code
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: fullPhoneNumber,
-        token: verificationCode,
-        type: 'sms'
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.session && data.user) {
-        // Ensure user profile exists in database
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            name: name,
-            phone: fullPhoneNumber,
-            role: 'user',
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'id'
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Continue anyway - user is authenticated
-        }
-
-        toast({
-          title: '✅ Account Verified!',
-          description: `Welcome ${name}! Your account is now active.`,
-        });
-
-        // Force router refresh to update auth state
-        router.refresh();
-        
-        // Small delay to ensure state updates, then redirect
-        setTimeout(() => {
-          router.push('/');
-        }, 500);
-      } else {
-        throw new Error('Verification failed');
-      }
-    } catch (error: any) {
-      console.error('Verification error:', error);
-
-      toast({
-        title: 'Verification Failed',
-        description: error.message || 'Invalid or expired code. Please try again.',
+        description: error.message || 'Could not resend verification email. Please try again.',
         variant: 'destructive',
       });
 
@@ -366,7 +276,7 @@ export default function SignupForm() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="At least 8 characters"
+                    placeholder="At least 8 characters, upper & lower case"
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -401,34 +311,51 @@ export default function SignupForm() {
             </CardFooter>
           </form>
         ) : (
-          <form onSubmit={handleVerifyCode}>
+          <div>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                    <Mail className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
-              <CardDescription>We sent a code to {countryCode}{phoneNumber}</CardDescription>
+              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
+              <CardDescription>We sent a verification link to {email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Verification Code</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                  className="text-center text-2xl tracking-widest"
-                  autoFocus
-                  required
-                />
-                <p className="text-xs text-muted-foreground text-center">
-                  Enter the 6-digit code sent to your phone
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Check your email</p>
+                    <p className="text-xs text-muted-foreground">
+                      We sent a verification link to <strong>{email}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Click the verification link</p>
+                    <p className="text-xs text-muted-foreground">
+                      Open your email and click the confirmation link
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">You'll be logged in automatically</p>
+                    <p className="text-xs text-muted-foreground">
+                      After verifying, you'll be redirected to the homepage
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-xs text-blue-800 dark:text-blue-200">
+                  📱 Your phone number ({countryCode}{phoneNumber}) has been saved and will be used for future login verification.
                 </p>
               </div>
               <p className="text-xs text-center text-muted-foreground">
-                Didn't receive the code?{' '}
+                Didn't receive the email? Check your spam folder or{' '}
                 <button
                   onClick={handleResendCode}
                   className="underline hover:text-primary"
@@ -440,9 +367,6 @@ export default function SignupForm() {
               </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading || verificationCode.length !== 6}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Verify & Continue'}
-              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -451,14 +375,13 @@ export default function SignupForm() {
                   const supabase = createClient();
                   supabase.auth.signOut();
                   setStep('signup');
-                  setVerificationCode('');
                 }}
                 disabled={loading}
               >
-                Back
+                Back to Signup
               </Button>
             </CardFooter>
-          </form>
+          </div>
         )}
       </Card>
     </div>
