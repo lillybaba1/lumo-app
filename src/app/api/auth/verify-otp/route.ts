@@ -94,7 +94,6 @@ export async function POST(request: NextRequest) {
           name: authUser.user_metadata?.name || 'User',
           phone_number: phone,
           role: 'customer',
-          email_verified: authUser.email_confirmed_at ? true : false,
           phone_verified: false,
         });
 
