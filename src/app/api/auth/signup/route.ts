@@ -167,7 +167,18 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error('Failed to create user profile:', profileError);
-      // Continue anyway - user is created in auth
+
+      // If profile creation failed, delete the auth user to maintain consistency
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+      } catch (deleteError) {
+        console.error('Failed to cleanup auth user:', deleteError);
+      }
+
+      return NextResponse.json(
+        { error: 'Failed to create user profile. Please try again.' },
+        { status: 500 }
+      );
     }
 
     // Send email verification
