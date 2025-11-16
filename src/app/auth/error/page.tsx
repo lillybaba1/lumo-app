@@ -10,6 +10,7 @@ import { Suspense } from 'react';
 function AuthErrorContent() {
   const searchParams = useSearchParams();
   const message = searchParams.get('message') || 'unknown_error';
+  const details = searchParams.get('details') || '';
 
   const errorMessages: { [key: string]: { title: string; description: string } } = {
     verification_failed: {
@@ -35,12 +36,20 @@ function AuthErrorContent() {
           <CardDescription>{error.description}</CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <p className="text-sm text-red-800 dark:text-red-200">
               Please try signing up again or contact support if the problem persists.
             </p>
           </div>
+          
+          {details && (
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-mono break-all">
+                Error details: {decodeURIComponent(details)}
+              </p>
+            </div>
+          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# 🔧 Supabase Redirect URL Configuration
+# This script helps you configure the correct redirect URLs in Supabase
+
+echo "=================================================="
+echo "🔧 Supabase Redirect URL Configuration"
+echo "=================================================="
+echo ""
+
+# Get current environment
+if [ -f .env.local ]; then
+    SITE_URL=$(grep NEXT_PUBLIC_SITE_URL .env.local | cut -d '=' -f2)
+    SUPABASE_URL=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local | cut -d '=' -f2)
+    echo "✅ Found .env.local"
+    echo "   Site URL: $SITE_URL"
+    echo "   Supabase URL: $SUPABASE_URL"
+else
+    echo "❌ No .env.local found!"
+    exit 1
+fi
+
+echo ""
+echo "=================================================="
+echo "📋 Required Redirect URLs"
+echo "=================================================="
+echo ""
+echo "Please add these URLs to your Supabase project:"
+echo ""
+echo "1. Go to: https://app.supabase.com"
+echo "2. Select your project"
+echo "3. Navigate to: Authentication → URL Configuration"
+echo "4. Add these to 'Redirect URLs':"
+echo ""
+echo "   🔗 http://localhost:3000/auth/callback"
+echo "   🔗 http://localhost:3001/auth/callback"
+echo "   🔗 https://your-production-domain.vercel.app/auth/callback"
+echo ""
+echo "5. Set 'Site URL' to:"
+echo "   🔗 $SITE_URL (for current environment)"
+echo ""
+echo "=================================================="
+echo "🧪 Testing Your Configuration"
+echo "=================================================="
+echo ""
+echo "After configuring Supabase, test the setup:"
+echo ""
+echo "1. Run: npm run dev"
+echo "2. Visit: $SITE_URL/signup"
+echo "3. Create an account"
+echo "4. Check your email"
+echo "5. Click the verification link"
+echo "6. Should redirect to: $SITE_URL/auth/verified"
+echo ""
+echo "=================================================="
+echo "📝 Common Issues"
+echo "=================================================="
+echo ""
+echo "Issue: 'Email Verification Failed'"
+echo "Solution: Make sure redirect URL is whitelisted in Supabase"
+echo ""
+echo "Issue: 'The link may have expired'"
+echo "Solution: Links expire after 24 hours, request new one"
+echo ""
+echo "Issue: 'No session created'"
+echo "Solution: Check browser console and Supabase logs"
+echo ""
+echo "=================================================="
+echo "✅ Next Steps"
+echo "=================================================="
+echo ""
+echo "1. Configure Supabase (see URLs above)"
+echo "2. Restart dev server: npm run dev"
+echo "3. Test signup flow"
+echo ""
+echo "For more help, see: EMAIL_VERIFICATION_TROUBLESHOOTING.md"
+echo ""
