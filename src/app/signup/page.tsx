@@ -1,5 +1,5 @@
-import EnhancedSignupForm from "./enhanced-signup-form";
+import SignupForm from "./signup-form";
 
 export default function SignupPage() {
-    return <EnhancedSignupForm />
+    return <SignupForm />
 }

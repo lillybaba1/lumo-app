@@ -119,6 +119,11 @@ export async function verifyDomainMX(domain: string): Promise<boolean> {
   }
 
   // Skip if not in Node.js environment
+  if (typeof window !== 'undefined') {
+    // Browser environment - skip DNS check
+    return true;
+  }
+
   if (typeof process === 'undefined' || process.env.NEXT_RUNTIME === 'edge') {
     return true;
   }
