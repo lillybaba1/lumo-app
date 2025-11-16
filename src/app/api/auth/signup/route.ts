@@ -173,7 +173,6 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         phone_number: phoneValidation.normalized,
         role: 'customer',
-        email_verified: false,
         phone_verified: false,
       });
 
