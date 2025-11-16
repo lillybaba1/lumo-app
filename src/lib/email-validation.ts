@@ -109,35 +109,17 @@ export function suggestEmailCorrection(email: string): string | null {
 
 /**
  * Verify email domain has valid MX records
- * Note: This requires DNS lookups which aren't available in Edge Runtime or browser
- * For server-side validation only - skipped on client
+ * Note: DNS lookups are not reliable in serverless/edge environments
+ * This function is disabled to prevent build issues and is not needed for production
  */
 export async function verifyDomainMX(domain: string): Promise<boolean> {
-  // Skip MX check in browser or Edge Runtime
-  if (typeof window !== 'undefined') {
-    return true;
-  }
-
-  // Skip if not in Node.js environment
-  if (typeof process === 'undefined' || process.env.NEXT_RUNTIME === 'edge') {
-    return true;
-  }
-
-  // Skip DNS checks in serverless environments (Vercel, etc.) where DNS module may be unreliable
-  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    return true;
-  }
-
-  try {
-    // Only import dns in server environment
-    const dns = await import('dns');
-    const records = await dns.promises.resolveMx(domain);
-    return records && records.length > 0;
-  } catch (error) {
-    // If DNS lookup fails or module not available, be permissive
-    console.warn('DNS MX lookup failed for domain:', domain, error);
-    return true;
-  }
+  // Always return true - DNS MX checks are disabled
+  // Reasons:
+  // 1. Not available in Edge Runtime or browser
+  // 2. Unreliable in serverless environments (Vercel, AWS Lambda)
+  // 3. Causes webpack bundling issues when imported by client components
+  // 4. Basic format validation is sufficient for most use cases
+  return true;
 }
 
 /**
@@ -176,14 +158,8 @@ export async function validateEmail(email: string): Promise<EmailValidationResul
     };
   }
 
-  // Verify MX records (server-side only)
-  const hasMX = await verifyDomainMX(domain);
-  if (!hasMX) {
-    return {
-      valid: false,
-      error: 'Email domain does not appear to be valid. Please check your email address.',
-    };
-  }
+  // MX record verification is disabled (unreliable in serverless environments)
+  // Basic format and disposable email checks are sufficient
 
   return {
     valid: true,
