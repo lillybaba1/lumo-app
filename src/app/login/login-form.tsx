@@ -1,18 +1,24 @@
-lillybaba1/lumo-app
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail } from 'lucide-react';
+import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail, Phone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { signInWithEmailAndPassword, RecaptchaVerifier, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { signInWithEmailAndPassword, RecaptchaVerifier, PhoneAuthProvider, signInWithCredential, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 import { getUserById } from '@/services/userService';
+import { useToast } from '@/hooks/use-toast';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -25,8 +31,24 @@ export default function LoginForm() {
   const [step, setStep] = useState<'login' | 'verify'>('login');
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [verificationCode, setVerificationCode] = useState('');
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/';
+
+  function getRecaptchaVerifier() {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible',
+        'callback': (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+        'expired-callback': () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+        }
+      });
+    }
+    return window.recaptchaVerifier;
+  }
 
   useEffect(() => {
     let cancelled = false;
