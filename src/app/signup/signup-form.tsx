@@ -43,15 +43,6 @@ export default function SignupForm() {
       return;
     }
 
-    if (!phoneNumber) {
-      toast({
-        title: 'Phone Number Required',
-        description: 'Please enter your phone number for verification.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (!isStrongPassword(password)) {
       toast({
         title: 'Weak Password',
@@ -65,16 +56,16 @@ export default function SignupForm() {
 
     try {
       const supabase = createClient();
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+      const fullPhoneNumber = phoneNumber ? `${countryCode}${phoneNumber}` : null;
 
-      // Step 1: Sign up with phone (Supabase phone verification)
+      // Step 1: Sign up with email (Supabase email verification)
       const { data, error: signUpError } = await supabase.auth.signUp({
-        phone: fullPhoneNumber,
+        email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name,
-            email, // Store email in user metadata
             phone_number: fullPhoneNumber,
           }
         }
@@ -105,8 +96,8 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Verification Code Sent',
-        description: `Please check your phone at ${fullPhoneNumber} for the verification code.`,
+        title: 'Verification Email Sent',
+        description: `Please check your inbox at ${email} for the verification link.`,
       });
 
       // Step 3: Show email verification screen
@@ -138,16 +129,18 @@ export default function SignupForm() {
     }
   };
 
-  const handleResendCode = async () => {
+  const handleResendEmail = async () => {
     setLoading(true);
 
     try {
       const supabase = createClient();
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { error } = await supabase.auth.resend({
-        type: 'sms',
-        phone: fullPhoneNumber,
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
       });
 
       if (error) {
@@ -155,71 +148,17 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Code Resent',
-        description: `A new verification code has been sent to ${fullPhoneNumber}`,
+        title: 'Email Resent',
+        description: `A new verification email has been sent to ${email}`,
       });
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Resend code error:', error);
+      console.error('Resend email error:', error);
 
       toast({
         title: 'Failed to Resend',
-        description: error.message || 'Could not resend verification code. Please try again.',
-        variant: 'destructive',
-      });
-
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!otp || otp.length !== 6) {
-      toast({
-        title: 'Invalid Code',
-        description: 'Please enter the 6-digit verification code.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: fullPhoneNumber,
-        token: otp,
-        type: 'sms'
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        toast({
-          title: 'Account Verified!',
-          description: 'Welcome to Lumo! You are now signed in.',
-        });
-
-        // Redirect to home or verified page
-        router.push('/auth/verified');
-      } else {
-        throw new Error('Verification failed');
-      }
-
-      setLoading(false);
-    } catch (error: any) {
-      console.error('OTP verification error:', error);
-
-      toast({
-        title: 'Verification Failed',
-        description: error.message || 'Invalid verification code. Please try again.',
+        description: error.message || 'Could not resend verification email. Please try again.',
         variant: 'destructive',
       });
 
@@ -293,7 +232,7 @@ export default function SignupForm() {
                 <p className="text-xs text-muted-foreground">For order confirmations and updates</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode}>
                     <SelectTrigger className="w-[120px]">
@@ -312,14 +251,13 @@ export default function SignupForm() {
                     name="phone"
                     type="tel"
                     placeholder="5551234567"
-                    required
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                     autoComplete="tel"
                     className="flex-1"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Required for account verification</p>
+                <p className="text-xs text-muted-foreground">For order updates and notifications</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -363,44 +301,68 @@ export default function SignupForm() {
             </CardFooter>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp}>
+          <div>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                   <CheckCircle2 className="h-8 w-8 text-primary" />
+                   <Mail className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
-              <CardDescription>We sent a 6-digit code to {countryCode}{phoneNumber}</CardDescription>
+              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
+              <CardDescription>We sent a verification link to {email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
-                <Input
-                  id="otp"
-                  name="otp"
-                  type="text"
-                  placeholder="123456"
-                  required
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  maxLength={6}
-                  className="text-center text-lg tracking-widest"
-                  autoComplete="one-time-code"
-                />
-                <p className="text-xs text-muted-foreground">Enter the 6-digit code sent to your phone</p>
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Check your email</p>
+                    <p className="text-xs text-muted-foreground">
+                      We sent a verification link to <strong>{email}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Click the verification link</p>
+                    <p className="text-xs text-muted-foreground">
+                      Open your email and click the confirmation link
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">You'll be logged in automatically</p>
+                    <p className="text-xs text-muted-foreground">
+                      After verifying, you'll be redirected to the homepage
+                    </p>
+                  </div>
+                </div>
               </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Didn't receive the email? Check your spam folder or{' '}
+                <button
+                  onClick={handleResendEmail}
+                  className="underline hover:text-primary"
+                  type="button"
+                  disabled={loading}
+                >
+                  resend
+                </button>
+              </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Verify & Sign In'}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setStep('signup')}
+                disabled={loading}
+              >
+                Back to Signup
               </Button>
-              <Button type="button" variant="outline" className="w-full" onClick={handleResendCode} disabled={loading}>
-                Resend Code
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Didn't receive the code? Check your phone and try resending.
-              </p>
             </CardFooter>
-          </form>
+          </div>
         )}
       </Card>
     </div>
