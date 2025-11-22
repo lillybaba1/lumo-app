@@ -1,17 +1,38 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthCallback() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check if there's a session after the callback
+        // Get the code from URL parameters (sent by Supabase email verification)
+        const code = searchParams.get('code');
+
+        if (code) {
+          // Exchange the code for a session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            console.error('Code exchange error:', error);
+            router.push(`/auth/error?message=${encodeURIComponent(error.message)}`);
+            return;
+          }
+
+          if (data.session) {
+            // Successfully logged in, redirect to verified page
+            router.push('/auth/verified');
+            return;
+          }
+        }
+
+        // If no code, check if there's already a session
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -21,10 +42,10 @@ export default function AuthCallback() {
         }
 
         if (session) {
-          // User is signed in, redirect to home or verified page
+          // User is signed in, redirect to verified page
           router.push('/auth/verified');
         } else {
-          // No session, might be an error
+          // No session and no code
           router.push('/auth/error?message=no_session');
         }
       } catch (err) {
@@ -34,7 +55,7 @@ export default function AuthCallback() {
     };
 
     handleAuthCallback();
-  }, [router, supabase]);
+  }, [router, searchParams, supabase]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
