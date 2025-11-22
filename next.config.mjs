@@ -6,6 +6,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'verbose-disco-wqgww9wrvp4c9vgj-3000.app.github.dev'],
+    },
+  },
   images: {
     remotePatterns: [
       {

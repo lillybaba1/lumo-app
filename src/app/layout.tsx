@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   description: 'Your modern e-commerce experience.',
 };
 
+// Force dynamic rendering for the entire app to avoid static pre-render
+// errors for routes that rely on runtime features (cookies(), server
+// APIs, etc.). This tells Next to render these pages at request-time
+// instead of attempting static prerender during build.
+export const dynamic = 'force-dynamic';
+
 const defaultTheme = {
   primaryColor: "#D0BFFF",
   accentColor: "#FFB3C6",
