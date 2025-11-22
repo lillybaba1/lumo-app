@@ -21,6 +21,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState('');
   const [countryCode, setCountryCode] = useState('+1');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
@@ -66,14 +67,14 @@ export default function SignupForm() {
       const supabase = createClient();
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
-      // Step 1: Sign up with email (Supabase email verification is free and works out of the box)
+      // Step 1: Sign up with phone (Supabase phone verification)
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email,
+        phone: fullPhoneNumber,
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
           data: {
             name,
+            email, // Store email in user metadata
             phone_number: fullPhoneNumber,
           }
         }
@@ -104,8 +105,8 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Verification Email Sent',
-        description: `Please check your inbox at ${email}. We've also saved your phone number.`,
+        title: 'Verification Code Sent',
+        description: `Please check your phone at ${fullPhoneNumber} for the verification code.`,
       });
 
       // Step 3: Show email verification screen
@@ -118,7 +119,7 @@ export default function SignupForm() {
       let errorMessage = 'An unknown error occurred.';
 
       if (error.message?.includes('already registered')) {
-        errorMessage = 'An account with this email already exists.';
+        errorMessage = 'An account with this email exists.';
       } else if (error.message?.includes('Invalid email')) {
         errorMessage = 'Invalid email address.';
       } else if (error.message?.includes('Password')) {
@@ -142,13 +143,11 @@ export default function SignupForm() {
 
     try {
       const supabase = createClient();
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
       const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
-        }
+        type: 'sms',
+        phone: fullPhoneNumber,
       });
 
       if (error) {
@@ -156,17 +155,17 @@ export default function SignupForm() {
       }
 
       toast({
-        title: 'Email Resent',
-        description: `A new verification email has been sent to ${email}`,
+        title: 'Code Resent',
+        description: `A new verification code has been sent to ${fullPhoneNumber}`,
       });
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Resend email error:', error);
+      console.error('Resend code error:', error);
 
       toast({
         title: 'Failed to Resend',
-        description: error.message || 'Could not resend verification email. Please try again.',
+        description: error.message || 'Could not resend verification code. Please try again.',
         variant: 'destructive',
       });
 
@@ -174,6 +173,59 @@ export default function SignupForm() {
     }
   };
 
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!otp || otp.length !== 6) {
+      toast({
+        title: 'Invalid Code',
+        description: 'Please enter the 6-digit verification code.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: fullPhoneNumber,
+        token: otp,
+        type: 'sms'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        toast({
+          title: 'Account Verified!',
+          description: 'Welcome to Lumo! You are now signed in.',
+        });
+
+        // Redirect to home or verified page
+        router.push('/auth/verified');
+      } else {
+        throw new Error('Verification failed');
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+
+      toast({
+        title: 'Verification Failed',
+        description: error.message || 'Invalid verification code. Please try again.',
+        variant: 'destructive',
+      });
+
+      setLoading(false);
+    }
+  };
 
   // Popular country codes
   const countryCodes = [
@@ -311,77 +363,44 @@ export default function SignupForm() {
             </CardFooter>
           </form>
         ) : (
-          <div>
+          <form onSubmit={handleVerifyOtp}>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                   <Mail className="h-8 w-8 text-primary" />
+                   <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
-              <CardDescription>We sent a verification link to {email}</CardDescription>
+              <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
+              <CardDescription>We sent a 6-digit code to {countryCode}{phoneNumber}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Check your email</p>
-                    <p className="text-xs text-muted-foreground">
-                      We sent a verification link to <strong>{email}</strong>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Click the verification link</p>
-                    <p className="text-xs text-muted-foreground">
-                      Open your email and click the confirmation link
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">You'll be logged in automatically</p>
-                    <p className="text-xs text-muted-foreground">
-                      After verifying, you'll be redirected to the homepage
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification Code</Label>
+                <Input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  placeholder="123456"
+                  required
+                  value={otp}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  className="text-center text-lg tracking-widest"
+                  autoComplete="one-time-code"
+                />
+                <p className="text-xs text-muted-foreground">Enter the 6-digit code sent to your phone</p>
               </div>
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <p className="text-xs text-blue-800 dark:text-blue-200">
-                  📱 Your phone number ({countryCode}{phoneNumber}) has been saved and will be used for future login verification.
-                </p>
-              </div>
-              <p className="text-xs text-center text-muted-foreground">
-                Didn't receive the email? Check your spam folder or{' '}
-                <button
-                  onClick={handleResendCode}
-                  className="underline hover:text-primary"
-                  type="button"
-                  disabled={loading}
-                >
-                  resend
-                </button>
-              </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  const supabase = createClient();
-                  supabase.auth.signOut();
-                  setStep('signup');
-                }}
-                disabled={loading}
-              >
-                Back to Signup
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : 'Verify & Sign In'}
               </Button>
+              <Button type="button" variant="outline" className="w-full" onClick={handleResendCode} disabled={loading}>
+                Resend Code
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Didn't receive the code? Check your phone and try resending.
+              </p>
             </CardFooter>
-          </div>
+          </form>
         )}
       </Card>
     </div>
