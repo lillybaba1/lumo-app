@@ -60,10 +60,17 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     }
   }
 
+  // Safety check
+  if (!user) {
+    console.error('AdminSidebar: No user prop provided!');
+    return null;
+  }
+
   return (
-    <aside className="w-64 flex-shrink-0 border-r bg-card text-card-foreground flex flex-col">
+    <aside className="w-64 flex-shrink-0 border-r bg-card text-card-foreground flex flex-col" style={{ minHeight: '100vh' }}>
       <div className="p-4 border-b flex items-center gap-2">
          <h1 className="text-2xl font-headline font-bold">Lumo</h1>
+         <span className="text-xs text-muted-foreground ml-auto">Admin</span>
       </div>
       <nav className="flex-grow px-2 py-4">
         <ul className="space-y-1">
@@ -85,6 +92,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         </ul>
       </nav>
       <div className="p-4 border-t mt-auto">
+        <p className="text-xs text-muted-foreground mb-2">{user.email}</p>
         <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Logout
