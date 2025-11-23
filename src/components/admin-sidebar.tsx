@@ -37,6 +37,9 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  // Debug logging
+  console.log('AdminSidebar rendering:', { user, pathname, navItemsCount: navItems.length });
+
   const handleLogout = async () => {
     const res = await fetch("/api/auth/logout", {
       method: "POST",
