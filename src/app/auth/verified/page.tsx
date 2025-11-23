@@ -19,6 +19,8 @@ export default function EmailVerifiedPage() {
   const checkVerification = async () => {
     try {
       const supabase = createClient();
+
+      // First try to get the current session
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
@@ -28,7 +30,13 @@ export default function EmailVerifiedPage() {
       }
 
       if (session?.user) {
+        console.log('User verified and logged in:', session.user.email);
         setVerified(true);
+
+        // Auto-redirect to home after 2 seconds
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
       }
       setLoading(false);
     } catch (error) {
@@ -61,7 +69,7 @@ export default function EmailVerifiedPage() {
             {loading
               ? 'Please wait while we verify your email...'
               : verified
-              ? 'Your account has been successfully verified.'
+              ? 'Your account has been verified and you are now logged in!'
               : 'We could not verify your session.'}
           </CardDescription>
         </CardHeader>
@@ -70,8 +78,11 @@ export default function EmailVerifiedPage() {
           <>
             <CardContent>
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
+                <p className="text-sm text-green-800 dark:text-green-200 mb-2 font-semibold">
+                  Success! Your email has been verified.
+                </p>
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  Your email has been verified and you're now logged in. You can start shopping!
+                  You are now logged in and will be redirected to the homepage automatically.
                 </p>
               </div>
             </CardContent>
