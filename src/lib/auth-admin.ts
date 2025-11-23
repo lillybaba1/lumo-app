@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/services/authService';
 import { authAdmin, isFirebaseAdminInitialized, dbAdmin } from './firebaseAdmin';
+import { createClient } from '@/lib/supabase/server';
 
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'session';
 
@@ -32,9 +33,6 @@ export async function requireAdmin(
   const loginRedirectPath = options.loginRedirect ?? '/admin/login?redirect=/admin/dashboard';
   const unauthorizedRedirectPath = options.unauthorizedRedirect ?? '/?error=unauthorized';
 
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(COOKIE_NAME);
-
   const fail = (message: string, redirectTo: 'login' | 'unauthorized' = 'login'): never => {
     if (redirectOnFail) {
       redirect(redirectTo === 'login' ? loginRedirectPath : unauthorizedRedirectPath);
@@ -42,11 +40,40 @@ export async function requireAdmin(
     throw new UnauthorizedError(message);
   };
 
-  if (!sessionCookie || !sessionCookie.value) {
-    fail('Not authenticated', 'login');
-  }
-
   try {
+    // First, try Supabase authentication (new system)
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (!authError && user) {
+      // User is authenticated with Supabase
+      const userId = user.id;
+      const email = user.email || '';
+
+      // Check user role from user_profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      const role = profile?.role || 'user';
+
+      if (role !== 'admin') {
+        fail('Admin role required', 'unauthorized');
+      }
+
+      return { userId, email, role };
+    }
+
+    // Fallback to Firebase authentication (old system)
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(COOKIE_NAME);
+
+    if (!sessionCookie || !sessionCookie.value) {
+      fail('Not authenticated', 'login');
+    }
+
     // If Firebase Admin is available, verify session cookie
     if (isFirebaseAdminInitialized()) {
       try {
@@ -100,14 +127,39 @@ export async function requireAdmin(
  * Returns null if not authenticated or not admin
  */
 export async function checkAdminAccess(): Promise<{ userId: string; email: string; role: string } | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(COOKIE_NAME);
-
-  if (!sessionCookie || !sessionCookie.value) {
-    return null;
-  }
-
   try {
+    // First, try Supabase authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (!authError && user) {
+      const userId = user.id;
+      const email = user.email || '';
+
+      // Check user role from user_profiles table
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      const role = profile?.role || 'user';
+
+      if (role !== 'admin') {
+        return null;
+      }
+
+      return { userId, email, role };
+    }
+
+    // Fallback to Firebase authentication
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(COOKIE_NAME);
+
+    if (!sessionCookie || !sessionCookie.value) {
+      return null;
+    }
+
     // If Firebase Admin is available, verify session cookie
     if (isFirebaseAdminInitialized()) {
       try {
@@ -155,14 +207,35 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
  * Returns null if not authenticated
  */
 export async function getCurrentUser(): Promise<{ userId: string; email: string; role: string } | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(COOKIE_NAME);
-
-  if (!sessionCookie || !sessionCookie.value) {
-    return null;
-  }
-
   try {
+    // First, try Supabase authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (!authError && user) {
+      const userId = user.id;
+      const email = user.email || '';
+
+      // Check user role from user_profiles table
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      const role = profile?.role || 'user';
+
+      return { userId, email, role };
+    }
+
+    // Fallback to Firebase authentication
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(COOKIE_NAME);
+
+    if (!sessionCookie || !sessionCookie.value) {
+      return null;
+    }
+
     // If Firebase Admin is available, verify session cookie
     if (isFirebaseAdminInitialized()) {
       try {

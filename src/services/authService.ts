@@ -73,7 +73,25 @@ export async function createUser(email: string, password: string, name: string):
 export async function getUsers(): Promise<User[]> {
   try {
     const supabase = await createClient();
-    
+
+    // Fetch from user_profiles table (new Supabase system)
+    const { data: profiles, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!profileError && profiles && profiles.length > 0) {
+      return profiles.map((profile: any) => ({
+        uid: profile.id,
+        email: profile.email || '',
+        name: profile.name || 'N/A',
+        createdAt: profile.created_at,
+        role: profile.role || 'user',
+        phoneNumber: profile.phone || null,
+      }));
+    }
+
+    // Fallback to users table (old Firebase system)
     const { data: users, error } = await supabase
       .from('users')
       .select('*')
@@ -135,18 +153,30 @@ export async function deleteUser(uid: string) {
 export async function getUserRole(userId: string): Promise<string | null> {
   try {
     const supabase = await createClient();
-    
+
+    // First, try user_profiles table (new Supabase system)
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (!profileError && profile) {
+      return profile.role || 'user';
+    }
+
+    // Fallback to users table (old Firebase system)
     const { data: user, error } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
-    
+
     if (error || !user) {
       console.error("Error getting user role:", error);
       return null;
     }
-    
+
     return user.role || 'customer';
   } catch (error) {
     console.error("Error getting user role:", error);
@@ -159,18 +189,30 @@ export async function getUserRoleClient(userId: string): Promise<string | null> 
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
-    
+
+    // First, try user_profiles table (new Supabase system)
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (!profileError && profile) {
+      return profile.role || 'user';
+    }
+
+    // Fallback to users table (old Firebase system)
     const { data: user, error } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
-    
+
     if (error || !user) {
       console.error("Error fetching user role on client:", error);
       return 'customer';
     }
-    
+
     return user.role || 'customer';
   } catch (error) {
     console.error("Error fetching user role on client:", error);
