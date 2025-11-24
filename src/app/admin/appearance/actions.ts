@@ -21,6 +21,9 @@ export async function saveTheme(
     formData: FormData
   ): Promise<{ message: string; success: boolean }> {
   try {
+    const backgroundImageCropStr = formData.get('backgroundImageCrop') as string;
+    const foregroundImageCropStr = formData.get('foregroundImageCrop') as string;
+
     const themeToSave = {
         primaryColor: formData.get('primaryColor') as string,
         accentColor: formData.get('accentColor') as string,
@@ -30,6 +33,8 @@ export async function saveTheme(
         foregroundImageScale: Number(formData.get('foregroundImageScale') ?? 100),
         foregroundImagePositionX: Number(formData.get('foregroundImagePositionX') ?? 50),
         foregroundImagePositionY: Number(formData.get('foregroundImagePositionY') ?? 50),
+        backgroundImageCrop: backgroundImageCropStr ? JSON.parse(backgroundImageCropStr) : undefined,
+        foregroundImageCrop: foregroundImageCropStr ? JSON.parse(foregroundImageCropStr) : undefined,
     };
 
     await saveThemeToDb(themeToSave);

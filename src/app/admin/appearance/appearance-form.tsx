@@ -9,11 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Paintbrush, Upload, X, Loader2, CornerDownRight } from 'lucide-react';
+import { Paintbrush, Upload, X, Loader2, CornerDownRight, Crop } from 'lucide-react';
 import { saveTheme } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import ImageCropModal, { CropData } from '@/components/image-crop-modal';
+import MultiScreenPreview from '@/components/multi-screen-preview';
 
 
 type Theme = {
@@ -25,6 +27,8 @@ type Theme = {
   foregroundImageScale?: number;
   foregroundImagePositionX?: number;
   foregroundImagePositionY?: number;
+  backgroundImageCrop?: CropData;
+  foregroundImageCrop?: CropData;
 };
 
 export default function AppearanceForm({ theme }: { theme: Theme }) {
@@ -42,8 +46,16 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const [fgPosX, setFgPosX] = useState(theme.foregroundImagePositionX ?? 50);
   const [fgPosY, setFgPosY] = useState(theme.foregroundImagePositionY ?? 50);
 
+  const [backgroundImageCrop, setBackgroundImageCrop] = useState<CropData | undefined>(theme.backgroundImageCrop);
+  const [foregroundImageCrop, setForegroundImageCrop] = useState<CropData | undefined>(theme.foregroundImageCrop);
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [currentCropImage, setCurrentCropImage] = useState<string>('');
+  const [currentCropType, setCurrentCropType] = useState<'background' | 'foreground'>('background');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const bgInputRef = React.useRef<HTMLInputElement>(null);
   const fgInputRef = React.useRef<HTMLInputElement>(null);
@@ -64,7 +76,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setIsSaving(true);
-      
+
       const formData = new FormData();
       formData.append('primaryColor', primaryColor);
       formData.append('accentColor', accentColor);
@@ -74,6 +86,13 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
       formData.append('foregroundImageScale', String(fgScale));
       formData.append('foregroundImagePositionX', String(fgPosX));
       formData.append('foregroundImagePositionY', String(fgPosY));
+
+      if (backgroundImageCrop) {
+          formData.append('backgroundImageCrop', JSON.stringify(backgroundImageCrop));
+      }
+      if (foregroundImageCrop) {
+          formData.append('foregroundImageCrop', JSON.stringify(foregroundImageCrop));
+      }
 
       const result = await saveTheme(formData);
 
@@ -91,7 +110,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
   }
 
 
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, imageSetter: (url: string) => void, path: string) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, imageType: 'background' | 'foreground') => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 4 * 1024 * 1024) { // 4MB limit
@@ -102,27 +121,68 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
         });
         return;
       }
-      setIsUploading(true);
-      try {
-        const url = await uploadImageAndGetUrl(file, path);
-        // Set the URL without query parameters (filename already has timestamp for uniqueness)
-        imageSetter(url);
-        setHasUnsavedChanges(true);
-        toast({
-          title: 'Upload successful',
-          description: 'Image uploaded. Click "Save Changes" below to keep it.',
-          variant: 'default'
-        });
-      } catch (error: any) {
-        toast({
-          title: 'Upload failed',
-          description: error.message || 'Could not upload image.',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsUploading(false);
-      }
+
+      // Create object URL for preview in crop modal
+      const objectUrl = URL.createObjectURL(file);
+      setCurrentCropImage(objectUrl);
+      setCurrentCropType(imageType);
+      setPendingFile(file);
+      setCropModalOpen(true);
     }
+  };
+
+  const handleCropComplete = async (cropData: CropData) => {
+    if (!pendingFile) return;
+
+    const path = currentCropType === 'background' ? 'theme/background' : 'theme/foreground';
+    const imageSetter = currentCropType === 'background' ? setBackgroundImage : setForegroundImage;
+    const cropSetter = currentCropType === 'background' ? setBackgroundImageCrop : setForegroundImageCrop;
+
+    setIsUploading(true);
+    try {
+      const url = await uploadImageAndGetUrl(pendingFile, path);
+      imageSetter(url);
+      cropSetter(cropData);
+      setHasUnsavedChanges(true);
+      toast({
+        title: 'Upload successful',
+        description: 'Image uploaded and cropped. Click "Save Changes" below to keep it.',
+        variant: 'default'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Upload failed',
+        description: error.message || 'Could not upload image.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+      setPendingFile(null);
+      URL.revokeObjectURL(currentCropImage);
+    }
+  };
+
+  const handleOpenCropModal = (imageType: 'background' | 'foreground') => {
+    const imageUrl = imageType === 'background' ? backgroundImage : foregroundImage;
+    if (!imageUrl) return;
+
+    setCurrentCropImage(imageUrl);
+    setCurrentCropType(imageType);
+    setCropModalOpen(true);
+  };
+
+  const handlePostUploadCropComplete = (cropData: CropData) => {
+    if (currentCropType === 'background') {
+      setBackgroundImageCrop(cropData);
+    } else {
+      setForegroundImageCrop(cropData);
+    }
+    setHasUnsavedChanges(true);
+    toast({
+      title: 'Crop updated',
+      description: 'Image crop adjusted. Click "Save Changes" to apply.',
+      variant: 'default'
+    });
   };
   
   const handleRemoveImage = (imageSetter: (url: string) => void, inputRef: React.RefObject<HTMLInputElement>) => {
@@ -272,15 +332,23 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                             {isUploading ? <Loader2 className="animate-spin"/> : <span className="text-xs text-muted-foreground">None</span>}
                         </div>
                     )}
-                    <label htmlFor="background-image-upload" className="cursor-pointer">
-                        <Button asChild variant="outline" type="button" disabled={isUploading}>
-                            <div>
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload
-                            </div>
-                        </Button>
-                        <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setBackgroundImage, 'theme/background')} />
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="background-image-upload" className="cursor-pointer">
+                            <Button asChild variant="outline" type="button" disabled={isUploading}>
+                                <div>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload
+                                </div>
+                            </Button>
+                            <input id="background-image-upload" ref={bgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, 'background')} />
                         </label>
+                        {backgroundImage && (
+                            <Button variant="outline" type="button" size="sm" onClick={() => handleOpenCropModal('background')} disabled={isUploading}>
+                                <Crop className="mr-2 h-4 w-4" />
+                                Crop
+                            </Button>
+                        )}
+                    </div>
                     </div>
                 </div>
 
@@ -299,25 +367,33 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                            {isUploading ? <Loader2 className="animate-spin"/> : <span className="text-xs text-muted-foreground">None</span>}
                         </div>
                     )}
+                    <div className="flex flex-col gap-2">
                         <label htmlFor="foreground-image-upload" className="cursor-pointer">
-                        <Button asChild variant="outline" type="button" disabled={isUploading}>
-                            <div>
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload
-                            </div>
-                        </Button>
-                        <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, setForegroundImage, 'theme/foreground')} />
+                            <Button asChild variant="outline" type="button" disabled={isUploading}>
+                                <div>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload
+                                </div>
+                            </Button>
+                            <input id="foreground-image-upload" ref={fgInputRef} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageChange(e, 'foreground')} />
                         </label>
+                        {foregroundImage && (
+                            <Button variant="outline" type="button" size="sm" onClick={() => handleOpenCropModal('foreground')} disabled={isUploading}>
+                                <Crop className="mr-2 h-4 w-4" />
+                                Crop
+                            </Button>
+                        )}
+                    </div>
                     </div>
                 </div>
 
                  <div className="space-y-4 md:col-span-2">
-                    <Label>Live Preview</Label>
+                    <Label>Positioning Editor (Drag to Position, Drag Corner to Resize)</Label>
                     <div ref={previewRef} className="relative w-full h-80 rounded-lg overflow-hidden border bg-muted/30 select-none">
                         {backgroundImage && <Image src={backgroundImage} alt="Background" layout="fill" objectFit="cover" unoptimized />}
                          <div className="absolute inset-0 bg-black/30"></div>
                         {foregroundImage && (
-                             <div 
+                             <div
                                 style={foregroundPreviewStyle}
                                 className={cn('absolute group', dragStateRef.current.isDragging || dragStateRef.current.isResizing ? 'cursor-grabbing' : 'cursor-grab')}
                                 onMouseDown={handleDragStart}
@@ -343,6 +419,19 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
                     </div>
                  </div>
 
+                 <div className="space-y-4 md:col-span-2">
+                    <Label>Multi-Screen Preview</Label>
+                    <MultiScreenPreview
+                        backgroundImage={backgroundImage}
+                        foregroundImage={foregroundImage}
+                        backgroundCrop={backgroundImageCrop}
+                        foregroundCrop={foregroundImageCrop}
+                        fgScale={fgScale}
+                        fgPosX={fgPosX}
+                        fgPosY={fgPosY}
+                    />
+                 </div>
+
             </div>
 
 
@@ -358,6 +447,19 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
             </div>
             </CardContent>
         </form>
+
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          onClose={() => {
+            setCropModalOpen(false);
+            if (currentCropImage.startsWith('blob:')) {
+              URL.revokeObjectURL(currentCropImage);
+            }
+          }}
+          imageSrc={currentCropImage}
+          onCropComplete={pendingFile ? handleCropComplete : handlePostUploadCropComplete}
+          initialCrop={currentCropType === 'background' ? backgroundImageCrop : foregroundImageCrop}
+        />
       </Card>
   );
 }

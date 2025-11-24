@@ -1,8 +1,15 @@
 
 "use client";
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import CroppedImage from './cropped-image';
+
+type CropData = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 type Hero3DProps = {
   theme: {
@@ -11,6 +18,8 @@ type Hero3DProps = {
     foregroundImageScale?: number;
     foregroundImagePositionX?: number;
     foregroundImagePositionY?: number;
+    backgroundImageCrop?: CropData;
+    foregroundImageCrop?: CropData;
     updatedAt?: string;
   };
 };
@@ -69,6 +78,9 @@ export default function Hero3D({ theme }: Hero3DProps) {
     return `${url}${separator}v=${timestamp}`;
   };
 
+  // Note: Crop data is saved and can be used for server-side image processing
+  // For now, images are displayed in full. Future enhancement: apply crops visually using canvas or server-side processing
+
   return (
     <div style={{ perspective: '1000px' }} className="w-full min-h-[70vh] md:min-h-[60vh] flex items-center justify-center p-4">
       <section
@@ -76,16 +88,16 @@ export default function Hero3D({ theme }: Hero3DProps) {
         style={sectionStyle}
       >
         {theme.backgroundImage ? (
-          <Image
+          <CroppedImage
             src={addCacheBuster(theme.backgroundImage)}
             alt="Background"
+            crop={theme.backgroundImageCrop}
             fill
-            className="object-cover z-0 transform-gpu"
+            className="z-0 transform-gpu"
+            objectFit="cover"
             sizes="100vw"
             priority
-
             unoptimized
-            data-ai-hint="modern room"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 z-0"></div>
@@ -100,11 +112,13 @@ export default function Hero3D({ theme }: Hero3DProps) {
             {theme.foregroundImage && (
               <div style={foregroundContainerStyle}>
                 <div className="relative w-full h-auto" style={{...foregroundImageStyle, paddingTop: '100%'}}>
-                    <Image
+                    <CroppedImage
                     src={addCacheBuster(theme.foregroundImage)}
                     alt="Featured Product"
+                    crop={theme.foregroundImageCrop}
                     fill
-                    className="object-contain drop-shadow-2xl transform-gpu"
+                    className="drop-shadow-2xl transform-gpu"
+                    objectFit="contain"
                     unoptimized
                     sizes="33vw"
                     />

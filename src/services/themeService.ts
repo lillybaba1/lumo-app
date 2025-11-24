@@ -3,6 +3,13 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
+export interface CropData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 interface Theme {
     primaryColor: string;
     accentColor: string;
@@ -12,6 +19,8 @@ interface Theme {
     foregroundImageScale?: number;
     foregroundImagePositionX?: number;
     foregroundImagePositionY?: number;
+    backgroundImageCrop?: CropData;
+    foregroundImageCrop?: CropData;
     updatedAt?: string;
 }
 
