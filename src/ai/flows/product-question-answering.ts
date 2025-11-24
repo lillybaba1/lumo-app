@@ -23,6 +23,11 @@ const ProductQuestionAnsweringOutputSchema = z.object({
 export type ProductQuestionAnsweringOutput = z.infer<typeof ProductQuestionAnsweringOutputSchema>;
 
 export async function productQuestionAnswering(input: ProductQuestionAnsweringInput): Promise<ProductQuestionAnsweringOutput> {
+  // Check if AI is configured
+  if (!ai) {
+    throw new Error('AI_NOT_CONFIGURED: No API key configured. Please set OPENAI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY in your environment.');
+  }
+
   // Pre-process input to add computed boolean for admin role
   const processedInput = {
     ...input,
@@ -32,7 +37,8 @@ export async function productQuestionAnswering(input: ProductQuestionAnsweringIn
   return productQuestionAnsweringFlow(processedInput as any);
 }
 
-const productQuestionAnsweringPrompt = ai.definePrompt({
+// Only define prompts and flows if AI is configured
+const productQuestionAnsweringPrompt = ai?.definePrompt({
   name: 'productQuestionAnsweringPrompt',
   input: {schema: ProductQuestionAnsweringInputSchema},
   output: {schema: ProductQuestionAnsweringOutputSchema},
@@ -97,7 +103,7 @@ Respond naturally and helpfully using the context above. Understand all kinds of
 RESPONSE:`,
 });
 
-const productQuestionAnsweringFlow = ai.defineFlow(
+const productQuestionAnsweringFlow = ai?.defineFlow(
   {
     name: 'productQuestionAnsweringFlow',
     inputSchema: ProductQuestionAnsweringInputSchema,

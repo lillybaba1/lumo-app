@@ -14,6 +14,7 @@ console.log('[Genkit Init] GEMINI_API_KEY present:', hasGemini);
 // Determine which AI provider to use (prefer OpenAI if both are available)
 const plugins = [];
 let defaultModel;
+let aiInstance: any = null;
 
 if (hasOpenAI) {
   console.log('[Genkit Init] Using OpenAI (GPT-4o)');
@@ -22,28 +23,35 @@ if (hasOpenAI) {
   }));
   defaultModel = gpt4o;
 } else if (hasGemini) {
-  console.log('[Genkit Init] Using Google Gemini (Gemini 2.5 Flash)');
+  console.log('[Genkit Init] Using Google Gemini (Gemini 1.5 Pro)');
   plugins.push(googleAI({
     apiKey: geminiKey,
   }));
-  // Use Gemini 2.5 Flash (the genkit library model reference)
-  defaultModel = 'googleai/gemini-2.5-flash';
+  // Use Gemini 1.5 Pro - more stable and widely available in v1beta API
+  // Flash model was giving 404 errors with the genkit library
+  defaultModel = gemini15Pro;
 } else {
   console.error(
     '❌ ERROR: No AI API key configured!\n' +
     '   Option 1 (OpenAI): Get key from https://platform.openai.com/api-keys\n' +
-    '   Option 2 (Gemini): Get key from https://makersuite.google.com/app/apikey\n' +
-    '   Add to .env.local as OPENAI_API_KEY or GEMINI_API_KEY\n' +
+    '   Option 2 (Gemini): Get key from https://aistudio.google.com/app/apikey\n' +
+    '   Add to your environment as OPENAI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY\n' +
     '   AI assistant will not work without an API key!'
   );
-  throw new Error('No AI API key configured. Please set OPENAI_API_KEY or GEMINI_API_KEY');
+  // Don't throw - let the app continue but mark AI as not configured
 }
 
-export const ai = genkit({
-  plugins,
-  model: defaultModel,
-});
+// Only initialize genkit if we have a valid configuration
+if (defaultModel && plugins.length > 0) {
+  aiInstance = genkit({
+    plugins,
+    model: defaultModel,
+  });
+}
+
+// Export AI instance (null if not configured)
+export const ai = aiInstance;
 
 // Export the selected model for reference
-export const selectedModel = hasOpenAI ? 'OpenAI GPT-4o' : 'Google Gemini 2.5 Flash';
+export const selectedModel = hasOpenAI ? 'OpenAI GPT-4o' : hasGemini ? 'Google Gemini 1.5 Pro' : 'None (No API key configured)';
 export const hasAIConfigured = hasOpenAI || hasGemini;

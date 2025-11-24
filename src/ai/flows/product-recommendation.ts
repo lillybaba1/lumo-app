@@ -34,10 +34,16 @@ const ProductRecommendationOutputSchema = z.object({
 export type ProductRecommendationOutput = z.infer<typeof ProductRecommendationOutputSchema>;
 
 export async function getProductRecommendations(input: ProductRecommendationInput): Promise<ProductRecommendationOutput> {
+  // Check if AI is configured
+  if (!ai) {
+    throw new Error('AI_NOT_CONFIGURED: No API key configured. Please set OPENAI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY in your environment.');
+  }
+
   return productRecommendationFlow(input);
 }
 
-const productRecommendationPrompt = ai.definePrompt({
+// Only define prompts and flows if AI is configured
+const productRecommendationPrompt = ai?.definePrompt({
   name: 'productRecommendationPrompt',
   input: {schema: ProductRecommendationInputSchema},
   output: {schema: ProductRecommendationOutputSchema},
@@ -61,7 +67,7 @@ Return your recommendations as a JSON object:
 }`,
 });
 
-const productRecommendationFlow = ai.defineFlow(
+const productRecommendationFlow = ai?.defineFlow(
   {
     name: 'productRecommendationFlow',
     inputSchema: ProductRecommendationInputSchema,

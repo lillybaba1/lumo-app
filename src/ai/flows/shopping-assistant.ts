@@ -259,9 +259,17 @@ export async function shoppingAssistant(
       }
       console.error('[AI] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
       console.error('[AI] GEMINI_API_KEY present:', !!process.env.GEMINI_API_KEY);
+      console.error('[AI] GOOGLE_API_KEY present:', !!process.env.GOOGLE_API_KEY);
       console.error('[AI] ====================================');
 
-      // Return error message to user - no fallback logic
+      // Check for configuration error
+      if (qaErr instanceof Error && qaErr.message.includes('AI_NOT_CONFIGURED')) {
+        return {
+          answer: "⚠️ AI Assistant is not configured. The administrator needs to set up an API key (OPENAI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY) in the environment variables. Please contact support for assistance."
+        };
+      }
+
+      // Return generic error message for other errors
       return {
         answer: "I'm sorry, I'm having trouble connecting to my AI services right now. Please try again in a moment. If the problem persists, please contact support."
       };
