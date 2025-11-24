@@ -8,7 +8,7 @@
  * - ProductRecommendationOutput - The return type for the getProductRecommendations function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, hasAIConfigured} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ProductRecommendationInputSchema = z.object({
@@ -34,14 +34,27 @@ const ProductRecommendationOutputSchema = z.object({
 export type ProductRecommendationOutput = z.infer<typeof ProductRecommendationOutputSchema>;
 
 export async function getProductRecommendations(input: ProductRecommendationInput): Promise<ProductRecommendationOutput> {
+  // Check if AI is configured
+  if (!hasAIConfigured || !ai) {
+    return {
+      recommendedProducts: [],
+      reasoning: "Product recommendations are currently unavailable due to missing AI configuration. Please contact the site administrator."
+    };
+  }
+  
   return productRecommendationFlow(input);
 }
 
-const productRecommendationPrompt = ai.definePrompt({
-  name: 'productRecommendationPrompt',
-  input: {schema: ProductRecommendationInputSchema},
-  output: {schema: ProductRecommendationOutputSchema},
-  prompt: `You are Luna, a friendly AI shopping assistant for Lumo. A customer is asking for product recommendations.
+// Only define prompt and flow if AI is configured
+let productRecommendationPrompt: any;
+let productRecommendationFlow: any;
+
+if (hasAIConfigured && ai) {
+  productRecommendationPrompt = ai.definePrompt({
+    name: 'productRecommendationPrompt',
+    input: {schema: ProductRecommendationInputSchema},
+    output: {schema: ProductRecommendationOutputSchema},
+    prompt: `You are Luna, a friendly AI shopping assistant for Lumo. A customer is asking for product recommendations.
 
 User ID: {{{userId}}}
 What they've been looking at: {{#each browsingHistory}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
@@ -59,16 +72,17 @@ Return your recommendations as a JSON object:
   "recommendedProducts": [array of product IDs],
   "reasoning": "friendly explanation of why these products are perfect for them"
 }`,
-});
+  });
 
-const productRecommendationFlow = ai.defineFlow(
-  {
-    name: 'productRecommendationFlow',
-    inputSchema: ProductRecommendationInputSchema,
-    outputSchema: ProductRecommendationOutputSchema,
-  },
-  async input => {
-    const {output} = await productRecommendationPrompt(input);
-    return output!;
-  }
-);
+  productRecommendationFlow = ai.defineFlow(
+    {
+      name: 'productRecommendationFlow',
+      inputSchema: ProductRecommendationInputSchema,
+      outputSchema: ProductRecommendationOutputSchema,
+    },
+    async input => {
+      const {output} = await productRecommendationPrompt(input);
+      return output!;
+    }
+  );
+}

@@ -4,7 +4,7 @@
 
 'use server';
 
-import {ai} from '@/ai/genkit';
+import {ai, hasAIConfigured} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ProductQuestionAnsweringInputSchema = z.object({
@@ -23,6 +23,17 @@ const ProductQuestionAnsweringOutputSchema = z.object({
 export type ProductQuestionAnsweringOutput = z.infer<typeof ProductQuestionAnsweringOutputSchema>;
 
 export async function productQuestionAnswering(input: ProductQuestionAnsweringInput): Promise<ProductQuestionAnsweringOutput> {
+  // Check if AI is configured
+  if (!hasAIConfigured || !ai) {
+    return {
+      answer: "I apologize, but the AI assistant is currently unavailable due to missing configuration. " +
+              "Please contact the site administrator to configure the AI service. " +
+              "\n\nFor production: Add OPENAI_API_KEY or GEMINI_API_KEY to your Vercel environment variables. " +
+              "\nFor development: Add these keys to your .env.local file. " +
+              "\n\nGet API keys from:\n• OpenAI: https://platform.openai.com/api-keys\n• Gemini: https://makersuite.google.com/app/apikey"
+    };
+  }
+
   // Pre-process input to add computed boolean for admin role
   const processedInput = {
     ...input,
@@ -32,11 +43,16 @@ export async function productQuestionAnswering(input: ProductQuestionAnsweringIn
   return productQuestionAnsweringFlow(processedInput as any);
 }
 
-const productQuestionAnsweringPrompt = ai.definePrompt({
-  name: 'productQuestionAnsweringPrompt',
-  input: {schema: ProductQuestionAnsweringInputSchema},
-  output: {schema: ProductQuestionAnsweringOutputSchema},
-  prompt: `You are Luna, a friendly and knowledgeable AI assistant for Lumo, an e-commerce store.
+// Only define prompt and flow if AI is configured
+let productQuestionAnsweringPrompt: any;
+let productQuestionAnsweringFlow: any;
+
+if (hasAIConfigured && ai) {
+  productQuestionAnsweringPrompt = ai.definePrompt({
+    name: 'productQuestionAnsweringPrompt',
+    input: {schema: ProductQuestionAnsweringInputSchema},
+    output: {schema: ProductQuestionAnsweringOutputSchema},
+    prompt: `You are Luna, a friendly and knowledgeable AI assistant for Lumo, an e-commerce store.
 
 {{#if userRole}}
 USER ROLE: {{userRole}}
@@ -95,16 +111,17 @@ CURRENT QUESTION: {{{question}}}
 Respond naturally and helpfully using the context above. Understand all kinds of natural language - don't just match keywords.
 
 RESPONSE:`,
-});
+  });
 
-const productQuestionAnsweringFlow = ai.defineFlow(
-  {
-    name: 'productQuestionAnsweringFlow',
-    inputSchema: ProductQuestionAnsweringInputSchema,
-    outputSchema: ProductQuestionAnsweringOutputSchema,
-  },
-  async input => {
-    const {output} = await productQuestionAnsweringPrompt(input);
-    return output!;
-  }
-);
+  productQuestionAnsweringFlow = ai.defineFlow(
+    {
+      name: 'productQuestionAnsweringFlow',
+      inputSchema: ProductQuestionAnsweringInputSchema,
+      outputSchema: ProductQuestionAnsweringOutputSchema,
+    },
+    async input => {
+      const {output} = await productQuestionAnsweringPrompt(input);
+      return output!;
+    }
+  );
+}
