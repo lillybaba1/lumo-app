@@ -1,46 +1,109 @@
 
 'use client';
 
+import { createClient } from '@/lib/supabase/client';
+
+// File upload constraints
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/svg+xml'
+];
+
 /**
- * Uploads an image file to a server endpoint and returns the URL.
+ * Validates uploaded file meets security requirements
+ */
+function validateFile(file: File): { valid: boolean; error?: string } {
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      valid: false,
+      error: `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`
+    };
+  }
+
+  // Check file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      error: `File type ${file.type} is not allowed. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`
+    };
+  }
+
+  // Check file name for security (prevent path traversal)
+  if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+    return {
+      valid: false,
+      error: 'Invalid file name. File name cannot contain path separators.'
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Uploads an image file to Supabase Storage and returns the public URL.
  * @param file The image file to upload.
- * @param path The path to use for the upload.
+ * @param path The path to use for the upload (e.g., 'products/12345').
  * @returns The public URL of the uploaded image.
  */
 export async function uploadImageAndGetUrl(file: File, path: string): Promise<string> {
-    console.log('[Storage] Uploading file:', {
+    console.log('[Storage] Uploading file to Supabase:', {
         name: file.name,
         size: file.size,
         type: file.type,
         path: path
     });
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', path);
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.valid) {
+        console.error('[Storage] File validation failed:', validation.error);
+        throw new Error(validation.error);
+    }
 
     try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-        });
+        const supabase = createClient();
 
-        console.log('[Storage] Upload response status:', response.status);
+        // Generate safe file path with timestamp to prevent caching issues
+        const timestamp = Date.now();
+        const ext = file.name.split('.').pop() ?? 'jpg';
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${timestamp}_${safeName}`;
+        const filePath = `${path}/${fileName}`;
 
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error('[Storage] Upload failed:', errorBody);
-            throw new Error(errorBody.error || `Upload failed with status ${response.status}`);
+        console.log('[Storage] Uploading to Supabase Storage:', filePath);
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type,
+            });
+
+        if (error) {
+            console.error('[Storage] Supabase upload error:', error);
+            throw new Error(`Upload failed: ${error.message}`);
         }
 
-        const result = await response.json();
-        console.log('[Storage] Upload successful, URL:', result.url);
-
-        if (!result.url) {
-            throw new Error('No URL returned from upload endpoint');
+        if (!data?.path) {
+            throw new Error('No path returned from Supabase upload');
         }
 
-        return result.url;
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(data.path);
+
+        console.log('[Storage] Upload successful, public URL:', publicUrl);
+
+        return publicUrl;
 
     } catch (error) {
         console.error('[Storage] Upload error:', error);
