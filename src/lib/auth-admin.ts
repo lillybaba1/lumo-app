@@ -50,14 +50,26 @@ export async function requireAdmin(
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table
-      const { data: profile, error: profileError } = await supabase
+      // Check user role from user_profiles table AND users table
+      const { data: profile } = await supabase
         .from('user_profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      const role = profile?.role || 'user';
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      // If either says admin, return admin
+      let role = 'customer';
+      if (profile?.role === 'admin' || userData?.role === 'admin') {
+        role = 'admin';
+      } else {
+        role = profile?.role || userData?.role || 'user';
+      }
 
       if (role !== 'admin') {
         fail('Admin role required', 'unauthorized');
@@ -136,14 +148,26 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table
+      // Check user role from user_profiles table AND users table
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      const role = profile?.role || 'user';
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      // If either says admin, return admin
+      let role = 'customer';
+      if (profile?.role === 'admin' || userData?.role === 'admin') {
+        role = 'admin';
+      } else {
+        role = profile?.role || userData?.role || 'user';
+      }
 
       if (role !== 'admin') {
         return null;
@@ -216,14 +240,26 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table
+      // Check user role from user_profiles table AND users table
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      const role = profile?.role || 'user';
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      // If either says admin, return admin
+      let role = 'customer';
+      if (profile?.role === 'admin' || userData?.role === 'admin') {
+        role = 'admin';
+      } else {
+        role = profile?.role || userData?.role || 'user';
+      }
 
       return { userId, email, role };
     }

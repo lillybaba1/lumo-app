@@ -18,8 +18,8 @@ export async function GET() {
       return NextResponse.json({ authenticated: false, user: null }, { status: 200 });
     }
 
-    // Get user profile from user_profiles table (or fallback to users table)
-    let profile = null;
+    // Get user profile from user_profiles table AND users table to ensure we get the correct role
+    // This handles the migration phase where data might be in either or both
     
     // Try user_profiles first (Supabase migration)
     const { data: userProfile } = await supabase
@@ -28,24 +28,30 @@ export async function GET() {
       .eq('id', user.id)
       .single();
     
-    if (userProfile) {
-      profile = userProfile;
+    // Also try users table (Legacy/Firebase migration)
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // Determine effective role - if EITHER table says admin, they are admin
+    let role = 'customer';
+    if (userProfile?.role === 'admin' || userData?.role === 'admin') {
+      role = 'admin';
     } else {
-      // Fallback to users table
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      profile = userData;
+      role = userProfile?.role || userData?.role || 'customer';
     }
+
+    // Use profile data, preferring userProfile for other fields if available
+    const profile = userProfile || userData;
 
     return NextResponse.json({
       authenticated: true,
       user: {
         uid: user.id,
         email: user.email || user.phone || '',
-        role: profile?.role || 'user',
+        role: role,
         name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
       },
     });

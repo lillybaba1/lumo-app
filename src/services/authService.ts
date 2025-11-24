@@ -154,30 +154,25 @@ export async function getUserRole(userId: string): Promise<string | null> {
   try {
     const supabase = await createClient();
 
-    // First, try user_profiles table (new Supabase system)
-    const { data: profile, error: profileError } = await supabase
+    // Check both tables to ensure we catch admin status from either
+    const { data: profile } = await supabase
       .from('user_profiles')
       .select('role')
       .eq('id', userId)
       .single();
 
-    if (!profileError && profile) {
-      return profile.role || 'user';
-    }
-
-    // Fallback to users table (old Firebase system)
-    const { data: user, error } = await supabase
+    const { data: user } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
 
-    if (error || !user) {
-      console.error("Error getting user role:", error);
-      return null;
+    // If either says admin, return admin
+    if (profile?.role === 'admin' || user?.role === 'admin') {
+      return 'admin';
     }
 
-    return user.role || 'customer';
+    return profile?.role || user?.role || 'customer';
   } catch (error) {
     console.error("Error getting user role:", error);
     return null;
@@ -190,30 +185,25 @@ export async function getUserRoleClient(userId: string): Promise<string | null> 
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
-    // First, try user_profiles table (new Supabase system)
-    const { data: profile, error: profileError } = await supabase
+    // Check both tables
+    const { data: profile } = await supabase
       .from('user_profiles')
       .select('role')
       .eq('id', userId)
       .single();
 
-    if (!profileError && profile) {
-      return profile.role || 'user';
-    }
-
-    // Fallback to users table (old Firebase system)
-    const { data: user, error } = await supabase
+    const { data: user } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
 
-    if (error || !user) {
-      console.error("Error fetching user role on client:", error);
-      return 'customer';
+    // If either says admin, return admin
+    if (profile?.role === 'admin' || user?.role === 'admin') {
+      return 'admin';
     }
 
-    return user.role || 'customer';
+    return profile?.role || user?.role || 'customer';
   } catch (error) {
     console.error("Error fetching user role on client:", error);
     return 'customer';
