@@ -43,8 +43,16 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const [state, formAction] = useFormState(saveProduct, initialState);
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     const [productImages, setProductImages] = React.useState<string[]>(product?.productImages || []);
-    const [isUploading, setIsUploading] = React.useState(false);
+    const [foregroundImages, setForegroundImages] = React.useState<string[]>(product?.foregroundImages || []);
+    const [backgroundImages, setBackgroundImages] = React.useState<string[]>(product?.backgroundImages || []);
+    const [isUploading, setIsUploading] = React.useState<{ product: boolean; foreground: boolean; background: boolean }>({
+        product: false,
+        foreground: false,
+        background: false
+    });
     const productImageInputRef = React.useRef<HTMLInputElement>(null);
+    const foregroundImageInputRef = React.useRef<HTMLInputElement>(null);
+    const backgroundImageInputRef = React.useRef<HTMLInputElement>(null);
 
     // Crop data state
     const [imageCropData, setImageCropData] = React.useState<Map<string, CropData>>(new Map());
@@ -55,8 +63,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     // Crop modal state
     const [cropModalOpen, setCropModalOpen] = React.useState(false);
     const [currentCropImage, setCurrentCropImage] = React.useState<string>('');
+    const [currentCropType, setCurrentCropType] = React.useState<'product' | 'foreground' | 'background'>('product');
     const [pendingFile, setPendingFile] = React.useState<File | null>(null);
-    const [fileQueue, setFileQueue] = React.useState<File[]>([]);
 
     React.useEffect(() => {
         if (state.success) {
@@ -74,50 +82,43 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         }
     }, [state, product, router, toast]);
 
-    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+    const handleImageChange = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+        type: 'product' | 'foreground' | 'background'
+    ) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        const validFiles: File[] = [];
-
-        // Validate all files
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            if (file.size > 4 * 1024 * 1024) {
-                toast({
-                    title: "Image too large",
-                    description: `${file.name} exceeds 4MB limit.`,
-                    variant: "destructive"
-                });
-                continue;
-            }
-            validFiles.push(file);
+        if (file.size > 4 * 1024 * 1024) {
+            toast({ title: "Image too large", description: "Max 4MB.", variant: "destructive" });
+            return;
         }
 
-        if (validFiles.length === 0) return;
-
-        // Start processing first file
-        const firstFile = validFiles[0];
-        const remainingFiles = validFiles.slice(1);
-
-        setFileQueue(remainingFiles);
-
-        const objectUrl = URL.createObjectURL(firstFile);
+        // Create object URL for preview in crop modal
+        const objectUrl = URL.createObjectURL(file);
         setCurrentCropImage(objectUrl);
-        setPendingFile(firstFile);
+        setCurrentCropType(type);
+        setPendingFile(file);
         setCropModalOpen(true);
     };
 
     const handleCropComplete = async (cropData: CropData) => {
         if (!pendingFile) return;
 
-        setIsUploading(true);
+        const folder = currentCropType === 'product' ? 'products' : currentCropType;
+        setIsUploading(prev => ({ ...prev, [currentCropType]: true }));
 
         try {
-            const url = await uploadImageAndGetUrl(pendingFile, `products/${Date.now()}-${pendingFile.name}`);
+            const url = await uploadImageAndGetUrl(pendingFile, `${folder}/${Date.now()}-${pendingFile.name}`);
 
-            // Add image to product images array
-            setProductImages(prev => [...prev, url]);
+            // Add image to appropriate array
+            if (currentCropType === 'product') {
+                setProductImages(prev => [...prev, url]);
+            } else if (currentCropType === 'foreground') {
+                setForegroundImages(prev => [...prev, url]);
+            } else if (currentCropType === 'background') {
+                setBackgroundImages(prev => [...prev, url]);
+            }
 
             // Store crop data
             setImageCropData(prev => {
@@ -131,60 +132,30 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 description: 'Image uploaded and cropped.',
                 variant: 'default'
             });
-
-            URL.revokeObjectURL(currentCropImage);
-
-            // Process next file in queue
-            if (fileQueue.length > 0) {
-                const nextFile = fileQueue[0];
-                const remainingFiles = fileQueue.slice(1);
-                setFileQueue(remainingFiles);
-
-                const objectUrl = URL.createObjectURL(nextFile);
-                setCurrentCropImage(objectUrl);
-                setPendingFile(nextFile);
-                // Modal stays open for next file
-            } else {
-                // No more files, close modal and reset
-                setCropModalOpen(false);
-                setPendingFile(null);
-
-                // Reset file input
-                if (productImageInputRef.current) {
-                    productImageInputRef.current.value = '';
-                }
-            }
         } catch (error: any) {
             toast({
                 title: 'Upload failed',
                 description: error.message,
                 variant: 'destructive'
             });
-
-            // On error, still try to process remaining files
-            if (fileQueue.length > 0) {
-                const nextFile = fileQueue[0];
-                const remainingFiles = fileQueue.slice(1);
-                setFileQueue(remainingFiles);
-
-                URL.revokeObjectURL(currentCropImage);
-                const objectUrl = URL.createObjectURL(nextFile);
-                setCurrentCropImage(objectUrl);
-                setPendingFile(nextFile);
-            } else {
-                setCropModalOpen(false);
-                setPendingFile(null);
-                if (productImageInputRef.current) {
-                    productImageInputRef.current.value = '';
-                }
-            }
         } finally {
-            setIsUploading(false);
+            setIsUploading(prev => ({ ...prev, [currentCropType]: false }));
+            setPendingFile(null);
+            URL.revokeObjectURL(currentCropImage);
+
+            // Reset file input
+            const inputRef = currentCropType === 'product' ? productImageInputRef :
+                           currentCropType === 'foreground' ? foregroundImageInputRef :
+                           backgroundImageInputRef;
+            if (inputRef.current) {
+                inputRef.current.value = '';
+            }
         }
     };
 
-    const handleOpenCropModal = (imageUrl: string) => {
+    const handleOpenCropModal = (imageUrl: string, type: 'product' | 'foreground' | 'background') => {
         setCurrentCropImage(imageUrl);
+        setCurrentCropType(type);
         setCropModalOpen(true);
     };
 
@@ -204,8 +175,14 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         });
     };
 
-    const handleRemoveImage = (urlToRemove: string) => {
-        setProductImages(prev => prev.filter(url => url !== urlToRemove));
+    const handleRemoveImage = (urlToRemove: string, type: 'product' | 'foreground' | 'background') => {
+        if (type === 'product') {
+            setProductImages(prev => prev.filter(url => url !== urlToRemove));
+        } else if (type === 'foreground') {
+            setForegroundImages(prev => prev.filter(url => url !== urlToRemove));
+        } else if (type === 'background') {
+            setBackgroundImages(prev => prev.filter(url => url !== urlToRemove));
+        }
 
         // Remove crop data
         setImageCropData(prev => {
@@ -213,7 +190,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             updated.delete(urlToRemove);
             return updated;
         });
-    };
+    }
 
     const handleSubmit = (formData: FormData) => {
         if (productImages.length === 0 && imageUrls.length === 0) {
@@ -239,6 +216,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             {product && <input type="hidden" name="id" value={product.id} />}
             <input type="hidden" name="imageUrls" value={imageUrls.join(',')} />
             <input type="hidden" name="productImages" value={productImages.join(',')} />
+            <input type="hidden" name="foregroundImages" value={foregroundImages.join(',')} />
+            <input type="hidden" name="backgroundImages" value={backgroundImages.join(',')} />
 
             <CardContent className="space-y-6 pt-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -283,10 +262,10 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     </div>
                     <div className="flex items-center gap-4">
                         <label htmlFor="product-image-upload" className="cursor-pointer">
-                            <Button asChild variant="outline" type="button" disabled={isUploading}>
+                            <Button asChild variant="outline" type="button" disabled={isUploading.product}>
                                 <div>
-                                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                                    {isUploading ? 'Uploading...' : 'Upload Product Images'}
+                                    {isUploading.product ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                                    {isUploading.product ? 'Uploading...' : 'Upload Product Images'}
                                 </div>
                             </Button>
                             <input
@@ -295,15 +274,11 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                 type="file"
                                 className="sr-only"
                                 accept="image/*"
-                                multiple
-                                onChange={handleImageChange}
+                                onChange={(e) => handleImageChange(e, 'product')}
                             />
                         </label>
                         {productImages.length > 0 && (
                             <span className="text-sm text-muted-foreground">{productImages.length} image(s) uploaded</span>
-                        )}
-                        {fileQueue.length > 0 && (
-                            <span className="text-sm text-muted-foreground">({fileQueue.length} in queue)</span>
                         )}
                     </div>
                     {productImages.length > 0 && (
@@ -317,7 +292,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                             size="icon"
                                             type="button"
                                             className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
-                                            onClick={() => handleRemoveImage(url)}
+                                            onClick={() => handleRemoveImage(url, 'product')}
                                         >
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -326,7 +301,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                         variant="outline"
                                         size="sm"
                                         type="button"
-                                        onClick={() => handleOpenCropModal(url)}
+                                        onClick={() => handleOpenCropModal(url, 'product')}
                                         className="w-full"
                                     >
                                         <CropIcon className="h-3 w-3 mr-1" />
@@ -338,7 +313,111 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     )}
                     {productImages.length === 0 && (
                         <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
-                            {isUploading ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Product Images</span>}
+                            {isUploading.product ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Product Images</span>}
+                        </div>
+                    )}
+                </div>
+
+                {/* Foreground Images Section */}
+                <div className="space-y-4">
+                    <div>
+                        <Label>Foreground Images</Label>
+                        <p className="text-sm text-muted-foreground">Foreground elements for admin/editing purposes (optional).</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label htmlFor="foreground-image-upload" className="cursor-pointer">
+                            <Button asChild variant="outline" type="button" disabled={isUploading.foreground}>
+                                <div>
+                                    {isUploading.foreground ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                                    {isUploading.foreground ? 'Uploading...' : 'Upload Foreground Images'}
+                                </div>
+                            </Button>
+                            <input
+                                id="foreground-image-upload"
+                                ref={foregroundImageInputRef}
+                                type="file"
+                                className="sr-only"
+                                accept="image/*"
+                                onChange={(e) => handleImageChange(e, 'foreground')}
+                            />
+                        </label>
+                        {foregroundImages.length > 0 && (
+                            <span className="text-sm text-muted-foreground">{foregroundImages.length} image(s) uploaded</span>
+                        )}
+                    </div>
+                    {foregroundImages.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {foregroundImages.map(url => (
+                                <div key={url} className="relative w-full aspect-square rounded-md overflow-hidden border">
+                                    <Image src={url} alt="Foreground" fill className="object-cover" unoptimized/>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        type="button"
+                                        className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
+                                        onClick={() => handleRemoveImage(url, 'foreground')}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {foregroundImages.length === 0 && (
+                        <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                            {isUploading.foreground ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Foreground Images</span>}
+                        </div>
+                    )}
+                </div>
+
+                {/* Background Images Section */}
+                <div className="space-y-4">
+                    <div>
+                        <Label>Background Images</Label>
+                        <p className="text-sm text-muted-foreground">Background elements for admin/editing purposes (optional).</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label htmlFor="background-image-upload" className="cursor-pointer">
+                            <Button asChild variant="outline" type="button" disabled={isUploading.background}>
+                                <div>
+                                    {isUploading.background ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                                    {isUploading.background ? 'Uploading...' : 'Upload Background Images'}
+                                </div>
+                            </Button>
+                            <input
+                                id="background-image-upload"
+                                ref={backgroundImageInputRef}
+                                type="file"
+                                className="sr-only"
+                                accept="image/*"
+                                onChange={(e) => handleImageChange(e, 'background')}
+                            />
+                        </label>
+                        {backgroundImages.length > 0 && (
+                            <span className="text-sm text-muted-foreground">{backgroundImages.length} image(s) uploaded</span>
+                        )}
+                    </div>
+                    {backgroundImages.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {backgroundImages.map(url => (
+                                <div key={url} className="relative w-full aspect-square rounded-md overflow-hidden border">
+                                    <Image src={url} alt="Background" fill className="object-cover" unoptimized/>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        type="button"
+                                        className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
+                                        onClick={() => handleRemoveImage(url, 'background')}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {backgroundImages.length === 0 && (
+                        <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
+                            {isUploading.background ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Background Images</span>}
                         </div>
                     )}
                 </div>
