@@ -10,12 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Upload, X, Save } from 'lucide-react';
+import { Loader2, Upload, X, Save, Crop as CropIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveProduct } from '@/app/admin/products/actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
-import { Product, Category } from '@/lib/types';
+import { Product, Category, CropData } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import ImageCropModal from '@/components/image-crop-modal';
+import ProductAttributesManager, { ProductAttribute } from '@/components/product-attributes-manager';
+import { Separator } from '@/components/ui/separator';
 
 type ProductFormProps = {
     product?: Product | null;
@@ -51,6 +54,18 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const foregroundImageInputRef = React.useRef<HTMLInputElement>(null);
     const backgroundImageInputRef = React.useRef<HTMLInputElement>(null);
 
+    // Crop data state
+    const [imageCropData, setImageCropData] = React.useState<Map<string, CropData>>(new Map());
+
+    // Product attributes
+    const [attributes, setAttributes] = React.useState<ProductAttribute[]>([]);
+
+    // Crop modal state
+    const [cropModalOpen, setCropModalOpen] = React.useState(false);
+    const [currentCropImage, setCurrentCropImage] = React.useState<string>('');
+    const [currentCropType, setCurrentCropType] = React.useState<'product' | 'foreground' | 'background'>('product');
+    const [pendingFile, setPendingFile] = React.useState<File | null>(null);
+
     React.useEffect(() => {
         if (state.success) {
             toast({
@@ -69,43 +84,95 @@ export default function ProductForm({ product = null, categories }: ProductFormP
 
     const handleImageChange = async (
         e: React.ChangeEvent<HTMLInputElement>,
-        type: 'product' | 'foreground' | 'background',
-        folder: string
+        type: 'product' | 'foreground' | 'background'
     ) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        setIsUploading(prev => ({ ...prev, [type]: true }));
+        if (file.size > 4 * 1024 * 1024) {
+            toast({ title: "Image too large", description: "Max 4MB.", variant: "destructive" });
+            return;
+        }
+
+        // Create object URL for preview in crop modal
+        const objectUrl = URL.createObjectURL(file);
+        setCurrentCropImage(objectUrl);
+        setCurrentCropType(type);
+        setPendingFile(file);
+        setCropModalOpen(true);
+    };
+
+    const handleCropComplete = async (cropData: CropData) => {
+        if (!pendingFile) return;
+
+        const folder = currentCropType === 'product' ? 'products' : currentCropType;
+        setIsUploading(prev => ({ ...prev, [currentCropType]: true }));
+
         try {
-            const uploadPromises = Array.from(files).map(file => {
-                if (file.size > 4 * 1024 * 1024) {
-                    toast({ title: `Image "${file.name}" too large`, description: "Max 4MB.", variant: "destructive" });
-                    return null;
-                }
-                return uploadImageAndGetUrl(file, `${folder}/${Date.now()}-${file.name}`);
+            const url = await uploadImageAndGetUrl(pendingFile, `${folder}/${Date.now()}-${pendingFile.name}`);
+
+            // Add image to appropriate array
+            if (currentCropType === 'product') {
+                setProductImages(prev => [...prev, url]);
+            } else if (currentCropType === 'foreground') {
+                setForegroundImages(prev => [...prev, url]);
+            } else if (currentCropType === 'background') {
+                setBackgroundImages(prev => [...prev, url]);
+            }
+
+            // Store crop data
+            setImageCropData(prev => {
+                const updated = new Map(prev);
+                updated.set(url, cropData);
+                return updated;
             });
 
-            const urls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
-
-            if (urls.length > 0) {
-                if (type === 'product') {
-                    setProductImages(prev => [...prev, ...urls]);
-                } else if (type === 'foreground') {
-                    setForegroundImages(prev => [...prev, ...urls]);
-                } else if (type === 'background') {
-                    setBackgroundImages(prev => [...prev, ...urls]);
-                }
-                toast({ title: 'Upload successful', description: `${urls.length} ${type} image(s) added.` });
-            }
+            toast({
+                title: 'Upload successful',
+                description: 'Image uploaded and cropped.',
+                variant: 'default'
+            });
         } catch (error: any) {
-            toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+            toast({
+                title: 'Upload failed',
+                description: error.message,
+                variant: 'destructive'
+            });
         } finally {
-            setIsUploading(prev => ({ ...prev, [type]: false }));
-            const inputRef = type === 'product' ? productImageInputRef : type === 'foreground' ? foregroundImageInputRef : backgroundImageInputRef;
+            setIsUploading(prev => ({ ...prev, [currentCropType]: false }));
+            setPendingFile(null);
+            URL.revokeObjectURL(currentCropImage);
+
+            // Reset file input
+            const inputRef = currentCropType === 'product' ? productImageInputRef :
+                           currentCropType === 'foreground' ? foregroundImageInputRef :
+                           backgroundImageInputRef;
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
         }
+    };
+
+    const handleOpenCropModal = (imageUrl: string, type: 'product' | 'foreground' | 'background') => {
+        setCurrentCropImage(imageUrl);
+        setCurrentCropType(type);
+        setCropModalOpen(true);
+    };
+
+    const handlePostUploadCropComplete = (cropData: CropData) => {
+        if (!currentCropImage) return;
+
+        setImageCropData(prev => {
+            const updated = new Map(prev);
+            updated.set(currentCropImage, cropData);
+            return updated;
+        });
+
+        toast({
+            title: 'Crop updated',
+            description: 'Image crop adjusted.',
+            variant: 'default'
+        });
     };
 
     const handleRemoveImage = (urlToRemove: string, type: 'product' | 'foreground' | 'background') => {
@@ -116,6 +183,13 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         } else if (type === 'background') {
             setBackgroundImages(prev => prev.filter(url => url !== urlToRemove));
         }
+
+        // Remove crop data
+        setImageCropData(prev => {
+            const updated = new Map(prev);
+            updated.delete(urlToRemove);
+            return updated;
+        });
     }
 
     const handleSubmit = (formData: FormData) => {
@@ -123,6 +197,17 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             toast({ title: 'Image Required', description: 'Please upload at least one product image.', variant: 'destructive' });
             return;
         }
+
+        // Add crop data to form
+        const cropDataObj: Record<string, CropData> = {};
+        imageCropData.forEach((crop, url) => {
+            cropDataObj[url] = crop;
+        });
+        formData.append('imageCropData', JSON.stringify(cropDataObj));
+
+        // Add attributes to form
+        formData.append('attributes', JSON.stringify(attributes));
+
         formAction(formData);
     }
 
@@ -189,8 +274,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                 type="file"
                                 className="sr-only"
                                 accept="image/*"
-                                onChange={(e) => handleImageChange(e, 'product', 'products')}
-                                multiple
+                                onChange={(e) => handleImageChange(e, 'product')}
                             />
                         </label>
                         {productImages.length > 0 && (
@@ -200,16 +284,28 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     {productImages.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {productImages.map(url => (
-                                <div key={url} className="relative w-full aspect-square rounded-md overflow-hidden border">
-                                    <Image src={url} alt="Product" fill className="object-cover" unoptimized/>
+                                <div key={url} className="relative space-y-2">
+                                    <div className="relative w-full aspect-square rounded-md overflow-hidden border">
+                                        <Image src={url} alt="Product" fill className="object-cover" unoptimized/>
+                                        <Button
+                                            variant="destructive"
+                                            size="icon"
+                                            type="button"
+                                            className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
+                                            onClick={() => handleRemoveImage(url, 'product')}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                     <Button
-                                        variant="destructive"
-                                        size="icon"
+                                        variant="outline"
+                                        size="sm"
                                         type="button"
-                                        className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
-                                        onClick={() => handleRemoveImage(url, 'product')}
+                                        onClick={() => handleOpenCropModal(url, 'product')}
+                                        className="w-full"
                                     >
-                                        <X className="h-4 w-4" />
+                                        <CropIcon className="h-3 w-3 mr-1" />
+                                        Crop
                                     </Button>
                                 </div>
                             ))}
@@ -242,8 +338,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                 type="file"
                                 className="sr-only"
                                 accept="image/*"
-                                onChange={(e) => handleImageChange(e, 'foreground', 'foreground')}
-                                multiple
+                                onChange={(e) => handleImageChange(e, 'foreground')}
                             />
                         </label>
                         {foregroundImages.length > 0 && (
@@ -295,8 +390,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                 type="file"
                                 className="sr-only"
                                 accept="image/*"
-                                onChange={(e) => handleImageChange(e, 'background', 'background')}
-                                multiple
+                                onChange={(e) => handleImageChange(e, 'background')}
                             />
                         </label>
                         {backgroundImages.length > 0 && (
@@ -328,11 +422,33 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     )}
                 </div>
 
+                <Separator className="my-8" />
+
+                {/* Product Attributes Section */}
+                <ProductAttributesManager
+                    attributes={attributes}
+                    onChange={setAttributes}
+                />
+
             </CardContent>
             <CardFooter className="flex justify-between">
                 <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
                 <SubmitButton />
             </CardFooter>
+
+            {/* Image Crop Modal */}
+            <ImageCropModal
+                isOpen={cropModalOpen}
+                onClose={() => {
+                    setCropModalOpen(false);
+                    if (currentCropImage.startsWith('blob:')) {
+                        URL.revokeObjectURL(currentCropImage);
+                    }
+                }}
+                imageSrc={currentCropImage}
+                onCropComplete={pendingFile ? handleCropComplete : handlePostUploadCropComplete}
+                initialCrop={imageCropData.get(currentCropImage)}
+            />
         </form>
     );
 }
