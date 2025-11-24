@@ -240,102 +240,30 @@ export async function shoppingAssistant(
         conversationHistory,
         userRole
       });
+
       if (res && res.answer) {
-        console.log('[AI] Gemini response successful');
+        console.log('[AI] AI response successful');
         return { answer: res.answer };
       }
-      console.warn('[AI] Gemini returned empty response, falling back');
-      // fallthrough to local fallback below
+
+      console.warn('[AI] AI returned empty response');
+      throw new Error('AI returned empty response');
     } catch (qaErr) {
       // Enhanced error logging for debugging
-      console.error('[AI] ========== GEMINI ERROR ==========');
+      console.error('[AI] ========== AI ERROR ==========');
       console.error('[AI] Error type:', qaErr instanceof Error ? qaErr.constructor.name : typeof qaErr);
       console.error('[AI] Error message:', qaErr instanceof Error ? qaErr.message : String(qaErr));
       console.error('[AI] Full error:', qaErr);
       if (qaErr instanceof Error && qaErr.stack) {
         console.error('[AI] Stack trace:', qaErr.stack);
       }
-      console.error('[AI] API Key present:', !!process.env.OPENAI_API_KEY);
-      console.error('[AI] API Key length:', process.env.OPENAI_API_KEY?.length || 0);
+      console.error('[AI] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+      console.error('[AI] GEMINI_API_KEY present:', !!process.env.GEMINI_API_KEY);
       console.error('[AI] ====================================');
-      // Continue to a local fallback that can answer simple queries from product data.
-    }
 
-    // Local fallback: simple keyword search over the fetched products.
-    try {
-      const q = query.toLowerCase().trim();
-
-      // Handle negative responses - user is declining
-      const negatives = ['no', 'nope', 'no thanks', 'not interested', 'nothing', 'never mind'];
-      if (negatives.some(n => q === n || q === n + '.')) {
-        return {
-          answer: "No problem! Is there anything else I can help you with? I can help you search for products, answer questions, or provide recommendations."
-        };
-      }
-
-      // Handle greetings (only for non-admin, admin greetings handled above)
-      if (!isAdmin) {
-        const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'how are you'];
-        if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ',') || q.includes(g))) {
-          return {
-            answer: "Hello! 👋 Welcome to Lumo! I'm Luna, your shopping assistant. I'm here to help you find the perfect products. What are you looking for today?"
-          };
-        }
-      }
-
-      // Handle follow-up questions without AI context
-      const followUps = ['do you have them', 'tell me more', 'more info', 'more information', 'details'];
-      if (followUps.some(f => q.includes(f))) {
-        const lastUserMessage = history?.filter(m => m.role === 'user').slice(-2, -1)[0];
-        if (lastUserMessage) {
-          return {
-            answer: `I'd love to provide more details! However, I need my AI connection to give you comprehensive information. Could you please be more specific about which product you'd like to know more about? For example, ask about "Hydrating Face Mask details" or "tell me about the Wireless Headphones".`
-          };
-        }
-      }
-
-      const tokens = q.split(/\s+/).filter(Boolean);
-
-      // Try fuzzy matching for common typos (e.g., "sikn" -> "skin")
-      const fuzzyTokens = tokens.map(token => {
-        if (token.match(/^sk?i[kn]+$/)) return 'skin'; // sikn, skin, skiin -> skin
-        if (token.match(/^ca?re?$/)) return 'care'; // care, car -> care
-        return token;
-      });
-
-      const matches = slice.filter((p: any) => {
-        const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
-        return fuzzyTokens.every(t => hay.includes(t));
-      });
-
-      if (matches.length === 0) {
-        // If no exact-match, try looser matching on any token
-        const loose = slice.filter((p: any) => {
-          const hay = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
-          return fuzzyTokens.some(t => hay.includes(t));
-        });
-        if (loose.length === 0) {
-          return {
-            answer: "I couldn't find any matching products. Could you try describing what you're looking for differently? For example, try 'electronics', 'fashion', or 'skincare'."
-          };
-        }
-        const top = loose.slice(0, 4).map((p: any) => `• ${p.name} — $${p.price || '??'} (${p.category || 'General'})`);
-        return {
-          answer: `I found these products that might interest you:\n\n${top.join('\n')}\n\nWould you like to know more about any of these?`
-        };
-      }
-
-      const topMatches = matches.slice(0, 6).map((p: any) => {
-        const desc = p.description ? `\n  ${String(p.description).slice(0, 100)}${String(p.description).length > 100 ? '...' : ''}` : '';
-        return `• **${p.name}** — $${p.price || '??'} (${p.category || 'General'})${desc}`;
-      });
+      // Return error message to user - no fallback logic
       return {
-        answer: `Great! Here are the products I found:\n\n${topMatches.join('\n\n')}\n\nWould you like more details about any of these?`
-      };
-    } catch (localErr) {
-      console.error('Local fallback failed:', localErr);
-      return {
-        answer: "I'm having trouble processing your request right now. Please try again or rephrase your question."
+        answer: "I'm sorry, I'm having trouble connecting to my AI services right now. Please try again in a moment. If the problem persists, please contact support."
       };
     }
   } catch (err) {
