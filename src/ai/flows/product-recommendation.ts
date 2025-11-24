@@ -35,7 +35,7 @@ export type ProductRecommendationOutput = z.infer<typeof ProductRecommendationOu
 
 export async function getProductRecommendations(input: ProductRecommendationInput): Promise<ProductRecommendationOutput> {
   // Check if AI is configured
-  if (!hasAIConfigured || !ai) {
+  if (!hasAIConfigured || !ai || !productRecommendationFlow) {
     return {
       recommendedProducts: [],
       reasoning: "Product recommendations are currently unavailable due to missing AI configuration. Please contact the site administrator."

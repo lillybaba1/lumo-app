@@ -24,7 +24,7 @@ export type ProductQuestionAnsweringOutput = z.infer<typeof ProductQuestionAnswe
 
 export async function productQuestionAnswering(input: ProductQuestionAnsweringInput): Promise<ProductQuestionAnsweringOutput> {
   // Check if AI is configured
-  if (!hasAIConfigured || !ai) {
+  if (!hasAIConfigured || !ai || !productQuestionAnsweringFlow) {
     return {
       answer: "I apologize, but the AI assistant is currently unavailable due to missing configuration. " +
               "Please contact the site administrator to configure the Google Gemini API key. " +
