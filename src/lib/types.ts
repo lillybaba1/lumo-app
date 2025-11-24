@@ -1,13 +1,67 @@
 
+export interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  imageUrl: string;
+  imageType: 'product' | 'foreground' | 'background';
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
+  displayOrder: number;
+  isPrimary: boolean;
+  altText?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ProductAttribute {
+  id: string;
+  productId: string;
+  attributeName: string;
+  attributeValue: string;
+  attributeGroup?: string; // "Variant", "Specification", "Feature"
+  displayOrder: number;
+  isVariant: boolean;
+  priceModifier?: number;
+  stockModifier?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  variantName: string;
+  sku?: string;
+  priceModifier: number;
+  stock: number;
+  attributes: Record<string, string>; // e.g., { "Color": "Red", "Size": "XL" }
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
   imageUrls: string[]; // Legacy field - kept for backwards compatibility
-  productImages?: string[]; // Main product photos shown in carousel
-  foregroundImages?: string[]; // Foreground elements for admin/editing
-  backgroundImages?: string[]; // Background elements for admin/editing
+  productImages?: string[]; // Legacy - Main product photos shown in carousel
+  foregroundImages?: string[]; // Legacy - Foreground elements for admin/editing
+  backgroundImages?: string[]; // Legacy - Background elements for admin/editing
+  images?: ProductImage[]; // New structured images with crop data
+  attributes?: ProductAttribute[]; // Product features/specifications
+  variants?: ProductVariant[]; // Product variants
   category: string;
   // optional category id / slug for linking
   categoryId?: string;
