@@ -23,12 +23,13 @@ if (hasOpenAI) {
   }));
   defaultModel = gpt4o;
 } else if (hasGemini) {
-  console.log('[Genkit Init] Using Google Gemini (Gemini 1.5 Flash)');
+  console.log('[Genkit Init] Using Google Gemini (Gemini 1.5 Pro)');
   plugins.push(googleAI({
     apiKey: geminiKey,
   }));
-  // Use Gemini 1.5 Flash (supported by @genkit-ai/googleai v1.14.1)
-  defaultModel = gemini15Flash;
+  // Use Gemini 1.5 Pro - more stable and widely available in v1beta API
+  // Flash model was giving 404 errors with the genkit library
+  defaultModel = gemini15Pro;
 } else {
   console.error(
     '❌ ERROR: No AI API key configured!\n' +
@@ -52,5 +53,5 @@ if (defaultModel && plugins.length > 0) {
 export const ai = aiInstance;
 
 // Export the selected model for reference
-export const selectedModel = hasOpenAI ? 'OpenAI GPT-4o' : hasGemini ? 'Google Gemini 1.5 Flash' : 'None (No API key configured)';
+export const selectedModel = hasOpenAI ? 'OpenAI GPT-4o' : hasGemini ? 'Google Gemini 1.5 Pro' : 'None (No API key configured)';
 export const hasAIConfigured = hasOpenAI || hasGemini;
