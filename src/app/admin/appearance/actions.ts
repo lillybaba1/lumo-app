@@ -1,57 +1,42 @@
-
 'use server';
 
-import { saveTheme as saveThemeToDb, getTheme as getThemeFromDb } from '@/services/themeService';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { unstable_cache } from 'next/cache';
+import { getSettings, saveSettings } from '@/services/settingsService';
+import { isValidTheme } from '@/lib/themes';
+import { revalidatePath } from 'next/cache';
 
-// Cache the theme for 60 seconds for faster updates across devices
-const getCachedTheme = unstable_cache(
-  async () => {
-    return await getThemeFromDb();
-  },
-  ['app-theme'],
-  {
-    revalidate: 60, // Cache for 60 seconds
-    tags: ['theme'],
-  }
-);
-
-export async function saveTheme(
-    formData: FormData
-  ): Promise<{ message: string; success: boolean }> {
-  try {
-    const backgroundImageCropStr = formData.get('backgroundImageCrop') as string;
-    const foregroundImageCropStr = formData.get('foregroundImageCrop') as string;
-
-    const themeToSave = {
-        primaryColor: formData.get('primaryColor') as string,
-        accentColor: formData.get('accentColor') as string,
-        backgroundColor: formData.get('backgroundColor') as string,
-        backgroundImage: formData.get('backgroundImage') as string,
-        foregroundImage: formData.get('foregroundImage') as string,
-        foregroundImageScale: Number(formData.get('foregroundImageScale') ?? 100),
-        foregroundImagePositionX: Number(formData.get('foregroundImagePositionX') ?? 50),
-        foregroundImagePositionY: Number(formData.get('foregroundImagePositionY') ?? 50),
-        backgroundImageCrop: backgroundImageCropStr ? JSON.parse(backgroundImageCropStr) : undefined,
-        foregroundImageCrop: foregroundImageCropStr ? JSON.parse(foregroundImageCropStr) : undefined,
-    };
-
-    await saveThemeToDb(themeToSave);
-
-    // Invalidate theme cache
-    revalidateTag('theme');
-    revalidatePath('/', 'layout');
-    revalidatePath('/admin/appearance');
-
-    return { message: 'Theme saved successfully!', success: true };
-  } catch (error) {
-    console.error('Failed to save theme:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { message: `Failed to save theme settings: ${errorMessage}`, success: false };
-  }
+/**
+ * Get the currently active theme
+ */
+export async function getActiveTheme(): Promise<string> {
+  const settings = await getSettings();
+  return settings.theme || 'minimal-light';
 }
 
-export async function getTheme() {
-    return await getCachedTheme();
+/**
+ * Update the active theme
+ */
+export async function updateTheme(themeId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Validate theme exists
+    if (!isValidTheme(themeId)) {
+      return { success: false, error: 'Invalid theme selected' };
+    }
+
+    // Get current settings
+    const currentSettings = await getSettings();
+
+    // Update with new theme
+    await saveSettings({
+      ...currentSettings,
+      theme: themeId,
+    });
+
+    // Revalidate all pages to apply new theme
+    revalidatePath('/', 'layout');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update theme:', error);
+    return { success: false, error: 'Failed to save theme. Please try again.' };
+  }
 }

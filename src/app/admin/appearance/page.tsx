@@ -1,28 +1,19 @@
-
-import { getTheme } from './actions';
-import AppearanceForm from './appearance-form';
-
-const defaultTheme = {
-  primaryColor: "#D0BFFF",
-  accentColor: "#FFB3C6",
-  backgroundColor: "#E8E2FF",
-  backgroundImage: "https://placehold.co/1200x800.png",
-  foregroundImage: "https://placehold.co/400x400.png",
-  foregroundImageScale: 100,
-  foregroundImagePositionX: 50,
-  foregroundImagePositionY: 50,
-};
-
+import { getActiveTheme } from './actions';
+import ThemeSelector from './theme-selector';
 
 export default async function AppearancePage() {
-  const theme = await getTheme() ?? defaultTheme;
+  const activeThemeId = await getActiveTheme();
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-headline font-bold">Appearance</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Site Appearance</h1>
+        <p className="text-muted-foreground">
+          Choose a theme to customize the look and feel of your store. Changes will be visible to all visitors.
+        </p>
       </div>
-      <AppearanceForm theme={theme} />
+
+      <ThemeSelector activeThemeId={activeThemeId} />
     </div>
   );
 }

@@ -32,6 +32,9 @@ export interface Settings {
     // Inventory Settings
     lowStockThreshold?: number;
     enableLowStockAlerts?: boolean;
+
+    // Appearance Settings
+    theme?: string; // Theme ID (e.g., 'minimal-light', 'dark-luxe')
 }
 
 const defaultSettings: Settings = {
@@ -51,6 +54,7 @@ const defaultSettings: Settings = {
     emailNewsletter: false,
     lowStockThreshold: 10,
     enableLowStockAlerts: true,
+    theme: 'minimal-light',
 };
 
 export async function getSettings(): Promise<Settings> {
@@ -95,4 +99,9 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
         console.error('Failed to save settings:', error);
         throw new Error('Failed to save settings. Ensure database is set up correctly.');
     }
+}
+
+// Alias for getSettings to match different naming conventions
+export async function getSiteSettings(): Promise<Settings> {
+    return getSettings();
 }
