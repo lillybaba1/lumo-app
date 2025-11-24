@@ -26,18 +26,6 @@ const productSchema = z.object({
     }
     return arg;
   }, z.array(z.string().url()).optional()),
-  foregroundImages: z.preprocess((arg) => {
-    if (typeof arg === 'string') {
-      return arg.split(',').filter(url => url.length > 0);
-    }
-    return arg;
-  }, z.array(z.string().url()).optional()),
-  backgroundImages: z.preprocess((arg) => {
-    if (typeof arg === 'string') {
-      return arg.split(',').filter(url => url.length > 0);
-    }
-    return arg;
-  }, z.array(z.string().url()).optional()),
 }).refine((data) => {
   // Ensure at least one product image exists (either in imageUrls or productImages)
   const hasImages = (data.imageUrls && data.imageUrls.length > 0) || (data.productImages && data.productImages.length > 0);
@@ -93,19 +81,13 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
         const existingUrls = new Set(existingImages.map(img => img.imageUrl));
 
         // Save each image with its crop data
-        const allImageUrls = [
-          ...(productData.productImages || []),
-          ...(productData.foregroundImages || []),
-          ...(productData.backgroundImages || [])
-        ];
+        const allImageUrls = [...(productData.productImages || [])];
 
         for (const url of allImageUrls) {
           // Skip if already exists
           if (existingUrls.has(url)) continue;
 
-          const imageType = productData.productImages?.includes(url) ? 'product' :
-                           productData.foregroundImages?.includes(url) ? 'foreground' : 'background';
-
+          const imageType = 'product';
           const crop = imageCropData[url];
 
           await saveProductImage({
@@ -117,7 +99,7 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
             cropWidth: crop?.width,
             cropHeight: crop?.height,
             displayOrder: allImageUrls.indexOf(url),
-            isPrimary: imageType === 'product' && allImageUrls.indexOf(url) === 0,
+            isPrimary: allImageUrls.indexOf(url) === 0,
           });
         }
       } catch (error) {
