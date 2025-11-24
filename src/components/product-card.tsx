@@ -60,9 +60,24 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.id}`} className="flex flex-col h-full">
-        <Card className="flex flex-col overflow-hidden h-full rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card
+          className="flex flex-col overflow-hidden h-full transition-all duration-300 group"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            borderColor: 'var(--card-border)',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-card)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+          }}
+        >
         <CardHeader className="p-0 relative">
-            <div className="aspect-square relative">
+            {/* Fixed 4:5 aspect ratio as per requirements */}
+            <div className="relative" style={{ aspectRatio: '4/5' }}>
             <Image
                 src={imageUrl}
                 alt={product.name}
@@ -73,6 +88,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
             </div>
+            {/* Wishlist button in top-right corner */}
             <div className="absolute top-2 right-2 z-10" onClick={(e) => e.preventDefault()}>
               <WishlistButton
                 productId={product.id}
@@ -83,16 +99,46 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
         </CardHeader>
         <CardContent className="flex-grow p-4 flex flex-col min-w-0">
-            <CardTitle className="font-headline text-lg mb-2 min-h-[2.5rem]">{product.name}</CardTitle>
-            <p className="text-muted-foreground text-sm flex-grow line-clamp-2">{product.description}</p>
+            <CardTitle
+              className="text-lg mb-2 min-h-[2.5rem]"
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              {product.name}
+            </CardTitle>
+            <p
+              className="text-sm flex-grow line-clamp-2"
+              style={{
+                color: 'var(--color-text-secondary)',
+                lineHeight: 'var(--line-height-normal)',
+              }}
+            >
+              {product.description}
+            </p>
         </CardContent>
         <CardFooter className="p-4 flex flex-col sm:flex-row justify-between items-center mt-auto gap-2 min-w-0">
-            <p className="text-xl font-bold whitespace-nowrap">{currencySymbol}{product.price.toFixed(2)}</p>
+            <p
+              className="text-xl whitespace-nowrap"
+              style={{
+                fontWeight: 'var(--font-weight-bold)',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              {currencySymbol}{product.price.toFixed(2)}
+            </p>
             <Button
               onClick={handleAddToCart}
               size="sm"
               aria-label={`Add ${product.name} to cart`}
               className="w-full sm:w-auto flex items-center justify-center px-2 sm:px-3 whitespace-normal min-w-0"
+              style={{
+                backgroundColor: 'var(--button-primary-bg)',
+                color: 'var(--button-primary-fg)',
+                borderRadius: 'var(--radius-button)',
+              }}
             >
               <ShoppingCart className="mr-2 h-4 w-4 shrink-0" />
               <span className="hidden md:inline truncate max-w-[6.5rem]">Add to Cart</span>

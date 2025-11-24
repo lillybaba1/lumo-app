@@ -4,49 +4,33 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product-card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getTheme } from '@/app/admin/appearance/actions';
 import { getProducts, getCategories } from '@/services/productService';
 import { seedInitialData } from '@/lib/seed';
-import Hero3D from '@/components/hero-3d';
+import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { Product, Category } from '@/lib/types';
 
-const defaultTheme = {
-  primaryColor: "#D0BFFF",
-  accentColor: "#FFB3C6",
-  backgroundColor: "#E8E2FF",
-  backgroundImage: "https://picsum.photos/seed/background/1200/800",
-  foregroundImage: "https://picsum.photos/seed/foreground/400/400",
-  foregroundImageScale: 100,
-  foregroundImagePositionX: 50,
-  foregroundImagePositionY: 50,
-};
-
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [theme, setTheme] = useState<any>(defaultTheme);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       await seedInitialData();
-      const [productsData, categoriesData, themeData] = await Promise.all([
+      const [productsData, categoriesData] = await Promise.all([
         getProducts(),
         getCategories(),
-        getTheme(),
       ]);
       setProducts(productsData);
       setCategories(categoriesData);
-      setTheme(themeData ?? defaultTheme);
       setLoading(false);
     }
     fetchData();
@@ -61,10 +45,10 @@ export default function HomePageDataContainer() {
     </div>;
   }
 
-  return <Home products={products} categories={categories} theme={theme} />;
+  return <Home products={products} categories={categories} />;
 }
 
-function Home({ products, categories, theme }: { products: Product[], categories: Category[], theme: any }) {
+function Home({ products, categories }: { products: Product[], categories: Category[] }) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -140,9 +124,9 @@ function Home({ products, categories, theme }: { products: Product[], categories
   }, [products, categories, searchQuery, selectedCategory, priceRange, showInStockOnly, sortBy]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg-page)' }}>
       <main className="flex-grow">
-        <Hero3D theme={theme} />
+        <Hero />
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Search and Sort Bar */}
@@ -153,13 +137,28 @@ function Home({ products, categories, theme }: { products: Product[], categories
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  backgroundColor: 'var(--input-bg)',
+                  borderColor: 'var(--input-border)',
+                  borderRadius: 'var(--radius-input)',
+                  color: 'var(--color-text-primary)',
+                }}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
+                style={{ color: 'var(--color-text-secondary)' }}
+              />
             </div>
 
             <div className="flex gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger
+                  className="w-[200px]"
+                  style={{
+                    borderRadius: 'var(--radius-button)',
+                    borderColor: 'var(--color-border-subtle)',
+                  }}
+                >
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,7 +172,11 @@ function Home({ products, categories, theme }: { products: Product[], categories
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="md:hidden px-4 py-2 border rounded-md hover:bg-accent"
+                className="md:hidden px-4 py-2 border hover:bg-accent transition-colors"
+                style={{
+                  borderRadius: 'var(--radius-button)',
+                  borderColor: 'var(--color-border-subtle)',
+                }}
               >
                 <SlidersHorizontal className="h-5 w-5" />
               </button>
@@ -184,7 +187,15 @@ function Home({ products, categories, theme }: { products: Product[], categories
             {/* Filters Sidebar */}
             {showFilters && (
               <div className="md:col-span-1">
-                <Card className="sticky top-4">
+                <Card
+                  className="sticky top-4"
+                  style={{
+                    backgroundColor: 'var(--card-bg)',
+                    borderColor: 'var(--card-border)',
+                    borderRadius: 'var(--radius-card)',
+                    boxShadow: 'var(--shadow-card)',
+                  }}
+                >
                   <CardContent className="pt-6 space-y-6">
                     <div>
                       <h3 className="font-semibold mb-4">Filters</h3>
