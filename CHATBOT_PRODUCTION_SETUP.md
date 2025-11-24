@@ -1,47 +1,27 @@
 # AI Chatbot Production Setup Guide
 
 ## Problem
-The AI chatbot is not working in production because the required API keys are not configured in the production environment (Vercel).
+The AI chatbot is not working in production because the required Google Gemini API key is not configured in the production environment (Vercel).
 
 ## Solution
 
-### Required Environment Variables
+### Required Environment Variable
 
-The chatbot requires **at least one** of the following API keys to function:
+The chatbot requires a **Google Gemini API key** to function:
 
-1. **OPENAI_API_KEY** (OpenAI GPT-4o) - Recommended for production
-2. **GEMINI_API_KEY** or **GOOGLE_API_KEY** (Google Gemini 2.5 Flash) - Free tier available
+**GEMINI_API_KEY** or **GOOGLE_API_KEY** (Google Gemini 2.5 Flash)
 
-### Option 1: OpenAI (Recommended for Production)
-
-**Pros:**
-- More reliable and consistent responses
-- Better reasoning capabilities
-- Lower latency
-- Professional quality
-
-**Cons:**
-- Requires payment (pay-as-you-go)
-- Costs approximately $0.005 per 1K tokens
-
-**Setup:**
-1. Go to: https://platform.openai.com/api-keys
-2. Sign in or create an account
-3. Click "Create new secret key"
-4. Copy the key (starts with `sk-...`)
-5. Add to Vercel (see steps below)
-
-### Option 2: Google Gemini (Free Tier Available)
+### Google Gemini Setup
 
 **Pros:**
 - Free tier: 15 requests/minute, 1500 requests/day
 - No credit card required
 - Fast responses
-- Good quality
+- Good quality AI
+- Very cost-effective for production
 
 **Cons:**
-- Rate limits on free tier
-- Slightly less consistent than GPT-4o
+- Rate limits on free tier (can upgrade to paid if needed)
 
 **Setup:**
 1. Go to: https://makersuite.google.com/app/apikey
@@ -59,22 +39,15 @@ The chatbot requires **at least one** of the following API keys to function:
 3. Click "Environment Variables" in the left sidebar
 4. Click "Add New"
 5. Enter the variable details:
-   - **Name**: `OPENAI_API_KEY` or `GEMINI_API_KEY`
-   - **Value**: Your API key
+   - **Name**: `GEMINI_API_KEY` (or `GOOGLE_API_KEY`)
+   - **Value**: Your API key (starts with `AIza...`)
    - **Environments**: Select all three (Production, Preview, Development)
 6. Click "Save"
 
 ### Via Vercel CLI:
 
 ```bash
-# For OpenAI
-vercel env add OPENAI_API_KEY production
-# Paste your API key when prompted
-
-vercel env add OPENAI_API_KEY preview
-# Paste your API key
-
-# Or for Gemini
+# Add Gemini API key
 vercel env add GEMINI_API_KEY production
 # Paste your API key when prompted
 
@@ -84,7 +57,7 @@ vercel env add GEMINI_API_KEY preview
 
 ## Redeploy Your Application
 
-After adding the environment variables, you must redeploy:
+After adding the environment variable, you must redeploy:
 
 ### Via Vercel Dashboard:
 1. Go to the "Deployments" tab
@@ -115,8 +88,8 @@ After deployment, test the chatbot:
 
 **Before Fix (No API Key):**
 - Error message about missing configuration
-- Instructions on how to set up API keys
-- Links to get API keys
+- Instructions on how to set up Gemini API key
+- Link to get the free API key
 
 **After Fix (API Key Configured):**
 - Intelligent, conversational responses
@@ -149,34 +122,34 @@ vercel --prod --force
 - API key doesn't have proper permissions
 
 **Fix:**
-1. Generate a new API key from the provider
+1. Generate a new API key from https://makersuite.google.com/app/apikey
 2. Update the environment variable in Vercel
 3. Redeploy
 
 ### Issue: Rate limit errors
 
-**For OpenAI:**
-- Check your OpenAI account has credits
-- Visit: https://platform.openai.com/usage
-
-**For Gemini:**
-- Free tier: 15 requests/minute
+**For Gemini Free Tier:**
+- 15 requests/minute, 1500 requests/day
 - Wait for rate limit to reset (1 minute)
-- Or upgrade to paid tier
+- Or upgrade to paid tier for higher limits
+
+**Check Quota:**
+https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com/quotas
 
 ## Code Changes Made
 
-The following files were updated to handle missing API keys gracefully:
+The following files were updated to handle missing API keys gracefully and use only Gemini:
 
 1. **src/ai/genkit.ts**
+   - Removed OpenAI dependency
+   - Simplified to use only Google Gemini
    - Changed from throwing error to logging warning
    - Made AI instance nullable when no key configured
-   - Added helpful warning messages
 
 2. **src/ai/flows/product-question-answering.ts**
    - Added check for AI configuration
    - Returns user-friendly error message when not configured
-   - Includes setup instructions in the error message
+   - Includes Gemini-specific setup instructions
 
 3. **src/ai/flows/product-recommendation.ts**
    - Added check for AI configuration
@@ -187,12 +160,11 @@ The following files were updated to handle missing API keys gracefully:
 For local development, create a `.env.local` file:
 
 ```bash
-# Choose one:
-OPENAI_API_KEY=sk-your-openai-key-here
-# OR
+# Google Gemini API Key (REQUIRED for AI chatbot)
 GEMINI_API_KEY=AIza-your-gemini-key-here
+# Or alternatively use GOOGLE_API_KEY
 
-# Other required variables
+# Firebase Client Config (Public)
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBb2rTZAGNbKDcF6lBxxCubKlxmks1n0ng
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=lumo-app-183f5.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=lumo-app-183f5
@@ -208,44 +180,44 @@ npm run dev
 
 ## Cost Estimates
 
-### OpenAI GPT-4o:
-- Input: ~$0.0025 per 1K tokens
-- Output: ~$0.0075 per 1K tokens
-- Average conversation (10 messages): ~$0.05-0.15
-- Monthly estimate (1000 conversations): ~$50-150
-
 ### Google Gemini 2.5 Flash:
-- Free tier: 1500 requests/day (plenty for small-medium sites)
-- Paid tier: ~$0.0001 per 1K tokens
-- Monthly estimate (1000 conversations): ~$1-5
+- **Free tier**: 15 requests/minute, 1500 requests/day
+  - Perfect for small-medium sites
+  - No cost at all
+  - No credit card required
+  
+- **Paid tier** (if you need more):
+  - ~$0.0001 per 1K tokens
+  - Very affordable: ~$1-5 per month for 1000 conversations
+  - Much cheaper than other AI providers
 
-## Recommendations
+## Why Gemini Only?
 
-**For small sites or testing:**
-- Use Google Gemini free tier
-- No cost, generous limits
+We simplified the chatbot to use only Google Gemini because:
 
-**For production sites with traffic:**
-- Use OpenAI GPT-4o
-- Better quality, more reliable
-- Worth the cost for customer experience
-
-**For cost optimization:**
-- Use Gemini paid tier
-- Good balance of quality and cost
+1. **Free tier is generous** - 1500 requests/day covers most use cases
+2. **No credit card required** - Easy to set up
+3. **Good quality** - Gemini 2.5 Flash provides excellent responses
+4. **Simple configuration** - Only one API key to manage
+5. **Cost-effective** - Even paid tier is very affordable
 
 ## Support
 
 If you encounter issues:
 
 1. Check Vercel deployment logs
-2. Verify environment variables are set
-3. Test API keys directly using curl
-4. Check provider's status page (OpenAI or Google)
+2. Verify environment variable is set correctly
+3. Test API key directly using curl:
+   ```bash
+   curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_KEY" \
+     -H 'Content-Type: application/json' \
+     -d '{"contents":[{"parts":[{"text":"Hello"}]}]}'
+   ```
+4. Check Google's status page
 
 ## References
 
-- OpenAI API Docs: https://platform.openai.com/docs
+- Get Gemini API Key: https://makersuite.google.com/app/apikey
 - Gemini API Docs: https://ai.google.dev/docs
 - Vercel Environment Variables: https://vercel.com/docs/environment-variables
 - Project Documentation: See AI_CHATBOT_SETUP.md for detailed features

@@ -27,10 +27,10 @@ export async function productQuestionAnswering(input: ProductQuestionAnsweringIn
   if (!hasAIConfigured || !ai) {
     return {
       answer: "I apologize, but the AI assistant is currently unavailable due to missing configuration. " +
-              "Please contact the site administrator to configure the AI service. " +
-              "\n\nFor production: Add OPENAI_API_KEY or GEMINI_API_KEY to your Vercel environment variables. " +
-              "\nFor development: Add these keys to your .env.local file. " +
-              "\n\nGet API keys from:\n• OpenAI: https://platform.openai.com/api-keys\n• Gemini: https://makersuite.google.com/app/apikey"
+              "Please contact the site administrator to configure the Google Gemini API key. " +
+              "\n\nFor production: Add GEMINI_API_KEY or GOOGLE_API_KEY to your Vercel environment variables. " +
+              "\nFor development: Add GEMINI_API_KEY or GOOGLE_API_KEY to your .env.local file. " +
+              "\n\nGet your free API key from: https://makersuite.google.com/app/apikey"
     };
   }
 
