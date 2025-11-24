@@ -1,8 +1,35 @@
 
 import Link from 'next/link';
-import { Home, ShoppingCart, Compass, UserCog } from 'lucide-react';
-import { Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
+import {
+  Home,
+  ShoppingCart,
+  Compass,
+  UserCog,
+  Heart,
+  Package,
+  User,
+  Settings,
+  Bell,
+  CreditCard,
+  MapPin,
+  HelpCircle,
+  Tag,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarFooter
+} from '@/components/ui/sidebar';
 import { getCurrentUser } from '@/hooks/use-auth';
+import { Badge } from '@/components/ui/badge';
 
 export default async function UserSidebar() {
   let user = null;
@@ -16,8 +43,24 @@ export default async function UserSidebar() {
 
   return (
     <Sidebar collapsible="icon" side="left">
+        <SidebarHeader>
+          <div className="px-2 py-1">
+            <Link href="/" className="flex items-center gap-2 px-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold">Lumo</span>
+                <span className="text-xs text-muted-foreground">Shop & Discover</span>
+              </div>
+            </Link>
+          </div>
+        </SidebarHeader>
+
         <SidebarContent>
-            <SidebarMenu>
+            <SidebarGroup>
+              <SidebarGroupLabel>Browse</SidebarGroupLabel>
+              <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="Home">
                         <Link href="/">
@@ -28,39 +71,194 @@ export default async function UserSidebar() {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="All Products">
-                        <Link href="/">
+                        <Link href="/products">
                             <Compass />
                             <span>All Products</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="New Arrivals">
+                        <Link href="/products?filter=new">
+                            <Sparkles />
+                            <span>New Arrivals</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Best Sellers">
+                        <Link href="/products?filter=bestsellers">
+                            <TrendingUp />
+                            <span>Best Sellers</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Deals & Offers">
+                        <Link href="/products?filter=deals">
+                            <Tag />
+                            <span>Deals & Offers</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
 
-                <SidebarGroup>
-                   <SidebarGroupLabel>My Account</SidebarGroupLabel>
-                    <SidebarMenuItem>
+            <SidebarGroup>
+               <SidebarGroupLabel>My Account</SidebarGroupLabel>
+               <SidebarMenu>
+                 {user ? (
+                   <>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Profile">
+                            <Link href="/account/profile">
+                                <User />
+                                <span>My Profile</span>
+                            </Link>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Orders">
+                            <Link href="/account/orders">
+                                <Package />
+                                <span>My Orders</span>
+                            </Link>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Wishlist">
+                            <Link href="/wishlist">
+                                <Heart />
+                                <span>Wishlist</span>
+                            </Link>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                     <SidebarMenuItem>
                        <SidebarMenuButton asChild tooltip="Cart">
                            <Link href="/cart">
                                <ShoppingCart />
-                               <span>Cart</span>
+                               <span>Shopping Cart</span>
                            </Link>
                        </SidebarMenuButton>
-                   </SidebarMenuItem>
+                     </SidebarMenuItem>
+                   </>
+                 ) : (
+                   <>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Wishlist">
+                            <Link href="/wishlist">
+                                <Heart />
+                                <span>Wishlist</span>
+                            </Link>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                     <SidebarMenuItem>
+                       <SidebarMenuButton asChild tooltip="Cart">
+                           <Link href="/cart">
+                               <ShoppingCart />
+                               <span>Shopping Cart</span>
+                           </Link>
+                       </SidebarMenuButton>
+                     </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Sign In">
+                            <Link href="/login">
+                                <User />
+                                <span>Sign In</span>
+                            </Link>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                   </>
+                 )}
+               </SidebarMenu>
+            </SidebarGroup>
 
-                   {user?.role === 'admin' && (
-                       <SidebarMenuItem>
-                           <SidebarMenuButton asChild tooltip="Admin">
-                               <Link href="/admin/dashboard">
-                                   <UserCog />
-                                   <span>Admin</span>
-                               </Link>
-                           </SidebarMenuButton>
-                       </SidebarMenuItem>
-                   )}
+            {user && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Settings</SidebarGroupLabel>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Payment Methods">
+                          <Link href="/account/payment-methods">
+                              <CreditCard />
+                              <span>Payment Methods</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Addresses">
+                          <Link href="/account/addresses">
+                              <MapPin />
+                              <span>Addresses</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Notifications">
+                          <Link href="/account/notifications">
+                              <Bell />
+                              <span>Notifications</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Account Settings">
+                          <Link href="/account/settings">
+                              <Settings />
+                              <span>Account Settings</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
 
-                </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Support</SidebarGroupLabel>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Help Center">
+                        <Link href="/pages/faq">
+                            <HelpCircle />
+                            <span>Help Center</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Contact Us">
+                        <Link href="/pages/contact">
+                            <HelpCircle />
+                            <span>Contact Us</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
 
-            </SidebarMenu>
+            {user?.role === 'admin' && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Admin Dashboard">
+                          <Link href="/admin/dashboard">
+                              <UserCog />
+                              <span>Admin Dashboard</span>
+                              <Badge variant="secondary" className="ml-auto">Admin</Badge>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
+
         </SidebarContent>
+
+        <SidebarFooter>
+          <div className="px-3 py-2 text-xs text-muted-foreground">
+            <p>© 2025 Lumo. All rights reserved.</p>
+          </div>
+        </SidebarFooter>
     </Sidebar>
   );
 }
