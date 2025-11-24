@@ -40,12 +40,16 @@ export async function getTheme(): Promise<Theme | null> {
 
 export async function saveTheme(theme: Partial<Theme>): Promise<void> {
     try {
+        console.log('saveTheme called with:', theme);
+
         const themeWithTimestamp = {
             ...theme,
             updatedAt: new Date().toISOString()
         };
 
-        const { error } = await supabaseAdmin
+        console.log('Attempting to upsert theme to site_settings...');
+
+        const { data, error } = await supabaseAdmin
             .from('site_settings')
             .upsert({
                 key: 'theme',
@@ -53,13 +57,25 @@ export async function saveTheme(theme: Partial<Theme>): Promise<void> {
                 updated_at: new Date().toISOString()
             }, {
                 onConflict: 'key'
-            });
+            })
+            .select();
 
         if (error) {
+            console.error('Supabase error details:', {
+                code: error.code,
+                message: error.message,
+                details: error.details,
+                hint: error.hint
+            });
             throw error;
         }
+
+        console.log('Theme saved successfully:', data);
     } catch (error) {
-        console.error('Failed to save theme:', error);
+        console.error('Failed to save theme - full error:', error);
+        if (error instanceof Error) {
+            throw new Error(`Failed to save theme: ${error.message}`);
+        }
         throw new Error('Failed to save theme. Ensure database is set up correctly.');
     }
 }

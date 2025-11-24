@@ -2,20 +2,11 @@ import { createClient } from '@supabase/supabase-js'
 
 // Use a function to get the client, which allows for lazy evaluation
 function getSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                      'https://edsuvnlbviosnyxbjptx.supabase.co'
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    // During build time, this might be called for static analysis
-    // Return a dummy client that will fail at runtime if actually used
-    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-      console.warn('Supabase admin client: Environment variables not set')
-    }
-    // Create client with empty strings - will fail if actually used
-    return createClient('https://placeholder.supabase.co', 'placeholder', {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
-  }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ||
+                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkc3V2bmxidmlvc255eGJqcHR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjY3NjEwMCwiZXhwIjoyMDc4MjUyMTAwfQ.lz5_bbcNNsUmDFdaorlFZi0XPHvnSt3Zqd-Yd_txRHw'
 
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
