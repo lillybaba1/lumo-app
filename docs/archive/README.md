@@ -4,6 +4,20 @@ This directory contains archived documentation that is no longer actively mainta
 
 ## Directory Structure
 
+### `/deployment`
+Contains previous versions of deployment documentation, consolidated into the main `DEPLOYMENT.md` file.
+
+**Files:**
+- `DEPLOYMENT_GUIDE.md` - Auth system deployment guide
+- `DEPLOY_NOW.md` - Detailed Firebase-focused deployment (outdated)
+- `QUICK_DEPLOY.md` - One-click Firebase deploy guide
+- `QUICK_DEPLOY_VERCEL.md` - Supabase-focused deployment
+- `VERCEL_DEPLOYMENT.md` - Firebase environment variables guide
+- `VERCEL_ENV_SETUP.md` - Environment setup guide
+- `VERCEL_SUPABASE_DEPLOY.md` - Comprehensive Supabase deployment
+
+**Current:** See `/DEPLOYMENT.md` in the root directory for the up-to-date consolidated deployment guide.
+
 ### `/fixes`
 Contains troubleshooting and bug fix documentation from the development process. These documents were created to solve specific issues during development and are kept for reference in case similar issues arise.
 
