@@ -128,6 +128,25 @@ If the AI assistant doesn't respond:
 3. Check server logs for errors
 4. See [AI_SETUP.md](./AI_SETUP.md) for detailed troubleshooting
 
+### AI Diagnostics
+
+If the AI assistant is not working in production, check the diagnostics endpoint:
+
+```bash
+# Visit this URL (replace with your domain)
+https://your-app.vercel.app/api/ai-diagnostics
+```
+
+This will show:
+- Which AI API keys are configured
+- Key lengths (to verify they're not truncated)
+- Recommendations for fixing issues
+
+**Common Issues:**
+- Missing `GOOGLE_API_KEY` - Add it to Vercel with the same value as `GEMINI_API_KEY`
+- Wrong key length - Should be around 39 characters for Gemini
+- Environment not set - Make sure variables are set for Production environment
+
 ### Development
 
 For development tips and common issues, check:
