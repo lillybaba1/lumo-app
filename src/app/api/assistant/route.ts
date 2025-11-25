@@ -85,7 +85,27 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     logger.error('AI assistant error', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+
+    // In production, provide a sanitized error message that helps debugging
+    // without exposing sensitive internal details to end users
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const errorMessage = isDevelopment
+      ? err?.message || 'Internal server error'
+      : 'AI service is currently unavailable. Please try again later.';
+
+    // Always log detailed error for debugging
+    console.error('[AI Assistant] Error details:', {
+      message: err?.message,
+      name: err?.name,
+      stack: err?.stack,
+      cause: err?.cause,
+    });
+
+    return new Response(JSON.stringify({
+      error: errorMessage,
+      // Include error type for debugging (safe to expose)
+      errorType: err?.name || 'UnknownError'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
