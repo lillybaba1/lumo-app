@@ -4,6 +4,20 @@ This directory contains archived documentation that is no longer actively mainta
 
 ## Directory Structure
 
+### `/status`
+Contains historical status reports and migration documentation. These documents tracked the project's progress during development and migration phases.
+
+**Files:**
+- `CURRENT_STATUS.md` - Status report from November 2025
+- `LUMO_APP_STATUS.md` - App status overview
+- `ENVIRONMENT_SETUP_STATUS.md` - Environment configuration status
+- `MIGRATION_COMPLETE.md` - Firebase to Supabase migration completion report
+- `MIGRATION_SUMMARY.md` - Summary of migration work
+- `SUPABASE_MIGRATION_STATUS.md` - Detailed Supabase migration tracking
+- `SUPABASE_STORAGE_MIGRATION.md` - Storage migration documentation
+
+**Current:** See `/README.md` and `/IMPROVEMENTS.md` for current project status.
+
 ### `/deployment`
 Contains previous versions of deployment documentation, consolidated into the main `DEPLOYMENT.md` file.
 
