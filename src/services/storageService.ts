@@ -83,7 +83,8 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
           .replace(/[^a-z0-9]+/g, '_')  // Replace any non-alphanumeric with underscore
           .replace(/_+/g, '_')           // Replace multiple underscores with single
           .replace(/^_|_$/g, '')         // Remove leading/trailing underscores
-          .substring(0, 50);             // Limit length to 50 chars
+          .substring(0, 50)              // Limit length to 50 chars
+          || 'file';                     // Fallback if name becomes empty
 
         const fileName = `${timestamp}_${safeName}.${ext}`;
         const filePath = `${path}/${fileName}`;

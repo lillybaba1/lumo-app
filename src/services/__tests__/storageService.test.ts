@@ -16,7 +16,8 @@ function sanitizeFileName(fileName: string, timestamp: number): string {
     .replace(/[^a-z0-9]+/g, '_')  // Replace any non-alphanumeric with underscore
     .replace(/_+/g, '_')           // Replace multiple underscores with single
     .replace(/^_|_$/g, '')         // Remove leading/trailing underscores
-    .substring(0, 50);             // Limit length to 50 chars
+    .substring(0, 50)              // Limit length to 50 chars
+    || 'file';                     // Fallback if name becomes empty
 
   return `${timestamp}_${safeName}.${ext}`;
 }
@@ -90,8 +91,8 @@ describe('Storage Service - Filename Sanitization', () => {
     it('should handle filename with only special characters', () => {
       const input = '!@#$%^&*().png';
       const result = sanitizeFileName(input, testTimestamp);
-      // Should result in empty safe name, but still have timestamp and extension
-      expect(result).toMatch(/^1764111353087_\.png$/);
+      // Should result in fallback name when safeName is empty
+      expect(result).toBe('1764111353087_file.png');
     });
 
     it('should preserve correct file extension', () => {
