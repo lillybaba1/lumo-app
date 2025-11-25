@@ -14,10 +14,10 @@ export async function GET() {
       openAIKeyLength: process.env.OPENAI_API_KEY?.length || 0,
       geminiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
       googleKeyLength: process.env.GOOGLE_API_KEY?.length || 0,
-      // Show first 10 characters only (safe to expose)
-      openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) || 'not set',
-      geminiKeyPrefix: process.env.GEMINI_API_KEY?.substring(0, 10) || 'not set',
-      googleKeyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 10) || 'not set',
+      // Show first 4 characters only (safe to expose for verification)
+      openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 4) || 'not set',
+      geminiKeyPrefix: process.env.GEMINI_API_KEY?.substring(0, 4) || 'not set',
+      googleKeyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 4) || 'not set',
     },
     expectedConfiguration: {
       primary: process.env.OPENAI_API_KEY ? 'OpenAI GPT-4o' : 
