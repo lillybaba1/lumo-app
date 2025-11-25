@@ -6,6 +6,8 @@ import { describe, it, expect } from 'vitest';
  */
 function sanitizeFileName(fileName: string, timestamp: number): string {
   // Remove file extension first
+  // Note: Using lastDotIndex > 0 (not >= 0) treats files starting with a dot
+  // as having no extension, which is appropriate for image uploads
   const lastDotIndex = fileName.lastIndexOf('.');
   const nameWithoutExt = lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
   const ext = lastDotIndex > 0 ? fileName.substring(lastDotIndex + 1).toLowerCase() : 'jpg';
@@ -83,8 +85,9 @@ describe('Storage Service - Filename Sanitization', () => {
     it('should handle very long filenames', () => {
       const input = 'a'.repeat(100) + '.jpg';
       const result = sanitizeFileName(input, testTimestamp);
-      // Should be limited to 50 chars + timestamp + extension
-      expect(result.length).toBeLessThanOrEqual(testTimestamp.toString().length + 1 + 50 + 1 + 3);
+      // Should be limited to 50 chars for the name part
+      const expectedMaxLength = testTimestamp.toString().length + 1 + 50 + 1 + 3; // timestamp + _ + name(50) + . + ext(3)
+      expect(result.length).toBeLessThanOrEqual(expectedMaxLength);
       expect(result).toMatch(/^1764111353087_a{50}\.jpg$/);
     });
 
@@ -133,6 +136,13 @@ describe('Storage Service - Filename Sanitization', () => {
       const result = sanitizeFileName(input, testTimestamp);
       // Should only contain alphanumeric, underscores, dots, and the dash from timestamp
       expect(result).toMatch(/^[0-9]+_[a-z0-9_]+\.[a-z]+$/);
+    });
+
+    it('should handle filename starting with dot (treats entire name as filename)', () => {
+      const input = '.htaccess';
+      const result = sanitizeFileName(input, testTimestamp);
+      // Files starting with dot are treated as having no extension
+      expect(result).toBe('1764111353087_htaccess.jpg');
     });
   });
 });

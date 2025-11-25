@@ -73,6 +73,8 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
         const timestamp = Date.now();
         
         // Remove file extension first
+        // Note: Using lastDotIndex > 0 (not >= 0) treats files starting with a dot
+        // as having no extension, which is appropriate for image uploads
         const lastDotIndex = file.name.lastIndexOf('.');
         const nameWithoutExt = lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name;
         const ext = lastDotIndex > 0 ? file.name.substring(lastDotIndex + 1).toLowerCase() : 'jpg';
