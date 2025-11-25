@@ -1,10 +1,5 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserRole } from '@/services/authService';
-import { authAdmin, isFirebaseAdminInitialized, dbAdmin } from './firebaseAdmin';
 import { createClient } from '@/lib/supabase/server';
-
-const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'session';
 
 export class UnauthorizedError extends Error {
   statusCode: number;
@@ -41,7 +36,7 @@ export async function requireAdmin(
   };
 
   try {
-    // First, try Supabase authentication (new system)
+    // Use Supabase authentication
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -78,52 +73,8 @@ export async function requireAdmin(
       return { userId, email, role };
     }
 
-    // Fallback to Firebase authentication (old system)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get(COOKIE_NAME);
-
-    if (!sessionCookie || !sessionCookie.value) {
-      fail('Not authenticated', 'login');
-    }
-
-    // If Firebase Admin is available, verify session cookie
-    if (isFirebaseAdminInitialized()) {
-      try {
-        const decodedClaims = await authAdmin().verifySessionCookie(sessionCookie.value, true);
-        const userId = decodedClaims.uid;
-        const email = decodedClaims.email || '';
-
-        // Check user role from database using Admin SDK
-        const userDoc = await dbAdmin().collection('users').doc(userId).get();
-        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
-
-        if (role !== 'admin') {
-          fail('Admin role required', 'unauthorized');
-        }
-
-        return { userId, email, role };
-      } catch (verifyError) {
-        console.error('Session verification failed:', verifyError);
-        fail('Session verification failed', 'login');
-      }
-    }
-
-    // Fallback: Parse as JSON (for local development without Firebase Admin)
-    const session = JSON.parse(sessionCookie.value);
-    const { userId, email } = session;
-
-    if (!userId) {
-      fail('Session missing user id', 'login');
-    }
-
-    // Check user role from database
-    const role = (await getUserRole(userId)) || 'customer';
-
-    if (role !== 'admin') {
-      fail('Admin role required', 'unauthorized');
-    }
-
-    return { userId, email, role };
+    // Not authenticated
+    fail('Not authenticated', 'login');
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       throw error;
@@ -140,7 +91,7 @@ export async function requireAdmin(
  */
 export async function checkAdminAccess(): Promise<{ userId: string; email: string; role: string } | null> {
   try {
-    // First, try Supabase authentication
+    // Use Supabase authentication
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -176,50 +127,7 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       return { userId, email, role };
     }
 
-    // Fallback to Firebase authentication
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get(COOKIE_NAME);
-
-    if (!sessionCookie || !sessionCookie.value) {
-      return null;
-    }
-
-    // If Firebase Admin is available, verify session cookie
-    if (isFirebaseAdminInitialized()) {
-      try {
-        const decodedClaims = await authAdmin().verifySessionCookie(sessionCookie.value, true);
-        const userId = decodedClaims.uid;
-        const email = decodedClaims.email || '';
-
-        // Get role from database using Admin SDK
-        const userDoc = await dbAdmin().collection('users').doc(userId).get();
-        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
-
-        if (role !== 'admin') {
-          return null;
-        }
-
-        return { userId, email, role };
-      } catch {
-        return null;
-      }
-    }
-
-    // Fallback: Parse as JSON
-    const session = JSON.parse(sessionCookie.value);
-    const { userId, email } = session;
-
-    if (!userId) {
-      return null;
-    }
-
-    const role = await getUserRole(userId) || 'customer';
-
-    if (role !== 'admin') {
-      return null;
-    }
-
-    return { userId, email, role };
+    return null;
   } catch (error) {
     console.error('Auth check error:', error);
     return null;
@@ -232,7 +140,7 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
  */
 export async function getCurrentUser(): Promise<{ userId: string; email: string; role: string } | null> {
   try {
-    // First, try Supabase authentication
+    // Use Supabase authentication
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -264,42 +172,7 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       return { userId, email, role };
     }
 
-    // Fallback to Firebase authentication
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get(COOKIE_NAME);
-
-    if (!sessionCookie || !sessionCookie.value) {
-      return null;
-    }
-
-    // If Firebase Admin is available, verify session cookie
-    if (isFirebaseAdminInitialized()) {
-      try {
-        const decodedClaims = await authAdmin().verifySessionCookie(sessionCookie.value, true);
-        const userId = decodedClaims.uid;
-        const email = decodedClaims.email || '';
-
-        // Get role from database using Admin SDK
-        const userDoc = await dbAdmin().collection('users').doc(userId).get();
-        const role = userDoc.exists && userDoc.data()?.role ? userDoc.data()!.role : 'customer';
-
-        return { userId, email, role };
-      } catch {
-        return null;
-      }
-    }
-
-    // Fallback: Parse as JSON
-    const session = JSON.parse(sessionCookie.value);
-    const { userId, email } = session;
-
-    if (!userId) {
-      return null;
-    }
-
-    const role = await getUserRole(userId) || 'customer';
-
-    return { userId, email, role };
+    return null;
   } catch (error) {
     console.error('Get user error:', error);
     return null;
