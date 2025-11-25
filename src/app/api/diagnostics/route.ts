@@ -6,8 +6,14 @@ export async function GET() {
     hasOpenAIKey: !!process.env.OPENAI_API_KEY,
     openAIKeyLength: process.env.OPENAI_API_KEY?.length || 0,
     openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) || 'not set',
-    allEnvKeys: Object.keys(process.env).filter(k => 
-      k.includes('OPENAI') || k.includes('API') || k.includes('KEY')
+    hasGeminiKey: !!process.env.GEMINI_API_KEY,
+    geminiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
+    geminiKeyPrefix: process.env.GEMINI_API_KEY?.substring(0, 10) || 'not set',
+    hasGoogleKey: !!process.env.GOOGLE_API_KEY,
+    googleKeyLength: process.env.GOOGLE_API_KEY?.length || 0,
+    googleKeyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 10) || 'not set',
+    allEnvKeys: Object.keys(process.env).filter(k =>
+      k.includes('OPENAI') || k.includes('GEMINI') || k.includes('GOOGLE') || k.includes('API') || k.includes('KEY')
     ).sort(),
   };
 
