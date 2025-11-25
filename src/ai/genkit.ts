@@ -1,6 +1,6 @@
 import {genkit} from 'genkit';
 import openAI, { gpt4o, gpt35Turbo } from 'genkitx-openai';
-import { googleAI, gemini15Flash, gemini15Pro } from '@genkit-ai/googleai';
+import { googleAI, gemini15Flash, gemini15Pro, gemini20Flash } from '@genkit-ai/googleai';
 
 // Check which AI API keys are configured
 const hasOpenAI = !!process.env.OPENAI_API_KEY;
@@ -16,12 +16,12 @@ const plugins = [];
 let defaultModel;
 
 if (hasGemini) {
-  console.log('[Genkit Init] Using Google Gemini (Gemini 1.5 Flash)');
+  console.log('[Genkit Init] Using Google Gemini (Gemini 2.0 Flash)');
   plugins.push(googleAI({
     apiKey: geminiKey,
   }));
-  // Use Gemini 1.5 Flash (imported from @genkit-ai/googleai)
-  defaultModel = gemini15Flash;
+  // Use Gemini 2.0 Flash - more widely available than 1.5
+  defaultModel = gemini20Flash;
 } else if (hasOpenAI) {
   console.log('[Genkit Init] Using OpenAI (GPT-4o)');
   plugins.push(openAI({
@@ -45,5 +45,5 @@ export const ai = genkit({
 });
 
 // Export the selected model for reference
-export const selectedModel = hasGemini ? 'Google Gemini 1.5 Flash' : 'OpenAI GPT-4o';
+export const selectedModel = hasGemini ? 'Google Gemini 2.0 Flash' : 'OpenAI GPT-4o';
 export const hasAIConfigured = hasGemini || hasOpenAI;
