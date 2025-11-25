@@ -35,6 +35,16 @@ export interface Settings {
 
     // Appearance Settings
     theme?: string; // Theme ID (e.g., 'minimal-light', 'dark-luxe')
+
+    // Hero Section Settings
+    heroHeading?: string;
+    heroTagline?: string;
+    heroBackgroundImage?: string;
+    heroCropX?: number;
+    heroCropY?: number;
+    heroCropWidth?: number;
+    heroCropHeight?: number;
+    heroImageObjectPosition?: string; // e.g., 'center', 'top', '50% 30%'
 }
 
 const defaultSettings: Settings = {
@@ -55,6 +65,10 @@ const defaultSettings: Settings = {
     lowStockThreshold: 10,
     enableLowStockAlerts: true,
     theme: 'minimal-light',
+    heroHeading: 'Step into Lumo',
+    heroTagline: 'Discover exceptional products crafted with care. Your journey to quality starts here.',
+    heroBackgroundImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop',
+    heroImageObjectPosition: 'center',
 };
 
 export async function getSettings(): Promise<Settings> {

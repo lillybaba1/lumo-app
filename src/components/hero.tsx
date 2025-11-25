@@ -1,10 +1,41 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
+type HeroSettings = {
+  heroHeading?: string;
+  heroTagline?: string;
+  heroBackgroundImage?: string;
+  heroImageObjectPosition?: string;
+};
+
 export default function Hero() {
+  const [settings, setSettings] = useState<HeroSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch hero settings from API
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        setSettings(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load hero settings:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  // Default values if settings haven't loaded yet
+  const heroHeading = settings?.heroHeading || 'Step into Lumo';
+  const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
+  const heroBackgroundImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+  const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
+
   return (
     <div
       className="relative w-full overflow-hidden"
@@ -15,9 +46,10 @@ export default function Hero() {
     >
       {/* Background Image */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop)',
+          backgroundImage: `url(${heroBackgroundImage})`,
+          backgroundPosition: heroImageObjectPosition,
         }}
       >
         {/* Gradient Overlay */}
@@ -43,7 +75,7 @@ export default function Hero() {
                 lineHeight: 'var(--line-height-tight)',
               }}
             >
-              Step into Lumo
+              {heroHeading}
             </h1>
 
             {/* Tagline */}
@@ -55,7 +87,7 @@ export default function Hero() {
                 lineHeight: 'var(--line-height-relaxed)',
               }}
             >
-              Discover exceptional products crafted with care. Your journey to quality starts here.
+              {heroTagline}
             </p>
 
             {/* CTAs */}

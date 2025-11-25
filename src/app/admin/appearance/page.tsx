@@ -1,5 +1,6 @@
 import { getActiveTheme } from './actions';
 import ThemeSelector from './theme-selector';
+import HeroSettingsForm from './hero-settings-form';
 
 export default async function AppearancePage() {
   const activeThemeId = await getActiveTheme();
@@ -14,6 +15,8 @@ export default async function AppearancePage() {
       </div>
 
       <ThemeSelector activeThemeId={activeThemeId} />
+
+      <HeroSettingsForm />
     </div>
   );
 }
