@@ -69,7 +69,30 @@ echo ""
 add_env_var "NEXT_PUBLIC_SUPABASE_URL" "Supabase project URL (e.g., https://xxx.supabase.co)" "public"
 add_env_var "NEXT_PUBLIC_SUPABASE_ANON_KEY" "Supabase anonymous key (public)" "public"
 add_env_var "SUPABASE_SERVICE_ROLE_KEY" "Supabase service role key (KEEP SECRET!)" "secret"
-add_env_var "OPENAI_API_KEY" "OpenAI API key for AI assistant (KEEP SECRET!)" "secret"
+
+echo ""
+echo "📋 AI Configuration (Choose one):"
+echo ""
+echo "The app supports both Google Gemini and OpenAI."
+echo "You only need ONE of these API keys:"
+echo ""
+read -p "Which AI provider are you using? (gemini/openai): " ai_provider
+
+if [[ "$ai_provider" == "gemini" ]]; then
+    echo ""
+    echo "Using Google Gemini API"
+    echo "Get your API key from: https://aistudio.google.com/apikey"
+    echo ""
+    add_env_var "GOOGLE_API_KEY" "Google AI API key for Gemini (KEEP SECRET!)" "secret"
+elif [[ "$ai_provider" == "openai" ]]; then
+    echo ""
+    echo "Using OpenAI API"
+    echo "Get your API key from: https://platform.openai.com/api-keys"
+    echo ""
+    add_env_var "OPENAI_API_KEY" "OpenAI API key for GPT (KEEP SECRET!)" "secret"
+else
+    echo "⚠️  Invalid choice. Please run the script again and choose 'gemini' or 'openai'"
+fi
 
 echo ""
 echo "📋 Optional Variables (for Firebase Storage):"

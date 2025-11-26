@@ -32,14 +32,20 @@ if (hasGemini) {
   }));
   defaultModel = gpt4o;
 } else {
-  console.error(
-    '❌ ERROR: No AI API key configured!\n' +
+  // During build time, API keys may not be set yet (they're set at runtime in production)
+  // Use a placeholder model to allow build to succeed
+  console.warn(
+    '⚠️  WARNING: No AI API key configured at build time!\n' +
+    '   This is expected during Next.js build process.\n' +
+    '   Ensure OPENAI_API_KEY or GEMINI_API_KEY is set in production environment.\n' +
     '   Option 1 (OpenAI): Get key from https://platform.openai.com/api-keys\n' +
-    '   Option 2 (Gemini): Get key from https://makersuite.google.com/app/apikey\n' +
-    '   Add to .env.local as OPENAI_API_KEY or GEMINI_API_KEY\n' +
-    '   AI assistant will not work without an API key!'
+    '   Option 2 (Gemini): Get key from https://makersuite.google.com/app/apikey'
   );
-  throw new Error('No AI API key configured. Please set OPENAI_API_KEY or GEMINI_API_KEY');
+  // Use Gemini as placeholder (will fail at runtime if keys not set)
+  plugins.push(googleAI({
+    apiKey: 'placeholder-key-will-fail-at-runtime',
+  }));
+  defaultModel = gemini15Flash;
 }
 
 export const ai = genkit({
