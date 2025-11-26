@@ -3,10 +3,12 @@ import { requireAdmin } from '@/lib/auth-admin';
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const GenerateDescriptionInputSchema = z.object({
+const GenerateContentInputSchema = z.object({
+  type: z.enum(['title', 'description', 'attributes']).default('description'),
   productName: z.string().optional(),
   category: z.string().optional(),
-  imageUrls: z.array(z.string()).min(1).max(5), // At least 1, max 5 images
+  description: z.string().optional(),
+  imageUrls: z.array(z.string()).min(1).max(5),
 });
 
 export async function POST(req: Request) {
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // Validate input
-    const validation = GenerateDescriptionInputSchema.safeParse(body);
+    const validation = GenerateContentInputSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid input', details: validation.error.errors },
@@ -25,16 +27,37 @@ export async function POST(req: Request) {
       );
     }
 
-    const { productName, category, imageUrls } = validation.data;
+    const { type, productName, category, description, imageUrls } = validation.data;
 
-    console.log('[AI Description] Generating description:', {
+    console.log('[AI Content] Generating:', {
+      type,
       productName,
       category,
       imageCount: imageUrls.length,
     });
 
-    // Build the prompt
-    let promptText = `You are an expert e-commerce product description writer. Analyze the product image(s) provided and generate a compelling, detailed product description.
+    let promptText = '';
+
+    switch (type) {
+      case 'title':
+        promptText = `You are an expert e-commerce product naming specialist. Analyze the product image(s) and generate a compelling product title.
+
+GUIDELINES FOR PRODUCT TITLES:
+- Keep it concise (3-8 words ideal)
+- Include key features or distinguishing characteristics
+- Use specific, descriptive language
+- Make it search-friendly and clear
+- Capitalize appropriately (Title Case)
+- No promotional language like "Best" or "Amazing"
+
+${category ? `Category: ${category}` : ''}
+${description ? `Context: ${description.substring(0, 200)}` : ''}
+
+Based on the image(s), generate a clear, compelling product title. Return ONLY the title, nothing else.`;
+        break;
+
+      case 'description':
+        promptText = `You are an expert e-commerce product description writer. Analyze the product image(s) provided and generate a compelling, detailed product description.
 
 GUIDELINES:
 - Be descriptive and highlight key features visible in the images
@@ -42,19 +65,34 @@ GUIDELINES:
 - Focus on benefits and use cases
 - Keep it concise (2-4 sentences for simple products, up to 6-8 sentences for complex ones)
 - Make it engaging and conversion-focused
-- Describe materials, colors, and notable design elements you can see`;
+- Describe materials, colors, and notable design elements you can see
 
-    if (productName) {
-      promptText += `\n\nProduct Name: ${productName}`;
+${productName ? `Product Name: ${productName}` : ''}
+${category ? `Category: ${category}` : ''}
+
+Based on the image(s), generate a product description. Return ONLY the description text, no additional commentary.`;
+        break;
+
+      case 'attributes':
+        promptText = `You are an expert e-commerce product analyst. Analyze the product image(s) and identify key product attributes/specifications.
+
+GUIDELINES FOR ATTRIBUTES:
+- List measurable or observable attributes only
+- Common attributes: Material, Color, Size, Style, Pattern, Features, etc.
+- Be specific and accurate based on what you can see
+- Return as a JSON array of objects with "name" and "value" fields
+- Maximum 8-10 most relevant attributes
+
+${productName ? `Product Name: ${productName}` : ''}
+${category ? `Category: ${category}` : ''}
+${description ? `Description: ${description.substring(0, 200)}` : ''}
+
+Analyze the image(s) and generate product attributes. Return ONLY valid JSON in this format:
+[{"name": "Material", "value": "Cotton"}, {"name": "Color", "value": "Blue"}]`;
+        break;
     }
-    if (category) {
-      promptText += `\nCategory: ${category}`;
-    }
 
-    promptText += `\n\nBased on the image(s), generate a product description. Return ONLY the description text, no additional commentary.`;
-
-    // Generate description using AI with multimodal input
-    // Format the prompt with image URLs
+    // Generate content using AI with multimodal input
     const { text } = await ai.generate({
       prompt: [
         { text: promptText },
@@ -62,15 +100,33 @@ GUIDELINES:
       ]
     });
 
-    console.log('[AI Description] Generated successfully');
+    console.log('[AI Content] Generated successfully:', type);
+
+    // For attributes, try to parse as JSON
+    if (type === 'attributes') {
+      try {
+        const attributes = JSON.parse(text);
+        return NextResponse.json({
+          attributes,
+          success: true,
+        });
+      } catch (parseError) {
+        console.error('[AI Content] Failed to parse attributes JSON:', text);
+        // Return raw text if JSON parsing fails
+        return NextResponse.json({
+          rawText: text,
+          success: true,
+        });
+      }
+    }
 
     return NextResponse.json({
-      description: text,
+      [type]: text,
       success: true,
     });
 
   } catch (error: any) {
-    console.error('[AI Description] Error:', {
+    console.error('[AI Content] Error:', {
       message: error?.message,
       name: error?.name,
       stack: error?.stack,
@@ -86,7 +142,7 @@ GUIDELINES:
 
     return NextResponse.json(
       {
-        error: 'Failed to generate description',
+        error: 'Failed to generate content',
         details: error?.message || 'Unknown error'
       },
       { status: 500 }

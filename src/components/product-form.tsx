@@ -52,11 +52,13 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     // Product attributes
     const [attributes, setAttributes] = React.useState<ProductAttribute[]>([]);
 
-    // AI description generation
+    // AI content generation
     const [description, setDescription] = React.useState<string>(product?.description || '');
     const [isGeneratingDescription, setIsGeneratingDescription] = React.useState(false);
     const [productName, setProductName] = React.useState<string>(product?.name || '');
+    const [isGeneratingTitle, setIsGeneratingTitle] = React.useState(false);
     const [selectedCategory, setSelectedCategory] = React.useState<string>(product?.category || '');
+    const [isGeneratingAttributes, setIsGeneratingAttributes] = React.useState(false);
 
     // Crop modal state
     const [cropModalOpen, setCropModalOpen] = React.useState(false);
@@ -221,8 +223,63 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         });
     };
 
+    const handleGenerateTitle = async () => {
+        if (productImages.length === 0) {
+            toast({
+                title: 'No images uploaded',
+                description: 'Please upload at least one product image before generating a title.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsGeneratingTitle(true);
+
+        try {
+            const imagesToAnalyze = productImages.slice(0, 5);
+
+            const response = await fetch('/api/admin/ai/generate-description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'title',
+                    category: selectedCategory || undefined,
+                    description: description || undefined,
+                    imageUrls: imagesToAnalyze,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.details || error.error || 'Failed to generate title');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.title) {
+                setProductName(data.title);
+                toast({
+                    title: 'Title generated!',
+                    description: 'AI has generated a product title. You can edit it as needed.',
+                });
+            } else {
+                throw new Error('No title received');
+            }
+        } catch (error: any) {
+            console.error('[AI Title] Error:', error);
+            toast({
+                title: 'Generation failed',
+                description: error.message || 'Could not generate title. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsGeneratingTitle(false);
+        }
+    };
+
     const handleGenerateDescription = async () => {
-        // Validate: need at least one image
         if (productImages.length === 0) {
             toast({
                 title: 'No images uploaded',
@@ -235,7 +292,6 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         setIsGeneratingDescription(true);
 
         try {
-            // Use up to 5 images for analysis
             const imagesToAnalyze = productImages.slice(0, 5);
 
             const response = await fetch('/api/admin/ai/generate-description', {
@@ -244,6 +300,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    type: 'description',
                     productName: productName || undefined,
                     category: selectedCategory || undefined,
                     imageUrls: imagesToAnalyze,
@@ -278,6 +335,74 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         }
     };
 
+    const handleGenerateAttributes = async () => {
+        if (productImages.length === 0) {
+            toast({
+                title: 'No images uploaded',
+                description: 'Please upload at least one product image before generating attributes.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsGeneratingAttributes(true);
+
+        try {
+            const imagesToAnalyze = productImages.slice(0, 5);
+
+            const response = await fetch('/api/admin/ai/generate-description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'attributes',
+                    productName: productName || undefined,
+                    category: selectedCategory || undefined,
+                    description: description || undefined,
+                    imageUrls: imagesToAnalyze,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.details || error.error || 'Failed to generate attributes');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.attributes && Array.isArray(data.attributes)) {
+                // Convert to ProductAttribute format
+                const newAttributes: ProductAttribute[] = data.attributes.map((attr: any, index: number) => ({
+                    attributeName: attr.name || '',
+                    attributeValue: attr.value || '',
+                    attributeGroup: 'specification',
+                    displayOrder: attributes.length + index,
+                    isVariant: false,
+                    priceModifier: 0,
+                    stockModifier: 0,
+                }));
+                // Append to existing attributes instead of replacing
+                setAttributes([...attributes, ...newAttributes]);
+                toast({
+                    title: 'Attributes generated!',
+                    description: `AI has generated ${newAttributes.length} product attributes. You can edit or remove them as needed.`,
+                });
+            } else {
+                throw new Error('No attributes received');
+            }
+        } catch (error: any) {
+            console.error('[AI Attributes] Error:', error);
+            toast({
+                title: 'Generation failed',
+                description: error.message || 'Could not generate attributes. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsGeneratingAttributes(false);
+        }
+    };
+
     const handleSubmit = (formData: FormData) => {
         if (productImages.length === 0 && imageUrls.length === 0) {
             toast({ title: 'Image Required', description: 'Please upload at least one product image.', variant: 'destructive' });
@@ -306,13 +431,31 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             <CardContent className="space-y-6 pt-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Product Name</Label>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="name">Product Name</Label>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleGenerateTitle}
+                                disabled={isGeneratingTitle || productImages.length === 0}
+                                className="gap-1.5 h-7"
+                            >
+                                {isGeneratingTitle ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                    <Sparkles className="h-3 w-3" />
+                                )}
+                                AI
+                            </Button>
+                        </div>
                         <Input
                             id="name"
                             name="name"
                             value={productName}
                             onChange={(e) => setProductName(e.target.value)}
                             required
+                            placeholder="Enter product name or generate with AI..."
                         />
                     </div>
                     <div className="space-y-2">
@@ -455,10 +598,38 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 <Separator className="my-8" />
 
                 {/* Product Attributes Section */}
-                <ProductAttributesManager
-                    attributes={attributes}
-                    onChange={setAttributes}
-                />
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-medium">Product Attributes</h3>
+                            <p className="text-sm text-muted-foreground">Add specifications, features, or variants</p>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateAttributes}
+                            disabled={isGeneratingAttributes || productImages.length === 0}
+                            className="gap-1.5"
+                        >
+                            {isGeneratingAttributes ? (
+                                <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    Generate with AI
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                    <ProductAttributesManager
+                        attributes={attributes}
+                        onChange={setAttributes}
+                    />
+                </div>
 
             </CardContent>
             <CardFooter className="flex justify-between">
