@@ -1,3 +1,5 @@
+import 'server-only';
+
 import {genkit} from 'genkit';
 import openAI, { gpt4o, gpt35Turbo } from 'genkitx-openai';
 import { googleAI, gemini15Flash, gemini15Pro, gemini20Flash } from '@genkit-ai/googleai';
