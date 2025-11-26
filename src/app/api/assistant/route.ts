@@ -52,12 +52,23 @@ export async function POST(req: Request) {
         if (user.role === 'admin') {
           userRole = 'admin';
           logger.debug('Admin user detected', { userId });
+        } else {
+          logger.debug('Regular customer user detected', { userId, role: user.role });
         }
+      } else {
+        logger.debug('No authenticated user - defaulting to customer');
       }
     } catch (error) {
       // User not logged in or error - default to customer
-      logger.debug('User not authenticated, defaulting to customer');
+      logger.debug('User authentication error - defaulting to customer', { error });
     }
+
+    // Log the final userRole for security auditing
+    console.log('[AI Assistant] Request:', {
+      userId: userId || 'anonymous',
+      userRole,
+      queryPreview: query.substring(0, 50),
+    });
 
     logger.info('Processing AI request', {
       userRole,
