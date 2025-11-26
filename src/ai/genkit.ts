@@ -12,6 +12,7 @@ const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 console.log('[Genkit Init] Environment:', process.env.NODE_ENV);
 console.log('[Genkit Init] OPENAI_API_KEY present:', hasOpenAI);
 console.log('[Genkit Init] GEMINI_API_KEY present:', hasGemini);
+console.log('[Genkit Init] Deployment version:', process.env.VERCEL_GIT_COMMIT_SHA || 'local');
 
 // Determine which AI provider to use (prefer Gemini over OpenAI)
 const plugins = [];
