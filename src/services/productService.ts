@@ -5,6 +5,64 @@ import { products as mockProducts, categories as mockCategories } from '@/lib/mo
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 /**
+ * Extract a user-friendly error message from a Supabase error
+ */
+function getSupabaseErrorMessage(error: any): string {
+  if (!error) return 'Unknown error occurred.';
+
+  // Check for PostgreSQL error codes
+  const code = error.code;
+  const message = error.message || '';
+  const details = error.details || '';
+
+  // Foreign key constraint violation (e.g., invalid category_id)
+  if (code === '23503') {
+    if (message.includes('category_id')) {
+      return 'Invalid category selected. The category may have been deleted or does not exist.';
+    }
+    return 'Invalid reference: One of the selected values does not exist.';
+  }
+
+  // Unique constraint violation (e.g., duplicate SKU or barcode)
+  if (code === '23505') {
+    if (message.includes('sku')) {
+      return 'SKU already exists. Please use a unique SKU.';
+    }
+    if (message.includes('barcode')) {
+      return 'Barcode already exists. Please use a unique barcode.';
+    }
+    return 'Duplicate value detected. Please ensure all unique fields are unique.';
+  }
+
+  // NOT NULL constraint violation (e.g., missing required field)
+  if (code === '23502') {
+    // Extract column name from error message
+    const match = message.match(/column "([^"]+)"/);
+    if (match) {
+      const column = match[1];
+      // Convert snake_case to readable format
+      const fieldName = column.split('_').map((word: string) => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      return `Required field '${fieldName}' is missing.`;
+    }
+    return 'Required field is missing.';
+  }
+
+  // Check constraint violation
+  if (code === '23514') {
+    return `Validation failed: ${details || message}`;
+  }
+
+  // Return the original message if we don't have a specific handler
+  if (message) {
+    return message;
+  }
+
+  return 'An unexpected database error occurred.';
+}
+
+/**
  * Get all products from Supabase
  */
 export async function getProducts(): Promise<Product[]> {
@@ -158,7 +216,8 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
 
     if (error || !data) {
       console.error('Failed to add product:', error);
-      throw new Error('Could not save product.');
+      const errorMessage = getSupabaseErrorMessage(error);
+      throw new Error(errorMessage);
     }
 
     return {
@@ -167,7 +226,13 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
     };
   } catch (error) {
     console.error('Failed to add product:', error);
-    throw new Error('Could not save product.');
+    // If it's already an Error with a message, re-throw it
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Otherwise, try to extract a meaningful message
+    const errorMessage = getSupabaseErrorMessage(error);
+    throw new Error(errorMessage);
   }
 }
 
@@ -201,11 +266,18 @@ export async function updateProduct(product: Product): Promise<void> {
 
     if (error) {
       console.error(`Failed to update product ${product.id}:`, error);
-      throw new Error('Could not update product.');
+      const errorMessage = getSupabaseErrorMessage(error);
+      throw new Error(errorMessage);
     }
   } catch (error) {
     console.error(`Failed to update product ${product.id}:`, error);
-    throw new Error('Could not update product.');
+    // If it's already an Error with a message, re-throw it
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Otherwise, try to extract a meaningful message
+    const errorMessage = getSupabaseErrorMessage(error);
+    throw new Error(errorMessage);
   }
 }
 
@@ -221,10 +293,17 @@ export async function deleteProduct(id: string): Promise<void> {
 
     if (error) {
       console.error(`Failed to delete product ${id}:`, error);
-      throw new Error('Could not delete product.');
+      const errorMessage = getSupabaseErrorMessage(error);
+      throw new Error(errorMessage);
     }
   } catch (error) {
     console.error(`Failed to delete product ${id}:`, error);
-    throw new Error('Could not delete product.');
+    // If it's already an Error with a message, re-throw it
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Otherwise, try to extract a meaningful message
+    const errorMessage = getSupabaseErrorMessage(error);
+    throw new Error(errorMessage);
   }
 }
