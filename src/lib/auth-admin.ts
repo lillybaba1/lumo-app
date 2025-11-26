@@ -45,26 +45,15 @@ export async function requireAdmin(
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table AND users table
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
+      // Check user role from users table (primary source)
       const { data: userData } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
 
-      // If either says admin, return admin
-      let role = 'customer';
-      if (profile?.role === 'admin' || userData?.role === 'admin') {
-        role = 'admin';
-      } else {
-        role = profile?.role || userData?.role || 'user';
-      }
+      // Determine role - users table is the source of truth
+      const role = userData?.role || 'customer';
 
       if (role !== 'admin') {
         fail('Admin role required', 'unauthorized');
@@ -99,26 +88,15 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table AND users table
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
+      // Check user role from users table (primary source)
       const { data: userData } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
 
-      // If either says admin, return admin
-      let role = 'customer';
-      if (profile?.role === 'admin' || userData?.role === 'admin') {
-        role = 'admin';
-      } else {
-        role = profile?.role || userData?.role || 'user';
-      }
+      // Determine role - users table is the source of truth
+      const role = userData?.role || 'customer';
 
       if (role !== 'admin') {
         return null;
@@ -148,26 +126,30 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from user_profiles table AND users table
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      const { data: userData } = await supabase
+      // Check user role from users table (primary source)
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
 
-      // If either says admin, return admin
-      let role = 'customer';
-      if (profile?.role === 'admin' || userData?.role === 'admin') {
-        role = 'admin';
-      } else {
-        role = profile?.role || userData?.role || 'user';
+      // Diagnostic logging
+      console.log('[Auth] getCurrentUser:', {
+        userId,
+        email,
+        userDataRole: userData?.role,
+        userError: userError?.message,
+      });
+
+      // Determine role - users table is the source of truth
+      let role = userData?.role || 'customer';
+
+      // Normalize 'user' to 'customer' for consistency
+      if (role === 'user') {
+        role = 'customer';
       }
+
+      console.log('[Auth] Final role determined:', role);
 
       return { userId, email, role };
     }
