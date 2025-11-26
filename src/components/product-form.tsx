@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Upload, X, Save, Crop as CropIcon } from 'lucide-react';
+import { Loader2, Upload, X, Save, Crop as CropIcon, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveProduct } from '@/app/admin/products/actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
@@ -51,6 +51,12 @@ export default function ProductForm({ product = null, categories }: ProductFormP
 
     // Product attributes
     const [attributes, setAttributes] = React.useState<ProductAttribute[]>([]);
+
+    // AI description generation
+    const [description, setDescription] = React.useState<string>(product?.description || '');
+    const [isGeneratingDescription, setIsGeneratingDescription] = React.useState(false);
+    const [productName, setProductName] = React.useState<string>(product?.name || '');
+    const [selectedCategory, setSelectedCategory] = React.useState<string>(product?.category || '');
 
     // Crop modal state
     const [cropModalOpen, setCropModalOpen] = React.useState(false);
@@ -215,6 +221,63 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         });
     };
 
+    const handleGenerateDescription = async () => {
+        // Validate: need at least one image
+        if (productImages.length === 0) {
+            toast({
+                title: 'No images uploaded',
+                description: 'Please upload at least one product image before generating a description.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsGeneratingDescription(true);
+
+        try {
+            // Use up to 5 images for analysis
+            const imagesToAnalyze = productImages.slice(0, 5);
+
+            const response = await fetch('/api/admin/ai/generate-description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productName: productName || undefined,
+                    category: selectedCategory || undefined,
+                    imageUrls: imagesToAnalyze,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.details || error.error || 'Failed to generate description');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.description) {
+                setDescription(data.description);
+                toast({
+                    title: 'Description generated!',
+                    description: 'AI has generated a product description. You can edit it as needed.',
+                });
+            } else {
+                throw new Error('No description received');
+            }
+        } catch (error: any) {
+            console.error('[AI Description] Error:', error);
+            toast({
+                title: 'Generation failed',
+                description: error.message || 'Could not generate description. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsGeneratingDescription(false);
+        }
+    };
+
     const handleSubmit = (formData: FormData) => {
         if (productImages.length === 0 && imageUrls.length === 0) {
             toast({ title: 'Image Required', description: 'Please upload at least one product image.', variant: 'destructive' });
@@ -244,11 +307,22 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="name">Product Name</Label>
-                        <Input id="name" name="name" defaultValue={product?.name} required />
+                        <Input
+                            id="name"
+                            name="name"
+                            value={productName}
+                            onChange={(e) => setProductName(e.target.value)}
+                            required
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category">Category</Label>
-                        <Select name="category" defaultValue={product?.category} required>
+                        <Select
+                            name="category"
+                            value={selectedCategory}
+                            onValueChange={setSelectedCategory}
+                            required
+                        >
                             <SelectTrigger id="category">
                                 <SelectValue placeholder="Select a category" />
                             </SelectTrigger>
@@ -261,8 +335,43 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" name="description" defaultValue={product?.description} required rows={5} />
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="description">Description</Label>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateDescription}
+                            disabled={isGeneratingDescription || productImages.length === 0}
+                            className="gap-1.5"
+                        >
+                            {isGeneratingDescription ? (
+                                <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    Generate with AI
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                    <Textarea
+                        id="description"
+                        name="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        required
+                        rows={5}
+                        placeholder="Enter product description or generate one with AI using product images..."
+                    />
+                    {productImages.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            💡 Tip: Upload product images first, then use AI to generate a description
+                        </p>
+                    )}
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
