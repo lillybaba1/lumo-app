@@ -128,18 +128,16 @@ function Home({ products, categories }: { products: Product[], categories: Categ
       <main className="flex-grow">
         <Hero />
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Search and Sort Bar */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Enhanced Search and Sort Bar */}
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">
               <Input
                 placeholder="Search for products..."
-                className="pl-10"
+                className="pl-10 border-0 bg-white/80 focus-visible:ring-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  backgroundColor: 'var(--input-bg)',
-                  borderColor: 'var(--input-border)',
                   borderRadius: 'var(--radius-input)',
                   color: 'var(--color-text-primary)',
                 }}
@@ -150,13 +148,13 @@ function Home({ products, categories }: { products: Product[], categories: Categ
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-muted-foreground hidden md:inline">Sort by:</span>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger
-                  className="w-[200px]"
+                  className="w-[200px] border-0 bg-white/80"
                   style={{
                     borderRadius: 'var(--radius-button)',
-                    borderColor: 'var(--color-border-subtle)',
                   }}
                 >
                   <SelectValue placeholder="Sort by" />
@@ -172,9 +170,8 @@ function Home({ products, categories }: { products: Product[], categories: Categ
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="md:hidden px-4 py-2 border hover:bg-accent transition-colors"
+                className="md:hidden px-4 py-2 border hover:bg-accent transition-colors rounded-xl"
                 style={{
-                  borderRadius: 'var(--radius-button)',
                   borderColor: 'var(--color-border-subtle)',
                 }}
               >
@@ -184,71 +181,73 @@ function Home({ products, categories }: { products: Product[], categories: Categ
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Filters Sidebar */}
+            {/* Enhanced Filters Sidebar */}
             {showFilters && (
-              <div className="md:col-span-1">
-                <Card
-                  className="sticky top-4"
-                  style={{
-                    backgroundColor: 'var(--card-bg)',
-                    borderColor: 'var(--card-border)',
-                    borderRadius: 'var(--radius-card)',
-                    boxShadow: 'var(--shadow-card)',
-                  }}
-                >
-                  <CardContent className="pt-6 space-y-6">
-                    <div>
-                      <h3 className="font-semibold mb-4">Filters</h3>
+              <aside className="md:col-span-1">
+                <div className="sticky top-20 w-full rounded-2xl border bg-white/70 backdrop-blur-sm p-5 shadow-sm space-y-6">
+                  {/* Filter Header */}
+                  <div>
+                    <h3 className="font-headline font-bold text-lg">Filters</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Refine your search
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  {/* Category Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Category
+                    </Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="border-0 bg-white/80">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  {/* Price Range Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Price Range
+                    </Label>
+                    <div className="text-sm font-medium text-center py-2 px-3 bg-white/80 rounded-lg">
+                      ${priceRange[0]} - ${priceRange[1]}
                     </div>
-
-                    <Separator />
-
-                    {/* Category Filter */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">
-                        Category
-                      </Label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Categories</SelectItem>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <Slider
+                      min={0}
+                      max={maxPrice}
+                      step={10}
+                      value={priceRange}
+                      onValueChange={setPriceRange}
+                      className="my-2"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>$0</span>
+                      <span>${maxPrice}</span>
                     </div>
+                  </div>
 
-                    <Separator />
+                  <Separator />
 
-                    {/* Price Range Filter */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">
-                        Price Range: ${priceRange[0]} - ${priceRange[1]}
-                      </Label>
-                      <Slider
-                        min={0}
-                        max={maxPrice}
-                        step={10}
-                        value={priceRange}
-                        onValueChange={setPriceRange}
-                        className="mb-2"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>$0</span>
-                        <span>${maxPrice}</span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* In Stock Filter */}
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="in-stock" className="text-sm font-semibold cursor-pointer">
+                  {/* Availability Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Availability
+                    </Label>
+                    <div className="flex items-center justify-between p-3 bg-white/80 rounded-lg">
+                      <Label htmlFor="in-stock" className="text-sm cursor-pointer">
                         In Stock Only
                       </Label>
                       <Switch
@@ -257,14 +256,21 @@ function Home({ products, categories }: { products: Product[], categories: Categ
                         onCheckedChange={setShowInStockOnly}
                       />
                     </div>
+                  </div>
 
-                    {/* Filter Summary */}
-                    <div className="pt-4 text-sm text-muted-foreground">
-                      Showing {filteredAndSortedProducts.length} of {products.length} products
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  <Separator />
+
+                  {/* Filter Summary */}
+                  <div className="pt-2 text-center">
+                    <p className="text-sm font-medium">
+                      {filteredAndSortedProducts.length} of {products.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      products found
+                    </p>
+                  </div>
+                </div>
+              </aside>
             )}
 
             {/* Products Grid */}
@@ -283,6 +289,70 @@ function Home({ products, categories }: { products: Product[], categories: Categ
               )}
             </div>
           </div>
+
+          {/* Trust & Story Sections */}
+          <section className="mt-16 space-y-12">
+            {/* The Lumo Promise */}
+            <Card className="overflow-hidden rounded-2xl border bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm shadow-sm">
+              <CardContent className="p-8 md:p-12">
+                <div className="max-w-3xl mx-auto text-center space-y-4">
+                  <h2 className="font-headline font-bold text-3xl md:text-4xl">
+                    The Lumo Promise
+                  </h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Every product in our collection is carefully curated with ethics,
+                    craftsmanship, and sustainability at its core. We partner with artisans
+                    and makers who share our commitment to quality and responsible practices.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <div className="space-y-2">
+                      <div className="text-2xl">🌱</div>
+                      <h3 className="font-semibold">Sustainable</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Eco-friendly materials and processes
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-2xl">✨</div>
+                      <h3 className="font-semibold">Quality Crafted</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Handpicked for excellence
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-2xl">🤝</div>
+                      <h3 className="font-semibold">Fair Trade</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Supporting artisan communities
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Meet the Makers */}
+            <Card className="overflow-hidden rounded-2xl border bg-white/80 backdrop-blur-sm shadow-sm">
+              <CardContent className="p-8 md:p-12">
+                <div className="max-w-3xl mx-auto space-y-4">
+                  <h2 className="font-headline font-bold text-3xl md:text-4xl text-center">
+                    Meet the Makers
+                  </h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed text-center">
+                    Behind every product is a story of skilled artisans dedicated to their craft.
+                    From traditional techniques passed down through generations to innovative
+                    approaches that honor heritage while embracing the future, each piece
+                    represents a commitment to authenticity and excellence.
+                  </p>
+                  <p className="text-base text-muted-foreground leading-relaxed text-center">
+                    We're proud to work directly with makers from diverse communities,
+                    ensuring fair compensation and celebrating the unique cultural traditions
+                    that make each product special.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </main>
     </div>

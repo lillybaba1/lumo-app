@@ -43,10 +43,9 @@ export default function Hero() {
 
   return (
     <div
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden rounded-3xl"
       style={{
-        borderRadius: 'var(--radius-hero)',
-        marginBottom: 'var(--spacing-3xl)',
+        marginBottom: 'var(--spacing-2xl)',
       }}
     >
       {/* Background Image */}
@@ -57,13 +56,8 @@ export default function Hero() {
           backgroundPosition: heroImageObjectPosition,
         }}
       >
-        {/* Gradient Overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(to right, var(--color-hero-overlay) 0%, var(--color-hero-overlay) 40%, transparent 100%)',
-          }}
-        />
+        {/* Enhanced Gradient Overlay for better text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
       </div>
 
       {/* Content */}

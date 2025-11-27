@@ -65,19 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <Card
-          className="flex flex-col overflow-hidden h-full transition-all duration-300 group"
-          style={{
-            backgroundColor: 'var(--card-bg)',
-            borderColor: 'var(--card-border)',
-            borderRadius: 'var(--radius-card)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--card-hover-shadow)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-          }}
+          className="group flex flex-col overflow-hidden h-full transition-all duration-300 hover:-translate-y-1 rounded-2xl border bg-white/80 shadow-sm hover:shadow-md"
         >
         <CardHeader className="p-0 relative">
             {/* Fixed 4:5 aspect ratio as per requirements */}
@@ -123,29 +111,30 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.description}
             </p>
         </CardContent>
-        <CardFooter className="p-4 flex flex-col sm:flex-row justify-between items-center mt-auto gap-2 min-w-0">
-            <p
-              className="text-xl whitespace-nowrap"
-              style={{
-                fontWeight: 'var(--font-weight-bold)',
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              {currencySymbol}{product.price.toFixed(2)}
-            </p>
+        <CardFooter className="p-4 flex flex-col gap-2 mt-auto">
+            <div className="flex justify-between items-center w-full">
+              <p
+                className="text-xl font-bold whitespace-nowrap"
+                style={{
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {currencySymbol}{product.price.toFixed(2)}
+              </p>
+              {product.stock > 0 && product.stock <= 5 && (
+                <span className="text-xs text-orange-600 font-medium">
+                  Only {product.stock} left
+                </span>
+              )}
+            </div>
             <Button
               onClick={handleAddToCart}
               size="sm"
               aria-label={`Add ${product.name} to cart`}
-              className="w-full sm:w-auto flex items-center justify-center px-2 sm:px-3 whitespace-normal min-w-0"
-              style={{
-                backgroundColor: 'var(--button-primary-bg)',
-                color: 'var(--button-primary-fg)',
-                borderRadius: 'var(--radius-button)',
-              }}
+              className="w-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/90 text-white hover:bg-black rounded-xl"
             >
-              <ShoppingCart className="mr-2 h-4 w-4 shrink-0" />
-              <span className="hidden md:inline truncate max-w-[6.5rem]">Add to Cart</span>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              <span>Add to Cart</span>
             </Button>
         </CardFooter>
         </Card>
