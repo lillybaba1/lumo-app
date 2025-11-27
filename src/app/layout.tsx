@@ -14,6 +14,14 @@ import AuthMenu from '@/components/auth-menu';
 export const metadata: Metadata = {
   title: 'Lumo',
   description: 'Your modern e-commerce experience.',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 // Force dynamic rendering for the entire app to avoid static pre-render
