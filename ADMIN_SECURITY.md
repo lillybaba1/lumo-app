@@ -6,27 +6,33 @@
 
 ## Security Measures in Place
 
-### 1. Setup First Admin (`/api/admin/setup-first-admin`)
+### 1. Setup First Admin (`/api/admin/setup-first-admin`) - **DISABLED**
 
-**Purpose:** Create the very first admin account when setting up the store.
+**Status:** ⛔ **PERMANENTLY DISABLED FOR SECURITY**
 
-**Security:**
-- ✅ **One-time use only** - Checks if any admin exists before allowing creation
-- ✅ **Automatic lockout** - Returns 403 error if an admin already exists
-- ✅ **Cannot be exploited** - After first admin is created, this endpoint becomes useless
+**Previous Purpose:** Create the very first admin account when setting up the store.
+
+**Why Disabled:**
+- Potential security risk if left accessible
+- Better to require server-level access for admin creation
+- Prevents any web-based admin creation attacks
+
+**Current Behavior:**
+- Always returns 403 Forbidden
+- Logs security warning when accessed
+- Provides instructions for proper admin creation methods
 
 **Code:**
 ```typescript
-// Checks if admin exists
-const { data: existingAdmins } = await supabaseAdmin
-  .from('users')
-  .select('id')
-  .eq('role', 'admin')
-  .limit(1);
+export async function POST(request: NextRequest) {
+  // SECURITY: This endpoint has been permanently disabled
+  console.warn('[SECURITY] Attempt to access disabled setup-first-admin endpoint');
 
-if (existingAdmins && existingAdmins.length > 0) {
   return NextResponse.json(
-    { error: 'An admin user already exists. This endpoint can only create the first admin.' },
+    {
+      error: 'This endpoint has been disabled for security reasons.',
+      message: 'Admin accounts can only be created by existing admins or server administrators.',
+    },
     { status: 403 }
   );
 }
@@ -197,10 +203,10 @@ User is admin → Access granted ✅
 node scripts/promote-to-admin.mjs user@example.com
 ```
 
-**Method 2: First Admin Setup (Only works once)**
-- Visit `/admin/setup-first-admin`
-- Create first admin account
-- This endpoint auto-locks after first admin
+**Method 2: First Admin Setup** ⛔ **DISABLED**
+- This endpoint has been permanently disabled for security
+- ~~Visit `/admin/setup-first-admin`~~
+- No longer available for web-based admin creation
 
 **Method 3: Admin Panel (After you have an admin)**
 - Log in as admin
@@ -209,9 +215,13 @@ node scripts/promote-to-admin.mjs user@example.com
 
 ## Conclusion
 
-**Your system is secure.** Regular users CANNOT become admins unless:
-1. They are the very first user creating the initial admin account, OR
+**Your system is highly secure.** Regular users CANNOT become admins unless:
+1. ~~They are the very first user creating the initial admin account~~ ⛔ **DISABLED**
 2. An existing admin explicitly promotes them, OR
 3. A system administrator with server access runs the promotion script
 
-All three methods require legitimate authorization and cannot be bypassed through normal user interactions or web requests.
+**Security Update:** The web-based first admin setup has been permanently disabled. Admin accounts can ONLY be created through:
+- Server-side script (requires filesystem access)
+- Existing admin promotion (requires current admin authentication)
+
+Both methods require legitimate authorization and cannot be bypassed through normal user interactions or web requests.

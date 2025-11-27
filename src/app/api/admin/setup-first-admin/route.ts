@@ -1,117 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
 
 /**
- * One-time endpoint to create the first admin user.
- * Should be disabled or removed after first admin is created.
+ * DISABLED: First admin setup endpoint has been disabled for security.
+ *
+ * This endpoint has been permanently disabled to prevent unauthorized admin creation.
+ * Admin accounts can only be created through secure, authorized channels.
+ *
+ * To create admin users, use one of these methods:
+ * 1. Server script: node scripts/promote-to-admin.mjs email@example.com
+ * 2. Existing admin can promote users through the admin panel
+ * 3. API endpoint: /api/admin/promote-user (requires existing admin authentication)
  */
 export async function POST(request: NextRequest) {
-  try {
-    const supabaseAdmin = createAdminClient();
+  // SECURITY: This endpoint has been permanently disabled
+  console.warn('[SECURITY] Attempt to access disabled setup-first-admin endpoint');
 
-    // Check if any admin users exist
-    const { data: existingAdmins, error: checkError } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('role', 'admin')
-      .limit(1);
+  return NextResponse.json(
+    {
+      error: 'This endpoint has been disabled for security reasons.',
+      message: 'Admin accounts can only be created by existing admins or server administrators.',
+      instructions: [
+        'Contact your system administrator',
+        'Or use server script: node scripts/promote-to-admin.mjs your-email@example.com',
+      ]
+    },
+    { status: 403 }
+  );
+}
 
-    if (checkError) {
-      console.error('Error checking for existing admins:', checkError);
-      return NextResponse.json(
-        { error: 'Failed to check existing users' },
-        { status: 500 }
-      );
-    }
-
-    if (existingAdmins && existingAdmins.length > 0) {
-      return NextResponse.json(
-        { error: 'An admin user already exists. This endpoint can only create the first admin.' },
-        { status: 403 }
-      );
-    }
-
-    const { email, password, name } = await request.json();
-
-    if (!email || !password || !name) {
-      return NextResponse.json(
-        { error: 'Email, password, and name are required' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
-
-    // Create the user in Supabase Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        name: name,
-      },
-    });
-
-    if (authError || !authData.user) {
-      console.error('Error creating user:', authError);
-      let errorMessage = 'Failed to create user';
-
-      if (authError?.message.includes('already registered')) {
-        errorMessage = 'An account with this email already exists';
-      } else if (authError?.message.includes('invalid')) {
-        errorMessage = 'Invalid email address or password';
-      } else if (authError?.message) {
-        errorMessage = authError.message;
-      }
-
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: 400 }
-      );
-    }
-
-    // Create user record in users table with admin role
-    const { error: insertError } = await supabaseAdmin
-      .from('users')
-      .insert({
-        id: authData.user.id,
-        email: authData.user.email,
-        name: name,
-        role: 'admin',
-        created_at: new Date().toISOString(),
-      });
-
-    if (insertError) {
-      console.error('Error inserting user record:', insertError);
-      // Try to clean up the auth user if insert failed
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-
-      return NextResponse.json(
-        { error: 'Failed to create user record: ' + insertError.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'First admin user created successfully',
-      data: {
-        id: authData.user.id,
-        email: authData.user.email,
-        role: 'admin',
-      },
-    });
-  } catch (error: any) {
-    console.error('Error creating first admin:', error);
-
-    return NextResponse.json(
-      { error: error.message || 'An unknown error occurred' },
-      { status: 500 }
-    );
-  }
+// Also disable GET requests
+export async function GET(request: NextRequest) {
+  return NextResponse.json(
+    {
+      error: 'This endpoint has been disabled for security reasons.',
+      message: 'Admin setup through this page is no longer available.',
+    },
+    { status: 403 }
+  );
 }
