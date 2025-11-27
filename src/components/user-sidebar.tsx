@@ -42,15 +42,15 @@ export default async function UserSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon" side="left">
-        <SidebarHeader>
-          <div className="px-2 py-1">
-            <Link href="/" className="flex items-center gap-2 px-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Sparkles className="h-4 w-4" />
+    <Sidebar collapsible="icon" side="left" className="border-r bg-white/90 backdrop-blur">
+        <SidebarHeader className="border-b">
+          <div className="px-4 py-4">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm">
+                <Sparkles className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold">Lumo</span>
+                <span className="text-base font-bold font-headline">Lumo</span>
                 <span className="text-xs text-muted-foreground">Shop & Discover</span>
               </div>
             </Link>

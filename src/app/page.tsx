@@ -124,10 +124,12 @@ function Home({ products, categories }: { products: Product[], categories: Categ
   }, [products, categories, searchQuery, selectedCategory, priceRange, showInStockOnly, sortBy]);
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg-page)' }}>
-      <main className="flex-grow">
+    <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)' }}>
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <Hero />
+      </div>
 
+      <div className="w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Enhanced Search and Sort Bar */}
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-4 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -354,7 +356,7 @@ function Home({ products, categories }: { products: Product[], categories: Categ
             </Card>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

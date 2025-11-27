@@ -54,9 +54,9 @@ export default async function RootLayout({
                 <Header>
                   <AuthMenu />
                 </Header>
-                <div className="flex flex-1">
+                <div className="flex flex-1 pt-0">
                   <UserSidebar />
-                  <main className="flex-1">
+                  <main className="flex-1 overflow-x-hidden">
                     {children}
                   </main>
                 </div>
