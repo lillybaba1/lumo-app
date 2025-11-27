@@ -16,6 +16,16 @@ const ProductQuestionAnsweringInputSchema = z.object({
 
 export type ProductQuestionAnsweringInput = z.infer<typeof ProductQuestionAnsweringInputSchema>;
 
+// Extended schema with computed boolean flags for the prompt template
+const ProductQuestionAnsweringFlowInputSchema = z.object({
+  question: z.string().describe('The question about the product.'),
+  productDetails: z.string().describe('The details of the product.'),
+  conversationHistory: z.string().optional().describe('The conversation history for context.'),
+  userRole: z.enum(['customer', 'admin']).optional().describe('The role of the user (customer or admin).'),
+  isAdmin: z.boolean().describe('Computed flag: true if userRole is admin, false otherwise.'),
+  isCustomer: z.boolean().describe('Computed flag: true if userRole is customer, false otherwise.'),
+});
+
 const ProductQuestionAnsweringOutputSchema = z.object({
   answer: z.string().describe('The answer to the question.'),
 });
@@ -27,14 +37,14 @@ export async function productQuestionAnswering(input: ProductQuestionAnsweringIn
   const processedInput = {
     ...input,
     isAdmin: input.userRole === 'admin',
-    isCustomer: input.userRole === 'customer',
+    isCustomer: input.userRole === 'customer' || !input.userRole,
   };
-  return productQuestionAnsweringFlow(processedInput as any);
+  return productQuestionAnsweringFlow(processedInput);
 }
 
 const productQuestionAnsweringPrompt = ai.definePrompt({
   name: 'productQuestionAnsweringPrompt',
-  input: {schema: ProductQuestionAnsweringInputSchema},
+  input: {schema: ProductQuestionAnsweringFlowInputSchema},
   output: {schema: ProductQuestionAnsweringOutputSchema},
   prompt: `You are Luna, a friendly and knowledgeable AI assistant for Lumo, an e-commerce store.
 
@@ -143,7 +153,7 @@ RESPONSE:`,
 const productQuestionAnsweringFlow = ai.defineFlow(
   {
     name: 'productQuestionAnsweringFlow',
-    inputSchema: ProductQuestionAnsweringInputSchema,
+    inputSchema: ProductQuestionAnsweringFlowInputSchema,
     outputSchema: ProductQuestionAnsweringOutputSchema,
   },
   async input => {
