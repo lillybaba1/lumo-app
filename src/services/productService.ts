@@ -11,7 +11,13 @@ export async function getProducts(): Promise<Product[]> {
   try {
     const { data, error } = await supabaseAdmin
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        categories:category_id (
+          id,
+          name
+        )
+      `)
       .eq('is_active', true)
       .order('name');
 
@@ -34,7 +40,7 @@ export async function getProducts(): Promise<Product[]> {
       productImages: product.product_images || [],
       foregroundImages: product.foreground_images || [],
       backgroundImages: product.background_images || [],
-      category: product.category_id || '',
+      category: product.categories?.name || '',
       categoryId: product.category_id || '',
       stock: product.stock || 0,
       sku: product.sku,
@@ -59,7 +65,13 @@ export async function getProductById(id: string): Promise<Product | null> {
   try {
     const { data, error } = await supabaseAdmin
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        categories:category_id (
+          id,
+          name
+        )
+      `)
       .eq('id', id)
       .single();
 
@@ -78,7 +90,7 @@ export async function getProductById(id: string): Promise<Product | null> {
       productImages: data.product_images || [],
       foregroundImages: data.foreground_images || [],
       backgroundImages: data.background_images || [],
-      category: data.category_id || '',
+      category: data.categories?.name || '',
       categoryId: data.category_id || '',
       stock: data.stock || 0,
       sku: data.sku,
