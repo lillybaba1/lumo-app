@@ -73,7 +73,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
             {isAuthenticated && user && (
               <div className="flex items-center space-x-2">
                 <Button variant="outline" asChild>
-                  <Link href="/profile">
+                  <Link href="/account/profile">
                     <User className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">{user.name}</span>
                   </Link>
