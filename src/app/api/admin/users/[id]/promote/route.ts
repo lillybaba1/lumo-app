@@ -3,56 +3,86 @@ export const runtime = 'nodejs';
 import 'server-only';
 
 import { NextResponse } from 'next/server';
-import { dbAdmin } from '@/lib/firebaseAdmin';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 
 /**
  * Protected endpoint to promote a user to admin.
  * Requires authenticated admin session.
- * Runs a Firestore transaction to atomically update the user's role and write an audit record.
+ * Updates user role in Supabase and logs audit entry.
  */
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     // SECURITY: Require admin authentication
     const adminUser = await requireAdmin({ redirect: false });
 
-    const uid = params.id;
-    if (!uid) {
+    const userId = params.id;
+    if (!userId) {
       return NextResponse.json({ success: false, message: 'Missing user id' }, { status: 400 });
     }
 
     // Prevent self-promotion (though already admin)
-    if (uid === adminUser.userId) {
+    if (userId === adminUser.userId) {
       return NextResponse.json({
         success: false,
         message: 'Cannot modify your own admin status'
       }, { status: 400 });
     }
 
-    const db = dbAdmin();
-    const userRef = db.collection('users').doc(uid);
-    const auditRef = db.collection('adminActions').doc();
+    const supabaseAdmin = createAdminClient();
 
-    await db.runTransaction(async (tx) => {
-      const userSnap = await tx.get(userRef);
-      if (!userSnap.exists) {
-        throw new Error('User not found');
-      }
+    // Check if user exists
+    const { data: existingUser, error: checkError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single();
 
-      // Set role to 'admin'
-      tx.update(userRef, { role: 'admin', updatedAt: new Date().toISOString() });
+    if (checkError || !existingUser) {
+      return NextResponse.json({
+        success: false,
+        message: 'User not found'
+      }, { status: 404 });
+    }
 
-      // Write audit entry
-      tx.set(auditRef, {
-        action: 'promote-to-admin',
-        targetUid: uid,
-        performedBy: adminUser.userId,
-        performedByEmail: adminUser.email,
-        performedAt: new Date().toISOString(),
-      });
+    // Update user role to admin
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        role: 'admin',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Failed to update user role:', updateError);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to update user role'
+      }, { status: 500 });
+    }
+
+    // Log audit entry (optional - only if admin_actions table exists)
+    try {
+      await supabaseAdmin
+        .from('admin_actions')
+        .insert({
+          action: 'promote-to-admin',
+          target_user_id: userId,
+          target_user_email: existingUser.email,
+          performed_by: adminUser.userId,
+          performed_by_email: adminUser.email,
+          performed_at: new Date().toISOString(),
+        });
+    } catch (auditError) {
+      // Audit logging is optional - don't fail if table doesn't exist
+      console.warn('Failed to log audit entry (table may not exist):', auditError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `User ${existingUser.email} promoted to admin`
     });
-
-    return NextResponse.json({ success: true });
   } catch (err: any) {
     if (err instanceof UnauthorizedError) {
       return NextResponse.json({
