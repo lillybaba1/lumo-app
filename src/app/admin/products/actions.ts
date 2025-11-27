@@ -43,14 +43,32 @@ type SaveProductState = {
 
 export async function saveProduct(prevState: SaveProductState, formData: FormData): Promise<SaveProductState> {
   const rawFormData = Object.fromEntries(formData.entries());
+
+  // Debug logging
+  console.log('[Product Save] Raw form data:', {
+    name: rawFormData.name,
+    price: rawFormData.price,
+    imageUrls: rawFormData.imageUrls,
+    productImages: rawFormData.productImages,
+    category: rawFormData.category,
+  });
+
   const validatedFields = productSchema.safeParse(rawFormData);
 
   if (!validatedFields.success) {
-    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
+    console.error('[Product Save] Validation failed:', validatedFields.error.flatten().fieldErrors);
+    console.error('[Product Save] Full validation errors:', validatedFields.error.errors);
+
+    // Create a user-friendly error message
+    const errors = validatedFields.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(errors)
+      .map(([field, messages]) => `${field}: ${messages?.join(', ')}`)
+      .join('; ');
+
     return {
       success: false,
-      message: 'Validation failed. Please check the form fields.',
-      errors: validatedFields.error.flatten().fieldErrors,
+      message: `Validation failed: ${errorMessages}`,
+      errors: errors,
     };
   }
 
@@ -151,7 +169,25 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
 
   } catch (error) {
     console.error('Failed to save product:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+
+    // Provide detailed error information
+    let errorMessage = 'An unknown error occurred.';
+    let errorDetails = '';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack || '';
+    } else if (typeof error === 'object' && error !== null) {
+      errorMessage = JSON.stringify(error);
+    }
+
+    // Log detailed error for debugging
+    console.error('Detailed error:', {
+      message: errorMessage,
+      details: errorDetails,
+      error: error
+    });
+
     return {
         success: false,
         message: `Failed to save product: ${errorMessage}`
