@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbAdmin, authAdmin, isFirebaseAdminInitialized } from '@/lib/firebaseAdmin';
+import { createAdminClient } from '@/lib/supabase/server';
 
 /**
  * One-time endpoint to create the first admin user.
  * Should be disabled or removed after first admin is created.
  */
 export async function POST(request: NextRequest) {
-  if (!isFirebaseAdminInitialized()) {
-    return NextResponse.json(
-      { error: 'Firebase Admin not initialized' },
-      { status: 500 }
-    );
-  }
-
   try {
-    // Check if any users exist
-    const usersSnapshot = await dbAdmin().collection('users').limit(1).get();
-    
-    if (!usersSnapshot.empty) {
+    const supabaseAdmin = createAdminClient();
+
+    // Check if any admin users exist
+    const { data: existingAdmins, error: checkError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('role', 'admin')
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error checking for existing admins:', checkError);
       return NextResponse.json(
-        { error: 'Users already exist. This endpoint can only create the first admin.' },
+        { error: 'Failed to check existing users' },
+        { status: 500 }
+      );
+    }
+
+    if (existingAdmins && existingAdmins.length > 0) {
+      return NextResponse.json(
+        { error: 'An admin user already exists. This endpoint can only create the first admin.' },
         { status: 403 }
       );
     }
@@ -40,48 +47,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the first user with admin role
-    const userRecord = await authAdmin().createUser({
+    // Create the user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      displayName: name,
+      email_confirm: true,
+      user_metadata: {
+        name: name,
+      },
     });
 
-    await dbAdmin().collection('users').doc(userRecord.uid).set({
-      uid: userRecord.uid,
-      email: userRecord.email,
-      name: name,
-      createdAt: new Date().toISOString(),
-      role: 'admin',
-    });
+    if (authError || !authData.user) {
+      console.error('Error creating user:', authError);
+      let errorMessage = 'Failed to create user';
+
+      if (authError?.message.includes('already registered')) {
+        errorMessage = 'An account with this email already exists';
+      } else if (authError?.message.includes('invalid')) {
+        errorMessage = 'Invalid email address or password';
+      } else if (authError?.message) {
+        errorMessage = authError.message;
+      }
+
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 400 }
+      );
+    }
+
+    // Create user record in users table with admin role
+    const { error: insertError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: authData.user.id,
+        email: authData.user.email,
+        name: name,
+        role: 'admin',
+        created_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error('Error inserting user record:', insertError);
+      // Try to clean up the auth user if insert failed
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+
+      return NextResponse.json(
+        { error: 'Failed to create user record: ' + insertError.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       message: 'First admin user created successfully',
       data: {
-        uid: userRecord.uid,
-        email: userRecord.email,
+        id: authData.user.id,
+        email: authData.user.email,
         role: 'admin',
       },
     });
   } catch (error: any) {
     console.error('Error creating first admin:', error);
 
-    let errorMessage = 'An unknown error occurred';
-    
-    if (error.code === 'auth/email-already-exists') {
-      errorMessage = 'An account with this email already exists';
-    } else if (error.code === 'auth/invalid-email') {
-      errorMessage = 'Invalid email address';
-    } else if (error.code === 'auth/weak-password') {
-      errorMessage = 'Password is too weak';
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
     return NextResponse.json(
-      { error: errorMessage },
-      { status: 400 }
+      { error: error.message || 'An unknown error occurred' },
+      { status: 500 }
     );
   }
 }
