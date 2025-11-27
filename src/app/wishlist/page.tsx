@@ -9,6 +9,10 @@ import Link from 'next/link';
 import { WishlistButton } from '@/components/wishlist-button';
 import { Badge } from '@/components/ui/badge';
 import { getSettings } from '@/app/admin/settings/actions';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
   if (!currencyCode) return '$';
@@ -17,8 +21,11 @@ async function getCurrencySymbol(currencyCode: string | undefined) {
 }
 
 export default async function WishlistPage() {
-  // TODO: Get current user from auth context
-  const currentUserId = undefined;
+  // Get current authenticated user
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  const currentUserId = user?.id;
 
   const settings = await getSettings();
   const currencySymbol = await getCurrencySymbol(settings?.currency);
