@@ -106,9 +106,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div key={index}>
                 <div className="flex gap-4">
                   <div className="w-20 h-20 bg-muted rounded flex-shrink-0">
-                    {item.product.imageUrls?.[0] && (
+                    {((item.product.productImages && item.product.productImages.length > 0) ||
+                      (item.product.imageUrls && item.product.imageUrls.length > 0)) && (
                       <img
-                        src={item.product.imageUrls[0]}
+                        src={
+                          (item.product.productImages && item.product.productImages.length > 0)
+                            ? item.product.productImages[0]
+                            : item.product.imageUrls[0]
+                        }
                         alt={item.product.name}
                         className="w-full h-full object-cover rounded"
                       />

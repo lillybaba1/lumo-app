@@ -255,9 +255,14 @@ export default function CheckoutPage() {
                     {items.map(item => (
                       <div key={item.product.id} className="flex gap-3">
                         <div className="w-16 h-16 bg-muted rounded flex-shrink-0">
-                          {item.product.imageUrls?.[0] && (
+                          {((item.product.productImages && item.product.productImages.length > 0) ||
+                            (item.product.imageUrls && item.product.imageUrls.length > 0)) && (
                             <img
-                              src={item.product.imageUrls[0]}
+                              src={
+                                (item.product.productImages && item.product.productImages.length > 0)
+                                  ? item.product.productImages[0]
+                                  : item.product.imageUrls[0]
+                              }
                               alt={item.product.name}
                               className="w-full h-full object-cover rounded"
                             />

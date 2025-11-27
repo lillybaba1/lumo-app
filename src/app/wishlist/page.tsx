@@ -108,7 +108,13 @@ export default async function WishlistPage() {
                 <Link href={`/products/${product.id}`}>
                   <div className="aspect-square relative bg-muted overflow-hidden">
                     <Image
-                      src={product.imageUrls[0] || 'https://placehold.co/400x400.png'}
+                      src={
+                        (product.productImages && product.productImages.length > 0)
+                          ? product.productImages[0]
+                          : (product.imageUrls && product.imageUrls.length > 0)
+                            ? product.imageUrls[0]
+                            : 'https://placehold.co/400x400.png'
+                      }
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"

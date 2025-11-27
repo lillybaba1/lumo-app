@@ -29,7 +29,11 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const [settings, setSettings] = useState<Settings>({});
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
-  const imageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://placehold.co/600x600.png';
+  const imageUrl = (product.productImages && product.productImages.length > 0)
+    ? product.productImages[0]
+    : (product.imageUrls && product.imageUrls.length > 0)
+      ? product.imageUrls[0]
+      : 'https://placehold.co/600x600.png';
 
 
   useEffect(() => {

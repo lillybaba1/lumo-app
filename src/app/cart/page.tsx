@@ -72,7 +72,21 @@ export default function CartPage() {
                       {items.map(({ product, quantity }) => (
                         <TableRow key={product.id}>
                           <TableCell>
-                            <Image src={product.imageUrls[0]} alt={product.name} width={80} height={80} className="rounded-md" unoptimized data-ai-hint={`${product.category} product`} />
+                            <Image
+                              src={
+                                (product.productImages && product.productImages.length > 0)
+                                  ? product.productImages[0]
+                                  : (product.imageUrls && product.imageUrls.length > 0)
+                                    ? product.imageUrls[0]
+                                    : 'https://placehold.co/600x600.png'
+                              }
+                              alt={product.name}
+                              width={80}
+                              height={80}
+                              className="rounded-md"
+                              unoptimized
+                              data-ai-hint={`${product.category} product`}
+                            />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
                           <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
