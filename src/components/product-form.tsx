@@ -57,7 +57,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const [isGeneratingDescription, setIsGeneratingDescription] = React.useState(false);
     const [productName, setProductName] = React.useState<string>(product?.name || '');
     const [isGeneratingTitle, setIsGeneratingTitle] = React.useState(false);
-    const [selectedCategory, setSelectedCategory] = React.useState<string>(product?.category || '');
+    const [selectedCategory, setSelectedCategory] = React.useState<string>(product?.categoryId || product?.category || '');
     const [isGeneratingAttributes, setIsGeneratingAttributes] = React.useState(false);
 
     // Crop modal state
@@ -471,7 +471,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                             </SelectTrigger>
                             <SelectContent>
                                 {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
