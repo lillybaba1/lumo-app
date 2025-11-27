@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import {
 
 export default function HeroSettingsForm() {
   const { toast } = useToast();
+  const router = useRouter();
 
   const [heroHeading, setHeroHeading] = useState('');
   const [heroTagline, setHeroTagline] = useState('');
@@ -82,9 +84,10 @@ export default function HeroSettingsForm() {
       setHeroBackgroundImage(url);
       setHasUnsavedChanges(true);
       toast({
-        title: 'Upload successful',
-        description: 'Hero image uploaded. Click "Save Changes" to apply.',
-        variant: 'default'
+        title: 'Image uploaded successfully!',
+        description: '⚠️ Important: Click "Save Changes" button below to apply the new hero image.',
+        variant: 'default',
+        duration: 8000,
       });
     } catch (error: any) {
       toast({
@@ -121,6 +124,8 @@ export default function HeroSettingsForm() {
 
       if (result.success) {
         setHasUnsavedChanges(false);
+        // Force refresh to show updated hero image
+        router.refresh();
       }
     } catch (error) {
       toast({

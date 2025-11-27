@@ -17,8 +17,13 @@ export default function Hero() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch hero settings from API
-    fetch('/api/settings')
+    // Fetch hero settings from API with cache busting
+    fetch(`/api/settings?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
       .then(res => res.json())
       .then(data => {
         setSettings(data);
