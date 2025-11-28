@@ -4,7 +4,7 @@
 -- 1. Create business_accounts table
 CREATE TABLE IF NOT EXISTS business_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
     business_name VARCHAR(255) NOT NULL,
     contact_person_name VARCHAR(255) NOT NULL,
     contact_email VARCHAR(255) NOT NULL,
@@ -37,13 +37,13 @@ CREATE INDEX IF NOT EXISTS idx_business_accounts_owner ON business_accounts(owne
 -- Create index on status for filtering
 CREATE INDEX IF NOT EXISTS idx_business_accounts_status ON business_accounts(status);
 
--- 2. Update users table to support new roles
+-- 2. Update user_profiles table to support new roles
 -- Add business_account_id column (for BUSINESS_ACCOUNT users)
-ALTER TABLE users
+ALTER TABLE user_profiles
 ADD COLUMN IF NOT EXISTS business_account_id UUID REFERENCES business_accounts(id) ON DELETE SET NULL;
 
 -- Create index on business_account_id
-CREATE INDEX IF NOT EXISTS idx_users_business_account ON users(business_account_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_business_account ON user_profiles(business_account_id);
 
 -- Note: The role column already exists, but we'll need to update its values
 -- The application will handle role migration: 'admin' -> 'APP_OWNER_ADMIN', 'customer' -> 'PERSONAL_ACCOUNT'
@@ -58,7 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_products_seller ON products(seller_id);
 -- 4. Add seller tracking to orders
 -- Add customer_id to orders (for linking to user accounts)
 ALTER TABLE orders
-ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES users(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL;
 
 -- Create index on customer_id
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
