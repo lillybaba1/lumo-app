@@ -55,6 +55,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  sellerId: string; // FK to BusinessAccount - which seller owns this product
   imageUrls: string[]; // Legacy field - kept for backwards compatibility
   productImages?: string[]; // Legacy - Main product photos shown in carousel
   foregroundImages?: string[]; // Legacy - Foreground elements for admin/editing
@@ -85,15 +86,24 @@ export interface Category {
 export interface CartItem {
   product: Product;
   quantity: number;
+  sellerId?: string; // Denormalized from product.sellerId for easier querying
+}
+
+export interface OrderItem {
+  product: Product;
+  quantity: number;
+  sellerId: string; // Which seller this item belongs to
+  sellerStatus?: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'; // Seller-specific status
 }
 
 export interface Order {
   id: string;
+  customerId?: string; // FK to User (optional for guest checkout)
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
   shippingAddress: string;
-  items: CartItem[];
+  items: OrderItem[]; // Changed from CartItem to OrderItem for better seller tracking
   subtotal: number;
   discount: number;
   total: number;
@@ -116,6 +126,33 @@ export interface PageContent {
   updatedAt?: string;
 }
 
+// Role types for marketplace
+export type UserRole = 'APP_OWNER_ADMIN' | 'BUSINESS_ACCOUNT' | 'PERSONAL_ACCOUNT';
+
+// Business Account / Seller Entity
+export interface BusinessAccount {
+  id: string;
+  ownerUserId: string; // FK to User with BUSINESS_ACCOUNT role
+  businessName: string;
+  contactPersonName: string;
+  contactEmail: string;
+  businessAddress: string;
+  businessPhone?: string;
+  taxId?: string; // Tax ID / Registration number
+  website?: string;
+  description?: string;
+  logo?: string;
+  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION';
+  // Payout settings
+  payoutMethod?: 'bank_transfer' | 'paypal' | 'stripe';
+  payoutDetails?: Record<string, any>; // Bank account, PayPal email, etc.
+  // Shipping settings
+  shippingPolicies?: string;
+  returnPolicy?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface User {
     uid: string;
     email: string;
@@ -123,7 +160,9 @@ export interface User {
     phoneNumber: string;
     emailVerified?: boolean;
     createdAt: string;
-    role: 'admin' | 'customer';
+    role: UserRole;
+    // Legacy support - map old 'admin' to APP_OWNER_ADMIN, 'customer' to PERSONAL_ACCOUNT
+    businessAccountId?: string; // FK to BusinessAccount if role is BUSINESS_ACCOUNT
 }
 
 export interface Review {

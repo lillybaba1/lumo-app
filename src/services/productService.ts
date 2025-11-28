@@ -51,6 +51,7 @@ export async function getProducts(): Promise<Product[]> {
       stockByLocation: product.stock_by_location,
       weight: product.weight ? parseFloat(product.weight) : undefined,
       dimensions: product.dimensions,
+      sellerId: product.seller_id,
     }));
   } catch (error) {
     console.error('Failed to fetch products:', error);
@@ -101,10 +102,67 @@ export async function getProductById(id: string): Promise<Product | null> {
       stockByLocation: data.stock_by_location,
       weight: data.weight ? parseFloat(data.weight) : undefined,
       dimensions: data.dimensions,
+      sellerId: data.seller_id,
     };
   } catch (error) {
     console.error(`Failed to fetch product ${id}:`, error);
     return null;
+  }
+}
+
+/**
+ * Get products by seller ID
+ */
+export async function getProductsBySeller(sellerId: string): Promise<Product[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .select(`
+        *,
+        categories:category_id (
+          id,
+          name
+        )
+      `)
+      .eq('seller_id', sellerId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch seller products from Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Map Supabase data to Product type
+    return data.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: parseFloat(product.price),
+      imageUrls: product.image_urls || [],
+      productImages: product.product_images || [],
+      foregroundImages: product.foreground_images || [],
+      backgroundImages: product.background_images || [],
+      category: product.categories?.name || '',
+      categoryId: product.category_id || '',
+      stock: product.stock || 0,
+      sku: product.sku,
+      barcode: product.barcode,
+      trackInventory: product.track_inventory,
+      reorderPoint: product.reorder_point,
+      reorderQuantity: product.reorder_quantity,
+      stockByLocation: product.stock_by_location,
+      weight: product.weight ? parseFloat(product.weight) : undefined,
+      dimensions: product.dimensions,
+      sellerId: product.seller_id,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch seller products:', error);
+    return [];
   }
 }
 
@@ -141,7 +199,7 @@ export async function getCategories(): Promise<Category[]> {
 /**
  * Add a new product
  */
-export async function addProduct(product: Omit<Product, 'id'>): Promise<Product> {
+export async function addProduct(product: Omit<Product, 'id'>, sellerId?: string): Promise<Product> {
   try {
     const { data, error } = await supabaseAdmin
       .from('products')
@@ -163,6 +221,7 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
         stock_by_location: product.stockByLocation || {},
         weight: product.weight,
         dimensions: product.dimensions,
+        seller_id: sellerId || product.sellerId,
         is_active: true,
       })
       .select()
@@ -176,6 +235,7 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
     return {
       id: data.id,
       ...product,
+      sellerId: data.seller_id,
     };
   } catch (error) {
     console.error('Failed to add product:', error);

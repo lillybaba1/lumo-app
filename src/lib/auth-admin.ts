@@ -55,7 +55,8 @@ export async function requireAdmin(
       // Determine role - users table is the source of truth
       const role = userData?.role || 'customer';
 
-      if (role !== 'admin') {
+      // Support both new and legacy admin roles
+      if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
         fail('Admin role required', 'unauthorized');
       }
 
@@ -98,7 +99,8 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       // Determine role - users table is the source of truth
       const role = userData?.role || 'customer';
 
-      if (role !== 'admin') {
+      // Support both new and legacy admin roles
+      if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
         return null;
       }
 
