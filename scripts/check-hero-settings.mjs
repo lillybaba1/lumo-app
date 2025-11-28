@@ -60,7 +60,7 @@ async function checkHeroSettings() {
     console.log('\n⏰ Last Updated:', data.updated_at || '(unknown)');
 
     // Check if hero image is using default
-    const defaultHeroImage = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+    const defaultHeroImage = '';
     if (data.value?.heroBackgroundImage === defaultHeroImage) {
       console.log('\n⚠️  WARNING: Hero image is set to the DEFAULT Unsplash image');
       console.log('If you uploaded a new image, it may not have been saved properly.');

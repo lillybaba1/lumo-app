@@ -55,7 +55,7 @@ export async function getHeroSettings(): Promise<{
   return {
     heroHeading: settings.heroHeading || 'Step into Lumo',
     heroTagline: settings.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.',
-    heroBackgroundImage: settings.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop',
+    heroBackgroundImage: settings.heroBackgroundImage || '',
     heroImageObjectPosition: settings.heroImageObjectPosition || 'center',
   };
 }

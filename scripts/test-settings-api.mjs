@@ -42,7 +42,7 @@ async function testSettingsAPI() {
     console.log('');
 
     // Check if it's the default
-    const defaultImage = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+    const defaultImage = '';
     if (data.heroBackgroundImage === defaultImage) {
       console.log('❌ API is returning DEFAULT image (problem detected!)');
     } else if (data.heroBackgroundImage?.includes('supabase')) {

@@ -82,11 +82,13 @@ export default function Hero() {
   const heroHeading = settings?.heroHeading || 'Step into Lumo';
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
   // Add aggressive cache-buster to hero image URL to prevent browser caching
-  const baseHeroImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
-  const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const heroBackgroundImage = baseHeroImage.includes('?')
-    ? `${baseHeroImage}&v=${cacheBuster}`
-    : `${baseHeroImage}?v=${cacheBuster}`;
+  const baseHeroImage = settings?.heroBackgroundImage || '';
+  const cacheBuster = baseHeroImage ? `${Date.now()}_${Math.random().toString(36).substring(7)}` : '';
+  const heroBackgroundImage = baseHeroImage
+    ? baseHeroImage.includes('?')
+      ? `${baseHeroImage}&v=${cacheBuster}`
+      : `${baseHeroImage}?v=${cacheBuster}`
+    : '';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
 
   const getProductById = (id: string) => products.find(p => p.id === id);
@@ -99,16 +101,20 @@ export default function Hero() {
       }}
     >
       {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: `url(${heroBackgroundImage})`,
-          backgroundPosition: heroImageObjectPosition,
-        }}
-      >
-        {/* Enhanced Gradient Overlay for better text contrast */}
+      {heroBackgroundImage ? (
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat"
+          style={{
+            backgroundImage: `url(${heroBackgroundImage})`,
+            backgroundPosition: heroImageObjectPosition,
+          }}
+        >
+          {/* Enhanced Gradient Overlay for better text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        </div>
+      ) : (
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
-      </div>
+      )}
 
       {/* Hero Products Overlay */}
       {heroData?.products && heroData.products.length > 0 && (

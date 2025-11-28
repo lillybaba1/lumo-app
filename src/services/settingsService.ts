@@ -67,7 +67,7 @@ const defaultSettings: Settings = {
     theme: 'minimal-light',
     heroHeading: 'Step into Lumo',
     heroTagline: 'Discover exceptional products crafted with care. Your journey to quality starts here.',
-    heroBackgroundImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop',
+    heroBackgroundImage: '',
     heroImageObjectPosition: 'center',
 };
 
