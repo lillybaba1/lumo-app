@@ -21,36 +21,61 @@ export default function Hero() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all data in parallel with aggressive cache-busting
-    const timestamp = Date.now();
-    Promise.all([
-      fetch(`/api/settings?nocache=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      }).then(res => res.json()),
-      fetch(`/api/hero?nocache=${timestamp}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
-      }).then(res => res.json()),
-      fetch(`/api/products?nocache=${timestamp}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
-      }).then(res => res.json())
-    ])
-      .then(([settingsData, heroDataResult, productsData]) => {
-        setSettings(settingsData);
-        setHeroData(heroDataResult);
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load hero data:', err);
-        setLoading(false);
-      });
+    // Fetch data with cache-busting but don't fail all if one request fails
+    const load = async () => {
+      const timestamp = Date.now();
+      const headers = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      } as const;
+
+      const requests = {
+        settings: fetch(`/api/settings?nocache=${timestamp}`, { cache: 'no-store', headers }).then(async (res) => {
+          if (!res.ok) throw new Error(`Settings request failed: ${res.status}`);
+          return res.json();
+        }),
+        hero: fetch(`/api/hero?nocache=${timestamp}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (res) => {
+          if (!res.ok) throw new Error(`Hero request failed: ${res.status}`);
+          return res.json();
+        }),
+        products: fetch(`/api/products?nocache=${timestamp}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (res) => {
+          if (!res.ok) throw new Error(`Products request failed: ${res.status}`);
+          return res.json();
+        }),
+      };
+
+      const [settingsResult, heroResult, productsResult] = await Promise.allSettled([
+        requests.settings,
+        requests.hero,
+        requests.products,
+      ]);
+
+      if (settingsResult.status === 'fulfilled') {
+        setSettings(settingsResult.value);
+      } else {
+        console.error('Failed to load settings:', settingsResult.reason);
+      }
+
+      if (heroResult.status === 'fulfilled') {
+        setHeroData(heroResult.value);
+      } else {
+        console.error('Failed to load hero data:', heroResult.reason);
+      }
+
+      if (productsResult.status === 'fulfilled') {
+        setProducts(Array.isArray(productsResult.value) ? productsResult.value : []);
+      } else {
+        console.error('Failed to load products:', productsResult.reason);
+      }
+
+      setLoading(false);
+    };
+
+    load().catch(err => {
+      console.error('Failed to load hero section:', err);
+      setLoading(false);
+    });
   }, []);
 
   // Default values if settings haven't loaded yet
