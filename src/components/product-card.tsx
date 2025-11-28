@@ -29,11 +29,17 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const [settings, setSettings] = useState<Settings>({});
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
-  const imageUrl = (product.productImages && product.productImages.length > 0)
+  // Get base image URL
+  const baseImageUrl = (product.productImages && product.productImages.length > 0)
     ? product.productImages[0]
     : (product.imageUrls && product.imageUrls.length > 0)
       ? product.imageUrls[0]
       : 'https://placehold.co/600x600.png';
+
+  // Add cache-buster to Supabase storage images to prevent browser caching
+  const imageUrl = baseImageUrl.includes('supabase.co/storage')
+    ? (baseImageUrl.includes('?') ? `${baseImageUrl}&v=${product.id}` : `${baseImageUrl}?v=${product.id}`)
+    : baseImageUrl;
 
 
   useEffect(() => {

@@ -48,9 +48,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const isOutOfStock = product.stock === 0;
 
   // Use productImages if available, otherwise fall back to imageUrls for backwards compatibility
-  const displayImages = product.productImages && product.productImages.length > 0
+  const baseDisplayImages = product.productImages && product.productImages.length > 0
     ? product.productImages
     : product.imageUrls;
+
+  // Add cache-buster to Supabase storage images
+  const displayImages = baseDisplayImages.map(url =>
+    url.includes('supabase.co/storage')
+      ? (url.includes('?') ? `${url}&v=${product.id}` : `${url}?v=${product.id}`)
+      : url
+  );
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">

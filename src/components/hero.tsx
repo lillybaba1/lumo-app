@@ -47,7 +47,11 @@ export default function Hero() {
   // Default values if settings haven't loaded yet
   const heroHeading = settings?.heroHeading || 'Step into Lumo';
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  const heroBackgroundImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+  // Add cache-buster to hero image URL to prevent browser caching
+  const baseHeroImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+  const heroBackgroundImage = baseHeroImage.includes('?')
+    ? `${baseHeroImage}&v=${Date.now()}`
+    : `${baseHeroImage}?v=${Date.now()}`;
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
 
   const getProductById = (id: string) => products.find(p => p.id === id);
