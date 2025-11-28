@@ -89,41 +89,48 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
     const imageCropDataStr = formData.get('imageCropData') as string;
     const attributesStr = formData.get('attributes') as string;
 
-    // Save images with crop data to product_images table
-    if (imageCropDataStr) {
-      try {
-        const imageCropData: Record<string, CropData> = JSON.parse(imageCropDataStr);
+        // Save images with crop data to product_images table and clean up removed ones
+        if (imageCropDataStr) {
+          try {
+            const imageCropData: Record<string, CropData> = JSON.parse(imageCropDataStr);
 
-        // Get existing images to avoid duplicates
-        const existingImages = await getProductImages(productId);
-        const existingUrls = new Set(existingImages.map(img => img.imageUrl));
+            // Get existing images for this product
+            const existingImages = await getProductImages(productId);
+            const existingByUrl = new Map(existingImages.map(img => [img.imageUrl, img]));
 
-        // Save each image with its crop data
-        const allImageUrls = [...(productData.productImages || [])];
+            // Images to keep and their order/primary flag
+            const allImageUrls = [...(productData.productImages || [])];
 
-        for (const url of allImageUrls) {
-          // Skip if already exists
-          if (existingUrls.has(url)) continue;
+            // Delete images that are no longer present
+            for (const existing of existingImages) {
+              if (!allImageUrls.includes(existing.imageUrl) && existing.id) {
+                await deleteProductImage(existing.id);
+              }
+            }
 
-          const imageType = 'product';
-          const crop = imageCropData[url];
+            // Upsert images with latest ordering/primary/crop
+            for (const [index, url] of allImageUrls.entries()) {
+              const imageType = 'product';
+              const crop = imageCropData[url];
+              const existing = existingByUrl.get(url);
 
-          await saveProductImage({
-            productId,
-            imageUrl: url,
-            imageType,
-            cropX: crop?.x,
-            cropY: crop?.y,
-            cropWidth: crop?.width,
-            cropHeight: crop?.height,
-            displayOrder: allImageUrls.indexOf(url),
-            isPrimary: allImageUrls.indexOf(url) === 0,
-          });
+              await saveProductImage({
+                id: existing?.id,
+                productId,
+                imageUrl: url,
+                imageType,
+                cropX: crop?.x,
+                cropY: crop?.y,
+                cropWidth: crop?.width,
+                cropHeight: crop?.height,
+                displayOrder: index,
+                isPrimary: index === 0,
+              });
+            }
+          } catch (error) {
+            console.error('Failed to save image crop data:', error);
+          }
         }
-      } catch (error) {
-        console.error('Failed to save image crop data:', error);
-      }
-    }
 
     // Save product attributes
     if (attributesStr) {

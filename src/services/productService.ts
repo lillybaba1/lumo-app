@@ -16,6 +16,11 @@ export async function getProducts(): Promise<Product[]> {
         categories:category_id (
           id,
           name
+        ),
+        product_images!left (
+          image_url,
+          display_order,
+          is_primary
         )
       `)
       .eq('is_active', true)
@@ -31,28 +36,35 @@ export async function getProducts(): Promise<Product[]> {
     }
 
     // Map Supabase data to Product type
-    return data.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description || '',
-      price: parseFloat(product.price),
-      imageUrls: product.image_urls || [],
-      productImages: product.product_images || [],
-      foregroundImages: product.foreground_images || [],
-      backgroundImages: product.background_images || [],
-      category: product.categories?.name || '',
-      categoryId: product.category_id || '',
-      stock: product.stock || 0,
-      sku: product.sku,
-      barcode: product.barcode,
-      trackInventory: product.track_inventory,
-      reorderPoint: product.reorder_point,
-      reorderQuantity: product.reorder_quantity,
-      stockByLocation: product.stock_by_location,
-      weight: product.weight ? parseFloat(product.weight) : undefined,
-      dimensions: product.dimensions,
-      sellerId: product.seller_id,
-    }));
+    return data.map(product => {
+      const images = Array.isArray(product.product_images) ? product.product_images : [];
+      const orderedImageUrls = images
+        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img: any) => img.image_url);
+
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: parseFloat(product.price),
+        imageUrls: product.image_urls || [],
+        productImages: orderedImageUrls,
+        foregroundImages: product.foreground_images || [],
+        backgroundImages: product.background_images || [],
+        category: product.categories?.name || '',
+        categoryId: product.category_id || '',
+        stock: product.stock || 0,
+        sku: product.sku,
+        barcode: product.barcode,
+        trackInventory: product.track_inventory,
+        reorderPoint: product.reorder_point,
+        reorderQuantity: product.reorder_quantity,
+        stockByLocation: product.stock_by_location,
+        weight: product.weight ? parseFloat(product.weight) : undefined,
+        dimensions: product.dimensions,
+        sellerId: product.seller_id,
+      };
+    });
   } catch (error) {
     console.error('Failed to fetch products:', error);
     return mockProducts;
@@ -71,6 +83,20 @@ export async function getProductById(id: string): Promise<Product | null> {
         categories:category_id (
           id,
           name
+        ),
+        product_images!left (
+          id,
+          image_url,
+          image_type,
+          crop_x,
+          crop_y,
+          crop_width,
+          crop_height,
+          display_order,
+          is_primary,
+          alt_text,
+          created_at,
+          updated_at
         )
       `)
       .eq('id', id)
@@ -82,13 +108,21 @@ export async function getProductById(id: string): Promise<Product | null> {
     }
 
     // Map Supabase data to Product type
+    const images = Array.isArray(data.product_images)
+      ? data.product_images
+      : [];
+
+    const orderedImageUrls = images
+      .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      .map((img: any) => img.image_url);
+
     return {
       id: data.id,
       name: data.name,
       description: data.description || '',
       price: parseFloat(data.price),
       imageUrls: data.image_urls || [],
-      productImages: data.product_images || [],
+      productImages: orderedImageUrls,
       foregroundImages: data.foreground_images || [],
       backgroundImages: data.background_images || [],
       category: data.categories?.name || '',
@@ -122,6 +156,11 @@ export async function getProductsBySeller(sellerId: string): Promise<Product[]> 
         categories:category_id (
           id,
           name
+        ),
+        product_images!left (
+          image_url,
+          display_order,
+          is_primary
         )
       `)
       .eq('seller_id', sellerId)
@@ -138,28 +177,35 @@ export async function getProductsBySeller(sellerId: string): Promise<Product[]> 
     }
 
     // Map Supabase data to Product type
-    return data.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description || '',
-      price: parseFloat(product.price),
-      imageUrls: product.image_urls || [],
-      productImages: product.product_images || [],
-      foregroundImages: product.foreground_images || [],
-      backgroundImages: product.background_images || [],
-      category: product.categories?.name || '',
-      categoryId: product.category_id || '',
-      stock: product.stock || 0,
-      sku: product.sku,
-      barcode: product.barcode,
-      trackInventory: product.track_inventory,
-      reorderPoint: product.reorder_point,
-      reorderQuantity: product.reorder_quantity,
-      stockByLocation: product.stock_by_location,
-      weight: product.weight ? parseFloat(product.weight) : undefined,
-      dimensions: product.dimensions,
-      sellerId: product.seller_id,
-    }));
+    return data.map(product => {
+      const images = Array.isArray(product.product_images) ? product.product_images : [];
+      const orderedImageUrls = images
+        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img: any) => img.image_url);
+
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: parseFloat(product.price),
+        imageUrls: product.image_urls || [],
+        productImages: orderedImageUrls,
+        foregroundImages: product.foreground_images || [],
+        backgroundImages: product.background_images || [],
+        category: product.categories?.name || '',
+        categoryId: product.category_id || '',
+        stock: product.stock || 0,
+        sku: product.sku,
+        barcode: product.barcode,
+        trackInventory: product.track_inventory,
+        reorderPoint: product.reorder_point,
+        reorderQuantity: product.reorder_quantity,
+        stockByLocation: product.stock_by_location,
+        weight: product.weight ? parseFloat(product.weight) : undefined,
+        dimensions: product.dimensions,
+        sellerId: product.seller_id,
+      };
+    });
   } catch (error) {
     console.error('Failed to fetch seller products:', error);
     return [];

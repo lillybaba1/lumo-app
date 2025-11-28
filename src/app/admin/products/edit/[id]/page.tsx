@@ -21,8 +21,8 @@ export default function EditProductPage() {
     async function fetchData() {
       try {
         const [productRes, categoriesRes] = await Promise.all([
-          fetch(`/api/products/${id}`),
-          fetch('/api/categories'),
+          fetch(`/api/products/${id}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+          fetch('/api/categories', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
         ]);
 
         if (!productRes.ok) {

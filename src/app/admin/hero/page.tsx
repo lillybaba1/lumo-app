@@ -33,7 +33,10 @@ export default function HeroAdminPage() {
     try {
       const [heroDataResult, productsData] = await Promise.all([
         getHeroData(),
-        fetch('/api/products').then(r => r.json())
+        fetch('/api/products', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (r) => {
+          if (!r.ok) throw new Error(`Products request failed: ${r.status}`);
+          return r.json();
+        })
       ]);
       setHeroData(heroDataResult || { products: [] });
       setAllProducts(Array.isArray(productsData) ? productsData : []);

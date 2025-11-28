@@ -66,6 +66,15 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const [pendingFile, setPendingFile] = React.useState<File | null>(null);
     const [fileQueue, setFileQueue] = React.useState<File[]>([]);
 
+    // Keep local state in sync if a different product record is loaded
+    React.useEffect(() => {
+        setImageUrls(product?.imageUrls || []);
+        setProductImages(product?.productImages || []);
+        setDescription(product?.description || '');
+        setProductName(product?.name || '');
+        setSelectedCategory(product?.categoryId || product?.category || '');
+    }, [product?.id, product?.imageUrls, product?.productImages, product?.description, product?.name, product?.categoryId, product?.category]);
+
     React.useEffect(() => {
         if (state.success) {
             toast({
@@ -220,6 +229,13 @@ export default function ProductForm({ product = null, categories }: ProductFormP
             const updated = new Map(prev);
             updated.delete(urlToRemove);
             return updated;
+        });
+    };
+
+    const handleSetPrimary = (url: string) => {
+        setProductImages(prev => {
+            const filtered = prev.filter(u => u !== url);
+            return [url, ...filtered];
         });
     };
 
@@ -574,16 +590,27 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        type="button"
-                                        onClick={() => handleOpenCropModal(url)}
-                                        className="w-full"
-                                    >
-                                        <CropIcon className="h-3 w-3 mr-1" />
-                                        Crop
-                                    </Button>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            type="button"
+                                            onClick={() => handleOpenCropModal(url)}
+                                            className="w-full"
+                                        >
+                                            <CropIcon className="h-3 w-3 mr-1" />
+                                            Crop
+                                        </Button>
+                                        <Button
+                                            variant={productImages[0] === url ? "default" : "outline"}
+                                            size="sm"
+                                            type="button"
+                                            onClick={() => handleSetPrimary(url)}
+                                            className="w-full"
+                                        >
+                                            {productImages[0] === url ? 'Primary' : 'Set Primary'}
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
