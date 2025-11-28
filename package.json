@@ -21,7 +21,8 @@
     "restore": "node scripts/restore-firestore.js",
     "sync:users": "node scripts/sync-auth-to-firestore.js",
     "seed:categories": "node scripts/seed-categories.js",
-    "create:admin": "node scripts/create-admin-user.js"
+    "create:admin": "node scripts/create-admin-user.js",
+    "migrate:marketplace": "node scripts/migrate-marketplace.mjs"
   },
   "dependencies": {
     "@genkit-ai/firebase": "1.16.1",
