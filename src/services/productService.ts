@@ -1,7 +1,7 @@
 "use server";
 
 import { Product, Category } from '@/lib/types';
-import { products as mockProducts, categories as mockCategories } from '@/lib/mock-data';
+import { categories as mockCategories } from '@/lib/mock-data';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 /**
@@ -28,11 +28,11 @@ export async function getProducts(): Promise<Product[]> {
 
     if (error) {
       console.error('Failed to fetch products from Supabase:', error);
-      return mockProducts;
+      return [];
     }
 
     if (!data || data.length === 0) {
-      return mockProducts;
+      return [];
     }
 
     // Map Supabase data to Product type
@@ -67,7 +67,7 @@ export async function getProducts(): Promise<Product[]> {
     });
   } catch (error) {
     console.error('Failed to fetch products:', error);
-    return mockProducts;
+    return [];
   }
 }
 
