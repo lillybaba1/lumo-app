@@ -21,16 +21,25 @@ export default function Hero() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all data in parallel
+    // Fetch all data in parallel with aggressive cache-busting
+    const timestamp = Date.now();
     Promise.all([
-      fetch(`/api/settings?t=${Date.now()}`, {
+      fetch(`/api/settings?nocache=${timestamp}`, {
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       }).then(res => res.json()),
-      fetch('/api/hero').then(res => res.json()),
-      fetch('/api/products').then(res => res.json())
+      fetch(`/api/hero?nocache=${timestamp}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      }).then(res => res.json()),
+      fetch(`/api/products?nocache=${timestamp}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      }).then(res => res.json())
     ])
       .then(([settingsData, heroDataResult, productsData]) => {
         setSettings(settingsData);
@@ -47,11 +56,12 @@ export default function Hero() {
   // Default values if settings haven't loaded yet
   const heroHeading = settings?.heroHeading || 'Step into Lumo';
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  // Add cache-buster to hero image URL to prevent browser caching
+  // Add aggressive cache-buster to hero image URL to prevent browser caching
   const baseHeroImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
+  const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const heroBackgroundImage = baseHeroImage.includes('?')
-    ? `${baseHeroImage}&v=${Date.now()}`
-    : `${baseHeroImage}?v=${Date.now()}`;
+    ? `${baseHeroImage}&v=${cacheBuster}`
+    : `${baseHeroImage}?v=${cacheBuster}`;
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
 
   const getProductById = (id: string) => products.find(p => p.id === id);
