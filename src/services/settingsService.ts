@@ -96,11 +96,15 @@ export async function getSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
     try {
+        // Merge with existing settings so partial updates don't wipe other fields (like hero image)
+        const existingSettings = await getSettings();
+        const settingsToSave = { ...existingSettings, ...settings };
+
         const { error } = await supabaseAdmin
             .from('site_settings')
             .upsert({
                 key: 'storeConfig',
-                value: settings,
+                value: settingsToSave,
                 updated_at: new Date().toISOString()
             }, {
                 onConflict: 'key'
