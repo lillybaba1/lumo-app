@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
+import { HeroData, HeroProduct, Product } from '@/lib/types';
+import Image from 'next/image';
 
 type HeroSettings = {
   heroHeading?: string;
@@ -14,23 +16,30 @@ type HeroSettings = {
 
 export default function Hero() {
   const [settings, setSettings] = useState<HeroSettings | null>(null);
+  const [heroData, setHeroData] = useState<HeroData | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch hero settings from API with cache busting
-    fetch(`/api/settings?t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setSettings(data);
+    // Fetch all data in parallel
+    Promise.all([
+      fetch(`/api/settings?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      }).then(res => res.json()),
+      fetch('/api/hero').then(res => res.json()),
+      fetch('/api/products').then(res => res.json())
+    ])
+      .then(([settingsData, heroDataResult, productsData]) => {
+        setSettings(settingsData);
+        setHeroData(heroDataResult);
+        setProducts(Array.isArray(productsData) ? productsData : []);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load hero settings:', err);
+        console.error('Failed to load hero data:', err);
         setLoading(false);
       });
   }, []);
@@ -40,6 +49,8 @@ export default function Hero() {
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
   const heroBackgroundImage = settings?.heroBackgroundImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
+
+  const getProductById = (id: string) => products.find(p => p.id === id);
 
   return (
     <div
@@ -59,6 +70,63 @@ export default function Hero() {
         {/* Enhanced Gradient Overlay for better text contrast */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
       </div>
+
+      {/* Hero Products Overlay */}
+      {heroData?.products && heroData.products.length > 0 && (
+        <div className="absolute inset-0">
+          {heroData.products
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((heroProduct) => {
+              const product = getProductById(heroProduct.productId);
+              if (!product) return null;
+
+              return (
+                <Link
+                  key={heroProduct.id}
+                  href={`/products/${product.id}`}
+                  className="absolute group transition-transform hover:scale-105 hover:z-10"
+                  style={{
+                    left: `${heroProduct.position.x}%`,
+                    top: `${heroProduct.position.y}%`,
+                    width: `${heroProduct.size.width}px`,
+                    height: `${heroProduct.size.height}px`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <div className="relative w-full h-full bg-white rounded-lg shadow-xl overflow-hidden border-2 border-white/20 hover:border-primary/50 transition-all">
+                    {/* Product Image */}
+                    <div className="absolute inset-0">
+                      {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                        <Image
+                          src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      )}
+                    </div>
+
+                    {/* Product Info Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-sm font-semibold truncate mb-1">{product.name}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-white text-lg font-bold">${product.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-1 text-xs text-white/90">
+                          <ShoppingBag className="h-3 w-3" />
+                          <span>View</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover ring effect */}
+                    <div className="absolute inset-0 ring-2 ring-primary/0 group-hover:ring-primary/50 rounded-lg transition-all pointer-events-none" />
+                  </div>
+                </Link>
+              );
+            })}
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">

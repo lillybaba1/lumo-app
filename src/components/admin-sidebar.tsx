@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Menu, X, ChevronLeft, ChevronRight, Store } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Menu, X, ChevronLeft, ChevronRight, Store, TrendingUp, HelpCircle, Mail, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,11 @@ const navGroups = [
     label: 'Customization',
     items: [
       { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
+      { href: '/admin/hero', icon: ImageIcon, label: 'Hero Products' },
+      { href: '/admin/collections', icon: TrendingUp, label: 'Collections' },
       { href: '/admin/pages', icon: FileText, label: 'Pages' },
+      { href: '/admin/faq', icon: HelpCircle, label: 'FAQ' },
+      { href: '/admin/contact', icon: Mail, label: 'Contact' },
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
     ]
   }

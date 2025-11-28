@@ -113,6 +113,7 @@ export interface Pages {
 export interface PageContent {
   title: string;
   content: string;
+  updatedAt?: string;
 }
 
 export interface User {
@@ -303,4 +304,59 @@ export interface ReturnItem {
   quantity: number;
   reason: string;
   condition?: 'new' | 'used' | 'damaged';
+}
+
+// FAQ Types
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface FAQData {
+  title: string;
+  introText?: string;
+  faqs: FAQ[];
+  updatedAt?: string;
+}
+
+// Contact Us Types
+export interface ContactData {
+  title: string;
+  introText?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  socialLinks?: {
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+  updatedAt?: string;
+}
+
+// Hero Product Types
+export interface HeroProduct {
+  id: string;
+  productId: string;
+  position: {
+    x: number; // percentage (0-100)
+    y: number; // percentage (0-100)
+  };
+  size: {
+    width: number; // pixels
+    height: number; // pixels
+  };
+  displayOrder: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface HeroData {
+  products: HeroProduct[];
+  updatedAt?: string;
 }

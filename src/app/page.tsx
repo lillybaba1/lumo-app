@@ -14,23 +14,34 @@ import { getProducts, getCategories } from '@/services/productService';
 import { seedInitialData } from '@/lib/seed';
 import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
+
+type Collections = {
+  bestSellers: string[];
+  newArrivals: string[];
+  deals: string[];
+};
 
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collections>({ bestSellers: [], newArrivals: [], deals: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       await seedInitialData();
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, collectionsData] = await Promise.all([
         getProducts(),
         getCategories(),
+        fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] }))
       ]);
       setProducts(productsData);
       setCategories(categoriesData);
+      setCollections(collectionsData);
       setLoading(false);
     }
     fetchData();
@@ -45,10 +56,10 @@ export default function HomePageDataContainer() {
     </div>;
   }
 
-  return <Home products={products} categories={categories} />;
+  return <Home products={products} categories={categories} collections={collections} />;
 }
 
-function Home({ products, categories }: { products: Product[], categories: Category[] }) {
+function Home({ products, categories, collections }: { products: Product[], categories: Category[], collections: Collections }) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -123,6 +134,45 @@ function Home({ products, categories }: { products: Product[], categories: Categ
     return sorted;
   }, [products, categories, searchQuery, selectedCategory, priceRange, showInStockOnly, sortBy]);
 
+  // Helper function to get products by IDs
+  const getProductsByIds = (ids: string[]) => {
+    return ids.map(id => products.find(p => p.id === id)).filter(Boolean) as Product[];
+  };
+
+  const CollectionSection = ({ title, icon: Icon, productIds, viewAllLink }: {
+    title: string;
+    icon: any;
+    productIds: string[];
+    viewAllLink?: string;
+  }) => {
+    const collectionProducts = getProductsByIds(productIds).slice(0, 4);
+
+    if (collectionProducts.length === 0) return null;
+
+    return (
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Icon className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-headline font-bold">{title}</h2>
+          </div>
+          {viewAllLink && (
+            <Link href={viewAllLink}>
+              <Button variant="ghost" className="gap-2">
+                View All <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {collectionProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)' }}>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
@@ -131,6 +181,25 @@ function Home({ products, categories }: { products: Product[], categories: Categ
 
       <div className="w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Featured Collections */}
+          <CollectionSection
+            title="Best Sellers"
+            icon={TrendingUp}
+            productIds={collections.bestSellers}
+            viewAllLink="/products?filter=bestsellers"
+          />
+          <CollectionSection
+            title="New Arrivals"
+            icon={Sparkles}
+            productIds={collections.newArrivals}
+            viewAllLink="/products?filter=new"
+          />
+          <CollectionSection
+            title="Deals & Offers"
+            icon={Tag}
+            productIds={collections.deals}
+            viewAllLink="/products?filter=deals"
+          />
           {/* Enhanced Search and Sort Bar */}
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">
