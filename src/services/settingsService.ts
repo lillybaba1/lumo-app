@@ -96,9 +96,20 @@ export async function getSettings(): Promise<Settings> {
 
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
     try {
-        // Merge with existing settings so partial updates don't wipe other fields (like hero image)
-        const existingSettings = await getSettings();
-        const settingsToSave = { ...existingSettings, ...settings };
+        // Fetch the current row directly to avoid merging in fallback defaults
+        const { data: existingRow, error: fetchError } = await supabaseAdmin
+            .from('site_settings')
+            .select('value')
+            .eq('key', 'storeConfig')
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            // Only ignore "no rows" errors; surface anything else
+            throw fetchError;
+        }
+
+        const currentValue = (existingRow?.value as Partial<Settings> | undefined) ?? {};
+        const settingsToSave = { ...currentValue, ...settings };
 
         const { error } = await supabaseAdmin
             .from('site_settings')
