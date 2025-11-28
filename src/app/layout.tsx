@@ -3,13 +3,12 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
 import { AIAssistantWidget } from '@/components/ai-assistant-widget';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import UserSidebar from '@/components/user-sidebar';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getSiteSettings } from '@/services/settingsService';
 import AuthMenu from '@/components/auth-menu';
+import PublicSidebar from '@/components/public-sidebar';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -49,22 +48,20 @@ export default async function RootLayout({
       <body className="font-body antialiased">
         <ThemeProvider initialTheme={initialTheme}>
           <CartProvider>
-            <SidebarProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header>
-                  <AuthMenu />
-                </Header>
-                <div className="flex flex-1 pt-0">
-                  <UserSidebar />
-                  <main className="flex-1 overflow-x-hidden">
-                    {children}
-                  </main>
-                </div>
-                <Footer />
+            <div className="flex min-h-screen flex-col">
+              <Header>
+                <AuthMenu />
+              </Header>
+              <div className="flex flex-1 pt-16 lg:pt-0">
+                <PublicSidebar />
+                <main className="flex-1 overflow-x-hidden">
+                  {children}
+                </main>
               </div>
-              <Toaster />
-              <AIAssistantWidget />
-            </SidebarProvider>
+              <Footer />
+            </div>
+            <Toaster />
+            <AIAssistantWidget />
           </CartProvider>
         </ThemeProvider>
       </body>

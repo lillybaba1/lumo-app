@@ -6,7 +6,6 @@ import { ShoppingBag, Heart, Shield, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
-import { SidebarTrigger } from "./ui/sidebar";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -60,13 +59,10 @@ export default function Header({ children }: { children: React.ReactNode }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="flex items-center">
-          <SidebarTrigger className="mr-2" />
-          <Link href="/" className="flex items-center space-x-2">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline text-lg">Lumo</span>
-          </Link>
-        </div>
+        <Link href="/" className="flex items-center space-x-2">
+          <ShoppingBag className="h-6 w-6 text-primary" />
+          <span className="font-bold font-headline text-lg">Lumo</span>
+        </Link>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center space-x-2">
             {children}
