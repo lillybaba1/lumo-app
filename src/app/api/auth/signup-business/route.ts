@@ -1,10 +1,39 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBusinessAccount } from '@/services/businessAccountService';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  name: z.string().min(1),
+  phone: z.string().optional().nullable(),
+  businessName: z.string().min(1),
+  businessAddress: z.string().min(1),
+  businessPhone: z.string().optional().nullable(),
+  taxId: z.string().optional().nullable(),
+  website: z.string().url().optional().nullable(),
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (err) {
+      console.error('Business signup: invalid JSON body', err);
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const parsed = signupSchema.safeParse(body);
+    if (!parsed.success) {
+      console.error('Business signup: validation failed', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Invalid signup data', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
       email,
       password,
@@ -15,15 +44,7 @@ export async function POST(request: Request) {
       businessPhone,
       taxId,
       website,
-    } = body;
-
-    // Validate required fields
-    if (!email || !password || !name || !businessName || !businessAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const supabase = await createClient();
 
@@ -41,7 +62,7 @@ export async function POST(request: Request) {
     });
 
     if (signUpError) {
-      console.error('Supabase signup error:', signUpError);
+      console.error('Business signup: Supabase signup error:', signUpError);
       return NextResponse.json(
         { error: signUpError.message },
         { status: 400 }
@@ -56,19 +77,25 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Create business account
-    const businessAccount = await createBusinessAccount(data.user.id, {
-      businessName,
-      contactPersonName: name,
-      contactEmail: email,
-      businessAddress,
-      businessPhone: businessPhone || phone,
-      taxId: taxId || undefined,
-      website: website || undefined,
-      status: 'PENDING_VERIFICATION',
-    });
+    let businessAccount;
+    try {
+      businessAccount = await createBusinessAccount(data.user.id, {
+        businessName,
+        contactPersonName: name,
+        contactEmail: email,
+        businessAddress,
+        businessPhone: businessPhone || phone,
+        taxId: taxId || undefined,
+        website: website || undefined,
+        status: 'PENDING_VERIFICATION',
+      });
+    } catch (err) {
+      console.error('Business signup: createBusinessAccount threw:', err);
+      businessAccount = null;
+    }
 
     if (!businessAccount) {
-      console.error('Failed to create business account');
+      console.error('Business signup: Failed to create business account for user', data.user.id);
       // User is created but business account failed
       // The user can still log in but won't have business access
       return NextResponse.json(
@@ -90,7 +117,7 @@ export async function POST(request: Request) {
       });
 
     if (profileError) {
-      console.error('Failed to create user profile:', profileError);
+      console.error('Business signup: Failed to create user profile:', profileError);
       // Continue anyway - the business account is created
     }
 
@@ -99,10 +126,10 @@ export async function POST(request: Request) {
       message: 'Business account created successfully',
       userId: data.user.id,
       businessAccountId: businessAccount.id,
-    });
+    }, { status: 201 });
 
   } catch (error: any) {
-    console.error('Business signup error:', error);
+    console.error('Business signup unexpected error:', error);
     return NextResponse.json(
       { error: error.message || 'An unexpected error occurred' },
       { status: 500 }

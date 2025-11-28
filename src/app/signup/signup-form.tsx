@@ -102,7 +102,7 @@ export default function SignupForm() {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || 'Failed to create business account');
+          throw new Error(result.error || result.message || 'Failed to create business account');
         }
 
         toast({
