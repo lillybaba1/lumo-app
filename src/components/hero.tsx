@@ -206,11 +206,11 @@ export default function Hero() {
 
       {/* Content */}
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-24 md:py-32 lg:py-40">
+        <div className="py-12 md:py-32 lg:py-40">
           <div className="max-w-2xl">
             {/* Heading */}
             <h1
-              className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6"
               style={{
                 color: 'var(--color-text-inverse)',
                 fontFamily: 'var(--font-heading)',
@@ -223,7 +223,7 @@ export default function Hero() {
 
             {/* Tagline */}
             <p
-              className="text-lg md:text-xl mb-8 max-w-xl"
+              className="text-base md:text-xl mb-6 md:mb-8 max-w-xl"
               style={{
                 color: 'var(--color-text-inverse)',
                 opacity: 0.95,
@@ -234,20 +234,20 @@ export default function Hero() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <Link href="/products?filter=new">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto text-base font-semibold"
+                  className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
                   style={{
                     backgroundColor: 'var(--button-primary-bg)',
                     color: 'var(--button-primary-fg)',
                     borderRadius: 'var(--radius-button)',
-                    padding: 'var(--spacing-md) var(--spacing-xl)',
+                    padding: '0 var(--spacing-xl)',
                   }}
                 >
                   Shop New Arrivals
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </Link>
 
@@ -255,13 +255,13 @@ export default function Hero() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto text-base font-semibold"
+                  className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
                   style={{
                     backgroundColor: 'var(--button-secondary-bg)',
                     color: 'var(--color-text-inverse)',
                     borderColor: 'var(--color-text-inverse)',
                     borderRadius: 'var(--radius-button)',
-                    padding: 'var(--spacing-md) var(--spacing-xl)',
+                    padding: '0 var(--spacing-xl)',
                   }}
                 >
                   Browse Collections
@@ -274,14 +274,15 @@ export default function Hero() {
 
       {/* Mobile carousel for hero products */}
       {mobileProducts.length > 0 && (
-        <div className="md:hidden mt-4 px-4">
+        <div className="md:hidden mt-2 px-4 pb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold">{heroData?.heroLabelText || 'Featured'}</span>
+            <span className="text-xs font-semibold text-white/90">{heroData?.heroLabelText || 'Featured'}</span>
             {mobileProducts.length > 1 && (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-6 px-2 text-xs bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => setMobileIndex((prev) => (prev - 1 + mobileProducts.length) % mobileProducts.length)}
                 >
                   Prev
@@ -289,6 +290,7 @@ export default function Hero() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-6 px-2 text-xs bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => setMobileIndex((prev) => (prev + 1) % mobileProducts.length)}
                 >
                   Next
@@ -296,7 +298,7 @@ export default function Hero() {
               </div>
             )}
           </div>
-          <div className="overflow-hidden rounded-xl border bg-white/80 backdrop-blur">
+          <div className="overflow-hidden rounded-xl border border-white/20 bg-white/90 backdrop-blur shadow-lg">
             <div
               className="flex transition-transform duration-300"
               style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
@@ -305,33 +307,37 @@ export default function Hero() {
                 <Link
                   href={`/products/${product.id}`}
                   key={product.id}
-                  className="min-w-full flex-shrink-0"
+                  className="min-w-full flex-shrink-0 flex h-24"
                 >
-                  <div className="relative w-full aspect-[4/3]">
+                  <div className="relative w-24 h-24 flex-shrink-0">
                     {(product.productImages?.[0] || product.imageUrls?.[0]) && (
                       <Image
                         src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
                         alt={product.name}
                         fill
-                        className="object-cover rounded-t-xl"
+                        className="object-cover"
                         unoptimized
                       />
                     )}
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-semibold truncate">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">${product.price.toFixed(2)}</p>
+                  <div className="p-3 flex flex-col justify-center flex-grow min-w-0">
+                    <p className="text-sm font-semibold truncate mb-1">{product.name}</p>
+                    <p className="text-sm font-bold text-primary">${product.price.toFixed(2)}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <ShoppingBag className="h-3 w-3" />
+                        <span>View Details</span>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
           {mobileProducts.length > 1 && (
-            <div className="flex justify-center gap-2 mt-2">
+            <div className="flex justify-center gap-1.5 mt-2">
               {mobileProducts.map((_, idx) => (
                 <button
                   key={idx}
-                  className={`h-2 w-2 rounded-full ${idx === mobileIndex ? 'bg-primary' : 'bg-muted'}`}
+                  className={`h-1.5 w-1.5 rounded-full transition-colors ${idx === mobileIndex ? 'bg-white' : 'bg-white/40'}`}
                   onClick={() => setMobileIndex(idx)}
                   aria-label={`Go to hero product ${idx + 1}`}
                 />

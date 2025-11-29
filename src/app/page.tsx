@@ -14,7 +14,7 @@ import { getProducts, getCategories } from '@/services/productService';
 import { seedInitialData } from '@/lib/seed';
 import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
@@ -66,7 +66,24 @@ function Home({ products, categories, collections }: { products: Product[], cate
   const [sortBy, setSortBy] = useState('name-asc');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showInStockOnly, setShowInStockOnly] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Open filters by default on desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setShowFilters(true);
+      } else {
+        setShowFilters(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Calculate max price from products
   const maxPrice = useMemo(() => {
@@ -150,21 +167,21 @@ function Home({ products, categories, collections }: { products: Product[], cate
     if (collectionProducts.length === 0) return null;
 
     return (
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Icon className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-headline font-bold">{title}</h2>
+      <div className="mb-8 md:mb-12">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            <h2 className="text-xl md:text-2xl font-headline font-bold">{title}</h2>
           </div>
           {viewAllLink && (
             <Link href={viewAllLink}>
-              <Button variant="ghost" className="gap-2">
+              <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
                 View All <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {collectionProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
@@ -175,12 +192,12 @@ function Home({ products, categories, collections }: { products: Product[], cate
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)' }}>
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         <Hero />
       </div>
 
       <div className="w-full">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Featured Collections */}
           <CollectionSection
             title="Best Sellers"
@@ -251,17 +268,24 @@ function Home({ products, categories, collections }: { products: Product[], cate
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
             {/* Enhanced Filters Sidebar */}
-            {showFilters && (
-              <aside className="md:col-span-1">
-                <div className="sticky top-20 w-full rounded-2xl border bg-white/70 backdrop-blur-sm p-5 shadow-sm space-y-6">
+            <aside className={`
+              ${showFilters ? 'fixed inset-0 z-50 bg-white p-6 overflow-y-auto' : 'hidden'}
+              md:relative md:block md:z-0 md:bg-transparent md:p-0 md:overflow-visible md:col-span-1
+            `}>
+                <div className="md:sticky md:top-20 w-full rounded-2xl border-0 md:border bg-white/70 backdrop-blur-sm p-0 md:p-5 shadow-none md:shadow-sm space-y-6 h-full md:h-auto">
                   {/* Filter Header */}
-                  <div>
-                    <h3 className="font-headline font-bold text-lg">Filters</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Refine your search
-                    </p>
+                  <div className="flex items-center justify-between md:block">
+                    <div>
+                      <h3 className="font-headline font-bold text-lg">Filters</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Refine your search
+                      </p>
+                    </div>
+                    <button onClick={() => setShowFilters(false)} className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground">
+                        <X className="h-6 w-6" />
+                    </button>
                   </div>
 
                   <Separator />
@@ -342,12 +366,11 @@ function Home({ products, categories, collections }: { products: Product[], cate
                   </div>
                 </div>
               </aside>
-            )}
 
             {/* Products Grid */}
             <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
               {filteredAndSortedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                   {filteredAndSortedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
