@@ -4,7 +4,7 @@ import { getFAQData } from '@/app/admin/faq/actions';
 import { getContactData } from '@/app/admin/contact/actions';
 import { notFound } from 'next/navigation';
 import * as defaultPagesData from '@/data/pages.json';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, X } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -132,7 +132,7 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
                       rel="noopener noreferrer"
                       className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
                     >
-                      <Twitter className="h-5 w-5 text-primary" />
+                      <X className="h-5 w-5 text-primary" />
                     </a>
                   )}
                   {contactData.socialLinks.instagram && (
