@@ -15,16 +15,19 @@ export async function getHeroData(): Promise<HeroData | null> {
       if (error.code === 'PGRST116') {
         // No data found, return default
         return {
-          products: []
+          products: [],
+          heroLabelText: 'Featured',
+          heroLabelPosition: { x: 10, y: 15 }
         };
       }
       throw error;
     }
 
-    return data?.value as HeroData || { products: [] };
+    const value = data?.value as HeroData | undefined;
+    return value || { products: [], heroLabelText: 'Featured', heroLabelPosition: { x: 10, y: 15 } };
   } catch (error) {
     console.error('Failed to get hero data:', error);
-    return { products: [] };
+    return { products: [], heroLabelText: 'Featured', heroLabelPosition: { x: 10, y: 15 } };
   }
 }
 

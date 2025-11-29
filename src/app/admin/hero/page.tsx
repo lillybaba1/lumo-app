@@ -17,12 +17,14 @@ export default function HeroAdminPage() {
   const { toast } = useToast();
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [resizingId, setResizingId] = useState<string | null>(null);
+  const [draggingLabel, setDraggingLabel] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,18 +33,36 @@ export default function HeroAdminPage() {
 
   const loadData = async () => {
     try {
-      const [heroDataResult, productsData] = await Promise.all([
+      const [heroDataResult, productsData, settingsData] = await Promise.all([
         getHeroData(),
         fetch('/api/products', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (r) => {
           if (!r.ok) throw new Error(`Products request failed: ${r.status}`);
           return r.json();
+        }),
+        fetch('/api/settings?nocache=' + Date.now(), {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        }).then(async (r) => {
+          if (!r.ok) throw new Error(`Settings request failed: ${r.status}`);
+          return r.json();
         })
       ]);
-      setHeroData(heroDataResult || { products: [] });
+      const mergedData = {
+        heroLabelText: 'Featured',
+        heroLabelPosition: { x: 10, y: 15 },
+        products: [],
+        ...(heroDataResult || {}),
+      };
+      setHeroData(mergedData);
       setAllProducts(Array.isArray(productsData) ? productsData : []);
+      setHeroBackgroundImage(settingsData?.heroBackgroundImage || '');
     } catch (error) {
       console.error('Failed to load data:', error);
-      setHeroData({ products: [] });
+      setHeroData({ products: [], heroLabelText: 'Featured', heroLabelPosition: { x: 10, y: 15 } });
     } finally {
       setLoading(false);
     }
@@ -106,6 +126,11 @@ export default function HeroAdminPage() {
     });
   };
 
+  const updateLabelText = (text: string) => {
+    if (!heroData) return;
+    setHeroData({ ...heroData, heroLabelText: text });
+  };
+
   const handleMouseDown = (e: React.MouseEvent, id: string, type: 'drag' | 'resize') => {
     e.preventDefault();
     if (type === 'drag') {
@@ -120,6 +145,18 @@ export default function HeroAdminPage() {
 
     const container = containerRef.current;
     const rect = container.getBoundingClientRect();
+
+    if (draggingLabel) {
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setHeroData({
+        ...heroData,
+        heroLabelPosition: {
+          x: Math.max(0, Math.min(100, x)),
+          y: Math.max(0, Math.min(100, y)),
+        }
+      });
+    }
 
     if (draggingId) {
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -159,6 +196,7 @@ export default function HeroAdminPage() {
   const handleMouseUp = () => {
     setDraggingId(null);
     setResizingId(null);
+    setDraggingLabel(false);
   };
 
   const getProductById = (id: string) => allProducts.find(p => p.id === id);
@@ -311,13 +349,40 @@ export default function HeroAdminPage() {
               onMouseLeave={handleMouseUp}
               style={{ cursor: draggingId || resizingId ? 'grabbing' : 'default' }}
             >
-              {/* Background text to show it's the hero area */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center text-white/20">
-                  <ImageIcon className="h-16 w-16 mx-auto mb-2" />
-                  <p className="text-sm">Hero Background Area</p>
+              {/* Background */}
+              {heroBackgroundImage ? (
+                <div
+                  className="absolute inset-0 bg-cover bg-no-repeat"
+                  style={{ backgroundImage: `url(${heroBackgroundImage})`, backgroundPosition: 'center' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
                 </div>
-              </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center text-white/20">
+                    <ImageIcon className="h-16 w-16 mx-auto mb-2" />
+                    <p className="text-sm">Hero Background Area</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Label */}
+              {heroData?.heroLabelText && (
+                <div
+                  className="absolute cursor-move"
+                  style={{
+                    left: `${heroData.heroLabelPosition?.x ?? 10}%`,
+                    top: `${heroData.heroLabelPosition?.y ?? 15}%`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                  onMouseDown={(e) => { e.preventDefault(); setDraggingLabel(true); }}
+                >
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 text-sm font-semibold text-slate-900 shadow-lg">
+                    {heroData.heroLabelText}
+                    <Move className="h-3 w-3 text-slate-700" />
+                  </span>
+                </div>
+              )}
 
               {/* Product overlays */}
               {heroData?.products.map((heroProduct) => {
@@ -396,6 +461,17 @@ export default function HeroAdminPage() {
             </div>
 
             <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Label Text</label>
+                  <Input
+                    value={heroData?.heroLabelText || ''}
+                    onChange={(e) => updateLabelText(e.target.value)}
+                    placeholder="Featured"
+                  />
+                  <p className="text-xs text-muted-foreground">Drag the pill on the preview to position it.</p>
+                </div>
+              </div>
               <p className="text-sm font-semibold mb-2">Instructions:</p>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Click the <Move className="inline h-3 w-3" /> icon to drag and position a product</li>

@@ -19,6 +19,7 @@ export default function Hero() {
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileIndex, setMobileIndex] = useState(0);
 
   useEffect(() => {
     // Fetch data with cache-busting but don't fail all if one request fails
@@ -92,6 +93,20 @@ export default function Hero() {
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
 
   const getProductById = (id: string) => products.find(p => p.id === id);
+  const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
+
+  const mobileProducts = heroProducts
+    .map((hp) => {
+      const product = getProductById(hp.productId);
+      return product ? { product, hp } : null;
+    })
+    .filter(Boolean) as { product: Product; hp: HeroProduct }[];
+
+  useEffect(() => {
+    if (mobileIndex >= mobileProducts.length) {
+      setMobileIndex(0);
+    }
+  }, [mobileProducts.length, mobileIndex]);
 
   return (
     <div
@@ -116,60 +131,72 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
       )}
 
-      {/* Hero Products Overlay */}
-      {heroData?.products && heroData.products.length > 0 && (
-        <div className="absolute inset-0">
-          {heroData.products
-            .sort((a, b) => a.displayOrder - b.displayOrder)
-            .map((heroProduct) => {
-              const product = getProductById(heroProduct.productId);
-              if (!product) return null;
+      {/* Hero Label */}
+      {heroData?.heroLabelText && (
+        <div
+          className="absolute hidden md:flex"
+          style={{
+            left: `${heroData.heroLabelPosition?.x ?? 10}%`,
+            top: `${heroData.heroLabelPosition?.y ?? 15}%`,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+          }}
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 text-sm font-semibold text-slate-900 shadow-lg">
+            {heroData.heroLabelText}
+          </span>
+        </div>
+      )}
 
-              return (
-                <Link
-                  key={heroProduct.id}
-                  href={`/products/${product.id}`}
-                  className="absolute group transition-transform hover:scale-105 hover:z-10"
-                  style={{
-                    left: `${heroProduct.position.x}%`,
-                    top: `${heroProduct.position.y}%`,
-                    width: `${heroProduct.size.width}px`,
-                    height: `${heroProduct.size.height}px`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  <div className="relative w-full h-full bg-white rounded-lg shadow-xl overflow-hidden border-2 border-white/20 hover:border-primary/50 transition-all">
-                    {/* Product Image */}
-                    <div className="absolute inset-0">
-                      {(product.productImages?.[0] || product.imageUrls?.[0]) && (
-                        <Image
-                          src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      )}
-                    </div>
+      {/* Hero Products Overlay - desktop */}
+      {heroProducts.length > 0 && (
+        <div className="absolute inset-0 hidden md:block">
+          {heroProducts.map((heroProduct) => {
+            const product = getProductById(heroProduct.productId);
+            if (!product) return null;
 
-                    {/* Product Info Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-white text-sm font-semibold truncate mb-1">{product.name}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-white text-lg font-bold">${product.price.toFixed(2)}</p>
-                        <div className="flex items-center gap-1 text-xs text-white/90">
-                          <ShoppingBag className="h-3 w-3" />
-                          <span>View</span>
-                        </div>
+            return (
+              <Link
+                key={heroProduct.id}
+                href={`/products/${product.id}`}
+                className="absolute group transition-transform hover:scale-105 hover:z-10"
+                style={{
+                  left: `${heroProduct.position.x}%`,
+                  top: `${heroProduct.position.y}%`,
+                  width: `${heroProduct.size.width}px`,
+                  height: `${heroProduct.size.height}px`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                <div className="relative w-full h-full bg-white rounded-lg shadow-xl overflow-hidden border-2 border-white/20 hover:border-primary/50 transition-all">
+                  <div className="absolute inset-0">
+                    {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                      <Image
+                        src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-white text-sm font-semibold truncate mb-1">{product.name}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-white text-lg font-bold">${product.price.toFixed(2)}</p>
+                      <div className="flex items-center gap-1 text-xs text-white/90">
+                        <ShoppingBag className="h-3 w-3" />
+                        <span>View</span>
                       </div>
                     </div>
-
-                    {/* Hover ring effect */}
-                    <div className="absolute inset-0 ring-2 ring-primary/0 group-hover:ring-primary/50 rounded-lg transition-all pointer-events-none" />
                   </div>
-                </Link>
-              );
-            })}
+
+                  <div className="absolute inset-0 ring-2 ring-primary/0 group-hover:ring-primary/50 rounded-lg transition-all pointer-events-none" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -240,6 +267,75 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      {/* Mobile carousel for hero products */}
+      {mobileProducts.length > 0 && (
+        <div className="md:hidden mt-4 px-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold">{heroData?.heroLabelText || 'Featured'}</span>
+            {mobileProducts.length > 1 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMobileIndex((prev) => (prev - 1 + mobileProducts.length) % mobileProducts.length)}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMobileIndex((prev) => (prev + 1) % mobileProducts.length)}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="overflow-hidden rounded-xl border bg-white/80 backdrop-blur">
+            <div
+              className="flex transition-transform duration-300"
+              style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
+            >
+              {mobileProducts.map(({ product }) => (
+                <Link
+                  href={`/products/${product.id}`}
+                  key={product.id}
+                  className="min-w-full flex-shrink-0"
+                >
+                  <div className="relative w-full aspect-[4/3]">
+                    {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                      <Image
+                        src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                        alt={product.name}
+                        fill
+                        className="object-cover rounded-t-xl"
+                        unoptimized
+                      />
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-semibold truncate">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">${product.price.toFixed(2)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+          {mobileProducts.length > 1 && (
+            <div className="flex justify-center gap-2 mt-2">
+              {mobileProducts.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`h-2 w-2 rounded-full ${idx === mobileIndex ? 'bg-primary' : 'bg-muted'}`}
+                  onClick={() => setMobileIndex(idx)}
+                  aria-label={`Go to hero product ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

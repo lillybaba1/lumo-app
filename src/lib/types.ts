@@ -397,5 +397,10 @@ export interface HeroProduct {
 
 export interface HeroData {
   products: HeroProduct[];
+  heroLabelText?: string;
+  heroLabelPosition?: {
+    x: number; // percentage
+    y: number; // percentage
+  };
   updatedAt?: string;
 }
