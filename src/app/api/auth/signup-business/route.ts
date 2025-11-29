@@ -3,6 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createBusinessAccount } from '@/services/businessAccountService';
 import { z } from 'zod';
 
+const websiteSchema = z
+  .union([
+    z.string().url({ message: 'Invalid url' }).trim(),
+    z.literal('').transform(() => undefined),
+  ])
+  .optional()
+  .nullable();
+
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -12,7 +20,7 @@ const signupSchema = z.object({
   businessAddress: z.string().min(1),
   businessPhone: z.string().optional().nullable(),
   taxId: z.string().optional().nullable(),
-  website: z.string().url().optional().nullable(),
+  website: websiteSchema,
 });
 
 export async function POST(request: Request) {
@@ -129,9 +137,17 @@ export async function POST(request: Request) {
     }, { status: 201 });
 
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      console.error('Business signup validation error:', error.flatten());
+      return NextResponse.json(
+        { error: 'Invalid signup data', details: error.flatten() },
+        { status: 400 }
+      );
+    }
+
     console.error('Business signup unexpected error:', error);
     return NextResponse.json(
-      { error: error.message || 'An unexpected error occurred' },
+      { error: 'Failed to create business account. Please contact support.' },
       { status: 500 }
     );
   }

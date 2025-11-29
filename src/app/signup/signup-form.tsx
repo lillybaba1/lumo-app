@@ -102,6 +102,13 @@ export default function SignupForm() {
         const result = await response.json();
 
         if (!response.ok) {
+          const fieldErrors = result?.details?.fieldErrors;
+          if (fieldErrors) {
+            const messages = Object.values(fieldErrors).flat().filter(Boolean) as string[];
+            if (messages.length > 0) {
+              throw new Error(messages.join(', '));
+            }
+          }
           throw new Error(result.error || result.message || 'Failed to create business account');
         }
 
