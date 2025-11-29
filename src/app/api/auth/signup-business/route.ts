@@ -70,9 +70,19 @@ export async function POST(request: Request) {
     });
 
     if (signUpError) {
+      const message = signUpError.message || 'Signup failed';
       console.error('Business signup: Supabase signup error:', signUpError);
+
+      // Handle provider rate limiting gracefully
+      if (message.toLowerCase().includes('for security purposes')) {
+        return NextResponse.json(
+          { error: 'rate_limit', message },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
-        { error: signUpError.message },
+        { error: message },
         { status: 400 }
       );
     }

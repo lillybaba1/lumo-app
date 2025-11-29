@@ -27,6 +27,7 @@ export default function SignupForm() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'account-type' | 'signup' | 'verify'>('account-type');
 
@@ -102,6 +103,23 @@ export default function SignupForm() {
         const result = await response.json();
 
         if (!response.ok) {
+          if (response.status === 429 || result?.error === 'rate_limit') {
+            const message = result?.message || 'Please wait before retrying signup.';
+            toast({
+              title: 'Rate Limited',
+              description: message,
+              variant: 'destructive',
+            });
+
+            // Extract seconds from message if present
+            const match = message.match(/after\s+(\d+)\s*seconds?/i);
+            if (match && match[1]) {
+              const secs = parseInt(match[1], 10);
+              if (!isNaN(secs)) setCooldown(secs);
+            }
+            setLoading(false);
+            return;
+          }
           const fieldErrors = result?.details?.fieldErrors;
           if (fieldErrors) {
             const messages = Object.values(fieldErrors).flat().filter(Boolean) as string[];
@@ -189,6 +207,15 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
+
+  // Cooldown timer for rate limiting
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleResendEmail = async () => {
     setLoading(true);
@@ -479,8 +506,8 @@ export default function SignupForm() {
                 >
                   Back
                 </Button>
-                <Button type="submit" className="flex-1" disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
+                <Button type="submit" className="flex-1" disabled={loading || cooldown > 0}>
+                  {loading ? <Loader2 className="animate-spin" /> : cooldown > 0 ? `Wait ${cooldown}s` : 'Create Account'}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
