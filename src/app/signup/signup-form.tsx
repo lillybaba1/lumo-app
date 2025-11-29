@@ -39,6 +39,16 @@ export default function SignupForm() {
   const [taxId, setTaxId] = useState('');
   const [website, setWebsite] = useState('');
 
+  // Cooldown timer effect
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setInterval(() => {
+        setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [cooldown]);
+
   const isStrongPassword = (value: string) => {
     // At least 8 chars, one uppercase, one lowercase
     return /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(value);
@@ -208,15 +218,6 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
-
-  // Cooldown timer for rate limiting
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setInterval(() => {
-      setCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [cooldown]);
 
   const handleResendEmail = async () => {
     setLoading(true);

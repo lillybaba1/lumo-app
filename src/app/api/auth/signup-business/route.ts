@@ -4,12 +4,12 @@ import { createBusinessAccount } from '@/services/businessAccountService';
 import { z } from 'zod';
 
 const websiteSchema = z
-  .union([
-    z.string().url({ message: 'Invalid url' }).trim(),
-    z.literal('').transform(() => undefined),
-  ])
+  .string()
+  .trim()
   .optional()
-  .nullable();
+  .nullable()
+  .transform((val) => (val === '' ? undefined : val))
+  .pipe(z.string().url({ message: 'Invalid url' }).optional().nullable());
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -74,10 +74,17 @@ export async function POST(request: Request) {
       console.error('Business signup: Supabase signup error:', signUpError);
 
       // Handle provider rate limiting gracefully
-      if (message.toLowerCase().includes('for security purposes')) {
+      if (message.toLowerCase().includes('for security purposes') || signUpError.status === 429) {
         return NextResponse.json(
           { error: 'rate_limit', message },
           { status: 429 }
+        );
+      }
+
+      if (message.includes('already registered') || message.includes('User already exists')) {
+         return NextResponse.json(
+          { error: 'Email already in use', details: { fieldErrors: { email: ['Email already in use'] } } },
+          { status: 409 }
         );
       }
 

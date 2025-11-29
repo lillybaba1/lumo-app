@@ -134,7 +134,10 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
             // Delete images that are no longer present
             for (const existing of existingImages) {
               if (!allImageUrls.includes(existing.imageUrl) && existing.id) {
-                await deleteProductImage(existing.id);
+                const deleted = await deleteProductImage(existing.id);
+                if (!deleted) {
+                    console.error(`[Product Save] Failed to delete image ${existing.id} (${existing.imageUrl})`);
+                }
               }
             }
 

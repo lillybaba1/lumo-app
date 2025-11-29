@@ -42,7 +42,12 @@ export default function ProductForm({ product = null, categories }: ProductFormP
     const router = useRouter();
     const [state, formAction] = useFormState(saveProduct, initialState);
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
-    const [productImages, setProductImages] = React.useState<string[]>(product?.productImages || []);
+    // Initialize productImages from structured data if available, otherwise fall back to legacy imageUrls
+    const [productImages, setProductImages] = React.useState<string[]>(
+        (product?.productImages && product.productImages.length > 0) 
+            ? product.productImages 
+            : (product?.imageUrls || [])
+    );
     const [isUploading, setIsUploading] = React.useState(false);
     const productImageInputRef = React.useRef<HTMLInputElement>(null);
 

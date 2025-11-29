@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { HeroData } from '@/lib/types';
 import { z } from 'zod';
+import { getSettings, saveSettings } from '@/services/settingsService';
 
 const heroProductSchema = z.object({
   id: z.string(),
@@ -27,6 +28,7 @@ const heroDataSchema = z.object({
     x: z.number(),
     y: z.number(),
   }).optional(),
+  backgroundImageUrl: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 
@@ -58,7 +60,7 @@ export async function getHeroData(): Promise<HeroData | null> {
   }
 }
 
-export async function saveHeroData(heroData: HeroData) {
+export async function saveHeroData(heroData: HeroData & { backgroundImageUrl?: string }) {
   try {
     console.log('Saving hero data:', JSON.stringify(heroData, null, 2));
 
@@ -90,6 +92,15 @@ export async function saveHeroData(heroData: HeroData) {
       ? parsed.data.products.filter(p => validIds!.has(p.productId))
       : parsed.data.products;
 
+    // Save background image to settings if provided
+    if (parsed.data.backgroundImageUrl) {
+      const currentSettings = await getSettings();
+      await saveSettings({
+        ...currentSettings,
+        heroBackgroundImage: parsed.data.backgroundImageUrl,
+      });
+    }
+
     const payload = {
       ...parsed.data,
       products: filteredProducts,
@@ -97,23 +108,24 @@ export async function saveHeroData(heroData: HeroData) {
       heroLabelPosition: parsed.data.heroLabelPosition || { x: 10, y: 15 },
       updatedAt: new Date().toISOString(),
     };
+    // Remove backgroundImageUrl from payload as it's stored in settings
+    delete (payload as any).backgroundImageUrl;
 
     const { error } = await supabaseAdmin
       .from('site_settings')
       .upsert({
         key: 'hero_products',
-        value: payload,
-        updated_at: new Date().toISOString()
+        value: payload
       });
 
     if (error) {
-      console.error('Supabase upsert error:', error);
+      console.error('Supabase error saving hero data:', error);
       throw error;
     }
 
     return { success: true };
   } catch (error) {
     console.error('Failed to save hero data:', error);
-    return { success: false, error: 'Failed to save hero data.' };
+    return { success: false, error: 'Failed to save hero data. Please try again.' };
   }
 }

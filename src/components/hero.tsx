@@ -108,6 +108,10 @@ export default function Hero() {
     }
   }, [mobileProducts.length, mobileIndex]);
 
+  if (loading) {
+    return <div className="w-full h-[600px] bg-muted animate-pulse rounded-3xl mb-16" />;
+  }
+
   return (
     <div
       className="relative w-full overflow-hidden rounded-3xl"
