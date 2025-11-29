@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+// Force rebuild
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

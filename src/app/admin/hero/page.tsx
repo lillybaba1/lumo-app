@@ -72,25 +72,36 @@ export default function HeroAdminPage() {
     if (!heroData) return;
     setIsSaving(true);
     try {
-      await saveHeroData(heroData);
-      toast({
-        title: "Hero Updated",
-        description: "Your hero products have been saved.",
-      });
-    } catch (error: any) {
-      if (error instanceof Error && error.message === 'VALIDATION_ERROR') {
+      const result = await saveHeroData(heroData);
+      
+      if (result.success) {
         toast({
-          title: "Validation Error",
-          description: "Please check hero label and product positions/sizes.",
-          variant: "destructive"
+          title: "Hero Updated",
+          description: "Your hero products have been saved.",
         });
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to save hero data.",
-          variant: "destructive"
-        });
+        if (result.error === 'Invalid hero data') {
+          toast({
+            title: "Validation Error",
+            description: "Please check hero label and product positions/sizes.",
+            variant: "destructive"
+          });
+          console.error('Validation details:', result.details);
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to save hero data.",
+            variant: "destructive"
+          });
+        }
       }
+    } catch (error: any) {
+      console.error('Unexpected error saving hero data:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
     } finally {
       setIsSaving(false);
     }

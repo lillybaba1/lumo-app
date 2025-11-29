@@ -60,11 +60,13 @@ export async function getHeroData(): Promise<HeroData | null> {
 
 export async function saveHeroData(heroData: HeroData) {
   try {
+    console.log('Saving hero data:', JSON.stringify(heroData, null, 2));
+
     // Validate incoming data
     const parsed = heroDataSchema.safeParse(heroData);
     if (!parsed.success) {
       console.error('Hero save validation failed:', parsed.error.flatten());
-      throw new Error('VALIDATION_ERROR');
+      return { success: false, error: 'Invalid hero data', details: parsed.error.flatten() };
     }
 
     // Ensure referenced products actually exist; drop any invalid ones to avoid DB errors
@@ -78,8 +80,7 @@ export async function saveHeroData(heroData: HeroData) {
 
       if (productsError) {
         console.error('Hero save product validation error:', productsError);
-        // Fail fast with validation error rather than 500
-        throw new Error('VALIDATION_ERROR');
+        return { success: false, error: 'Database error validating products' };
       }
 
       validIds = new Set((existingProducts || []).map(p => p.id));
@@ -105,13 +106,14 @@ export async function saveHeroData(heroData: HeroData) {
         updated_at: new Date().toISOString()
       });
 
-    if (error) throw error;
-  } catch (error) {
-    if (error instanceof Error && error.message === 'VALIDATION_ERROR') {
-      // surface validation issues back to caller
+    if (error) {
+      console.error('Supabase upsert error:', error);
       throw error;
     }
+
+    return { success: true };
+  } catch (error) {
     console.error('Failed to save hero data:', error);
-    throw new Error('Failed to save hero data.');
+    return { success: false, error: 'Failed to save hero data.' };
   }
 }
