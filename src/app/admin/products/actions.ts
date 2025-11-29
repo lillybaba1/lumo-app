@@ -2,10 +2,11 @@
 'use server';
 
 import { z } from 'zod';
-import { addProduct, updateProduct, deleteProduct as deleteProductFromDb } from '@/services/productService';
+import { addProduct, updateProduct, deleteProduct as deleteProductFromDb, getProductById } from '@/services/productService';
 import { saveProductImage, saveProductAttribute, getProductImages, getProductAttributes, deleteProductImage, deleteProductAttribute } from '@/services/productImageService';
 import { revalidatePath } from 'next/cache';
 import { CropData } from '@/lib/types';
+import { requireAuth } from '@/lib/auth-roles';
 
 const productSchema = z.object({
   id: z.string().optional(),
@@ -14,6 +15,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0.01, 'Price must be greater than 0'),
   category: z.string().min(1, 'Category is required'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
+  sellerId: z.string().optional(),
   imageUrls: z.preprocess((arg) => {
     if (typeof arg === 'string') {
       return arg.split(',').filter(url => url.length > 0);
@@ -75,13 +77,41 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
   const { id, ...productData } = validatedFields.data;
 
   try {
+    const user = await requireAuth();
+    let sellerId = productData.sellerId;
+
     // Save product first
     let productId: string;
     if (id) {
-      await updateProduct({ id, ...productData });
+      if (!sellerId) {
+        const existingProduct = await getProductById(id);
+        if (!existingProduct) {
+          return { success: false, message: 'Product not found' };
+        }
+        sellerId = existingProduct.sellerId;
+      }
+      await updateProduct({ 
+        id, 
+        ...productData, 
+        sellerId,
+        imageUrls: productData.imageUrls || [],
+        productImages: productData.productImages || []
+      });
       productId = id;
     } else {
-      const newProduct = await addProduct(productData);
+      if (!sellerId) {
+        if (user.businessAccountId) {
+          sellerId = user.businessAccountId;
+        } else {
+          return { success: false, message: 'You must have a business account to create products.' };
+        }
+      }
+      const newProduct = await addProduct({ 
+        ...productData, 
+        sellerId,
+        imageUrls: productData.imageUrls || [],
+        productImages: productData.productImages || []
+      });
       productId = newProduct.id;
     }
 

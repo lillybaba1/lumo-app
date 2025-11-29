@@ -18,7 +18,7 @@ const CHAT_CLEAR_TIMEOUT = 3 * 60 * 1000; // 3 minutes
 export function AIAssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<any>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleQuerySubmit = async (query: string) => {

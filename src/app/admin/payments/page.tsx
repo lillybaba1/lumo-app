@@ -34,7 +34,8 @@ import { Payment } from '@/lib/types';
 
 const statusVariant = {
   'Pending': 'default',
-  'Paid': 'outline',
+  'Processing': 'secondary',
+  'Completed': 'outline',
   'Failed': 'destructive',
   'Refunded': 'secondary',
 } as const;
@@ -106,7 +107,7 @@ export default function PaymentsPage() {
 
   const getTotalStats = () => {
     const total = payments.reduce((sum, p) => sum + p.amount, 0);
-    const paid = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
+    const paid = payments.filter(p => p.status === 'Completed').reduce((sum, p) => sum + p.amount, 0);
     const pending = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
     return { total, paid, pending };
   };
@@ -143,7 +144,7 @@ export default function PaymentsPage() {
           <p className="text-sm text-muted-foreground">Successful Payments</p>
           <p className="text-2xl font-bold text-green-600">${stats.paid.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {payments.filter(p => p.status === 'Paid').length} paid
+            {payments.filter(p => p.status === 'Completed').length} paid
           </p>
         </div>
         <div className="border rounded-lg p-4">
@@ -213,7 +214,8 @@ export default function PaymentsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Paid">Paid</SelectItem>
+                        <SelectItem value="Processing">Processing</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
                         <SelectItem value="Failed">Failed</SelectItem>
                         <SelectItem value="Refunded">Refunded</SelectItem>
                       </SelectContent>
@@ -232,7 +234,7 @@ export default function PaymentsPage() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {payment.status === 'Paid' && (
+                      {payment.status === 'Completed' && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -339,7 +341,7 @@ export default function PaymentsPage() {
               )}
 
               <div className="flex gap-2 pt-4">
-                {selectedPayment.status === 'Paid' && (
+                {selectedPayment.status === 'Completed' && (
                   <Button
                     variant="destructive"
                     onClick={() => {

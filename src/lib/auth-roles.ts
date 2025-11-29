@@ -1,6 +1,41 @@
 import { User, UserRole } from '@/lib/types';
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/hooks/use-auth';
+import { createClient } from '@/lib/supabase/server';
+import { getBusinessAccountByOwner } from '@/services/businessAccountService';
+
+async function getCurrentUser(): Promise<User | null> {
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  
+  if (!authUser) return null;
+
+  const { data: userData, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', authUser.id)
+    .single();
+    
+  if (error || !userData) return null;
+
+  let businessAccountId: string | undefined;
+  if (userData.role === 'BUSINESS_ACCOUNT') {
+      const business = await getBusinessAccountByOwner(authUser.id);
+      if (business) {
+          businessAccountId = business.id;
+      }
+  }
+
+  return {
+      uid: userData.id,
+      email: userData.email,
+      name: userData.name,
+      phoneNumber: userData.phone_number || '',
+      emailVerified: userData.email_verified,
+      createdAt: userData.created_at,
+      role: userData.role,
+      businessAccountId
+  };
+}
 
 /**
  * Check if user has APP_OWNER_ADMIN role

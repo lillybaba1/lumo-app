@@ -14,6 +14,7 @@ import { getSettings } from '@/app/admin/settings/actions';
 
 const statusVariant = {
     'Pending': 'default',
+    'Processing': 'secondary',
     'Shipped': 'secondary',
     'Delivered': 'outline',
     'Cancelled': 'destructive',

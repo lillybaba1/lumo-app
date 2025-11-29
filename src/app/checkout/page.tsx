@@ -107,7 +107,10 @@ export default function CheckoutPage() {
         customerEmail: email,
         customerPhone: phone,
         shippingAddress: `${address}, ${city}`,
-        items: items,
+        items: items.map(item => ({
+          ...item,
+          sellerId: item.sellerId || item.product.sellerId || 'unknown'
+        })),
         subtotal: subtotal,
         discount: discount,
         total: total,

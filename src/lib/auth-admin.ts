@@ -40,38 +40,37 @@ export async function requireAdmin(
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!authError && user) {
-      // User is authenticated with Supabase
-      const userId = user.id;
-      const email = user.email || '';
-
-      // Check user role from users table (primary source)
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      // Determine role - users table is the source of truth
-      const role = userData?.role || 'customer';
-
-      // Support both new and legacy admin roles
-      if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-        fail('Admin role required', 'unauthorized');
-      }
-
-      return { userId, email, role };
+    if (authError || !user) {
+      return fail('Not authenticated', 'login');
     }
 
-    // Not authenticated
-    fail('Not authenticated', 'login');
+    // User is authenticated with Supabase
+    const userId = user.id;
+    const email = user.email || '';
+
+    // Check user role from users table (primary source)
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    // Determine role - users table is the source of truth
+    const role = userData?.role || 'customer';
+
+    // Support both new and legacy admin roles
+    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
+      return fail('Admin role required', 'unauthorized');
+    }
+
+    return { userId, email, role };
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       throw error;
     }
 
     console.error('Auth error:', error);
-    fail('Authentication failed', 'login');
+    return fail('Authentication failed', 'login');
   }
 }
 

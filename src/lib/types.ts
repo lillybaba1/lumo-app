@@ -1,4 +1,3 @@
-
 export interface CropData {
   x: number;
   y: number;
@@ -81,6 +80,7 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
+  description?: string;
 }
 
 export interface CartItem {
@@ -402,5 +402,20 @@ export interface HeroData {
     x: number; // percentage
     y: number; // percentage
   };
+  updatedAt?: string;
+}
+
+export interface Payment {
+  id: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: 'Wave Money' | 'Cash on Delivery';
+  status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
+  transactionId?: string;
+  customerEmail: string;
+  customerName: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
   updatedAt?: string;
 }

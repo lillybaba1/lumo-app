@@ -21,6 +21,7 @@ type Settings = { currency?: string };
 
 const statusVariant = {
     'Pending': 'default',
+    'Processing': 'secondary',
     'Shipped': 'secondary',
     'Delivered': 'outline',
     'Cancelled': 'destructive',

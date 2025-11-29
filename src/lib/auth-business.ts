@@ -44,7 +44,7 @@ export async function requireBusiness(
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
     if (!authUser || authError) {
-      fail('Not authenticated', 'login');
+      return fail('Not authenticated', 'login');
     }
 
     const userId = authUser.id;
@@ -58,24 +58,24 @@ export async function requireBusiness(
       .single();
 
     if (userError || !userData) {
-      fail('User not found', 'login');
+      return fail('User not found', 'login');
     }
 
     // Check if user has BUSINESS_ACCOUNT role
     if (userData.role !== 'BUSINESS_ACCOUNT') {
-      fail('Business account required', 'unauthorized');
+      return fail('Business account required', 'unauthorized');
     }
 
     // Get business account
     const businessAccount = await getBusinessAccountByOwner(userId);
 
     if (!businessAccount) {
-      fail('Business account not found. Please complete your business registration.', 'unauthorized');
+      return fail('Business account not found. Please complete your business registration.', 'unauthorized');
     }
 
     // Check if business account is active
     if (businessAccount.status === 'SUSPENDED') {
-      fail('Your business account has been suspended. Please contact support.', 'unauthorized');
+      return fail('Your business account has been suspended. Please contact support.', 'unauthorized');
     }
 
     const user: User = {
@@ -96,7 +96,7 @@ export async function requireBusiness(
     }
 
     console.error('Business auth error:', error);
-    fail('Authentication failed', 'login');
+    return fail('Authentication failed', 'login');
   }
 }
 

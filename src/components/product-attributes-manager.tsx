@@ -194,9 +194,9 @@ export default function ProductAttributesManager({
                           <div>
                             <span className="font-medium">{attr.attributeName}:</span> {attr.attributeValue}
                           </div>
-                          {attr.priceModifier !== 0 && (
+                          {(attr.priceModifier || 0) !== 0 && (
                             <div className="text-muted-foreground">
-                              Price: {attr.priceModifier > 0 ? '+' : ''}{attr.priceModifier} GMD
+                              Price: {(attr.priceModifier || 0) > 0 ? '+' : ''}{attr.priceModifier} GMD
                             </div>
                           )}
                           {attr.isVariant && (

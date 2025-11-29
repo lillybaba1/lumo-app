@@ -32,7 +32,7 @@ vi.mock('next/headers', () => ({
 }));
 
 // Mock environment variables
-process.env.NODE_ENV = 'test';
-process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'test-api-key';
-process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'test-project';
-process.env.GOOGLE_API_KEY = 'test-google-api-key';
+vi.stubEnv('NODE_ENV', 'test');
+vi.stubEnv('NEXT_PUBLIC_FIREBASE_API_KEY', 'test-api-key');
+vi.stubEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID', 'test-project');
+vi.stubEnv('GOOGLE_API_KEY', 'test-google-api-key');

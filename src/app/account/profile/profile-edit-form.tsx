@@ -37,7 +37,7 @@ function SubmitButton() {
   );
 }
 
-const initialState = { success: false, message: '' };
+const initialState = { success: false, message: '', errors: null as Record<string, string[]> | null };
 
 export default function ProfileEditForm({ user }: ProfileEditFormProps) {
   const { toast } = useToast();

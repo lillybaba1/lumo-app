@@ -86,7 +86,7 @@ describe('Error Handler', () => {
     });
 
     it('should throw ValidationError for missing fields', () => {
-      const data = { name: 'John' };
+      const data: Record<string, any> = { name: 'John' };
       expect(() => validateRequired(data, ['name', 'email'])).toThrow(ValidationError);
     });
 

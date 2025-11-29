@@ -1,6 +1,6 @@
 'use server';
 
-import type { User } from '@/lib/types';
+import { User, UserRole } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 /**
@@ -61,14 +61,19 @@ export async function getUserById(uid: string): Promise<User | null> {
     }
 
     // Map Supabase data to User type
+    let role: UserRole = 'PERSONAL_ACCOUNT';
+    if (data.role === 'admin' || data.role === 'APP_OWNER_ADMIN') role = 'APP_OWNER_ADMIN';
+    else if (data.role === 'BUSINESS_ACCOUNT') role = 'BUSINESS_ACCOUNT';
+    else if (data.role === 'customer' || data.role === 'PERSONAL_ACCOUNT') role = 'PERSONAL_ACCOUNT';
+    
     return {
       uid: data.id,
       email: data.email,
       name: data.name,
       phoneNumber: data.phone_number || '',
-      phoneVerified: data.phone_verified || false,
+      emailVerified: data.email_verified,
       createdAt: data.created_at,
-      role: data.role as 'admin' | 'customer',
+      role: role,
     };
   } catch (error) {
     console.error('Failed to get user:', error);

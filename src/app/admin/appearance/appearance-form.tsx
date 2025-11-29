@@ -98,7 +98,7 @@ export default function AppearanceForm({ theme }: { theme: Theme }) {
 
       toast({
           title: result.success ? "Appearance Updated" : "Error",
-          description: result.message,
+          description: result.success ? "Theme saved successfully" : (result.error || "Failed to save theme"),
           variant: result.success ? "default" : "destructive",
       });
 

@@ -102,7 +102,7 @@ export async function POST(request: Request) {
         contactPersonName: name,
         contactEmail: email,
         businessAddress,
-        businessPhone: businessPhone || phone,
+        businessPhone: businessPhone || phone || undefined,
         taxId: taxId || undefined,
         website: website || undefined,
         status: 'PENDING_VERIFICATION',

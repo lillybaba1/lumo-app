@@ -1,5 +1,5 @@
-
 import { getPages } from '@/app/admin/pages/actions';
+import { Pages } from '@/lib/types';
 import { getFAQData } from '@/app/admin/faq/actions';
 import { getContactData } from '@/app/admin/contact/actions';
 import { notFound } from 'next/navigation';
@@ -165,7 +165,7 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
   }
 
   // Handle regular pages
-  const pages = await getPages() ?? defaultPagesData;
+  const pages = (await getPages() ?? (defaultPagesData as any)) as Pages;
   const page = pages[slug];
 
   if (!page) {

@@ -121,8 +121,6 @@ export default function CouponsPage() {
         } else {
           await createCoupon({
             ...couponData,
-            usedCount: 0,
-            createdAt: new Date().toISOString(),
           });
         }
 
