@@ -67,20 +67,48 @@ export async function saveHeroData(heroData: HeroData) {
       throw new Error('VALIDATION_ERROR');
     }
 
+    // Ensure referenced products actually exist; drop any invalid ones to avoid DB errors
+    const productIds = parsed.data.products.map(p => p.productId);
+    let validIds: Set<string> | null = null;
+    if (productIds.length > 0) {
+      const { data: existingProducts, error: productsError } = await supabaseAdmin
+        .from('products')
+        .select('id')
+        .in('id', productIds);
+
+      if (productsError) {
+        console.error('Hero save product validation error:', productsError);
+        // Fail fast with validation error rather than 500
+        throw new Error('VALIDATION_ERROR');
+      }
+
+      validIds = new Set((existingProducts || []).map(p => p.id));
+    }
+
+    const filteredProducts = validIds
+      ? parsed.data.products.filter(p => validIds!.has(p.productId))
+      : parsed.data.products;
+
+    const payload = {
+      ...parsed.data,
+      products: filteredProducts,
+      heroLabelText: parsed.data.heroLabelText || 'Featured',
+      heroLabelPosition: parsed.data.heroLabelPosition || { x: 10, y: 15 },
+      updatedAt: new Date().toISOString(),
+    };
+
     const { error } = await supabaseAdmin
       .from('site_settings')
       .upsert({
         key: 'hero_products',
-        value: {
-          ...heroData,
-          updatedAt: new Date().toISOString()
-        },
+        value: payload,
         updated_at: new Date().toISOString()
       });
 
     if (error) throw error;
   } catch (error) {
     if (error instanceof Error && error.message === 'VALIDATION_ERROR') {
+      // surface validation issues back to caller
       throw error;
     }
     console.error('Failed to save hero data:', error);
