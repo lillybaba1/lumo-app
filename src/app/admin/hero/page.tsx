@@ -77,12 +77,20 @@ export default function HeroAdminPage() {
         title: "Hero Updated",
         description: "Your hero products have been saved.",
       });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save hero data.",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      if (error instanceof Error && error.message === 'VALIDATION_ERROR') {
+        toast({
+          title: "Validation Error",
+          description: "Please check hero label and product positions/sizes.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save hero data.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSaving(false);
     }
