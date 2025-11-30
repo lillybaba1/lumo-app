@@ -17,13 +17,33 @@ function AuthErrorContent() {
       title: 'Email Verification Failed',
       description: 'We could not verify your email. The link may have expired or is invalid.',
     },
+    expired_link: {
+      title: 'Verification Link Expired',
+      description: 'Your verification link has expired. Please request a new one.',
+    },
+    invalid_token: {
+      title: 'Invalid Verification Link',
+      description: 'This verification link is not valid. Please check your email for the correct link.',
+    },
     unknown_error: {
       title: 'Authentication Error',
       description: 'An unexpected error occurred during authentication.',
     },
   };
 
-  const error = errorMessages[message] || errorMessages.unknown_error;
+  // Check if details contain specific error types
+  const getErrorType = () => {
+    const detailsLower = details.toLowerCase();
+    if (detailsLower.includes('expired') || detailsLower.includes('otp')) {
+      return 'expired_link';
+    }
+    if (detailsLower.includes('invalid')) {
+      return 'invalid_token';
+    }
+    return message;
+  };
+
+  const error = errorMessages[getErrorType()] || errorMessages.unknown_error;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">

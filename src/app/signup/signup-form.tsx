@@ -143,7 +143,7 @@ export default function SignupForm() {
 
         toast({
           title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email} for the verification link.`,
+          description: `Please check your inbox at ${email}. Link expires in 30 minutes.`,
         });
 
         setStep('verify');
@@ -157,6 +157,7 @@ export default function SignupForm() {
             data: {
               name,
               phone_number: fullPhoneNumber,
+              role: 'PERSONAL_ACCOUNT',
             }
           }
         });
@@ -169,24 +170,12 @@ export default function SignupForm() {
           throw new Error('Failed to create user account');
         }
 
-        // Create user profile in user_profiles table
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            email: email,
-            name: name,
-            phone: fullPhoneNumber,
-            role: 'PERSONAL_ACCOUNT',
-          });
-
-        if (profileError) {
-          console.error('Failed to create user profile:', profileError);
-        }
+        // Note: User profile will be created in /auth/callback AFTER email verification
+        // This ensures only verified users exist in user_profiles table
 
         toast({
           title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email} for the verification link.`,
+          description: `Please check your inbox at ${email}. Link expires in 30 minutes.`,
         });
 
         setStep('verify');
@@ -527,6 +516,11 @@ export default function SignupForm() {
               <CardDescription>We sent a verification link to {email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+                <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium">
+                  ⏱️ This link expires in 30 minutes
+                </p>
+              </div>
               <div className="bg-muted p-4 rounded-lg space-y-2">
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />

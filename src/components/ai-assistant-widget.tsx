@@ -49,16 +49,18 @@ export function AIAssistantWidget() {
     }
 
     // Load chatbot settings
-    fetch('/api/settings')
+    fetch('/api/settings?nocache=' + Date.now())
       .then(res => res.json())
       .then(data => {
+        console.log('[Chatbot] Loaded settings:', data);
         setSettings({
           chatbotImage: data.chatbotImage || '',
           chatbotName: data.chatbotName || 'Luna',
           chatbotEnabled: data.chatbotEnabled !== false,
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[Chatbot] Failed to load settings:', err);
         // Use defaults on error
       });
   }, []);
@@ -212,7 +214,7 @@ export function AIAssistantWidget() {
         size="icon"
         className={`rounded-full h-14 w-14 shadow-lg relative overflow-hidden group ${
           isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-105'
-        } transition-transform`}
+        } transition-transform ${settings.chatbotImage && !isOpen ? 'bg-transparent p-0 border-2 border-primary' : ''}`}
         onClick={handleClick}
         onMouseDown={handleMouseDown}
         onTouchStart={handleMouseDown}
@@ -225,11 +227,12 @@ export function AIAssistantWidget() {
               src={settings.chatbotImage}
               alt={settings.chatbotName || 'AI Assistant'}
               fill
-              className="object-cover"
+              className="object-cover rounded-full"
               sizes="56px"
+              unoptimized
             />
             {/* Chat bubble indicator */}
-            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 shadow-md z-10">
               <MessageCircle className="h-3 w-3" />
             </div>
           </>

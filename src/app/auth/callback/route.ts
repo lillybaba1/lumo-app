@@ -4,8 +4,19 @@ import { type NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const error = searchParams.get('error')
+  const error_description = searchParams.get('error_description')
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/auth/verified'
+
+  // Handle error from Supabase (e.g., expired link)
+  if (error) {
+    console.error('Auth callback error:', error, error_description)
+    const errorMessage = error_description || error
+    return NextResponse.redirect(
+      `${origin}/auth/error?message=verification_failed&details=${encodeURIComponent(errorMessage)}`
+    )
+  }
 
   if (code) {
     const response = NextResponse.redirect(`${origin}${next}`)
