@@ -45,6 +45,11 @@ export interface Settings {
     heroCropWidth?: number;
     heroCropHeight?: number;
     heroImageObjectPosition?: string; // e.g., 'center', 'top', '50% 30%'
+
+    // Chatbot Settings
+    chatbotImage?: string;
+    chatbotName?: string;
+    chatbotEnabled?: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -69,6 +74,9 @@ const defaultSettings: Settings = {
     heroTagline: 'Discover exceptional products crafted with care. Your journey to quality starts here.',
     heroBackgroundImage: '',
     heroImageObjectPosition: 'center',
+    chatbotImage: '',
+    chatbotName: 'Luna',
+    chatbotEnabled: true,
 };
 
 export async function getSettings(): Promise<Settings> {
