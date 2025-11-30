@@ -109,7 +109,23 @@ export default function Hero() {
   }, [mobileProducts.length, mobileIndex]);
 
   if (loading) {
-    return <div className="w-full h-[600px] bg-muted animate-pulse rounded-3xl mb-16" />;
+    return (
+      <div 
+        className="w-full overflow-hidden rounded-3xl bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600"
+        style={{ 
+          minHeight: '400px',
+          marginBottom: 'var(--spacing-2xl)',
+        }}
+      >
+        <div className="h-full flex items-center justify-center py-12 md:py-32 px-6 md:px-12">
+          <div className="animate-pulse space-y-4 w-full max-w-lg">
+            <div className="h-8 md:h-12 bg-white/20 rounded w-3/4"></div>
+            <div className="h-4 md:h-6 bg-white/10 rounded w-full"></div>
+            <div className="h-4 md:h-6 bg-white/10 rounded w-2/3"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -121,18 +137,21 @@ export default function Hero() {
     >
       {/* Background Image */}
       {heroBackgroundImage ? (
-        <div
-          className="absolute inset-0 bg-cover bg-no-repeat"
-          style={{
-            backgroundImage: `url(${heroBackgroundImage})`,
-            backgroundPosition: heroImageObjectPosition,
-          }}
-        >
+        <div className="absolute inset-0">
+          <Image
+            src={heroBackgroundImage}
+            alt="Hero background"
+            fill
+            priority
+            className="object-cover"
+            style={{ objectPosition: heroImageObjectPosition }}
+            unoptimized
+          />
           {/* Enhanced Gradient Overlay for better text contrast */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
         </div>
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
       {/* Hero Label */}
