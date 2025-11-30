@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           email: user.email,
           name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
           phone: user.user_metadata?.phone_number || user.phone || null,
-          role: 'user',
+          role: user.user_metadata?.role || 'PERSONAL_ACCOUNT',
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'

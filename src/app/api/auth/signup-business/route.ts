@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBusinessAccount } from '@/services/businessAccountService';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { z } from 'zod';
 
 const websiteSchema = z
@@ -101,7 +102,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 2: Create business account
+    // Step 2: Create user profile FIRST (avoids FK issues when creating business account)
+    const { error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .insert({
+        id: data.user.id,
+        email,
+        name,
+        phone,
+        role: 'BUSINESS_ACCOUNT',
+      });
+
+    if (profileError) {
+      console.error('Business signup: Failed to create user profile:', profileError);
+      // Clean up auth user so we don't leave dangling accounts
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+      } catch (cleanupErr) {
+        console.error('Business signup: Failed to cleanup auth user after profile error:', cleanupErr);
+      }
+      return NextResponse.json(
+        { error: 'Failed to create user profile. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    // Step 3: Create business account (requires user profile to exist due to FK)
     let businessAccount;
     try {
       businessAccount = await createBusinessAccount(data.user.id, {
@@ -121,29 +147,23 @@ export async function POST(request: Request) {
 
     if (!businessAccount) {
       console.error('Business signup: Failed to create business account for user', data.user.id);
-      // User is created but business account failed
-      // The user can still log in but won't have business access
       return NextResponse.json(
         { error: 'Failed to create business account. Please contact support.' },
         { status: 500 }
       );
     }
 
-    // Step 3: Create user profile with business account reference
-    const { error: profileError } = await supabase
+    // Step 4: Link profile to business account
+    const { error: profileLinkError } = await supabaseAdmin
       .from('user_profiles')
-      .insert({
-        id: data.user.id,
-        email: email,
-        name: name,
-        phone: phone,
-        role: 'BUSINESS_ACCOUNT',
+      .update({
         business_account_id: businessAccount.id,
-      });
+      })
+      .eq('id', data.user.id);
 
-    if (profileError) {
-      console.error('Business signup: Failed to create user profile:', profileError);
-      // Continue anyway - the business account is created
+    if (profileLinkError) {
+      console.error('Business signup: Failed to link profile to business account:', profileLinkError);
+      // Not fatal for signup, but log for follow-up
     }
 
     return NextResponse.json({
