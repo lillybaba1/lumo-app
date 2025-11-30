@@ -43,9 +43,14 @@ export async function deletePage(slug: string) {
 export async function getPages(): Promise<Pages | null> {
     try {
         const pages = await getPagesFromDbAdmin();
+        console.log('getPages action result:', pages ? Object.keys(pages) : 'null');
+        // If no pages from DB, return default pages
+        if (!pages || Object.keys(pages).length === 0) {
+            return defaultPagesData as unknown as Pages;
+        }
         return pages;
     } catch (error) {
         console.error('Failed to read pages:', error);
-        return null;
+        return defaultPagesData as unknown as Pages;
     }
 }

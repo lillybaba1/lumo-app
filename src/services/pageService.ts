@@ -15,16 +15,23 @@ export async function getPages(): Promise<Pages | null> {
 
         if (error) {
             if (error.code === 'PGRST116') {
-                // No pages found, return default
-                return defaultPagesData;
+                // No pages found, return default and save them
+                console.log('No pages in database, returning defaults');
+                return defaultPagesData as unknown as Pages;
             }
-            throw error;
+            console.error('Error fetching pages:', error);
+            return defaultPagesData as unknown as Pages;
         }
 
-        return data?.value as Pages || defaultPagesData;
+        const pages = data?.value as Pages;
+        if (!pages || Object.keys(pages).length === 0) {
+            return defaultPagesData as unknown as Pages;
+        }
+        
+        return pages;
     } catch (error) {
         console.error('Failed to get pages:', error);
-        return defaultPagesData;
+        return defaultPagesData as unknown as Pages;
     }
 }
 

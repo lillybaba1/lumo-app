@@ -35,9 +35,16 @@ export default function PagesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const loadPages = async () => {
-    const data = await getPages();
-    setPages(data || {});
-    setLoading(false);
+    try {
+      const data = await getPages();
+      console.log('Loaded pages:', data);
+      setPages(data || {});
+    } catch (error) {
+      console.error('Failed to load pages:', error);
+      setPages({});
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

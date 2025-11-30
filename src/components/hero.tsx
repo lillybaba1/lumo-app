@@ -154,9 +154,10 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
-      {/* Hero Label */}
+      {/* Hero Label - Clickable Featured Button */}
       {heroData?.heroLabelText && (
-        <div
+        <Link
+          href="/products?filter=featured"
           className="absolute hidden md:flex"
           style={{
             left: `${heroData.heroLabelPosition?.x ?? 10}%`,
@@ -165,10 +166,21 @@ export default function Hero() {
             zIndex: 5,
           }}
         >
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 text-sm font-semibold text-slate-900 shadow-lg">
+          <Button
+            size="lg"
+            className="font-semibold text-sm md:text-base h-10 md:h-11 gap-2 rounded-full shadow-lg"
+            style={{
+              backgroundColor: 'var(--button-primary-bg)',
+              color: 'var(--button-primary-text)',
+              borderRadius: 'var(--radius-button)',
+              padding: '0 var(--spacing-xl)',
+            }}
+          >
+            <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
             {heroData.heroLabelText}
-          </span>
-        </div>
+            <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+          </Button>
+        </Link>
       )}
 
       {/* Hero Products Overlay - desktop */}
@@ -295,7 +307,11 @@ export default function Hero() {
       {mobileProducts.length > 0 && (
         <div className="md:hidden mt-2 px-4 pb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-white/90">{heroData?.heroLabelText || 'Featured'}</span>
+            <Link href="/products?filter=featured" className="flex items-center gap-1 text-xs font-semibold text-white/90 hover:text-white">
+              <ShoppingBag className="h-3 w-3" />
+              {heroData?.heroLabelText || 'Featured'}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
             {mobileProducts.length > 1 && (
               <div className="flex gap-2">
                 <Button
