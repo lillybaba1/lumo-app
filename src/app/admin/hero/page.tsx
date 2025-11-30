@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Plus, X, Move, Maximize2, Image as ImageIcon } from 'lucide-react';
+import { Save, Loader2, Plus, X, Move, Maximize2, Image as ImageIcon, ShoppingBag, ArrowRight } from 'lucide-react';
 import { getHeroData, saveHeroData } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ export default function HeroAdminPage() {
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>('');
+  const [heroHeading, setHeroHeading] = useState<string>('Step into Lumo');
+  const [heroTagline, setHeroTagline] = useState<string>('Discover exceptional products crafted with care. Your journey to quality starts here.');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +62,8 @@ export default function HeroAdminPage() {
       setHeroData(mergedData);
       setAllProducts(Array.isArray(productsData) ? productsData : []);
       setHeroBackgroundImage(settingsData?.heroBackgroundImage || '');
+      setHeroHeading(settingsData?.heroHeading || 'Step into Lumo');
+      setHeroTagline(settingsData?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.');
     } catch (error) {
       console.error('Failed to load data:', error);
       setHeroData({ products: [], heroLabelText: 'Featured', heroLabelPosition: { x: 10, y: 15 } });
@@ -374,32 +378,59 @@ export default function HeroAdminPage() {
                   className="absolute inset-0 bg-cover bg-no-repeat"
                   style={{ backgroundImage: `url(${heroBackgroundImage})`, backgroundPosition: 'center' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
                 </div>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center text-white/20">
-                    <ImageIcon className="h-16 w-16 mx-auto mb-2" />
-                    <p className="text-sm">Hero Background Area</p>
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+                    <div className="text-center text-white">
+                      <ImageIcon className="h-16 w-16 mx-auto mb-2" />
+                      <p className="text-sm">Set hero background in Appearance</p>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Label */}
+              {/* Hero Content - Heading, Tagline, CTAs */}
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 max-w-[45%] pointer-events-none z-[1]">
+                <h2 className="text-2xl font-bold text-white mb-2 leading-tight">{heroHeading}</h2>
+                <p className="text-white/80 text-sm mb-4 line-clamp-2">{heroTagline}</p>
+                <div className="flex gap-2">
+                  <Button size="sm" className="gap-1 text-xs pointer-events-none">
+                    Shop New Arrivals
+                    <ArrowRight className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-xs bg-white/90 text-slate-900 hover:bg-white pointer-events-none">
+                    Browse Collections
+                  </Button>
+                </div>
+              </div>
+
+              {/* Label - styled like homepage */}
               {heroData?.heroLabelText && (
                 <div
-                  className="absolute cursor-move"
+                  className="absolute cursor-move group"
                   style={{
                     left: `${heroData.heroLabelPosition?.x ?? 10}%`,
                     top: `${heroData.heroLabelPosition?.y ?? 15}%`,
                     transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
                   }}
                   onMouseDown={(e) => { e.preventDefault(); setDraggingLabel(true); }}
                 >
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 text-sm font-semibold text-slate-900 shadow-lg">
+                  <Button
+                    size="sm"
+                    className="font-semibold text-xs gap-1.5 rounded-full shadow-lg cursor-move"
+                  >
+                    <ShoppingBag className="h-3 w-3" />
                     {heroData.heroLabelText}
-                    <Move className="h-3 w-3 text-slate-700" />
-                  </span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Button>
+                  {/* Drag indicator on hover */}
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    <Move className="h-3 w-3 inline mr-1" />
+                    Drag to move
+                  </div>
                 </div>
               )}
 
