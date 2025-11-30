@@ -102,19 +102,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 2: Create user profile FIRST (avoids FK issues when creating business account)
+    // Step 2: Create user profile in users table (same as personal signup for consistency)
     const { error: profileError } = await supabaseAdmin
-      .from('user_profiles')
+      .from('users')
       .insert({
         id: data.user.id,
-        email,
-        name,
-        phone,
-        role: 'BUSINESS_ACCOUNT',
+        email: email.toLowerCase().trim(),
+        name: name.trim(),
+        phone_number: phone || null,
+        role: 'customer', // Use 'customer' role in users table, business status tracked in business_accounts
       });
 
     if (profileError) {
-      console.error('Business signup: Failed to create user profile:', profileError);
+      console.error('Business signup: Failed to create user profile:', JSON.stringify(profileError));
       // Clean up auth user so we don't leave dangling accounts
       try {
         await supabaseAdmin.auth.admin.deleteUser(data.user.id);
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
         console.error('Business signup: Failed to cleanup auth user after profile error:', cleanupErr);
       }
       return NextResponse.json(
-        { error: 'Failed to create user profile. Please try again.' },
+        { error: 'Failed to create user profile. Please try again.', details: profileError.message },
         { status: 500 }
       );
     }
@@ -153,18 +153,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 4: Link profile to business account
-    const { error: profileLinkError } = await supabaseAdmin
-      .from('user_profiles')
-      .update({
-        business_account_id: businessAccount.id,
-      })
-      .eq('id', data.user.id);
-
-    if (profileLinkError) {
-      console.error('Business signup: Failed to link profile to business account:', profileLinkError);
-      // Not fatal for signup, but log for follow-up
-    }
+    // Business status is tracked in business_accounts table, no need to update users.role
 
     return NextResponse.json({
       success: true,
