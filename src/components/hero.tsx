@@ -14,12 +14,22 @@ type HeroSettings = {
   heroImageObjectPosition?: string;
 };
 
-export default function Hero() {
-  const [settings, setSettings] = useState<HeroSettings | null>(null);
+interface HeroProps {
+  initialSettings?: HeroSettings;
+}
+
+export default function Hero({ initialSettings }: HeroProps = {}) {
+  const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileIndex, setMobileIndex] = useState(0);
+
+  // Use initial settings for immediate render, then fetch fresh data
+  const heroHeading = settings?.heroHeading || 'Step into Lumo';
+  const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
+  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '';
+  const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
 
   useEffect(() => {
     // Fetch data with cache-busting but don't fail all if one request fails
@@ -79,19 +89,6 @@ export default function Hero() {
     });
   }, []);
 
-  // Default values if settings haven't loaded yet
-  const heroHeading = settings?.heroHeading || 'Step into Lumo';
-  const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  // Add aggressive cache-buster to hero image URL to prevent browser caching
-  const baseHeroImage = settings?.heroBackgroundImage || '';
-  const cacheBuster = baseHeroImage ? `${Date.now()}_${Math.random().toString(36).substring(7)}` : '';
-  const heroBackgroundImage = baseHeroImage
-    ? baseHeroImage.includes('?')
-      ? `${baseHeroImage}&v=${cacheBuster}`
-      : `${baseHeroImage}?v=${cacheBuster}`
-    : '';
-  const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
-
   const getProductById = (id: string) => products.find(p => p.id === id);
   const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -111,17 +108,40 @@ export default function Hero() {
   if (loading) {
     return (
       <div 
-        className="w-full overflow-hidden rounded-3xl bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600"
+        className="relative w-full overflow-hidden rounded-3xl"
         style={{ 
           minHeight: '400px',
           marginBottom: 'var(--spacing-2xl)',
         }}
       >
-        <div className="h-full flex items-center justify-center py-12 md:py-32 px-6 md:px-12">
+        {/* Show hero image immediately while loading other content */}
+        {heroBackgroundImage ? (
+          <div className="absolute inset-0">
+            <Image
+              src={heroBackgroundImage}
+              alt="Hero background"
+              fill
+              priority
+              className="object-cover"
+              style={{ objectPosition: heroImageObjectPosition }}
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
+        )}
+        
+        {/* Loading content overlay */}
+        <div className="relative h-full flex items-center py-12 md:py-32 px-6 md:px-12">
           <div className="animate-pulse space-y-4 w-full max-w-lg">
-            <div className="h-8 md:h-12 bg-white/20 rounded w-3/4"></div>
-            <div className="h-4 md:h-6 bg-white/10 rounded w-full"></div>
-            <div className="h-4 md:h-6 bg-white/10 rounded w-2/3"></div>
+            <div className="h-10 md:h-16 bg-white/30 rounded w-3/4"></div>
+            <div className="h-5 md:h-6 bg-white/20 rounded w-full"></div>
+            <div className="h-5 md:h-6 bg-white/20 rounded w-2/3"></div>
+            <div className="flex gap-3 mt-6">
+              <div className="h-11 w-40 bg-white/30 rounded-lg"></div>
+              <div className="h-11 w-40 bg-white/20 rounded-lg"></div>
+            </div>
           </div>
         </div>
       </div>

@@ -37,6 +37,7 @@ export default async function RootLayout({
   // Get the active theme from database settings
   const settings = await getSiteSettings();
   const initialTheme = settings?.theme || 'minimal-light';
+  const heroBackgroundImage = settings?.heroBackgroundImage || '';
 
   return (
     <html lang="en" className="light">
@@ -44,6 +45,10 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* Preload hero image for faster rendering */}
+        {heroBackgroundImage && (
+          <link rel="preload" as="image" href={heroBackgroundImage} fetchPriority="high" />
+        )}
       </head>
       <body className="font-body antialiased">
         <ThemeProvider initialTheme={initialTheme}>

@@ -50,6 +50,21 @@ export interface Settings {
     chatbotImage?: string;
     chatbotName?: string;
     chatbotEnabled?: boolean;
+
+    // Header Settings
+    headerBgColor?: string;
+    headerTextColor?: string;
+    headerButtonStyle?: 'outline' | 'solid' | 'ghost';
+    headerButtonColor?: string;
+    homeButtonGradientFrom?: string;
+    homeButtonGradientTo?: string;
+
+    // Announcement Bar Settings
+    announcementEnabled?: boolean;
+    announcementText?: string;
+    announcementBgColor?: string;
+    announcementTextColor?: string;
+    announcementLink?: string;
 }
 
 const defaultSettings: Settings = {
@@ -77,6 +92,17 @@ const defaultSettings: Settings = {
     chatbotImage: '',
     chatbotName: 'Luna',
     chatbotEnabled: true,
+    headerBgColor: '#ffffff',
+    headerTextColor: '#000000',
+    headerButtonStyle: 'outline',
+    headerButtonColor: '#8b5cf6',
+    homeButtonGradientFrom: '#8b5cf6',
+    homeButtonGradientTo: '#ec4899',
+    announcementEnabled: false,
+    announcementText: '',
+    announcementBgColor: '#8b5cf6',
+    announcementTextColor: '#ffffff',
+    announcementLink: '',
 };
 
 export async function getSettings(): Promise<Settings> {

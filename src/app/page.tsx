@@ -25,35 +25,54 @@ type Collections = {
   deals: string[];
 };
 
+type HeroSettings = {
+  heroHeading?: string;
+  heroTagline?: string;
+  heroBackgroundImage?: string;
+  heroImageObjectPosition?: string;
+};
+
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collections>({ bestSellers: [], newArrivals: [], deals: [] });
+  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
+      // Fetch settings first for hero image
+      const settingsPromise = fetch('/api/settings').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+      
       await seedInitialData();
-      const [productsData, categoriesData, collectionsData] = await Promise.all([
+      const [productsData, categoriesData, collectionsData, settingsData] = await Promise.all([
         getProducts(),
         getCategories(),
-        fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] }))
+        fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
+        settingsPromise
       ]);
       setProducts(productsData);
       setCategories(categoriesData);
       setCollections(collectionsData);
+      setHeroSettings(settingsData);
       setLoading(false);
     }
     fetchData();
   }, []);
 
+  // Show Hero immediately with settings even while loading other content
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-        <p className="mt-2 text-muted-foreground">Loading products...</p>
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Hero initialSettings={heroSettings || undefined} />
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+            <p className="mt-2 text-muted-foreground">Loading products...</p>
+          </div>
+        </div>
       </div>
-    </div>;
+    );
   }
 
   return <Home products={products} categories={categories} collections={collections} />;
