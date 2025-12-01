@@ -267,7 +267,7 @@ function Home({ products, categories, collections, categorySectionSettings }: {
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
-      <div className="w-full mt-14 lg:mt-0" style={{ width: '100%' }}>
+      <div className="w-full" style={{ width: '100%' }}>
         <Hero />
       </div>
 
@@ -293,7 +293,8 @@ function Home({ products, categories, collections, categorySectionSettings }: {
                   asChild
                 >
                   <Link href="/categories">
-                    View All <ChevronRight className="h-4 w-4" />
+                    <span style={{ color: categoryTextColor }}>View All</span> 
+                    <ChevronRight className="h-4 w-4" style={{ color: categoryTextColor }} />
                   </Link>
                 </Button>
               </div>
