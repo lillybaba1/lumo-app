@@ -9,6 +9,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getSiteSettings } from '@/services/settingsService';
 import AuthMenu from '@/components/auth-menu';
 import PublicSidebar from '@/components/public-sidebar';
+import { CookieConsent } from '@/components/cookie-consent';
+import { LocationProvider } from '@/components/location-consent';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -53,20 +55,23 @@ export default async function RootLayout({
       <body className="font-body antialiased">
         <ThemeProvider initialTheme={initialTheme}>
           <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header>
-                <AuthMenu />
-              </Header>
-              <div className="flex flex-1 pt-16 lg:pt-0">
-                <PublicSidebar />
-                <main className="flex-1 overflow-x-hidden">
-                  {children}
-                </main>
+            <LocationProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header>
+                  <AuthMenu />
+                </Header>
+                <div className="flex flex-1 pt-16 lg:pt-0">
+                  <PublicSidebar />
+                  <main className="flex-1 overflow-x-hidden">
+                    {children}
+                  </main>
+                </div>
+                <Footer />
               </div>
-              <Footer />
-            </div>
-            <Toaster />
-            <AIAssistantWidget />
+              <Toaster />
+              <AIAssistantWidget />
+              <CookieConsent />
+            </LocationProvider>
           </CartProvider>
         </ThemeProvider>
       </body>
