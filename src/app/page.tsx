@@ -227,29 +227,35 @@ function Home({ products, categories, collections }: { products: Product[], cate
                 </Button>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4">
-                {categories.slice(0, 6).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/?category=${category.id}`}
-                    className="group flex flex-col items-center p-3 md:p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all"
-                    style={{ backgroundColor: category.bgColor || 'rgba(255,255,255,0.6)' }}
-                  >
-                    <div 
-                      className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform"
-                      style={{ backgroundColor: category.iconBgColor || 'rgba(139, 92, 246, 0.1)' }}
+                {categories.slice(0, 6).map((category) => {
+                  const cardBg = category.bgColor || '#ffffff';
+                  const iconBg = category.iconBgColor || 'rgba(139, 92, 246, 0.15)';
+                  const textClr = category.textColor || '#1f2937';
+                  
+                  return (
+                    <Link
+                      key={category.id}
+                      href={`/?category=${category.id}`}
+                      className="group flex flex-col items-center p-3 md:p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all"
+                      style={{ backgroundColor: cardBg }}
                     >
-                      <span className="text-2xl md:text-3xl">
-                        {category.icon || '🛍️'}
+                      <div 
+                        className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: iconBg }}
+                      >
+                        <span className="text-2xl md:text-3xl">
+                          {category.icon || '🛍️'}
+                        </span>
+                      </div>
+                      <span 
+                        className="text-xs md:text-sm font-medium text-center line-clamp-2"
+                        style={{ color: textClr }}
+                      >
+                        {category.name}
                       </span>
-                    </div>
-                    <span 
-                      className="text-xs md:text-sm font-medium text-center line-clamp-2"
-                      style={{ color: category.textColor || 'inherit' }}
-                    >
-                      {category.name}
-                    </span>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
