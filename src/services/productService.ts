@@ -235,6 +235,12 @@ export async function getCategories(): Promise<Category[]> {
     return data.map(cat => ({
       id: cat.id,
       name: cat.name,
+      description: cat.description,
+      image: cat.image_url,
+      icon: cat.icon,
+      bgColor: cat.bg_color,
+      textColor: cat.text_color,
+      iconBgColor: cat.icon_bg_color,
     }));
   } catch (error) {
     console.error('Failed to fetch categories:', error);

@@ -10,8 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getProducts, getCategories } from '@/services/productService';
-import { seedInitialData } from '@/lib/seed';
 import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
@@ -41,20 +39,20 @@ export default function HomePageDataContainer() {
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch settings first for hero image
-      const settingsPromise = fetch('/api/settings').then(r => r.ok ? r.json() : {}).catch(() => ({}));
-      
-      await seedInitialData();
-      const [productsData, categoriesData, collectionsData, settingsData] = await Promise.all([
-        getProducts(),
-        getCategories(),
+      // Fetch all data in parallel using API routes for better performance
+      const nocache = Date.now();
+      const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes] = await Promise.all([
+        fetch(`/api/products?nocache=${nocache}`).then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
+        fetch(`/api/categories?nocache=${nocache}`).then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
-        settingsPromise
+        fetch(`/api/settings?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+        fetch(`/api/hero?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setCollections(collectionsData);
-      setHeroSettings(settingsData);
+      
+      setProducts(Array.isArray(productsRes) ? productsRes : (productsRes.products || []));
+      setCategories(categoriesRes.categories || (Array.isArray(categoriesRes) ? categoriesRes : []));
+      setCollections(collectionsRes);
+      setHeroSettings({ ...settingsRes, ...heroRes });
       setLoading(false);
     }
     fetchData();
@@ -233,23 +231,23 @@ function Home({ products, categories, collections }: { products: Product[], cate
                   <Link
                     key={category.id}
                     href={`/?category=${category.id}`}
-                    className="group flex flex-col items-center p-3 md:p-4 rounded-xl bg-white/60 backdrop-blur-sm border hover:border-primary hover:shadow-md transition-all"
+                    className="group flex flex-col items-center p-3 md:p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all"
+                    style={{ backgroundColor: category.bgColor || 'rgba(255,255,255,0.6)' }}
                   >
-                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                    <div 
+                      className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform"
+                      style={{ backgroundColor: category.iconBgColor || 'rgba(139, 92, 246, 0.1)' }}
+                    >
                       <span className="text-2xl md:text-3xl">
-                        {category.name === 'Fashion' ? '👗' :
-                         category.name === 'Beauty' ? '💄' :
-                         category.name === 'Home' ? '🏠' :
-                         category.name === 'Electronics' ? '📱' :
-                         category.name === 'Food' ? '🍽️' :
-                         category.name === 'Health' ? '💊' :
-                         category.name === 'Sports' ? '⚽' :
-                         category.name === 'Kids' ? '🧸' :
-                         category.name === 'Books' ? '📚' :
-                         category.name === 'Art' ? '🎨' : '🛍️'}
+                        {category.icon || '🛍️'}
                       </span>
                     </div>
-                    <span className="text-xs md:text-sm font-medium text-center line-clamp-2">{category.name}</span>
+                    <span 
+                      className="text-xs md:text-sm font-medium text-center line-clamp-2"
+                      style={{ color: category.textColor || 'inherit' }}
+                    >
+                      {category.name}
+                    </span>
                   </Link>
                 ))}
               </div>
