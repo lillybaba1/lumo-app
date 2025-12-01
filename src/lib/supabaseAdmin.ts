@@ -1,7 +1,13 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Use a function to get the client, which allows for lazy evaluation
-function getSupabaseAdmin() {
+let supabaseAdminInstance: SupabaseClient | null = null;
+
+// Lazy initialization to avoid build-time errors
+function getSupabaseAdmin(): SupabaseClient {
+  if (supabaseAdminInstance) {
+    return supabaseAdminInstance;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -13,13 +19,30 @@ function getSupabaseAdmin() {
     );
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  supabaseAdminInstance = createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
-  })
+  });
+
+  return supabaseAdminInstance;
 }
 
-// Export a single instance
-export const supabaseAdmin = getSupabaseAdmin()
+// Export as a getter to ensure lazy initialization at runtime, not build time
+export const supabaseAdmin = {
+  get client() {
+    return getSupabaseAdmin();
+  },
+  // Proxy common methods for backward compatibility
+  from: (table: string) => getSupabaseAdmin().from(table),
+  auth: {
+    get admin() {
+      return getSupabaseAdmin().auth.admin;
+    }
+  },
+  storage: {
+    from: (bucket: string) => getSupabaseAdmin().storage.from(bucket),
+  },
+  rpc: (fn: string, params?: object) => getSupabaseAdmin().rpc(fn, params),
+};
