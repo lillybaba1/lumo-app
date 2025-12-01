@@ -137,7 +137,14 @@ export function CookieConsent() {
                     Lumo uses cookies and similar technologies to enhance your shopping experience, 
                     analyze site traffic, and personalize content. In accordance with The Gambia&apos;s 
                     consumer protection guidelines, we respect your right to privacy.
-                    <Link href="/pages/policy" className="text-primary hover:underline ml-1">
+                    <Link 
+                      href="/pages/privacy" 
+                      className="text-primary hover:underline ml-1"
+                      onClick={() => {
+                        // Close the banner when navigating to privacy page
+                        setShowBanner(false);
+                      }}
+                    >
                       View our Privacy Policy
                     </Link>
                   </p>

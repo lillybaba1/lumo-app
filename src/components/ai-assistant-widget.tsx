@@ -207,7 +207,7 @@ export function AIAssistantWidget() {
       className="fixed z-50 select-none"
       style={{ 
         right: position.x || 16, 
-        bottom: position.y || 16,
+        bottom: position.y || 100,
         transition: isDragging ? 'none' : 'right 0.1s, bottom 0.1s',
       }}
     >
@@ -282,7 +282,7 @@ export function AIAssistantWidget() {
               color: settings.chatbotLabelTextColor || '#8b5cf6',
             }}
           >
-            Chat
+            Need help?
           </span>
         )}
       </div>

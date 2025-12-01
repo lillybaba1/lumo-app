@@ -217,6 +217,67 @@ function Home({ products, categories, collections }: { products: Product[], cate
 
       <div className="w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+          {/* Categories Section - Show immediately after Hero */}
+          {categories.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-xl md:text-2xl font-headline font-bold">Shop by Category</h2>
+                <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4" asChild>
+                  <Link href="/categories">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4">
+                {categories.slice(0, 6).map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/?category=${category.id}`}
+                    className="group flex flex-col items-center p-3 md:p-4 rounded-xl bg-white/60 backdrop-blur-sm border hover:border-primary hover:shadow-md transition-all"
+                  >
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                      <span className="text-2xl md:text-3xl">
+                        {category.name === 'Fashion' ? '👗' :
+                         category.name === 'Beauty' ? '💄' :
+                         category.name === 'Home' ? '🏠' :
+                         category.name === 'Electronics' ? '📱' :
+                         category.name === 'Food' ? '🍽️' :
+                         category.name === 'Health' ? '💊' :
+                         category.name === 'Sports' ? '⚽' :
+                         category.name === 'Kids' ? '🧸' :
+                         category.name === 'Books' ? '📚' :
+                         category.name === 'Art' ? '🎨' : '🛍️'}
+                      </span>
+                    </div>
+                    <span className="text-xs md:text-sm font-medium text-center line-clamp-2">{category.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trending Products - Always show some products immediately */}
+          {products.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                  <h2 className="text-xl md:text-2xl font-headline font-bold">Trending Now</h2>
+                </div>
+                <Link href="/products">
+                  <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
+                    Shop All <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
+                {products.slice(0, 4).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Featured Collections */}
           <CollectionSection
             title="Best Sellers"
@@ -236,6 +297,29 @@ function Home({ products, categories, collections }: { products: Product[], cate
             productIds={collections.deals}
             viewAllLink="/products?filter=deals"
           />
+
+          {/* Featured Products - Shows when collections are empty */}
+          {collections.bestSellers.length === 0 && collections.newArrivals.length === 0 && products.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                  <h2 className="text-xl md:text-2xl font-headline font-bold">Featured Products</h2>
+                </div>
+                <Link href="/products">
+                  <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
+                {products.slice(0, 8).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Enhanced Search and Sort Bar */}
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">

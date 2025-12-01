@@ -3,7 +3,7 @@ import { getProductById } from '@/services/productService';
 import { Product } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, Shield, Truck, CreditCard, HeadphonesIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { WishlistButton } from '@/components/wishlist-button';
@@ -13,6 +13,32 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
+
+function TrustBadges() {
+  return (
+    <div className="mt-8 w-full max-w-2xl mx-auto">
+      <p className="text-sm text-muted-foreground mb-4 text-center">Why shop with Lumo?</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+          <Shield className="h-6 w-6 text-green-600 mb-2" />
+          <span className="text-xs font-medium text-center">Secure Payments</span>
+        </div>
+        <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+          <Truck className="h-6 w-6 text-blue-600 mb-2" />
+          <span className="text-xs font-medium text-center">Fast Delivery</span>
+        </div>
+        <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+          <CreditCard className="h-6 w-6 text-purple-600 mb-2" />
+          <span className="text-xs font-medium text-center">7-Day Refunds</span>
+        </div>
+        <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+          <HeadphonesIcon className="h-6 w-6 text-orange-600 mb-2" />
+          <span className="text-xs font-medium text-center">Local Support</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
   if (!currencyCode) return '$';
@@ -42,6 +68,7 @@ export default async function WishlistPage() {
           <Button asChild>
             <Link href="/login">Sign In</Link>
           </Button>
+          <TrustBadges />
         </div>
       </div>
     );
@@ -61,6 +88,7 @@ export default async function WishlistPage() {
           <Button asChild>
             <Link href="/">Browse Products</Link>
           </Button>
+          <TrustBadges />
         </div>
       </div>
     );

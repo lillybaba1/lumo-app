@@ -14,8 +14,12 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
       .insert({
         name: category.name,
         slug: category.name.toLowerCase().replace(/\s+/g, '-'),
-        description: null,
-        image_url: null,
+        description: category.description || null,
+        image_url: category.image || null,
+        icon: category.icon || null,
+        bg_color: category.bgColor || null,
+        text_color: category.textColor || null,
+        icon_bg_color: category.iconBgColor || null,
         parent_id: null,
         display_order: 0,
         is_active: true,
@@ -31,6 +35,12 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
     return {
       id: data.id,
       name: data.name,
+      description: data.description,
+      image: data.image_url,
+      icon: data.icon,
+      bgColor: data.bg_color,
+      textColor: data.text_color,
+      iconBgColor: data.icon_bg_color,
     };
   } catch (error) {
     console.error('Failed to add category:', error);
@@ -48,6 +58,12 @@ export async function updateCategory(category: Category): Promise<void> {
       .update({
         name: category.name,
         slug: category.name.toLowerCase().replace(/\s+/g, '-'),
+        description: category.description || null,
+        image_url: category.image || null,
+        icon: category.icon || null,
+        bg_color: category.bgColor || null,
+        text_color: category.textColor || null,
+        icon_bg_color: category.iconBgColor || null,
       })
       .eq('id', category.id);
 
@@ -104,6 +120,12 @@ export async function getCategories(): Promise<Category[]> {
     return data.map(cat => ({
       id: cat.id,
       name: cat.name,
+      description: cat.description,
+      image: cat.image_url,
+      icon: cat.icon,
+      bgColor: cat.bg_color,
+      textColor: cat.text_color,
+      iconBgColor: cat.icon_bg_color,
     }));
   } catch (error) {
     console.error('Failed to fetch categories:', error);

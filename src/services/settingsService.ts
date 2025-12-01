@@ -71,6 +71,41 @@ export interface Settings {
     announcementBgColor?: string;
     announcementTextColor?: string;
     announcementLink?: string;
+
+    // Footer Settings
+    footerDescription?: string;
+    footerCopyright?: string;
+    footerTagline?: string;
+    
+    // Footer Contact
+    footerEmail?: string;
+    footerPhone?: string;
+    footerWhatsApp?: string;
+    
+    // Footer Social Media
+    socialFacebook?: string;
+    socialInstagram?: string;
+    socialX?: string;
+    socialTiktok?: string;
+    socialYoutube?: string;
+    
+    // Footer Trust Badges
+    trustBadge1Title?: string;
+    trustBadge1Subtitle?: string;
+    trustBadge2Title?: string;
+    trustBadge2Subtitle?: string;
+    trustBadge3Title?: string;
+    trustBadge3Subtitle?: string;
+    trustBadge4Title?: string;
+    trustBadge4Subtitle?: string;
+    trustBadge5Title?: string;
+    trustBadge5Subtitle?: string;
+    
+    // Footer Payment Methods (comma-separated)
+    footerPaymentMethods?: string;
+    
+    // Footer Delivery Countries (comma-separated, format: "emoji Country")
+    footerDeliveryCountries?: string;
 }
 
 const defaultSettings: Settings = {
@@ -115,6 +150,30 @@ const defaultSettings: Settings = {
     announcementBgColor: '#8b5cf6',
     announcementTextColor: '#ffffff',
     announcementLink: '',
+    // Footer defaults
+    footerDescription: "We're building a trusted shopping experience for Africa. Quality products, secure payments, and reliable delivery across the continent.",
+    footerCopyright: 'Lumo – Africa\'s Trusted Marketplace',
+    footerTagline: 'Building trust, one order at a time 🌍',
+    footerEmail: 'support@lumo-app.org',
+    footerPhone: '+220 700 1234',
+    footerWhatsApp: '+2207001234',
+    socialFacebook: 'https://facebook.com/lumogambia',
+    socialInstagram: 'https://instagram.com/lumo_gambia',
+    socialX: 'https://x.com/lumogambia',
+    socialTiktok: '',
+    socialYoutube: '',
+    trustBadge1Title: 'Secure Payments',
+    trustBadge1Subtitle: '100% Protected',
+    trustBadge2Title: 'Fast Delivery',
+    trustBadge2Subtitle: '2-7 Business Days',
+    trustBadge3Title: 'Easy Refunds',
+    trustBadge3Subtitle: '7-Day Returns',
+    trustBadge4Title: 'Local Support',
+    trustBadge4Subtitle: 'We Speak Your Language',
+    trustBadge5Title: "Africa's Marketplace",
+    trustBadge5Subtitle: 'Built for Africa',
+    footerPaymentMethods: 'Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery',
+    footerDeliveryCountries: '🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria,🇬🇭 Ghana,🇰🇪 Kenya',
 };
 
 export async function getSettings(): Promise<Settings> {

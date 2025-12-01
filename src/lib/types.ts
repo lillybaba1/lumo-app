@@ -81,6 +81,11 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
+  image?: string;
+  icon?: string;
+  bgColor?: string;
+  textColor?: string;
+  iconBgColor?: string;
 }
 
 export interface CartItem {

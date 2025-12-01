@@ -15,6 +15,7 @@ export interface TableData {
 
 // List of tables that are safe to expose to admin
 const ALLOWED_TABLES = [
+  'users',
   'visitors',
   'page_views',
   'orders',
@@ -42,8 +43,9 @@ export async function getTableList(): Promise<TableInfo[]> {
           .from(tableName)
           .select('*', { count: 'exact', head: true });
 
-        if (!error) {
-          tables.push({ name: tableName, rowCount: count || 0 });
+        // Only add table if it exists and no error
+        if (!error && count !== null) {
+          tables.push({ name: tableName, rowCount: count });
         }
       } catch {
         // Table might not exist, skip it

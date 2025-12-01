@@ -7,7 +7,6 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getSiteSettings } from '@/services/settingsService';
-import AuthMenu from '@/components/auth-menu';
 import PublicSidebar from '@/components/public-sidebar';
 import { CookieConsent } from '@/components/cookie-consent';
 import { LocationProvider } from '@/components/location-consent';
@@ -59,7 +58,7 @@ export default async function RootLayout({
             <LocationProvider>
               <div className="flex min-h-screen flex-col">
                 <Header>
-                  <AuthMenu />
+                  {null}
                 </Header>
                 <div className="flex flex-1 pt-16 lg:pt-0">
                   <PublicSidebar />

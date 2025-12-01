@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Store, DollarSign, Truck, Mail, Package } from 'lucide-react';
+import { Save, Loader2, Store, DollarSign, Truck, Mail, Package, Globe, Share2, Shield, MessageCircle } from 'lucide-react';
 import { saveSettings } from './actions';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -60,6 +60,31 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
     // Inventory
     lowStockThreshold: settings.lowStockThreshold ?? 10,
     enableLowStockAlerts: settings.enableLowStockAlerts ?? true,
+
+    // Footer
+    footerDescription: settings.footerDescription || '',
+    footerCopyright: settings.footerCopyright || '',
+    footerTagline: settings.footerTagline || '',
+    footerEmail: settings.footerEmail || '',
+    footerPhone: settings.footerPhone || '',
+    footerWhatsApp: settings.footerWhatsApp || '',
+    socialFacebook: settings.socialFacebook || '',
+    socialInstagram: settings.socialInstagram || '',
+    socialX: settings.socialX || '',
+    socialTiktok: settings.socialTiktok || '',
+    socialYoutube: settings.socialYoutube || '',
+    trustBadge1Title: settings.trustBadge1Title || 'Secure Payments',
+    trustBadge1Subtitle: settings.trustBadge1Subtitle || '100% Protected',
+    trustBadge2Title: settings.trustBadge2Title || 'Fast Delivery',
+    trustBadge2Subtitle: settings.trustBadge2Subtitle || '2-7 Business Days',
+    trustBadge3Title: settings.trustBadge3Title || 'Easy Refunds',
+    trustBadge3Subtitle: settings.trustBadge3Subtitle || '7-Day Returns',
+    trustBadge4Title: settings.trustBadge4Title || 'Local Support',
+    trustBadge4Subtitle: settings.trustBadge4Subtitle || 'We Speak Your Language',
+    trustBadge5Title: settings.trustBadge5Title || "Africa's Marketplace",
+    trustBadge5Subtitle: settings.trustBadge5Subtitle || 'Built for Africa',
+    footerPaymentMethods: settings.footerPaymentMethods || 'Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery',
+    footerDeliveryCountries: settings.footerDeliveryCountries || '🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria,🇬🇭 Ghana,🇰🇪 Kenya',
   });
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -418,6 +443,229 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Footer Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            <CardTitle>Footer Settings</CardTitle>
+          </div>
+          <CardDescription>
+            Customize your website footer content
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="footerDescription">Footer Description</Label>
+            <Textarea
+              id="footerDescription"
+              placeholder="We're building a trusted shopping experience..."
+              value={formState.footerDescription}
+              onChange={(e) => updateField('footerDescription', e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="footerCopyright">Copyright Text</Label>
+              <Input
+                id="footerCopyright"
+                placeholder="Lumo – Africa's Trusted Marketplace"
+                value={formState.footerCopyright}
+                onChange={(e) => updateField('footerCopyright', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footerTagline">Footer Tagline</Label>
+              <Input
+                id="footerTagline"
+                placeholder="Building trust, one order at a time 🌍"
+                value={formState.footerTagline}
+                onChange={(e) => updateField('footerTagline', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Separator />
+          <h4 className="font-medium">Contact Information</h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="footerEmail">Contact Email</Label>
+              <Input
+                id="footerEmail"
+                type="email"
+                placeholder="support@example.com"
+                value={formState.footerEmail}
+                onChange={(e) => updateField('footerEmail', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footerPhone">Phone Number</Label>
+              <Input
+                id="footerPhone"
+                placeholder="+220 700 1234"
+                value={formState.footerPhone}
+                onChange={(e) => updateField('footerPhone', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footerWhatsApp">WhatsApp Number</Label>
+              <Input
+                id="footerWhatsApp"
+                placeholder="+2207001234"
+                value={formState.footerWhatsApp}
+                onChange={(e) => updateField('footerWhatsApp', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Without spaces or dashes</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Social Media Links */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Share2 className="h-5 w-5" />
+            <CardTitle>Social Media Links</CardTitle>
+          </div>
+          <CardDescription>
+            Add your social media profile URLs
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="socialFacebook">Facebook</Label>
+              <Input
+                id="socialFacebook"
+                placeholder="https://facebook.com/yourpage"
+                value={formState.socialFacebook}
+                onChange={(e) => updateField('socialFacebook', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="socialInstagram">Instagram</Label>
+              <Input
+                id="socialInstagram"
+                placeholder="https://instagram.com/yourpage"
+                value={formState.socialInstagram}
+                onChange={(e) => updateField('socialInstagram', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="socialX">X (Twitter)</Label>
+              <Input
+                id="socialX"
+                placeholder="https://x.com/yourhandle"
+                value={formState.socialX}
+                onChange={(e) => updateField('socialX', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="socialTiktok">TikTok</Label>
+              <Input
+                id="socialTiktok"
+                placeholder="https://tiktok.com/@yourhandle"
+                value={formState.socialTiktok}
+                onChange={(e) => updateField('socialTiktok', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="socialYoutube">YouTube</Label>
+              <Input
+                id="socialYoutube"
+                placeholder="https://youtube.com/@yourchannel"
+                value={formState.socialYoutube}
+                onChange={(e) => updateField('socialYoutube', e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Trust Badges */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            <CardTitle>Trust Badges</CardTitle>
+          </div>
+          <CardDescription>
+            Customize the trust badges shown in the footer
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <div key={num} className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b last:border-0">
+              <div className="space-y-2">
+                <Label htmlFor={`trustBadge${num}Title`}>Badge {num} Title</Label>
+                <Input
+                  id={`trustBadge${num}Title`}
+                  placeholder="Secure Payments"
+                  value={(formState as any)[`trustBadge${num}Title`]}
+                  onChange={(e) => updateField(`trustBadge${num}Title`, e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`trustBadge${num}Subtitle`}>Badge {num} Subtitle</Label>
+                <Input
+                  id={`trustBadge${num}Subtitle`}
+                  placeholder="100% Protected"
+                  value={(formState as any)[`trustBadge${num}Subtitle`]}
+                  onChange={(e) => updateField(`trustBadge${num}Subtitle`, e.target.value)}
+                />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Payment & Delivery */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            <CardTitle>Payment & Delivery</CardTitle>
+          </div>
+          <CardDescription>
+            Configure payment methods and delivery regions shown in footer
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="footerPaymentMethods">Payment Methods</Label>
+            <Input
+              id="footerPaymentMethods"
+              placeholder="Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery"
+              value={formState.footerPaymentMethods}
+              onChange={(e) => updateField('footerPaymentMethods', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list of payment methods</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="footerDeliveryCountries">Delivery Countries</Label>
+            <Input
+              id="footerDeliveryCountries"
+              placeholder="🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria"
+              value={formState.footerDeliveryCountries}
+              onChange={(e) => updateField('footerDeliveryCountries', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list with emoji flags (e.g., 🇬🇲 Gambia)</p>
+          </div>
         </CardContent>
       </Card>
 
