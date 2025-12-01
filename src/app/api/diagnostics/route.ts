@@ -1,23 +1,42 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req: Request) {
+  // SECURITY: Require admin authentication for diagnostics
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  // Verify admin role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  
+  if (profile?.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Admin access required' },
+      { status: 403 }
+    );
+  }
+
+  // Only show safe diagnostics info - no key prefixes
   const url = new URL(req.url);
   const testAI = url.searchParams.get('testAI') === 'true';
 
   const diagnostics: any = {
     nodeEnv: process.env.NODE_ENV,
     hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-    openAIKeyLength: process.env.OPENAI_API_KEY?.length || 0,
-    openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) || 'not set',
     hasGeminiKey: !!process.env.GEMINI_API_KEY,
-    geminiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
-    geminiKeyPrefix: process.env.GEMINI_API_KEY?.substring(0, 10) || 'not set',
     hasGoogleKey: !!process.env.GOOGLE_API_KEY,
-    googleKeyLength: process.env.GOOGLE_API_KEY?.length || 0,
-    googleKeyPrefix: process.env.GOOGLE_API_KEY?.substring(0, 10) || 'not set',
-    allEnvKeys: Object.keys(process.env).filter(k =>
-      k.includes('OPENAI') || k.includes('GEMINI') || k.includes('GOOGLE') || k.includes('API') || k.includes('KEY')
-    ).sort(),
+    // SECURITY: Removed key prefixes and lengths - only show boolean presence
   };
 
   // Optional: Test AI functionality with a simple query

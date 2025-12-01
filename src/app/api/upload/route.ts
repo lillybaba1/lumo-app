@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { createClient } from '@/lib/supabase/server';
 
 // File upload constraints
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -14,9 +15,38 @@ const ALLOWED_IMAGE_TYPES = [
 
 export async function POST(request: NextRequest) {
     try {
+        // SECURITY: Require authentication for file uploads
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            return NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+            );
+        }
+
+        // Check if user is admin for admin-only folders
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
         const folder = (formData.get('folder') as string) || 'uploads';
+        
+        // Admin-only folders require admin role
+        const adminOnlyFolders = ['chatbot', 'hero', 'store'];
+        if (adminOnlyFolders.includes(folder)) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+            
+            if (profile?.role !== 'admin') {
+                return NextResponse.json(
+                    { error: 'Admin access required for this folder' },
+                    { status: 403 }
+                );
+            }
+        }
 
         if (!file) {
             return NextResponse.json(
