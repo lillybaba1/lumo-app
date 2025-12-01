@@ -200,7 +200,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
             </Link>
           )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
           {collectionProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
@@ -211,7 +211,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)' }}>
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-2 pb-4 md:py-6 mt-12 lg:mt-0">
         <Hero />
       </div>
 
@@ -237,7 +237,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
             viewAllLink="/products?filter=deals"
           />
           {/* Enhanced Search and Sort Bar */}
-          <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">
               <Input
                 placeholder="Search for products..."
@@ -259,7 +259,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
               <span className="text-sm text-muted-foreground hidden md:inline">Sort by:</span>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger
-                  className="w-[200px] border-0 bg-white/80"
+                  className="w-full md:w-[200px] border-0 bg-white/80 flex-1"
                   style={{
                     borderRadius: 'var(--radius-button)',
                   }}
@@ -389,7 +389,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
             {/* Products Grid */}
             <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
               {filteredAndSortedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
                   {filteredAndSortedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

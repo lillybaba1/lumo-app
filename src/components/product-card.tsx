@@ -96,9 +96,9 @@ export default function ProductCard({ product }: ProductCardProps) {
               />
             </div>
         </CardHeader>
-        <CardContent className="flex-grow p-3 md:p-4 flex flex-col min-w-0">
+        <CardContent className="flex-grow p-2 md:p-4 flex flex-col min-w-0">
             <CardTitle
-              className="text-sm md:text-lg mb-1 md:mb-2 min-h-[2rem] md:min-h-[2.5rem] leading-tight"
+              className="text-xs md:text-lg mb-1 md:mb-2 min-h-[2rem] md:min-h-[2.5rem] leading-tight line-clamp-2"
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontWeight: 'var(--font-weight-semibold)',
@@ -117,10 +117,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.description}
             </p>
         </CardContent>
-        <CardFooter className="p-3 md:p-4 flex flex-col gap-2 mt-auto">
+        <CardFooter className="p-2 md:p-4 flex flex-col gap-1.5 md:gap-2 mt-auto">
             <div className="flex justify-between items-center w-full">
               <p
-                className="text-base md:text-xl font-bold whitespace-nowrap"
+                className="text-sm md:text-xl font-bold whitespace-nowrap"
                 style={{
                   color: 'var(--color-text-primary)',
                 }}
@@ -128,7 +128,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {currencySymbol}{product.price.toFixed(2)}
               </p>
               {product.stock > 0 && product.stock <= 5 && (
-                <span className="text-[10px] md:text-xs text-orange-600 font-medium">
+                <span className="text-[8px] md:text-xs text-orange-600 font-medium">
                   Only {product.stock} left
                 </span>
               )}
@@ -137,7 +137,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               onClick={handleAddToCart}
               size="sm"
               aria-label={`Add ${product.name} to cart`}
-              className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 bg-black/90 text-white hover:bg-black rounded-xl h-8 md:h-9 text-xs md:text-sm"
+              className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 bg-black/90 text-white hover:bg-black rounded-xl h-7 md:h-9 text-[10px] md:text-sm"
             >
               <ShoppingCart className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
               <span>Add</span>

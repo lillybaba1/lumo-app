@@ -19,6 +19,12 @@ interface ChatbotSettings {
   chatbotImage?: string;
   chatbotName?: string;
   chatbotEnabled?: boolean;
+  chatbotGlowColor?: string;
+  chatbotBubbleGradientFrom?: string;
+  chatbotBubbleGradientTo?: string;
+  chatbotLabelBgColor?: string;
+  chatbotLabelTextColor?: string;
+  chatbotPulseEnabled?: boolean;
 }
 
 export function AIAssistantWidget() {
@@ -57,6 +63,12 @@ export function AIAssistantWidget() {
           chatbotImage: data.chatbotImage || '',
           chatbotName: data.chatbotName || 'Luna',
           chatbotEnabled: data.chatbotEnabled !== false,
+          chatbotGlowColor: data.chatbotGlowColor || '#8b5cf6',
+          chatbotBubbleGradientFrom: data.chatbotBubbleGradientFrom || '#8b5cf6',
+          chatbotBubbleGradientTo: data.chatbotBubbleGradientTo || '#ec4899',
+          chatbotLabelBgColor: data.chatbotLabelBgColor || '#ffffff',
+          chatbotLabelTextColor: data.chatbotLabelTextColor || '#8b5cf6',
+          chatbotPulseEnabled: data.chatbotPulseEnabled !== false,
         });
       })
       .catch((err) => {
@@ -209,45 +221,71 @@ export function AIAssistantWidget() {
         </div>
       )}
       
-      <Button
-        ref={buttonRef}
-        size="icon"
-        className={`rounded-full h-14 w-14 shadow-lg relative overflow-hidden group ${
-          isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-105'
-        } transition-transform ${settings.chatbotImage && !isOpen ? 'bg-transparent p-0 border-2 border-primary' : ''}`}
-        onClick={handleClick}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleMouseDown}
-      >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : settings.chatbotImage ? (
-          <>
-            <Image
-              src={settings.chatbotImage}
-              alt={settings.chatbotName || 'AI Assistant'}
-              fill
-              className="object-cover rounded-full"
-              sizes="56px"
-              unoptimized
-            />
-            {/* Chat bubble indicator */}
-            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 shadow-md z-10">
-              <MessageCircle className="h-3 w-3" />
+      {/* Chat Button Container */}
+      <div className="flex flex-col items-center gap-1">
+        <Button
+          ref={buttonRef}
+          size="icon"
+          className={`rounded-full h-14 w-14 shadow-lg relative overflow-visible group ${
+            isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-105'
+          } transition-transform ${settings.chatbotImage && !isOpen ? 'bg-transparent p-0' : ''}`}
+          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleMouseDown}
+          style={!isOpen && settings.chatbotImage ? {
+            border: `2px solid ${settings.chatbotGlowColor || '#8b5cf6'}`,
+            outline: `4px solid ${(settings.chatbotGlowColor || '#8b5cf6')}4D`,
+            boxShadow: `0 0 20px ${settings.chatbotGlowColor || '#8b5cf6'}66, 0 4px 12px rgba(0, 0, 0, 0.15)`
+          } : undefined}
+        >
+          {isOpen ? (
+            <X className="h-6 w-6" />
+          ) : settings.chatbotImage ? (
+            <>
+              <Image
+                src={settings.chatbotImage}
+                alt={settings.chatbotName || 'AI Assistant'}
+                fill
+                className="object-cover rounded-full"
+                sizes="56px"
+                unoptimized
+              />
+              {/* Chat bubble indicator - larger and more visible */}
+              <div 
+                className={`absolute -top-1 -right-1 text-white rounded-full p-1.5 shadow-lg z-10 ${settings.chatbotPulseEnabled !== false ? 'animate-pulse' : ''}`}
+                style={{
+                  background: `linear-gradient(to bottom right, ${settings.chatbotBubbleGradientFrom || '#8b5cf6'}, ${settings.chatbotBubbleGradientTo || '#ec4899'})`
+                }}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+              </div>
+            </>
+          ) : (
+            <Bot className="h-6 w-6" />
+          )}
+          <span className="sr-only">{isOpen ? 'Close AI Assistant' : 'Open AI Assistant'}</span>
+          
+          {/* Drag hint on hover */}
+          {!isOpen && !isDragging && (
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Drag to move
             </div>
-          </>
-        ) : (
-          <Bot className="h-6 w-6" />
-        )}
-        <span className="sr-only">{isOpen ? 'Close AI Assistant' : 'Open AI Assistant'}</span>
+          )}
+        </Button>
         
-        {/* Drag hint on hover */}
-        {!isOpen && !isDragging && (
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Drag to move
-          </div>
+        {/* Chat label on mobile */}
+        {!isOpen && (
+          <span 
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm"
+            style={{
+              backgroundColor: settings.chatbotLabelBgColor || '#ffffff',
+              color: settings.chatbotLabelTextColor || '#8b5cf6',
+            }}
+          >
+            Chat
+          </span>
         )}
-      </Button>
+      </div>
     </div>
   );
 }

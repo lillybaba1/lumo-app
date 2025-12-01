@@ -139,7 +139,7 @@ export function AppSidebar({
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className={cn("lg:hidden fixed left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b shadow-sm", mobileOffsetClassName)}>
+      <div className={cn("lg:hidden fixed left-0 right-0 z-40 flex items-center justify-between px-4 py-2 bg-card border-b shadow-sm", mobileOffsetClassName)}>
         <div className="flex items-center gap-2">
           {mobileIcon}
           <h1 className="text-lg font-headline font-bold">{mobileTitle}</h1>

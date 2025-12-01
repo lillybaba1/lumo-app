@@ -160,8 +160,8 @@ export default function Header({ children }: { children: React.ReactNode }) {
           color: settings.headerTextColor,
         }}
       >
-        <div className="container flex h-16 items-center">
-          <Link href="/" className="flex items-center gap-3 group">
+        <div className="container flex h-16 items-center px-4 md:px-6">
+          <Link href="/" className="flex items-center gap-2 md:gap-3 group flex-shrink-0">
             {/* Enhanced Logo */}
             <div 
               className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
@@ -182,37 +182,66 @@ export default function Header({ children }: { children: React.ReactNode }) {
               </button>
             )}
           </Link>
-          <div className="flex flex-1 items-center justify-end space-x-2">
-            <nav className="flex items-center space-x-2">
+          <div className="flex flex-1 items-center justify-end space-x-1 md:space-x-2">
+            <nav className="flex items-center space-x-1 md:space-x-2">
               {children}
               {isAuthenticated && user && (
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" asChild style={buttonStyle}>
+                <div className="flex items-center">
+                  <Button variant="outline" size="icon" className="md:hidden h-9 w-9" asChild style={buttonStyle}>
                     <Link href="/account/profile">
-                      <User className="h-4 w-4 md:mr-2" />
-                      <span className="hidden md:inline">{user.name}</span>
+                      <User className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="hidden md:flex" asChild style={buttonStyle}>
+                    <Link href="/account/profile">
+                      <User className="h-4 w-4 mr-2" />
+                      <span>{user.name}</span>
                     </Link>
                   </Button>
                 </div>
               )}
               {user?.role === 'admin' && (
-                <Button variant="outline" asChild style={buttonStyle}>
-                  <Link href="/admin/dashboard">
-                    <Shield className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Admin</span>
-                  </Link>
-                </Button>
+                <>
+                  <Button variant="outline" size="icon" className="md:hidden h-9 w-9" asChild style={buttonStyle}>
+                    <Link href="/admin/dashboard">
+                      <Shield className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="hidden md:flex" asChild style={buttonStyle}>
+                    <Link href="/admin/dashboard">
+                      <Shield className="h-4 w-4 mr-2" />
+                      <span>Admin</span>
+                    </Link>
+                  </Button>
+                </>
               )}
-              <Button variant="outline" asChild style={buttonStyle}>
+              {/* Wishlist - icon only on mobile */}
+              <Button variant="outline" size="icon" className="md:hidden h-9 w-9" asChild style={buttonStyle}>
                 <Link href="/wishlist">
-                  <Heart className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Wishlist</span>
+                  <Heart className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" asChild className="relative" style={buttonStyle}>
+              <Button variant="outline" className="hidden md:flex" asChild style={buttonStyle}>
+                <Link href="/wishlist">
+                  <Heart className="h-4 w-4 mr-2" />
+                  <span>Wishlist</span>
+                </Link>
+              </Button>
+              {/* Cart - icon only on mobile */}
+              <Button variant="outline" size="icon" className="md:hidden h-9 w-9 relative" asChild style={buttonStyle}>
                 <Link href="/cart">
-                  <ShoppingBag className="h-4 w-4 md:mr-2" />
-                   <span className="hidden md:inline">Cart</span>
+                  <ShoppingBag className="h-4 w-4" />
+                  {itemCount > 0 && (
+                    <Badge variant="destructive" className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]">
+                      {itemCount}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
+              <Button variant="outline" className="hidden md:flex relative" asChild style={buttonStyle}>
+                <Link href="/cart">
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  <span>Cart</span>
                   {itemCount > 0 && (
                     <Badge variant="destructive" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">
                       {itemCount}

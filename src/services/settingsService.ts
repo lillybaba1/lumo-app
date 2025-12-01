@@ -50,6 +50,12 @@ export interface Settings {
     chatbotImage?: string;
     chatbotName?: string;
     chatbotEnabled?: boolean;
+    chatbotGlowColor?: string;
+    chatbotBubbleGradientFrom?: string;
+    chatbotBubbleGradientTo?: string;
+    chatbotLabelBgColor?: string;
+    chatbotLabelTextColor?: string;
+    chatbotPulseEnabled?: boolean;
 
     // Header Settings
     headerBgColor?: string;
@@ -92,6 +98,12 @@ const defaultSettings: Settings = {
     chatbotImage: '',
     chatbotName: 'Luna',
     chatbotEnabled: true,
+    chatbotGlowColor: '#8b5cf6',
+    chatbotBubbleGradientFrom: '#8b5cf6',
+    chatbotBubbleGradientTo: '#ec4899',
+    chatbotLabelBgColor: '#ffffff',
+    chatbotLabelTextColor: '#8b5cf6',
+    chatbotPulseEnabled: true,
     headerBgColor: '#ffffff',
     headerTextColor: '#000000',
     headerButtonStyle: 'outline',
