@@ -176,7 +176,7 @@ export function AppSidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col flex-shrink-0 border-r bg-card text-card-foreground transition-all duration-300 ease-in-out",
+          "hidden lg:flex flex-col flex-shrink-0 border-r bg-card text-card-foreground transition-all duration-300 ease-in-out z-40",
           collapsed ? "w-[4.5rem]" : "w-72",
           "min-h-screen sticky top-0 h-screen",
           className
@@ -187,7 +187,7 @@ export function AppSidebar({
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 z-10 h-6 w-6 rounded-full border bg-background shadow-md hover:shadow-lg transition-all"
+          className="absolute -right-3 top-20 z-50 h-6 w-6 rounded-full border bg-background shadow-md hover:shadow-lg transition-all"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>

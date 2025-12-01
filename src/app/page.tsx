@@ -30,11 +30,22 @@ type HeroSettings = {
   heroImageObjectPosition?: string;
 };
 
+type CategorySectionSettings = {
+  categorySectionBgType?: 'color' | 'image' | 'gradient';
+  categorySectionBgColor?: string;
+  categorySectionBgImage?: string;
+  categorySectionBgGradientFrom?: string;
+  categorySectionBgGradientTo?: string;
+  categorySectionBgGradientDirection?: string;
+  categorySectionTextColor?: string;
+};
+
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collections>({ bestSellers: [], newArrivals: [], deals: [] });
   const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
+  const [categorySectionSettings, setCategorySectionSettings] = useState<CategorySectionSettings>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +64,15 @@ export default function HomePageDataContainer() {
       setCategories(categoriesRes.categories || (Array.isArray(categoriesRes) ? categoriesRes : []));
       setCollections(collectionsRes);
       setHeroSettings({ ...settingsRes, ...heroRes });
+      setCategorySectionSettings({
+        categorySectionBgType: settingsRes.categorySectionBgType,
+        categorySectionBgColor: settingsRes.categorySectionBgColor,
+        categorySectionBgImage: settingsRes.categorySectionBgImage,
+        categorySectionBgGradientFrom: settingsRes.categorySectionBgGradientFrom,
+        categorySectionBgGradientTo: settingsRes.categorySectionBgGradientTo,
+        categorySectionBgGradientDirection: settingsRes.categorySectionBgGradientDirection,
+        categorySectionTextColor: settingsRes.categorySectionTextColor,
+      });
       setLoading(false);
     }
     fetchData();
@@ -73,10 +93,15 @@ export default function HomePageDataContainer() {
     );
   }
 
-  return <Home products={products} categories={categories} collections={collections} />;
+  return <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} />;
 }
 
-function Home({ products, categories, collections }: { products: Product[], categories: Category[], collections: Collections }) {
+function Home({ products, categories, collections, categorySectionSettings }: { 
+  products: Product[], 
+  categories: Category[], 
+  collections: Collections,
+  categorySectionSettings: CategorySectionSettings 
+}) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -207,20 +232,66 @@ function Home({ products, categories, collections }: { products: Product[], cate
     );
   };
 
+  // Generate category section background style
+  const getCategorySectionStyle = (): React.CSSProperties => {
+    const { 
+      categorySectionBgType, 
+      categorySectionBgColor, 
+      categorySectionBgImage,
+      categorySectionBgGradientFrom,
+      categorySectionBgGradientTo,
+      categorySectionBgGradientDirection
+    } = categorySectionSettings;
+
+    switch (categorySectionBgType) {
+      case 'image':
+        return {
+          backgroundImage: categorySectionBgImage ? `url(${categorySectionBgImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: categorySectionBgColor || '#f3f4f6',
+        };
+      case 'gradient':
+        return {
+          background: `linear-gradient(${categorySectionBgGradientDirection || 'to right'}, ${categorySectionBgGradientFrom || '#667eea'}, ${categorySectionBgGradientTo || '#764ba2'})`,
+        };
+      case 'color':
+      default:
+        return {
+          backgroundColor: categorySectionBgColor || '#f3f4f6',
+        };
+    }
+  };
+
+  const categoryTextColor = categorySectionSettings.categorySectionTextColor || '#1f2937';
+
   return (
-    <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)' }}>
-      <div className="w-full px-4 sm:px-6 lg:px-8 pt-2 pb-4 md:py-6 mt-12 lg:mt-0">
+    <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
+      <div className="w-full mt-14 lg:mt-0" style={{ width: '100%' }}>
         <Hero />
       </div>
 
       <div className="w-full">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-          {/* Categories Section - Show immediately after Hero */}
-          {categories.length > 0 && (
-            <div className="mb-8 md:mb-12">
+        {/* Categories Section - With customizable background */}
+        {categories.length > 0 && (
+          <div 
+            className="w-full py-6 md:py-10 mb-0"
+            style={getCategorySectionStyle()}
+          >
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-xl md:text-2xl font-headline font-bold">Shop by Category</h2>
-                <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4" asChild>
+                <h2 
+                  className="text-xl md:text-2xl font-headline font-bold"
+                  style={{ color: categoryTextColor }}
+                >
+                  Shop by Category
+                </h2>
+                <Button 
+                  variant="ghost" 
+                  className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4" 
+                  style={{ color: categoryTextColor }}
+                  asChild
+                >
                   <Link href="/categories">
                     View All <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -236,7 +307,7 @@ function Home({ products, categories, collections }: { products: Product[], cate
                     <Link
                       key={category.id}
                       href={`/?category=${category.id}`}
-                      className="group flex flex-col items-center p-3 md:p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all"
+                      className="group flex flex-col items-center p-3 md:p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all bg-white/90 backdrop-blur-sm"
                       style={{ backgroundColor: cardBg }}
                     >
                       <div 
@@ -258,8 +329,10 @@ function Home({ products, categories, collections }: { products: Product[], cate
                 })}
               </div>
             </div>
-          )}
+          </div>
+        )}
 
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Trending Products - Always show some products immediately */}
           {products.length > 0 && (
             <div className="mb-8 md:mb-12">

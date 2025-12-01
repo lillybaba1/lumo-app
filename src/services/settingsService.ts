@@ -117,6 +117,16 @@ export interface Settings {
     
     // Footer Delivery Countries (comma-separated, format: "emoji Country")
     footerDeliveryCountries?: string;
+
+    // Category Section Settings
+    categorySectionBgType?: 'color' | 'image' | 'gradient';
+    categorySectionBgColor?: string;
+    categorySectionBgImage?: string;
+    categorySectionBgGradientFrom?: string;
+    categorySectionBgGradientTo?: string;
+    categorySectionBgGradientDirection?: string;
+    categorySectionTextColor?: string;
+    categorySectionPadding?: string;
 }
 
 const defaultSettings: Settings = {

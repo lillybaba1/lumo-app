@@ -37,14 +37,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Verify admin role - check both users and user_profiles tables
+    const { data: userData } = await supabase
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
     
-    if (profile?.role !== 'admin') {
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    const role = userData?.role || profileData?.role;
+    const isAdmin = role === 'admin' || role === 'APP_OWNER_ADMIN';
+    
+    if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

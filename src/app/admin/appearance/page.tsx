@@ -1,9 +1,12 @@
 import { getActiveTheme } from './actions';
 import ThemeSelector from './theme-selector';
 import HeroSettingsForm from './hero-settings-form';
+import CategorySectionForm from './category-section-form';
+import { getSettings } from '@/services/settingsService';
 
 export default async function AppearancePage() {
   const activeThemeId = await getActiveTheme();
+  const settings = await getSettings();
 
   return (
     <div className="space-y-8">
@@ -17,6 +20,8 @@ export default async function AppearancePage() {
       <ThemeSelector activeThemeId={activeThemeId} />
 
       <HeroSettingsForm />
+
+      <CategorySectionForm settings={settings} />
     </div>
   );
 }

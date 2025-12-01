@@ -108,10 +108,11 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   if (loading) {
     return (
       <div 
-        className="relative w-full overflow-hidden rounded-3xl"
+        className="relative w-full overflow-hidden z-0"
         style={{ 
           minHeight: '400px',
-          marginBottom: 'var(--spacing-2xl)',
+          width: '100%',
+          maxWidth: '100%',
         }}
       >
         {/* Show hero image immediately while loading other content */}
@@ -150,10 +151,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl"
-      style={{
-        marginBottom: 'var(--spacing-2xl)',
-      }}
+      className="relative w-full overflow-hidden z-0"
+      style={{ width: '100%', maxWidth: '100%' }}
     >
       {/* Background Image */}
       {heroBackgroundImage ? (
