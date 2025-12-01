@@ -396,3 +396,81 @@ export function SimpleCheckoutConsent({
     </div>
   );
 }
+
+// Simple checkout consent component for the checkout page
+interface SimpleCheckoutConsentProps {
+  onConsentChange: (consent: boolean) => void;
+}
+
+export function CheckoutConsent({ onConsentChange }: SimpleCheckoutConsentProps) {
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [shippingAccepted, setShippingAccepted] = useState(false);
+
+  const handleTermsChange = (checked: boolean) => {
+    setTermsAccepted(checked);
+    onConsentChange(checked && ageConfirmed && shippingAccepted);
+  };
+
+  const handleAgeChange = (checked: boolean) => {
+    setAgeConfirmed(checked);
+    onConsentChange(termsAccepted && checked && shippingAccepted);
+  };
+
+  const handleShippingChange = (checked: boolean) => {
+    setShippingAccepted(checked);
+    onConsentChange(termsAccepted && ageConfirmed && checked);
+  };
+
+  return (
+    <div className="space-y-3 w-full">
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="terms" 
+          checked={termsAccepted}
+          onCheckedChange={handleTermsChange}
+        />
+        <Label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
+          I agree to the{' '}
+          <Link href="/pages/terms" className="text-primary hover:underline">
+            Terms & Conditions
+          </Link>
+          {' '}and{' '}
+          <Link href="/pages/policy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </Label>
+      </div>
+
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="age" 
+          checked={ageConfirmed}
+          onCheckedChange={handleAgeChange}
+        />
+        <Label htmlFor="age" className="text-sm leading-tight cursor-pointer">
+          I confirm I am 18 years or older
+        </Label>
+      </div>
+
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="shipping" 
+          checked={shippingAccepted}
+          onCheckedChange={handleShippingChange}
+        />
+        <Label htmlFor="shipping" className="text-sm leading-tight cursor-pointer">
+          I understand the{' '}
+          <Link href="/pages/shipping" className="text-primary hover:underline">
+            Shipping Policy
+          </Link>
+          {' '}(5-7 days delivery within The Gambia)
+        </Label>
+      </div>
+
+      <p className="text-xs text-muted-foreground pt-1">
+        All fields are required to place your order
+      </p>
+    </div>
+  );
+}

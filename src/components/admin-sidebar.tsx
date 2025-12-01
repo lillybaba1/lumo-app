@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database } from 'lucide-react';
 
 type AdminUser = {
   userId: string;
@@ -43,6 +43,7 @@ const navGroups: SidebarSection[] = [
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
       { href: '/admin/privacy', icon: Shield, label: 'Privacy & Consent' },
+      { href: '/admin/database', icon: Database, label: 'Database' },
     ]
   },
   {

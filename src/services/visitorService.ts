@@ -402,3 +402,187 @@ export async function getLiveVisitors(): Promise<number> {
     return 0;
   }
 }
+
+// Get visitors filtered by active status
+export async function getVisitorsByStatus(
+  status: 'active' | 'inactive' | 'all' = 'all',
+  page: number = 1,
+  limit: number = 50
+): Promise<{ visitors: Visitor[]; total: number; activeCount: number; inactiveCount: number }> {
+  try {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    let query = supabaseAdmin.from('visitors').select('*', { count: 'exact' });
+    
+    if (status === 'active') {
+      query = query.gte('last_activity', fiveMinutesAgo);
+    } else if (status === 'inactive') {
+      query = query.lt('last_activity', fiveMinutesAgo);
+    }
+    
+    const { data, error, count } = await query
+      .order('last_activity', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (error) {
+      console.error('Error fetching visitors by status:', error);
+      return { visitors: [], total: 0, activeCount: 0, inactiveCount: 0 };
+    }
+
+    // Get counts for both statuses
+    const { count: activeCount } = await supabaseAdmin
+      .from('visitors')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_activity', fiveMinutesAgo);
+
+    const { count: inactiveCount } = await supabaseAdmin
+      .from('visitors')
+      .select('*', { count: 'exact', head: true })
+      .lt('last_activity', fiveMinutesAgo);
+
+    return { 
+      visitors: data || [], 
+      total: count || 0,
+      activeCount: activeCount || 0,
+      inactiveCount: inactiveCount || 0
+    };
+  } catch (error) {
+    console.error('Error fetching visitors by status:', error);
+    return { visitors: [], total: 0, activeCount: 0, inactiveCount: 0 };
+  }
+}
+
+// Get page views (activity log) for a specific visitor
+export async function getVisitorActivity(visitor_id: string): Promise<PageView[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('page_views')
+      .select('*')
+      .eq('visitor_id', visitor_id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Error fetching visitor activity:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching visitor activity:', error);
+    return [];
+  }
+}
+
+// Get all recent activities across all visitors
+export async function getRecentActivities(limit: number = 100): Promise<(PageView & { visitor?: Visitor })[]> {
+  try {
+    const { data: pageViews, error } = await supabaseAdmin
+      .from('page_views')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching recent activities:', error);
+      return [];
+    }
+
+    // Get unique visitor IDs
+    const visitorIds = [...new Set(pageViews?.map(pv => pv.visitor_id) || [])];
+    
+    // Fetch visitor data
+    const { data: visitors } = await supabaseAdmin
+      .from('visitors')
+      .select('*')
+      .in('visitor_id', visitorIds);
+
+    const visitorMap = new Map(visitors?.map(v => [v.visitor_id, v]) || []);
+
+    return (pageViews || []).map(pv => ({
+      ...pv,
+      visitor: visitorMap.get(pv.visitor_id)
+    }));
+  } catch (error) {
+    console.error('Error fetching recent activities:', error);
+    return [];
+  }
+}
+
+// Clear inactive visitors (older than specified hours)
+export async function clearInactiveVisitors(hoursInactive: number = 24): Promise<{ deleted: number; error?: string }> {
+  try {
+    const cutoffTime = new Date(Date.now() - hoursInactive * 60 * 60 * 1000).toISOString();
+    
+    // First get the visitor_ids to delete
+    const { data: visitorsToDelete } = await supabaseAdmin
+      .from('visitors')
+      .select('visitor_id')
+      .lt('last_activity', cutoffTime);
+
+    if (!visitorsToDelete || visitorsToDelete.length === 0) {
+      return { deleted: 0 };
+    }
+
+    const visitorIds = visitorsToDelete.map(v => v.visitor_id);
+
+    // Delete page views for these visitors
+    await supabaseAdmin
+      .from('page_views')
+      .delete()
+      .in('visitor_id', visitorIds);
+
+    // Delete the visitors
+    const { error } = await supabaseAdmin
+      .from('visitors')
+      .delete()
+      .lt('last_activity', cutoffTime);
+
+    if (error) {
+      console.error('Error clearing inactive visitors:', error);
+      return { deleted: 0, error: error.message };
+    }
+
+    return { deleted: visitorsToDelete.length };
+  } catch (error) {
+    console.error('Error clearing inactive visitors:', error);
+    return { deleted: 0, error: 'Failed to clear inactive visitors' };
+  }
+}
+
+// Delete a single visitor and their data
+export async function deleteVisitor(id: string): Promise<boolean> {
+  try {
+    // Get the visitor_id first
+    const { data: visitor } = await supabaseAdmin
+      .from('visitors')
+      .select('visitor_id')
+      .eq('id', id)
+      .single();
+
+    if (visitor) {
+      // Delete page views
+      await supabaseAdmin
+        .from('page_views')
+        .delete()
+        .eq('visitor_id', visitor.visitor_id);
+    }
+
+    // Delete the visitor
+    const { error } = await supabaseAdmin
+      .from('visitors')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting visitor:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting visitor:', error);
+    return false;
+  }
+}
+

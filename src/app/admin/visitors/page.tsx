@@ -1,9 +1,9 @@
-import { getVisitors, getVisitorStats, getLiveVisitors } from '@/services/visitorService';
+import { getVisitorsByStatus, getVisitorStats, getLiveVisitors, getRecentActivities } from '@/services/visitorService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Globe, Monitor, Clock, TrendingUp, Eye, MapPin, Activity } from 'lucide-react';
-import VisitorTable from './visitor-table';
 import VisitorCharts from './visitor-charts';
+import VisitorTabs from './visitor-tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,10 +16,11 @@ function formatDuration(seconds: number): string {
 }
 
 export default async function VisitorsPage() {
-  const [{ visitors, total }, stats, liveCount] = await Promise.all([
-    getVisitors(1, 50),
+  const [visitorsData, stats, liveCount, recentActivities] = await Promise.all([
+    getVisitorsByStatus('all', 1, 50),
     getVisitorStats(),
     getLiveVisitors(),
+    getRecentActivities(100),
   ]);
 
   return (
@@ -61,12 +62,15 @@ export default async function VisitorsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Today's Visitors</p>
-                <p className="text-2xl font-bold">{stats.todayVisitors.toLocaleString()}</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <TrendingUp className="h-3 w-3 text-green-600" />
-                  <span className="text-xs text-green-600">Active</span>
-                </div>
+                <p className="text-sm text-muted-foreground">Active / Inactive</p>
+                <p className="text-2xl font-bold">
+                  <span className="text-green-600">{visitorsData.activeCount}</span>
+                  {' / '}
+                  <span className="text-muted-foreground">{visitorsData.inactiveCount}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active in last 5 min
+                </p>
               </div>
               <div className="p-3 rounded-full bg-green-500/10">
                 <Activity className="h-6 w-6 text-green-600" />
@@ -214,18 +218,14 @@ export default async function VisitorsPage() {
         </Card>
       </div>
 
-      {/* Visitor Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Visitors</CardTitle>
-          <CardDescription>
-            Showing {visitors.length} of {total} total visitors
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <VisitorTable visitors={visitors} />
-        </CardContent>
-      </Card>
+      {/* Visitor Tabs - Active/Inactive/Activity */}
+      <VisitorTabs 
+        initialVisitors={visitorsData.visitors}
+        initialTotal={visitorsData.total}
+        activeCount={visitorsData.activeCount}
+        inactiveCount={visitorsData.inactiveCount}
+        recentActivities={recentActivities}
+      />
     </div>
   );
 }
