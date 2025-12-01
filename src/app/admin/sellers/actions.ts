@@ -140,3 +140,59 @@ export async function reactivateBusinessAccount(businessId: string) {
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
+
+export async function deleteBusinessAccountAndUser(businessId: string) {
+  try {
+    // Get the business account to find owner
+    const { data: businessAccount } = await supabaseAdmin
+      .from('business_accounts')
+      .select('owner_user_id')
+      .eq('id', businessId)
+      .single();
+
+    if (!businessAccount) {
+      return { success: false, error: 'Business account not found' };
+    }
+
+    const ownerId = businessAccount.owner_user_id;
+
+    // Delete business account
+    const { error: businessError } = await supabaseAdmin
+      .from('business_accounts')
+      .delete()
+      .eq('id', businessId);
+
+    if (businessError) {
+      console.error('Error deleting business account:', businessError);
+      return { success: false, error: 'Failed to delete business account' };
+    }
+
+    // Delete from user_profiles table
+    await supabaseAdmin
+      .from('user_profiles')
+      .delete()
+      .eq('id', ownerId);
+
+    // Delete from users table
+    await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', ownerId);
+
+    // Delete from auth.users
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(ownerId);
+    
+    if (authError) {
+      console.error('Error deleting user from auth:', authError);
+      // Continue anyway, the business account is already deleted
+    }
+
+    revalidatePath('/admin/sellers');
+    revalidatePath('/admin/customers');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error in deleteBusinessAccountAndUser:', error);
+    return { success: false, error: 'An unexpected error occurred' };
+  }
+}

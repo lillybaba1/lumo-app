@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { revalidatePath } from 'next/cache';
 import type { User } from '@/lib/types';
 
@@ -119,28 +120,45 @@ export async function getUsers(): Promise<User[]> {
 
 export async function deleteUser(uid: string) {
   try {
-    const supabase = await createClient();
+    // Use admin client for deleting users (requires service role key)
     
-    // Delete from auth.users (this will cascade to users table if set up properly)
-    const { error: authError } = await supabase.auth.admin.deleteUser(uid);
+    // First check if user has a business account and delete it
+    const { data: businessAccount } = await supabaseAdmin
+      .from('business_accounts')
+      .select('id')
+      .eq('owner_user_id', uid)
+      .single();
+
+    if (businessAccount) {
+      // Delete business account first
+      await supabaseAdmin
+        .from('business_accounts')
+        .delete()
+        .eq('id', businessAccount.id);
+    }
+
+    // Delete from user_profiles table
+    await supabaseAdmin
+      .from('user_profiles')
+      .delete()
+      .eq('id', uid);
+
+    // Delete from users table
+    await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', uid);
+
+    // Delete from auth.users (this is the main auth record)
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(uid);
     
     if (authError) {
       console.error("Error deleting user from auth:", authError);
       return { success: false, message: authError.message };
     }
 
-    // Also delete from users table explicitly
-    const { error: dbError } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', uid);
-
-    if (dbError) {
-      console.error("Error deleting user from database:", dbError);
-      // Don't fail if already deleted by cascade
-    }
-
     revalidatePath('/admin/customers');
+    revalidatePath('/admin/sellers');
     
     return { success: true, message: "User deleted successfully." };
   } catch (error: any) {

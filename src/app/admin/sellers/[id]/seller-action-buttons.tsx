@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2, Ban, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Ban, RotateCcw, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { approveBusinessAccount, rejectBusinessAccount, suspendBusinessAccount, reactivateBusinessAccount } from '../actions';
+import { approveBusinessAccount, rejectBusinessAccount, suspendBusinessAccount, reactivateBusinessAccount, deleteBusinessAccountAndUser } from '../actions';
 
 interface Props {
   businessId: string;
@@ -128,6 +128,29 @@ export function SellerActionButtons({ businessId, status }: Props) {
     }
   };
 
+  const handleDelete = async () => {
+    setLoading('delete');
+    try {
+      const result = await deleteBusinessAccountAndUser(businessId);
+      if (result.success) {
+        toast({
+          title: 'Account Deleted',
+          description: 'The seller account and user have been permanently deleted.',
+        });
+        router.push('/admin/sellers');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete account',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
   return (
     <div className="space-y-3">
       {/* Pending Approval Actions */}
@@ -246,6 +269,43 @@ export function SellerActionButtons({ businessId, status }: Props) {
           Waiting for user to verify their email address.
         </p>
       )}
+
+      {/* Delete Button - Available for all statuses */}
+      <div className="pt-4 border-t mt-4">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="outline"
+              className="w-full text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+              disabled={loading !== null}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Account Permanently
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Seller Account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the seller's business account and their user account. 
+                This action cannot be undone. All their products, orders, and data will be lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {loading === 'delete' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                Delete Permanently
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
