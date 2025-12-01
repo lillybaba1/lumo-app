@@ -11,6 +11,7 @@ import AuthMenu from '@/components/auth-menu';
 import PublicSidebar from '@/components/public-sidebar';
 import { CookieConsent } from '@/components/cookie-consent';
 import { LocationProvider } from '@/components/location-consent';
+import { VisitorTracker } from '@/components/visitor-tracker';
 
 export const metadata: Metadata = {
   title: 'Lumo',
@@ -71,6 +72,7 @@ export default async function RootLayout({
               <Toaster />
               <AIAssistantWidget />
               <CookieConsent />
+              <VisitorTracker />
             </LocationProvider>
           </CartProvider>
         </ThemeProvider>
