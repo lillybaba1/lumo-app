@@ -1,6 +1,6 @@
 import { getTableList } from '@/services/databaseService';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Database, Table, Shield, AlertTriangle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Database, Table, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import DatabaseBrowser from './database-browser';
 
