@@ -122,11 +122,13 @@ export default function BusinessSidebar({ user, businessAccount }: BusinessSideb
               "h-2 w-2 rounded-full",
               businessAccount.status === 'ACTIVE' && "bg-green-500",
               businessAccount.status === 'PENDING_VERIFICATION' && "bg-yellow-500",
+              businessAccount.status === 'PENDING_APPROVAL' && "bg-orange-500",
               businessAccount.status === 'SUSPENDED' && "bg-red-500"
             )} />
             <span className="text-xs font-medium">
               {businessAccount.status === 'ACTIVE' && 'Active'}
               {businessAccount.status === 'PENDING_VERIFICATION' && 'Pending Verification'}
+              {businessAccount.status === 'PENDING_APPROVAL' && 'Pending Approval'}
               {businessAccount.status === 'SUSPENDED' && 'Suspended'}
             </span>
           </div>

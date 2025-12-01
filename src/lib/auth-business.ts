@@ -78,6 +78,14 @@ export async function requireBusiness(
       return fail('Your business account has been suspended. Please contact support.', 'unauthorized');
     }
 
+    // Check if business account is pending approval
+    if (businessAccount.status === 'PENDING_APPROVAL' || businessAccount.status === 'PENDING_VERIFICATION') {
+      if (redirectOnFail) {
+        redirect('/business/pending');
+      }
+      throw new UnauthorizedError('Your business account is pending approval. Please wait for admin review.');
+    }
+
     const user: User = {
       uid: userData.id,
       email: userData.email,

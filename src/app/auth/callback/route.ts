@@ -65,6 +65,33 @@ export async function GET(request: NextRequest) {
         console.log('User profile created/updated successfully')
       }
 
+      // Check if user has a business account with PENDING_VERIFICATION status
+      // If so, update it to PENDING_APPROVAL now that email is verified
+      const { data: businessAccount } = await supabase
+        .from('business_accounts')
+        .select('id, status')
+        .eq('owner_user_id', user.id)
+        .single()
+
+      if (businessAccount && businessAccount.status === 'PENDING_VERIFICATION') {
+        console.log('Business account found, updating to PENDING_APPROVAL:', businessAccount.id)
+        const { error: businessError } = await supabase
+          .from('business_accounts')
+          .update({
+            status: 'PENDING_APPROVAL',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', businessAccount.id)
+
+        if (businessError) {
+          console.error('Error updating business account status:', businessError)
+        } else {
+          console.log('Business account status updated to PENDING_APPROVAL')
+          // Redirect business users to the pending page instead of verified
+          return NextResponse.redirect(`${origin}/business/pending`)
+        }
+      }
+
       return response
     } else {
       console.error('Exchange code error:', error)

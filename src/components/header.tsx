@@ -164,15 +164,17 @@ export default function Header({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="container flex h-16 items-center px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2 md:gap-3 group flex-shrink-0">
-            {/* Enhanced Logo */}
-            <div 
-              className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
-              style={{ backgroundColor: settings.headerButtonColor }}
-            >
-              <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold font-headline text-xl leading-tight tracking-tight">Lumo</span>
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            <Link href="/" className="flex items-center gap-2 md:gap-3 group">
+              {/* Enhanced Logo */}
+              <div 
+                className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
+                style={{ backgroundColor: settings.headerButtonColor }}
+              >
+                <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <span className="font-bold font-headline text-xl leading-tight tracking-tight">Lumo</span>
+            </Link>
             {!isHomePage && (
               <Link 
                 href="/"
@@ -185,7 +187,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
                 <span>Home</span>
               </Link>
             )}
-          </Link>
+          </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-2">

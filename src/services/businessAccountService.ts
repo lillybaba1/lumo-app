@@ -103,6 +103,11 @@ export async function createBusinessAccount(
       created_at: new Date().toISOString(),
     };
 
+    console.log('[BusinessAccount] Attempting to create business account:', {
+      ownerUserId,
+      businessName: dbData.business_name,
+    });
+
     const { data, error } = await supabaseAdmin
       .from('business_accounts')
       .insert(dbData)
@@ -110,13 +115,20 @@ export async function createBusinessAccount(
       .single();
 
     if (error) {
-      console.error('Error creating business account:', error);
+      console.error('[BusinessAccount] Error creating business account:', {
+        error: JSON.stringify(error),
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       return null;
     }
 
+    console.log('[BusinessAccount] Successfully created business account:', data?.id);
     return data ? mapDbToBusinessAccount(data) : null;
   } catch (error) {
-    console.error('Error in createBusinessAccount:', error);
+    console.error('[BusinessAccount] Exception in createBusinessAccount:', error);
     return null;
   }
 }

@@ -147,7 +147,7 @@ export interface BusinessAccount {
   website?: string;
   description?: string;
   logo?: string;
-  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION';
+  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'PENDING_APPROVAL';
   // Payout settings
   payoutMethod?: 'bank_transfer' | 'paypal' | 'stripe';
   payoutDetails?: Record<string, any>; // Bank account, PayPal email, etc.

@@ -12,6 +12,17 @@ export interface Settings {
     storeAddress?: string;
     storeLogo?: string;
 
+    // Logo & Branding
+    logoUrl?: string;
+    logoAlt?: string;
+    logoCropX?: number;
+    logoCropY?: number;
+    logoCropWidth?: number;
+    logoCropHeight?: number;
+    logoWidth?: number;
+    logoHeight?: number;
+    faviconUrl?: string;
+
     // Tax Settings
     taxEnabled?: boolean;
     taxRate?: number;

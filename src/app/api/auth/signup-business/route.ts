@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
 
     // Step 1: Create auth user with Supabase
+    console.log('[Business Signup] Attempting to create auth user for:', email);
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
 
     if (signUpError) {
       const message = signUpError.message || 'Signup failed';
-      console.error('Business signup: Supabase signup error:', signUpError);
+      console.error('[Business Signup] Supabase signup error:', signUpError);
 
       // Handle provider rate limiting gracefully
       if (message.toLowerCase().includes('for security purposes') || signUpError.status === 429) {
@@ -103,23 +104,28 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Create user profile in users table (same as personal signup for consistency)
+    // Use upsert to handle cases where auth user exists but profile doesn't
+    console.log('[Business Signup] Creating user profile for:', data.user.id);
     const { error: profileError } = await supabaseAdmin
       .from('users')
-      .insert({
+      .upsert({
         id: data.user.id,
         email: email.toLowerCase().trim(),
         name: name.trim(),
         phone_number: phone || null,
         role: 'customer', // Use 'customer' role in users table, business status tracked in business_accounts
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
       });
 
     if (profileError) {
-      console.error('Business signup: Failed to create user profile:', JSON.stringify(profileError));
+      console.error('[Business Signup] Failed to create user profile:', JSON.stringify(profileError, null, 2));
       // Clean up auth user so we don't leave dangling accounts
       try {
         await supabaseAdmin.auth.admin.deleteUser(data.user.id);
       } catch (cleanupErr) {
-        console.error('Business signup: Failed to cleanup auth user after profile error:', cleanupErr);
+        console.error('[Business Signup] Failed to cleanup auth user after profile error:', cleanupErr);
       }
       return NextResponse.json(
         { error: 'Failed to create user profile. Please try again.', details: profileError.message },
@@ -127,6 +133,8 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('[Business Signup] User profile created, now creating business account');
+    
     // Step 3: Create business account (requires user profile to exist due to FK)
     let businessAccount;
     try {
@@ -141,17 +149,19 @@ export async function POST(request: Request) {
         status: 'PENDING_VERIFICATION',
       });
     } catch (err) {
-      console.error('Business signup: createBusinessAccount threw:', err);
+      console.error('[Business Signup] createBusinessAccount threw:', err);
       businessAccount = null;
     }
 
     if (!businessAccount) {
-      console.error('Business signup: Failed to create business account for user', data.user.id);
+      console.error('[Business Signup] Failed to create business account for user', data.user.id);
       return NextResponse.json(
         { error: 'Failed to create business account. Please contact support.' },
         { status: 500 }
       );
     }
+
+    console.log('[Business Signup] Business account created successfully:', businessAccount.id);
 
     // Business status is tracked in business_accounts table, no need to update users.role
 

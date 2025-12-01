@@ -3,14 +3,23 @@
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AlertCircle, Mail, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 function AuthErrorContent() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const message = searchParams.get('message') || 'unknown_error';
   const details = searchParams.get('details') || '';
+  
+  const [email, setEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [showResendForm, setShowResendForm] = useState(false);
 
   const errorMessages: { [key: string]: { title: string; description: string } } = {
     verification_failed: {
@@ -44,6 +53,51 @@ function AuthErrorContent() {
   };
 
   const error = errorMessages[getErrorType()] || errorMessages.unknown_error;
+  const isExpiredError = getErrorType() === 'expired_link' || getErrorType() === 'verification_failed';
+
+  const handleResendVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Verification Email Sent!',
+        description: `A new verification link has been sent to ${email}. Check your inbox.`,
+      });
+      setShowResendForm(false);
+      setEmail('');
+    } catch (error: any) {
+      console.error('Resend error:', error);
+      toast({
+        title: 'Failed to Resend',
+        description: error.message || 'Could not send verification email. Please try signing up again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -70,10 +124,58 @@ function AuthErrorContent() {
               </p>
             </div>
           )}
+
+          {/* Resend Verification Form */}
+          {isExpiredError && showResendForm && (
+            <form onSubmit={handleResendVerification} className="space-y-3 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="resend-email">Email Address</Label>
+                <Input
+                  id="resend-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isResending}>
+                {isResending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send New Verification Link
+                  </>
+                )}
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full" 
+                onClick={() => setShowResendForm(false)}
+              >
+                Cancel
+              </Button>
+            </form>
+          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
-          <Button asChild className="w-full">
+          {isExpiredError && !showResendForm && (
+            <Button 
+              className="w-full" 
+              variant="default"
+              onClick={() => setShowResendForm(true)}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Resend Verification Email
+            </Button>
+          )}
+          <Button asChild className={isExpiredError && !showResendForm ? "w-full" : "w-full"} variant={isExpiredError ? "outline" : "default"}>
             <Link href="/signup">Try Again</Link>
           </Button>
           <Button asChild variant="outline" className="w-full">

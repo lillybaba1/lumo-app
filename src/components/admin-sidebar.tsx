@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database, Image, Building2 } from 'lucide-react';
 
 type AdminUser = {
   userId: string;
@@ -40,6 +40,7 @@ const navGroups: SidebarSection[] = [
   {
     label: 'Management',
     items: [
+      { href: '/admin/sellers', icon: Building2, label: 'Seller Accounts' },
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
       { href: '/admin/privacy', icon: Shield, label: 'Privacy & Consent' },
@@ -50,6 +51,7 @@ const navGroups: SidebarSection[] = [
     label: 'Customization',
     items: [
       { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
+      { href: '/admin/logo', icon: Image, label: 'Logo & Branding' },
       { href: '/admin/header', icon: PanelTop, label: 'Header & Announcement' },
       { href: '/admin/hero', icon: ImageIcon, label: 'Hero Products' },
       { href: '/admin/collections', icon: TrendingUp, label: 'Collections' },
