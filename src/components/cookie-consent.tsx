@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Cookie, Settings, X, Shield } from 'lucide-react';
+import { Cookie, Settings, X, Shield, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 const COOKIE_CONSENT_KEY = 'lumo-cookie-consent';
 const COOKIE_PREFERENCES_KEY = 'lumo-cookie-preferences';
+const USER_CONSENT_KEY = 'lumo-user-consent';
 
 export interface CookiePreferences {
   necessary: boolean; // Always true, required for site function
@@ -19,7 +20,25 @@ export interface CookiePreferences {
   timestamp: string;
 }
 
-const defaultPreferences: CookiePreferences = {
+export interface UserConsent {
+  // Data Processing Consent (aligned with Gambian business practices)
+  dataProcessing: boolean;      // Consent to process personal data
+  dataSharing: boolean;         // Consent to share data with delivery partners
+  marketingComms: boolean;      // Consent to receive marketing communications
+  orderUpdates: boolean;        // Consent to receive order/shipping updates (usually required)
+  
+  // E-commerce specific
+  termsAccepted: boolean;       // Terms and Conditions accepted
+  returnPolicyAccepted: boolean; // Return/Refund policy accepted
+  shippingPolicyAccepted: boolean; // Shipping policy accepted
+  
+  // Timestamps
+  consentTimestamp: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+const defaultCookiePreferences: CookiePreferences = {
   necessary: true,
   analytics: false,
   marketing: false,
@@ -27,10 +46,21 @@ const defaultPreferences: CookiePreferences = {
   timestamp: '',
 };
 
+const defaultUserConsent: UserConsent = {
+  dataProcessing: false,
+  dataSharing: false,
+  marketingComms: false,
+  orderUpdates: true, // Default to true as it's essential for orders
+  termsAccepted: false,
+  returnPolicyAccepted: false,
+  shippingPolicyAccepted: false,
+  consentTimestamp: '',
+};
+
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [preferences, setPreferences] = useState<CookiePreferences>(defaultPreferences);
+  const [preferences, setPreferences] = useState<CookiePreferences>(defaultCookiePreferences);
 
   useEffect(() => {
     // Check if user has already consented
@@ -102,12 +132,13 @@ export function CookieConsent() {
                   <Cookie className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">We value your privacy</h3>
+                  <h3 className="font-semibold text-lg">We Value Your Privacy</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    We use cookies to enhance your browsing experience, analyze site traffic, 
-                    and personalize content. By clicking &quot;Accept All&quot;, you consent to our use of cookies.
+                    Lumo uses cookies and similar technologies to enhance your shopping experience, 
+                    analyze site traffic, and personalize content. In accordance with The Gambia&apos;s 
+                    consumer protection guidelines, we respect your right to privacy.
                     <Link href="/pages/policy" className="text-primary hover:underline ml-1">
-                      Learn more
+                      View our Privacy Policy
                     </Link>
                   </p>
                 </div>
@@ -142,9 +173,9 @@ export function CookieConsent() {
                 {/* Necessary Cookies */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
-                    <Label className="font-medium">Necessary Cookies</Label>
+                    <Label className="font-medium">Essential Cookies</Label>
                     <p className="text-xs text-muted-foreground">
-                      Required for the website to function properly
+                      Required for secure shopping, cart, and checkout
                     </p>
                   </div>
                   <Switch checked disabled />
@@ -155,7 +186,7 @@ export function CookieConsent() {
                   <div>
                     <Label className="font-medium">Analytics Cookies</Label>
                     <p className="text-xs text-muted-foreground">
-                      Help us understand how visitors interact with our site
+                      Help us understand how customers use our store
                     </p>
                   </div>
                   <Switch
@@ -171,7 +202,7 @@ export function CookieConsent() {
                   <div>
                     <Label className="font-medium">Marketing Cookies</Label>
                     <p className="text-xs text-muted-foreground">
-                      Used to deliver personalized advertisements
+                      Used to show relevant product recommendations
                     </p>
                   </div>
                   <Switch
@@ -187,7 +218,7 @@ export function CookieConsent() {
                   <div>
                     <Label className="font-medium">Preference Cookies</Label>
                     <p className="text-xs text-muted-foreground">
-                      Remember your settings and preferences
+                      Remember your settings (language, currency, location)
                     </p>
                   </div>
                   <Switch
@@ -207,6 +238,10 @@ export function CookieConsent() {
                   Accept All
                 </Button>
               </div>
+              
+              <p className="text-xs text-center text-muted-foreground">
+                Your privacy choices comply with The Gambia consumer protection standards
+              </p>
             </div>
           )}
         </CardContent>
@@ -238,4 +273,34 @@ export function useCookiePreferences(): CookiePreferences | null {
   }, []);
 
   return preferences;
+}
+
+// Hook to get and manage user consent
+export function useUserConsent() {
+  const [consent, setConsent] = useState<UserConsent | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(USER_CONSENT_KEY);
+    if (saved) {
+      try {
+        setConsent(JSON.parse(saved));
+      } catch (e) {
+        // Invalid
+      }
+    }
+  }, []);
+
+  const updateConsent = (updates: Partial<UserConsent>) => {
+    const updated = {
+      ...defaultUserConsent,
+      ...consent,
+      ...updates,
+      consentTimestamp: new Date().toISOString(),
+    };
+    localStorage.setItem(USER_CONSENT_KEY, JSON.stringify(updated));
+    setConsent(updated);
+    return updated;
+  };
+
+  return { consent, updateConsent };
 }

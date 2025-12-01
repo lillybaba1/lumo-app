@@ -18,6 +18,7 @@ import { initiateWaveMoneyPayment, processCashOnDelivery } from '@/services/paym
 import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2 } from 'lucide-react';
+import { CheckoutConsent } from '@/components/checkout-consent';
 
 type Settings = { currency?: string };
 
@@ -37,6 +38,7 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   useEffect(() => {
     getSettings().then(s => setSettings(s || {}));
@@ -343,8 +345,9 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                <CardFooter className="flex-col gap-4">
+                  <CheckoutConsent onConsentChange={setConsentGiven} />
+                  <Button type="submit" className="w-full" size="lg" disabled={loading || !consentGiven}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {loading ? 'Processing Order...' : 'Place Order'}
                   </Button>

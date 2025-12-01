@@ -191,7 +191,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Allow location access for local shipping rates and nearby store features.
+                    Allow location access for accurate shipping rates within The Gambia 
+                    and better delivery estimates.
                   </p>
                   <div className="flex gap-2 mt-3">
                     <Button
