@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Image as ImageIcon, Upload } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Upload, Crop } from 'lucide-react';
 import { getHeroSettings, updateHeroSettings } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
+import ImageCropUploadModal from '@/components/image-crop-upload-modal';
 import {
   Select,
   SelectContent,
@@ -21,9 +22,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const HERO_ASPECT_RATIOS = [
+  { label: 'Free', value: 'free', ratio: undefined },
+  { label: '21:9', value: '21:9', ratio: 21 / 9 },
+  { label: '16:9', value: '16:9', ratio: 16 / 9 },
+  { label: '4:3', value: '4:3', ratio: 4 / 3 },
+  { label: '3:1', value: '3:1', ratio: 3 / 1 },
+  { label: '2:1', value: '2:1', ratio: 2 / 1 },
+];
+
 export default function HeroSettingsForm() {
   const { toast } = useToast();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [heroHeading, setHeroHeading] = useState('');
   const [heroTagline, setHeroTagline] = useState('');
@@ -36,6 +47,10 @@ export default function HeroSettingsForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>('');
 
   // Load initial settings
   useEffect(() => {
@@ -80,11 +95,29 @@ export default function HeroSettingsForm() {
       return;
     }
 
+    // Open crop modal instead of uploading directly
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
     setIsUploading(true);
+    setCropModalOpen(false);
+
     try {
-      const url = await uploadImageAndGetUrl(file, 'hero');
+      const url = await uploadImageAndGetUrl(croppedFile, 'hero');
       setHeroBackgroundImage(url);
       setHasUnsavedChanges(true);
+      setImageToCrop('');
       toast({
         title: 'Image uploaded successfully!',
         description: '⚠️ Important: Click "Save Changes" button below to apply the new hero image.',
@@ -224,16 +257,20 @@ export default function HeroSettingsForm() {
                 />
                 <label htmlFor="hero-image-upload">
                   <Button asChild variant="outline" type="button" disabled={isUploading}>
-                    <div className="cursor-pointer">
+                    <div className="cursor-pointer flex items-center gap-2">
                       {isUploading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Upload className="h-4 w-4" />
+                        <>
+                          <Crop className="h-4 w-4" />
+                          <span className="hidden sm:inline">Upload & Crop</span>
+                        </>
                       )}
                     </div>
                   </Button>
                   <input
                     id="hero-image-upload"
+                    ref={fileInputRef}
                     type="file"
                     className="sr-only"
                     accept="image/*"
@@ -327,6 +364,22 @@ export default function HeroSettingsForm() {
           </div>
         </CardContent>
       </form>
+
+      {/* Image Crop Modal */}
+      <ImageCropUploadModal
+        isOpen={cropModalOpen}
+        onClose={() => {
+          setCropModalOpen(false);
+          setImageToCrop('');
+        }}
+        imageSrc={imageToCrop}
+        onComplete={handleCropComplete}
+        title="Crop Hero Image"
+        description="Adjust the crop area, zoom, and rotation to fit your hero section perfectly."
+        aspectRatios={HERO_ASPECT_RATIOS}
+        defaultAspectRatio="16:9"
+        isUploading={isUploading}
+      />
     </Card>
   );
 }

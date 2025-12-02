@@ -7,9 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Trash2, Palette, Image as ImageIcon, Blend } from 'lucide-react';
+import { Loader2, Upload, Trash2, Palette, Image as ImageIcon, Blend, Crop } from 'lucide-react';
 import { Settings } from '@/services/settingsService';
 import Image from 'next/image';
+import ImageCropUploadModal from '@/components/image-crop-upload-modal';
+
+const CATEGORY_BG_ASPECT_RATIOS = [
+  { label: 'Free', value: 'free', ratio: undefined },
+  { label: '21:9', value: '21:9', ratio: 21 / 9 },
+  { label: '16:9', value: '16:9', ratio: 16 / 9 },
+  { label: '4:3', value: '4:3', ratio: 4 / 3 },
+  { label: '3:1', value: '3:1', ratio: 3 / 1 },
+];
 
 interface Props {
   settings: Settings;
@@ -31,6 +40,10 @@ export default function CategorySectionForm({ settings }: Props) {
   const [gradientDirection, setGradientDirection] = useState(settings.categorySectionBgGradientDirection || 'to right');
   const [textColor, setTextColor] = useState(settings.categorySectionTextColor || '#1f2937');
 
+  // Crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>('');
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,11 +57,27 @@ export default function CategorySectionForm({ settings }: Props) {
       return;
     }
 
+    // Open crop modal instead of uploading directly
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
     setUploading(true);
+    setCropModalOpen(false);
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', croppedFile);
       formData.append('folder', 'branding');
 
       const response = await fetch('/api/upload', {
@@ -62,6 +91,7 @@ export default function CategorySectionForm({ settings }: Props) {
 
       const data = await response.json();
       setBgImage(data.url);
+      setImageToCrop('');
 
       toast({
         title: 'Image uploaded',
@@ -235,9 +265,9 @@ export default function CategorySectionForm({ settings }: Props) {
                   {uploading ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Crop className="h-4 w-4 mr-2" />
                   )}
-                  Upload Image
+                  Upload & Crop Image
                 </Button>
                 {bgImage && (
                   <Button
@@ -409,6 +439,22 @@ export default function CategorySectionForm({ settings }: Props) {
           )}
         </Button>
       </CardContent>
+
+      {/* Image Crop Modal */}
+      <ImageCropUploadModal
+        isOpen={cropModalOpen}
+        onClose={() => {
+          setCropModalOpen(false);
+          setImageToCrop('');
+        }}
+        imageSrc={imageToCrop}
+        onComplete={handleCropComplete}
+        title="Crop Category Section Background"
+        description="Adjust the crop area, zoom, and rotation for the category section background."
+        aspectRatios={CATEGORY_BG_ASPECT_RATIOS}
+        defaultAspectRatio="21:9"
+        isUploading={uploading}
+      />
     </Card>
   );
 }

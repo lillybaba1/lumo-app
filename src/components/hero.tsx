@@ -135,7 +135,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           </div>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
-        )}}
+        )}
         
         {/* Loading content overlay */}
         <div className="relative h-full flex items-center py-12 md:py-32 px-6 md:px-12">

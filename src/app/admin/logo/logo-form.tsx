@@ -40,6 +40,10 @@ const ASPECT_RATIOS = [
   { label: '1:1', value: '1:1', ratio: 1 },
 ];
 
+const FAVICON_ASPECT_RATIOS = [
+  { label: '1:1', value: '1:1', ratio: 1 }, // Favicons should be square
+];
+
 export default function LogoForm({ initialSettings }: { initialSettings: LogoSettings }) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +62,7 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
   const [rotation, setRotation] = useState(0);
   const [aspectRatio, setAspectRatio] = useState<string>('free');
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
+  const [currentUploadType, setCurrentUploadType] = useState<'logo' | 'favicon'>('logo');
   
   // Preview modal
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -70,18 +75,16 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // For logo, open crop modal first
-    if (type === 'logo') {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageToCrop(reader.result as string);
-        setCropModalOpen(true);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // For favicon, upload directly
-      await handleUpload(file, type);
-    }
+    // Open crop modal for both logo and favicon
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCurrentUploadType(type);
+      // Set default aspect ratio based on type
+      setAspectRatio(type === 'favicon' ? '1:1' : 'free');
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUpload = async (file: File, type: 'logo' | 'favicon') => {
@@ -125,20 +128,22 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
   const handleCropSave = async () => {
     if (!croppedAreaPixels) return;
     
-    // Save crop data
-    setSettings(prev => ({
-      ...prev,
-      logoCropX: croppedAreaPixels.x,
-      logoCropY: croppedAreaPixels.y,
-      logoCropWidth: croppedAreaPixels.width,
-      logoCropHeight: croppedAreaPixels.height,
-    }));
+    // Save crop data (only for logo)
+    if (currentUploadType === 'logo') {
+      setSettings(prev => ({
+        ...prev,
+        logoCropX: croppedAreaPixels.x,
+        logoCropY: croppedAreaPixels.y,
+        logoCropWidth: croppedAreaPixels.width,
+        logoCropHeight: croppedAreaPixels.height,
+      }));
+    }
     
     // Create cropped image and upload
     try {
       const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels, rotation);
       if (croppedImage) {
-        await handleUpload(croppedImage, 'logo');
+        await handleUpload(croppedImage, currentUploadType);
       }
     } catch (error) {
       console.error('Error cropping image:', error);
@@ -348,8 +353,8 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
                   size="sm"
                   onClick={() => faviconInputRef.current?.click()}
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Replace
+                  <Crop className="h-4 w-4 mr-2" />
+                  Replace & Crop
                 </Button>
                 <Button
                   variant="destructive"
@@ -366,8 +371,8 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
               className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
               onClick={() => faviconInputRef.current?.click()}
             >
-              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm font-medium">Upload Favicon</p>
+              <Crop className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm font-medium">Upload & Crop Favicon</p>
               <p className="text-xs text-muted-foreground">
                 ICO, PNG, or SVG (32x32 recommended)
               </p>
@@ -407,10 +412,12 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Crop className="h-5 w-5" />
-              Crop Logo
+              {currentUploadType === 'favicon' ? 'Crop Favicon' : 'Crop Logo'}
             </DialogTitle>
             <DialogDescription>
-              Adjust the crop area, zoom, and rotation to fit your logo perfectly.
+              {currentUploadType === 'favicon' 
+                ? 'Adjust the crop area to create a square favicon. Favicons should be 1:1 ratio.'
+                : 'Adjust the crop area, zoom, and rotation to fit your logo perfectly.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -422,7 +429,7 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
                 Aspect Ratio
               </Label>
               <div className="flex flex-wrap gap-2">
-                {ASPECT_RATIOS.map((ar) => (
+                {(currentUploadType === 'favicon' ? FAVICON_ASPECT_RATIOS : ASPECT_RATIOS).map((ar) => (
                   <Button
                     key={ar.value}
                     type="button"
@@ -444,7 +451,7 @@ export default function LogoForm({ initialSettings }: { initialSettings: LogoSet
                   crop={crop}
                   zoom={zoom}
                   rotation={rotation}
-                  aspect={ASPECT_RATIOS.find(ar => ar.value === aspectRatio)?.ratio}
+                  aspect={(currentUploadType === 'favicon' ? FAVICON_ASPECT_RATIOS : ASPECT_RATIOS).find(ar => ar.value === aspectRatio)?.ratio}
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onRotationChange={setRotation}

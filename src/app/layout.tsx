@@ -12,18 +12,44 @@ import { CookieConsent } from '@/components/cookie-consent';
 import { LocationProvider } from '@/components/location-consent';
 import { VisitorTracker } from '@/components/visitor-tracker';
 
-export const metadata: Metadata = {
-  title: 'Lumo',
-  description: 'Your modern e-commerce experience.',
-  icons: {
-    icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-  },
-};
+// Generate dynamic metadata including favicon from admin settings
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const settings = await getSiteSettings();
+    
+    // Use uploaded favicon or fallback to default
+    const faviconUrl = settings?.faviconUrl || '/icon.svg';
+    const siteName = settings?.storeName || 'Lumo';
+    
+    return {
+      title: siteName,
+      description: 'Your modern e-commerce experience.',
+      icons: {
+        icon: [
+          { url: faviconUrl },
+        ],
+        apple: [
+          { url: faviconUrl },
+        ],
+        shortcut: faviconUrl,
+      },
+    };
+  } catch (error) {
+    // Fallback if settings fetch fails
+    return {
+      title: 'Lumo',
+      description: 'Your modern e-commerce experience.',
+      icons: {
+        icon: [
+          { url: '/icon.svg', type: 'image/svg+xml' },
+        ],
+        apple: [
+          { url: '/icon.svg', type: 'image/svg+xml' },
+        ],
+      },
+    };
+  }
+}
 
 // Force dynamic rendering for the entire app to avoid static pre-render
 // errors for routes that rely on runtime features (cookies(), server

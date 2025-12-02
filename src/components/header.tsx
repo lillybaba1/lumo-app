@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -28,6 +29,11 @@ interface HeaderSettings {
   announcementBgColor?: string;
   announcementTextColor?: string;
   announcementLink?: string;
+  logoUrl?: string;
+  logoAlt?: string;
+  logoWidth?: number;
+  logoHeight?: number;
+  storeName?: string;
 }
 
 const defaultHeaderSettings: HeaderSettings = {
@@ -42,6 +48,11 @@ const defaultHeaderSettings: HeaderSettings = {
   announcementBgColor: '#8b5cf6',
   announcementTextColor: '#ffffff',
   announcementLink: '',
+  logoUrl: '',
+  logoAlt: 'Lumo',
+  logoWidth: 200,
+  logoHeight: 60,
+  storeName: 'Lumo',
 };
 
 export default function Header({ children }: { children: React.ReactNode }) {
@@ -107,6 +118,11 @@ export default function Header({ children }: { children: React.ReactNode }) {
             announcementBgColor: data.announcementBgColor || defaultHeaderSettings.announcementBgColor,
             announcementTextColor: data.announcementTextColor || defaultHeaderSettings.announcementTextColor,
             announcementLink: data.announcementLink || defaultHeaderSettings.announcementLink,
+            logoUrl: data.logoUrl || defaultHeaderSettings.logoUrl,
+            logoAlt: data.logoAlt || defaultHeaderSettings.logoAlt,
+            logoWidth: data.logoWidth || defaultHeaderSettings.logoWidth,
+            logoHeight: data.logoHeight || defaultHeaderSettings.logoHeight,
+            storeName: data.storeName || defaultHeaderSettings.storeName,
           });
         }
       } catch (error) {
@@ -166,14 +182,32 @@ export default function Header({ children }: { children: React.ReactNode }) {
         <div className="container flex h-16 items-center px-4 md:px-6">
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 md:gap-3 group">
-              {/* Enhanced Logo */}
-              <div 
-                className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
-                style={{ backgroundColor: settings.headerButtonColor }}
-              >
-                <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
-              </div>
-              <span className="font-bold font-headline text-xl leading-tight tracking-tight">Lumo</span>
+              {/* Logo - Uses uploaded logo or fallback to icon */}
+              {settings.logoUrl ? (
+                <div className="relative h-10 flex items-center">
+                  <Image
+                    src={settings.logoUrl}
+                    alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                    width={settings.logoWidth || 200}
+                    height={settings.logoHeight || 40}
+                    className="object-contain max-h-10 w-auto"
+                    priority
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <>
+                  <div 
+                    className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
+                    style={{ backgroundColor: settings.headerButtonColor }}
+                  >
+                    <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
+                  </div>
+                  <span className="font-bold font-headline text-xl leading-tight tracking-tight">
+                    {settings.storeName || 'Lumo'}
+                  </span>
+                </>
+              )}
             </Link>
             {!isHomePage && (
               <Link 
