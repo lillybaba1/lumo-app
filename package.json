@@ -23,9 +23,16 @@
     "seed:categories": "node scripts/seed-categories.js",
     "create:admin": "node scripts/create-admin-user.js",
     "migrate:marketplace": "node scripts/migrate-marketplace.mjs",
-    "test:marketplace": "node scripts/test-marketplace.mjs"
+    "test:marketplace": "node scripts/test-marketplace.mjs",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "android:run": "npx cap run android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
     "@genkit-ai/firebase": "1.16.1",
     "@genkit-ai/googleai": "1.14.1",
     "@hookform/resolvers": "^4.1.3",
