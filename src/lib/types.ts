@@ -134,23 +134,169 @@ export interface PageContent {
 // Role types for marketplace
 export type UserRole = 'APP_OWNER_ADMIN' | 'BUSINESS_ACCOUNT' | 'PERSONAL_ACCOUNT';
 
-// Business Account / Seller Entity
+// Seller Types
+export type SellerType = 'individual' | 'company';
+
+// Subscription Tiers
+export type SubscriptionTier = 'free' | 'pro' | 'enterprise';
+
+// Verification Status
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
+
+// Subscription Tier Details
+export interface SubscriptionTierDetails {
+  tier: SubscriptionTier;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  commissionRate: number; // Percentage taken from each sale
+  features: {
+    maxProducts: number; // -1 for unlimited
+    maxMonthlyOrders: number; // -1 for unlimited
+    customBoutique: boolean;
+    prioritySupport: boolean;
+    analyticsAdvanced: boolean;
+    promotionalTools: boolean;
+    verifiedBadge: boolean;
+    featuredListings: number; // Number of featured product slots per month
+  };
+}
+
+// Subscription Tiers Configuration
+export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierDetails> = {
+  free: {
+    tier: 'free',
+    name: 'Starter',
+    monthlyPrice: 0,
+    annualPrice: 0,
+    commissionRate: 15, // 15% commission
+    features: {
+      maxProducts: 10,
+      maxMonthlyOrders: 50,
+      customBoutique: false,
+      prioritySupport: false,
+      analyticsAdvanced: false,
+      promotionalTools: false,
+      verifiedBadge: false,
+      featuredListings: 0,
+    },
+  },
+  pro: {
+    tier: 'pro',
+    name: 'Professional',
+    monthlyPrice: 29.99,
+    annualPrice: 299.99,
+    commissionRate: 10, // 10% commission
+    features: {
+      maxProducts: 100,
+      maxMonthlyOrders: 500,
+      customBoutique: true,
+      prioritySupport: true,
+      analyticsAdvanced: true,
+      promotionalTools: true,
+      verifiedBadge: false,
+      featuredListings: 5,
+    },
+  },
+  enterprise: {
+    tier: 'enterprise',
+    name: 'Enterprise',
+    monthlyPrice: 99.99,
+    annualPrice: 999.99,
+    commissionRate: 5, // 5% commission
+    features: {
+      maxProducts: -1, // Unlimited
+      maxMonthlyOrders: -1, // Unlimited
+      customBoutique: true,
+      prioritySupport: true,
+      analyticsAdvanced: true,
+      promotionalTools: true,
+      verifiedBadge: true,
+      featuredListings: 20,
+    },
+  },
+};
+
+// Boutique - Seller's Storefront
+export interface Boutique {
+  id: string;
+  businessAccountId: string; // FK to BusinessAccount
+  slug: string; // URL-friendly name, e.g., "johns-electronics"
+  displayName: string; // Public name shown on boutique
+  tagline?: string; // Short description, e.g., "Quality electronics since 2020"
+  description?: string; // Full about section
+  logo?: string;
+  bannerImage?: string;
+  themeColor?: string; // Primary color for boutique branding
+  accentColor?: string;
+  // Social & Contact
+  socialLinks?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+  };
+  contactEmail?: string;
+  contactPhone?: string;
+  // Policies displayed on boutique
+  shippingInfo?: string;
+  returnPolicy?: string;
+  // Stats (cached, updated periodically)
+  totalProducts: number;
+  totalSales: number;
+  averageRating: number;
+  totalReviews: number;
+  // Visibility
+  isPublished: boolean;
+  isFeatured: boolean; // Admin can feature top boutiques
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Enhanced Business Account with Boutique features
 export interface BusinessAccount {
   id: string;
-  ownerUserId: string; // FK to User with BUSINESS_ACCOUNT role
+  ownerUserId: string;
   businessName: string;
   contactPersonName: string;
   contactEmail: string;
   businessAddress: string;
   businessPhone?: string;
-  taxId?: string; // Tax ID / Registration number
+  taxId?: string;
   website?: string;
   description?: string;
   logo?: string;
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'PENDING_APPROVAL';
+  // NEW: Seller Type
+  sellerType: SellerType;
+  // NEW: Subscription
+  subscriptionTier: SubscriptionTier;
+  subscriptionStatus: 'active' | 'cancelled' | 'past_due' | 'trialing';
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  // NEW: Verification
+  verificationStatus: VerificationStatus;
+  verificationDocuments?: {
+    idDocument?: string; // URL to uploaded ID
+    businessLicense?: string; // URL to business license
+    proofOfAddress?: string; // URL to proof of address
+    submittedAt?: string;
+    reviewedAt?: string;
+    rejectionReason?: string;
+  };
+  // NEW: Boutique reference
+  boutiqueId?: string;
+  boutiqueSlug?: string;
   // Payout settings
   payoutMethod?: 'bank_transfer' | 'paypal' | 'stripe';
-  payoutDetails?: Record<string, any>; // Bank account, PayPal email, etc.
+  payoutDetails?: Record<string, any>;
+  // Commission tracking
+  totalEarnings: number;
+  totalCommissionPaid: number;
+  pendingPayout: number;
   // Shipping settings
   shippingPolicies?: string;
   returnPolicy?: string;

@@ -160,6 +160,21 @@ export async function updateBusinessAccount(
     if (updates.payoutDetails !== undefined) dbUpdates.payout_details = updates.payoutDetails;
     if (updates.shippingPolicies !== undefined) dbUpdates.shipping_policies = updates.shippingPolicies;
     if (updates.returnPolicy !== undefined) dbUpdates.return_policy = updates.returnPolicy;
+    // New boutique fields
+    if (updates.sellerType !== undefined) dbUpdates.seller_type = updates.sellerType;
+    if (updates.subscriptionTier !== undefined) dbUpdates.subscription_tier = updates.subscriptionTier;
+    if (updates.subscriptionStatus !== undefined) dbUpdates.subscription_status = updates.subscriptionStatus;
+    if (updates.subscriptionStartDate !== undefined) dbUpdates.subscription_start_date = updates.subscriptionStartDate;
+    if (updates.subscriptionEndDate !== undefined) dbUpdates.subscription_end_date = updates.subscriptionEndDate;
+    if (updates.stripeCustomerId !== undefined) dbUpdates.stripe_customer_id = updates.stripeCustomerId;
+    if (updates.stripeSubscriptionId !== undefined) dbUpdates.stripe_subscription_id = updates.stripeSubscriptionId;
+    if (updates.verificationStatus !== undefined) dbUpdates.verification_status = updates.verificationStatus;
+    if (updates.verificationDocuments !== undefined) dbUpdates.verification_documents = updates.verificationDocuments;
+    if (updates.boutiqueId !== undefined) dbUpdates.boutique_id = updates.boutiqueId;
+    if (updates.boutiqueSlug !== undefined) dbUpdates.boutique_slug = updates.boutiqueSlug;
+    if (updates.totalEarnings !== undefined) dbUpdates.total_earnings = updates.totalEarnings;
+    if (updates.totalCommissionPaid !== undefined) dbUpdates.total_commission_paid = updates.totalCommissionPaid;
+    if (updates.pendingPayout !== undefined) dbUpdates.pending_payout = updates.pendingPayout;
 
     const { data, error } = await supabaseAdmin
       .from('business_accounts')
@@ -223,6 +238,22 @@ function mapDbToBusinessAccount(dbRecord: any): BusinessAccount {
     description: dbRecord.description,
     logo: dbRecord.logo,
     status: dbRecord.status,
+    // New boutique fields
+    sellerType: dbRecord.seller_type || 'individual',
+    subscriptionTier: dbRecord.subscription_tier || 'free',
+    subscriptionStatus: dbRecord.subscription_status || 'active',
+    subscriptionStartDate: dbRecord.subscription_start_date,
+    subscriptionEndDate: dbRecord.subscription_end_date,
+    stripeCustomerId: dbRecord.stripe_customer_id,
+    stripeSubscriptionId: dbRecord.stripe_subscription_id,
+    verificationStatus: dbRecord.verification_status || 'unverified',
+    verificationDocuments: dbRecord.verification_documents,
+    boutiqueId: dbRecord.boutique_id,
+    boutiqueSlug: dbRecord.boutique_slug,
+    totalEarnings: parseFloat(dbRecord.total_earnings) || 0,
+    totalCommissionPaid: parseFloat(dbRecord.total_commission_paid) || 0,
+    pendingPayout: parseFloat(dbRecord.pending_payout) || 0,
+    // Original fields
     payoutMethod: dbRecord.payout_method,
     payoutDetails: dbRecord.payout_details,
     shippingPolicies: dbRecord.shipping_policies,

@@ -17,7 +17,10 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  Crown,
+  Shield,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +39,7 @@ const navGroups = [
     label: 'Overview',
     items: [
       { href: '/business/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/business/boutique', icon: Store, label: 'My Boutique' },
       { href: '/business/analytics', icon: BarChart, label: 'Analytics' },
     ]
   },
@@ -50,11 +54,14 @@ const navGroups = [
     label: 'Sales',
     items: [
       { href: '/business/orders', icon: ShoppingCart, label: 'Orders' },
+      { href: '/business/earnings', icon: Wallet, label: 'Earnings' },
     ]
   },
   {
-    label: 'Settings',
+    label: 'Account',
     items: [
+      { href: '/business/subscription', icon: Crown, label: 'Subscription' },
+      { href: '/business/verification', icon: Shield, label: 'Verification' },
       { href: '/business/profile', icon: User, label: 'Business Profile' },
       { href: '/business/shipping', icon: Truck, label: 'Shipping Settings' },
       { href: '/business/payout', icon: CreditCard, label: 'Payout Settings' },

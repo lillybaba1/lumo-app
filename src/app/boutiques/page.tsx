@@ -1,0 +1,177 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { getPublishedBoutiques } from '@/services/boutiqueService';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Store, Star, Package, ShoppingBag, CheckCircle, Shield } from 'lucide-react';
+
+export const metadata = {
+  title: 'Discover Boutiques | Lumo',
+  description: 'Explore unique boutiques and shops from verified sellers on Lumo',
+};
+
+export default async function BoutiquesPage() {
+  const featuredBoutiques = await getPublishedBoutiques({ featured: true, limit: 4 });
+  const allBoutiques = await getPublishedBoutiques({ limit: 20 });
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 py-12 md:py-16">
+        <div className="container px-4 md:px-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-headline font-bold mb-4">
+            Discover Boutiques
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Shop from our curated collection of unique boutiques, each offering handpicked 
+            products from verified sellers.
+          </p>
+        </div>
+      </div>
+
+      <div className="container px-4 md:px-6 py-12">
+        {/* Featured Boutiques */}
+        {featuredBoutiques.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              <h2 className="text-2xl font-semibold">Featured Boutiques</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredBoutiques.map((boutique) => (
+                <BoutiqueCard key={boutique.id} boutique={boutique} featured />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* All Boutiques */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">All Boutiques</h2>
+          {allBoutiques.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {allBoutiques.map((boutique) => (
+                <BoutiqueCard key={boutique.id} boutique={boutique} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-1">No boutiques yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  Be the first to open your boutique! Sign up as a seller to get started.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* CTA for sellers */}
+        <section className="mt-16">
+          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-none">
+            <CardContent className="py-12 text-center">
+              <Store className="h-12 w-12 mx-auto text-primary mb-4" />
+              <h2 className="text-2xl font-headline font-bold mb-2">
+                Start Your Own Boutique
+              </h2>
+              <p className="text-muted-foreground max-w-lg mx-auto mb-6">
+                Join our marketplace and showcase your products to thousands of customers. 
+                Create your branded boutique and start selling today.
+              </p>
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Become a Seller
+              </Link>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function BoutiqueCard({ boutique, featured = false }: { boutique: any; featured?: boolean }) {
+  return (
+    <Link href={`/boutique/${boutique.slug}`}>
+      <Card className={`group overflow-hidden hover:shadow-lg transition-all duration-300 h-full ${featured ? 'border-yellow-500/50' : ''}`}>
+        {/* Banner */}
+        <div 
+          className="h-24 bg-gradient-to-r from-primary/20 to-accent/20 relative"
+          style={{ backgroundColor: boutique.themeColor }}
+        >
+          {boutique.bannerImage && (
+            <Image
+              src={boutique.bannerImage}
+              alt=""
+              fill
+              className="object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          
+          {/* Logo */}
+          <div 
+            className="absolute -bottom-6 left-4 w-12 h-12 rounded-lg border-2 border-background bg-card shadow flex items-center justify-center overflow-hidden"
+            style={{ backgroundColor: boutique.themeColor }}
+          >
+            {boutique.logo ? (
+              <Image
+                src={boutique.logo}
+                alt={boutique.displayName}
+                width={48}
+                height={48}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <Store className="h-6 w-6 text-white" />
+            )}
+          </div>
+
+          {/* Badges */}
+          <div className="absolute top-2 right-2 flex gap-1">
+            {featured && (
+              <Badge className="bg-yellow-500 text-white text-xs">
+                Featured
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <CardContent className="pt-8 pb-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
+              {boutique.displayName}
+            </h3>
+            <div className="flex gap-1 flex-shrink-0">
+              {boutique.isVerified && (
+                <CheckCircle className="h-4 w-4 text-blue-500" />
+              )}
+            </div>
+          </div>
+          
+          {boutique.tagline && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              {boutique.tagline}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Package className="h-3 w-3" />
+              <span>{boutique.totalProducts} products</span>
+            </div>
+            {boutique.totalReviews > 0 && (
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                <span>{boutique.averageRating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
