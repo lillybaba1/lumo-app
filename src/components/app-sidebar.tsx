@@ -147,7 +147,7 @@ export function AppSidebar({
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className={cn("lg:hidden fixed left-0 right-0 z-40 flex items-center justify-between px-4 py-2 bg-card border-b shadow-sm", mobileOffsetClassName)}>
+      <div className={cn("lg:hidden fixed left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b shadow-sm", mobileOffsetClassName)}>
         <div className="flex items-center gap-2">
           {mobileIcon}
           <h1 className="text-lg font-headline font-bold">{mobileTitle}</h1>
@@ -165,8 +165,8 @@ export function AppSidebar({
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
-          style={{ top: '48px' }}
+          className="lg:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+          style={{ top: '52px' }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -174,10 +174,10 @@ export function AppSidebar({
       {/* Mobile Sidebar */}
       <aside
         className={cn(
-          "lg:hidden fixed left-0 z-50 w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
+          "lg:hidden fixed left-0 z-[60] w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ top: '48px', height: 'calc(100vh - 48px)' }}
+        style={{ top: '52px', height: 'calc(100vh - 52px)' }}
       >
         <div className="flex flex-col h-full overflow-hidden">
           {header && (
