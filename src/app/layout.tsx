@@ -60,7 +60,7 @@ export default async function RootLayout({
                 <Header>
                   {null}
                 </Header>
-                <div className="flex flex-1 pt-[7.5rem] lg:pt-0">
+                <div className="flex flex-1 pt-12 lg:pt-0">
                   <PublicSidebar />
                   <main className="flex-1 overflow-x-hidden">
                     {children}

@@ -29,6 +29,7 @@ export default function HeroSettingsForm() {
   const [heroTagline, setHeroTagline] = useState('');
   const [heroBackgroundImage, setHeroBackgroundImage] = useState('');
   const [heroImageObjectPosition, setHeroImageObjectPosition] = useState('center');
+  const [heroImageFit, setHeroImageFit] = useState<'cover' | 'contain'>('cover');
   const [customPosition, setCustomPosition] = useState('');
 
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +46,7 @@ export default function HeroSettingsForm() {
         setHeroTagline(settings.heroTagline);
         setHeroBackgroundImage(settings.heroBackgroundImage);
         setHeroImageObjectPosition(settings.heroImageObjectPosition);
+        setHeroImageFit(settings.heroImageFit || 'cover');
 
         // If it's a custom position (not in preset list), set it to custom
         const presets = ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'];
@@ -112,6 +114,7 @@ export default function HeroSettingsForm() {
         heroTagline,
         heroBackgroundImage,
         heroImageObjectPosition: finalPosition,
+        heroImageFit,
       });
 
       toast({
@@ -194,12 +197,12 @@ export default function HeroSettingsForm() {
 
             {/* Image Preview */}
             {heroBackgroundImage && (
-              <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border" style={{ backgroundColor: '#f3f4f6' }}>
                 <Image
                   src={heroBackgroundImage}
                   alt="Hero Background Preview"
                   fill
-                  className="object-cover"
+                  className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
                   style={{ objectPosition: heroImageObjectPosition === 'custom' ? customPosition : heroImageObjectPosition }}
                   unoptimized
                 />
@@ -242,31 +245,57 @@ export default function HeroSettingsForm() {
           </div>
 
           {/* Image Position */}
-          <div className="space-y-2">
-            <Label htmlFor="image-position">Image Position</Label>
-            <Select
-              value={heroImageObjectPosition}
-              onValueChange={(value) => {
-                setHeroImageObjectPosition(value);
-                setHasUnsavedChanges(true);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="center">Center</SelectItem>
-                <SelectItem value="top">Top</SelectItem>
-                <SelectItem value="bottom">Bottom</SelectItem>
-                <SelectItem value="left">Left</SelectItem>
-                <SelectItem value="right">Right</SelectItem>
-                <SelectItem value="top left">Top Left</SelectItem>
-                <SelectItem value="top right">Top Right</SelectItem>
-                <SelectItem value="bottom left">Bottom Left</SelectItem>
-                <SelectItem value="bottom right">Bottom Right</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="image-fit">Image Fit Mode</Label>
+              <Select
+                value={heroImageFit}
+                onValueChange={(value: 'cover' | 'contain') => {
+                  setHeroImageFit(value);
+                  setHasUnsavedChanges(true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fit mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cover">Cover (fill & crop)</SelectItem>
+                  <SelectItem value="contain">Contain (show full image)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {heroImageFit === 'cover' 
+                  ? 'Image fills the entire area, may be cropped' 
+                  : 'Full image is visible, may have empty space'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="image-position">Image Position</Label>
+              <Select
+                value={heroImageObjectPosition}
+                onValueChange={(value) => {
+                  setHeroImageObjectPosition(value);
+                  setHasUnsavedChanges(true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="center">Center</SelectItem>
+                  <SelectItem value="top">Top</SelectItem>
+                  <SelectItem value="bottom">Bottom</SelectItem>
+                  <SelectItem value="left">Left</SelectItem>
+                  <SelectItem value="right">Right</SelectItem>
+                  <SelectItem value="top left">Top Left</SelectItem>
+                  <SelectItem value="top right">Top Right</SelectItem>
+                  <SelectItem value="bottom left">Bottom Left</SelectItem>
+                  <SelectItem value="bottom right">Bottom Right</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Custom Position Input */}

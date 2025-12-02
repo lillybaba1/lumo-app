@@ -56,6 +56,7 @@ export interface Settings {
     heroCropWidth?: number;
     heroCropHeight?: number;
     heroImageObjectPosition?: string; // e.g., 'center', 'top', '50% 30%'
+    heroImageFit?: 'cover' | 'contain'; // How the image should fit
 
     // Chatbot Settings
     chatbotImage?: string;

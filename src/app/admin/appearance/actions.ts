@@ -50,6 +50,7 @@ export async function getHeroSettings(): Promise<{
   heroTagline: string;
   heroBackgroundImage: string;
   heroImageObjectPosition: string;
+  heroImageFit: 'cover' | 'contain';
 }> {
   const settings = await getSettings();
   return {
@@ -57,6 +58,7 @@ export async function getHeroSettings(): Promise<{
     heroTagline: settings.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.',
     heroBackgroundImage: settings.heroBackgroundImage || '',
     heroImageObjectPosition: settings.heroImageObjectPosition || 'center',
+    heroImageFit: settings.heroImageFit || 'cover',
   };
 }
 
@@ -68,6 +70,7 @@ export async function updateHeroSettings(heroData: {
   heroTagline: string;
   heroBackgroundImage: string;
   heroImageObjectPosition: string;
+  heroImageFit: 'cover' | 'contain';
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const currentSettings = await getSettings();
@@ -107,6 +110,7 @@ export async function updateHeroSettings(heroData: {
       heroTagline: heroData.heroTagline,
       heroBackgroundImage: heroData.heroBackgroundImage,
       heroImageObjectPosition: heroData.heroImageObjectPosition,
+      heroImageFit: heroData.heroImageFit,
     });
 
     // Revalidate ALL pages to force refresh

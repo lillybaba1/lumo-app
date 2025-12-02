@@ -12,6 +12,7 @@ type HeroSettings = {
   heroTagline?: string;
   heroBackgroundImage?: string;
   heroImageObjectPosition?: string;
+  heroImageFit?: 'cover' | 'contain';
 };
 
 interface HeroProps {
@@ -30,6 +31,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
   const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
+  const heroImageFit = settings?.heroImageFit || 'cover';
 
   useEffect(() => {
     // Fetch data with cache-busting but don't fail all if one request fails
@@ -117,21 +119,23 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       >
         {/* Show hero image immediately while loading other content */}
         {heroBackgroundImage ? (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0" style={{ backgroundColor: heroImageFit === 'contain' ? '#1a1a2e' : undefined }}>
             <Image
               src={heroBackgroundImage}
               alt="Hero background"
               fill
               priority
-              className="object-cover"
+              className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
               style={{ objectPosition: heroImageObjectPosition }}
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+            {heroImageFit === 'cover' && (
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+            )}
           </div>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
-        )}
+        )}}
         
         {/* Loading content overlay */}
         <div className="relative h-full flex items-center py-12 md:py-32 px-6 md:px-12">
@@ -156,18 +160,20 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
     >
       {/* Background Image */}
       {heroBackgroundImage ? (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ backgroundColor: heroImageFit === 'contain' ? '#1a1a2e' : undefined }}>
           <Image
             src={heroBackgroundImage}
             alt="Hero background"
             fill
             priority
-            className="object-cover"
+            className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
             style={{ objectPosition: heroImageObjectPosition }}
             unoptimized
           />
-          {/* Enhanced Gradient Overlay for better text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          {/* Enhanced Gradient Overlay for better text contrast - only for cover mode */}
+          {heroImageFit === 'cover' && (
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          )}
         </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
