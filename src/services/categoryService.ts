@@ -3,6 +3,7 @@
 import { Category } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { categories as mockCategories } from '@/lib/mock-data';
+import { revalidatePath } from 'next/cache';
 
 /**
  * Add a new category
@@ -45,6 +46,11 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
   } catch (error) {
     console.error('Failed to add category:', error);
     throw new Error('Could not save category.');
+  } finally {
+    // Revalidate all pages that show categories
+    revalidatePath('/', 'layout');
+    revalidatePath('/admin/categories');
+    revalidatePath('/categories');
   }
 }
 
@@ -71,6 +77,11 @@ export async function updateCategory(category: Category): Promise<void> {
       console.error(`Failed to update category ${category.id}:`, error);
       throw new Error('Could not update category.');
     }
+
+    // Revalidate all pages that show categories
+    revalidatePath('/', 'layout');
+    revalidatePath('/admin/categories');
+    revalidatePath('/categories');
   } catch (error) {
     console.error(`Failed to update category ${category.id}:`, error);
     throw new Error('Could not update category.');
@@ -91,6 +102,11 @@ export async function deleteCategory(id: string): Promise<void> {
       console.error(`Failed to delete category ${id}:`, error);
       throw new Error('Could not delete category.');
     }
+
+    // Revalidate all pages that show categories
+    revalidatePath('/', 'layout');
+    revalidatePath('/admin/categories');
+    revalidatePath('/categories');
   } catch (error) {
     console.error(`Failed to delete category ${id}:`, error);
     throw new Error('Could not delete category.');
