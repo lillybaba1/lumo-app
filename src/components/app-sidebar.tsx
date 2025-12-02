@@ -165,7 +165,8 @@ export function AppSidebar({
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className={cn("lg:hidden fixed left-0 right-0 bottom-0 z-40 bg-background/80 backdrop-blur-sm", mobileOffsetClassName)}
+          className="lg:hidden fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
+          style={{ top: '48px' }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -173,12 +174,66 @@ export function AppSidebar({
       {/* Mobile Sidebar */}
       <aside
         className={cn(
-          "lg:hidden fixed left-0 bottom-0 z-50 w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col",
-          mobileOffsetClassName,
+          "lg:hidden fixed left-0 z-50 w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ top: '48px', height: 'calc(100vh - 48px)' }}
       >
-        <SidebarContent />
+        <div className="flex flex-col h-full overflow-hidden">
+          {header && (
+            <div
+              className={cn(
+                "flex items-center gap-3 px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-accent/5 flex-shrink-0",
+                collapsed && "px-3 justify-center"
+              )}
+            >
+              {header({ collapsed: false, closeSidebar })}
+            </div>
+          )}
+
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+            <div className="space-y-4">
+              {sections.map((section, idx) => (
+                <div key={section.label ?? idx}>
+                  {section.label && (
+                    <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {section.label}
+                    </h3>
+                  )}
+                  <ul className="space-y-1">
+                    {section.items.map((item) => {
+                      const active = isActive(item.href);
+                      return (
+                        <li key={item.label}>
+                          <Link
+                            href={item.href}
+                            onClick={() => setMobileOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                              "hover:bg-accent/50 hover:text-accent-foreground",
+                              active && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+                              !active && "text-muted-foreground"
+                            )}
+                          >
+                            <item.icon className={cn("h-5 w-5 flex-shrink-0", active && "drop-shadow")} />
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && <span className="ml-auto">{item.badge}</span>}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </nav>
+
+          {footer && (
+            <div className="border-t bg-muted/30 flex-shrink-0">
+              {footer({ collapsed: false })}
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* Desktop Sidebar */}
