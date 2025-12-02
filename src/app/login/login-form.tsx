@@ -80,8 +80,42 @@ export default function LoginForm() {
         return;
       }
 
-      console.log('Email verified, redirecting to:', next);
-      // Supabase handles sessions automatically via cookies
+      console.log('Email verified, checking account type...');
+      
+      // Check if user has a business account
+      const { data: businessAccount } = await supabase
+        .from('business_accounts')
+        .select('id, status')
+        .eq('owner_user_id', data.user.id)
+        .single();
+      
+      if (businessAccount) {
+        console.log('Business account found:', businessAccount.status);
+        // Business user - redirect based on status
+        if (businessAccount.status === 'ACTIVE') {
+          window.location.href = '/business/dashboard';
+        } else {
+          // Pending verification, pending approval, or suspended
+          window.location.href = '/business/pending';
+        }
+        return;
+      }
+      
+      // Check if user is admin
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (userData?.role === 'admin' || userData?.role === 'APP_OWNER_ADMIN') {
+        console.log('Admin user, redirecting to admin dashboard');
+        window.location.href = '/admin/dashboard';
+        return;
+      }
+      
+      console.log('Regular user, redirecting to:', next);
+      // Regular user - redirect to requested page or home
       window.location.href = next;
     } catch (e: any) {
       console.error('Login error:', e);

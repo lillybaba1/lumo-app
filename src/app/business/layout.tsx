@@ -23,8 +23,8 @@ export default async function BusinessLayout({
           }}
           businessAccount={businessAccount}
         />
-        <main className="flex-1 w-full lg:w-auto">
-          <div className="pt-16 lg:pt-0 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="flex-1 w-full lg:w-auto min-w-0">
+          <div className="pt-14 lg:pt-0 px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>

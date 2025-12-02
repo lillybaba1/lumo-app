@@ -46,6 +46,21 @@ export async function GET() {
     // Use profile data, preferring userProfile for other fields if available
     const profile = userProfile || userData;
 
+    // Check for business account
+    let hasBusinessAccount = false;
+    let businessStatus = null;
+    
+    const { data: businessAccount } = await supabase
+      .from('business_accounts')
+      .select('id, status')
+      .eq('owner_user_id', user.id)
+      .single();
+    
+    if (businessAccount) {
+      hasBusinessAccount = true;
+      businessStatus = businessAccount.status;
+    }
+
     return NextResponse.json({
       authenticated: true,
       user: {
@@ -53,6 +68,8 @@ export async function GET() {
         email: user.email || user.phone || '',
         role: role,
         name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+        hasBusinessAccount,
+        businessStatus,
       },
     });
   } catch (error) {

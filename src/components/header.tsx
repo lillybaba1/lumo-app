@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X, Search } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X, Search, Store } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -17,6 +17,8 @@ interface UserData {
   email: string;
   role: string;
   name: string;
+  hasBusinessAccount?: boolean;
+  businessStatus?: string;
 }
 
 interface HeaderSettings {
@@ -249,6 +251,14 @@ export default function Header({ children }: { children: React.ReactNode }) {
                   <Link href="/admin/dashboard">
                     <Shield className="h-4 w-4 mr-2" />
                     <span>Admin</span>
+                  </Link>
+                </Button>
+              )}
+              {user?.hasBusinessAccount && (
+                <Button variant="outline" asChild style={buttonStyle}>
+                  <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'}>
+                    <Store className="h-4 w-4 mr-2" />
+                    <span>Seller</span>
                   </Link>
                 </Button>
               )}
