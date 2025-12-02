@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
 import { Home, Grid, Sparkles, Star, Tag, Heart, ShoppingCart, User, HelpCircle, Mail, Sparkles as SparklesIcon, LogOut, Package } from 'lucide-react';
+import Link from 'next/link';
 
 interface UserData {
   uid: string;
@@ -89,13 +90,20 @@ export default function PublicSidebar() {
       sections={sections}
       mobileTitle="Browse Lumo"
       mobileIcon={
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <SparklesIcon className="h-5 w-5" />
-        </div>
+        </Link>
       }
       mobileOffsetClassName="top-16"
-      header={({ collapsed }) => (
-        <>
+      header={({ collapsed, closeSidebar }) => (
+        <Link 
+          href="/" 
+          onClick={() => {
+            closeSidebar();
+            router.push('/');
+          }}
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm">
             <SparklesIcon className="h-5 w-5" />
           </div>
@@ -105,7 +113,7 @@ export default function PublicSidebar() {
               <span className="text-xs text-muted-foreground">Shop & Discover</span>
             </div>
           )}
-        </>
+        </Link>
       )}
       footer={({ collapsed }) =>
         !collapsed ? (

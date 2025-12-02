@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
@@ -70,9 +70,15 @@ type BusinessSidebarProps = {
 
 export default function BusinessSidebar({ user, businessAccount }: BusinessSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { toast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogoClick = () => {
+    setMobileOpen(false);
+    router.push('/');
+  };
 
   const handleLogout = async () => {
     const res = await fetch("/api/auth/logout", {
@@ -96,11 +102,15 @@ export default function BusinessSidebar({ user, businessAccount }: BusinessSideb
 
   const SidebarContent = () => (
     <>
-      {/* Header */}
-      <div className={cn(
-        "flex items-center gap-3 px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-accent/5",
-        collapsed && "px-3 justify-center"
-      )}>
+      {/* Header - Clickable to go home */}
+      <Link 
+        href="/"
+        onClick={handleLogoClick}
+        className={cn(
+          "flex items-center gap-3 px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-accent/5 cursor-pointer hover:opacity-80 transition-opacity",
+          collapsed && "px-3 justify-center"
+        )}
+      >
         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-lg">
           <Store className="h-6 w-6" />
         </div>
@@ -112,7 +122,7 @@ export default function BusinessSidebar({ user, businessAccount }: BusinessSideb
             <span className="text-xs text-muted-foreground">Seller Dashboard</span>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Status Badge */}
       {!collapsed && (

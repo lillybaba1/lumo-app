@@ -10,6 +10,7 @@ import { Badge } from "./ui/badge";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
+import MobileSearchModal from "./mobile-search-modal";
 
 interface UserData {
   uid: string;
@@ -59,12 +60,14 @@ const defaultHeaderSettings: HeaderSettings = {
 export default function Header({ children }: { children: React.ReactNode }) {
   const { state } = useCart();
   const pathname = usePathname();
+  const router = useRouter();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   
   // Check if we're on the homepage
   const isHomePage = pathname === '/';
@@ -213,13 +216,13 @@ export default function Header({ children }: { children: React.ReactNode }) {
             {!isHomePage && (
               <Link 
                 href="/"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
                 style={{ 
                   background: `linear-gradient(to right, ${settings.homeButtonGradientFrom}, ${settings.homeButtonGradientTo})` 
                 }}
               >
                 <Home className="h-4 w-4" strokeWidth={2.5} />
-                <span>Home</span>
+                <span className="hidden sm:inline">Home</span>
               </Link>
             )}
           </div>
@@ -275,12 +278,10 @@ export default function Header({ children }: { children: React.ReactNode }) {
                 variant="outline" 
                 size="icon" 
                 className="h-9 w-9" 
-                asChild 
                 style={buttonStyle}
+                onClick={() => setMobileSearchOpen(true)}
               >
-                <Link href="/?focus=search">
-                  <Search className="h-4 w-4" />
-                </Link>
+                <Search className="h-4 w-4" />
               </Button>
               {/* Cart Button - Always visible on mobile */}
               <Button variant="outline" size="icon" className="h-9 w-9 relative" asChild style={buttonStyle}>
@@ -297,6 +298,12 @@ export default function Header({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Modal */}
+      <MobileSearchModal 
+        isOpen={mobileSearchOpen} 
+        onClose={() => setMobileSearchOpen(false)} 
+      />
     </>
   );
 }

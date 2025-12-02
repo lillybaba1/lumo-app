@@ -3,6 +3,8 @@
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database, Image, Building2 } from 'lucide-react';
 
@@ -70,6 +72,7 @@ type AdminSidebarProps = {
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleLogout = async () => {
     const res = await fetch("/api/auth/logout", {
@@ -101,12 +104,19 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       sections={navGroups}
       mobileTitle="Lumo Admin"
       mobileIcon={
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold">
+        <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold">
           <Store className="h-5 w-5" />
-        </div>
+        </Link>
       }
-      header={({ collapsed }) => (
-        <>
+      header={({ collapsed, closeSidebar }) => (
+        <Link 
+          href="/" 
+          onClick={() => {
+            closeSidebar();
+            router.push('/');
+          }}
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-lg">
             <Store className="h-6 w-6" />
           </div>
@@ -116,7 +126,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
               <span className="text-xs text-muted-foreground">Admin Dashboard</span>
             </div>
           )}
-        </>
+        </Link>
       )}
       footer={({ collapsed }) => (
         <>

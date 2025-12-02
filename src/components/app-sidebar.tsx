@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ export type SidebarSection = {
 };
 
 type SidebarProps = {
-  header?: (opts: { collapsed: boolean }) => ReactNode;
+  header?: (opts: { collapsed: boolean; closeSidebar: () => void }) => ReactNode;
   footer?: (opts: { collapsed: boolean }) => ReactNode;
   sections: SidebarSection[];
   activePath?: string;
@@ -29,6 +29,7 @@ type SidebarProps = {
   mobileIcon?: ReactNode;
   defaultCollapsed?: boolean;
   mobileOffsetClassName?: string;
+  onLogoClick?: () => void;
 };
 
 export function AppSidebar({
@@ -41,11 +42,18 @@ export function AppSidebar({
   mobileIcon,
   defaultCollapsed = false,
   mobileOffsetClassName = 'top-0',
+  onLogoClick,
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
+  // Function to close the mobile sidebar
+  const closeSidebar = () => {
+    setMobileOpen(false);
+  };
 
   const computedPath = useMemo(() => {
     if (activePath) return activePath;
@@ -81,7 +89,7 @@ export function AppSidebar({
             collapsed && "px-3 justify-center"
           )}
         >
-          {header({ collapsed })}
+          {header({ collapsed, closeSidebar })}
         </div>
       )}
 
