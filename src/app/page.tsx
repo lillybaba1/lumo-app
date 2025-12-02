@@ -16,6 +16,9 @@ import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X }
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
+import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
+import ServiceHighlights, { PromoBanner } from '@/components/service-highlights';
+import SearchBar from '@/components/search-bar';
 
 type Collections = {
   bestSellers: string[];
@@ -78,16 +81,34 @@ export default function HomePageDataContainer() {
     fetchData();
   }, []);
 
-  // Show Hero immediately with settings even while loading other content
+  // Show skeleton loading state while fetching data
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
         <Hero initialSettings={heroSettings || undefined} />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-            <p className="mt-2 text-muted-foreground">Loading products...</p>
+        
+        {/* Service Highlights Skeleton */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <ServiceHighlights />
+        </div>
+
+        {/* Categories Skeleton */}
+        <div className="w-full py-6 md:py-10 bg-muted/30">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <div className="h-7 w-40 bg-muted animate-pulse rounded"></div>
+            </div>
+            <CategoryGridSkeleton count={6} />
           </div>
+        </div>
+
+        {/* Products Skeleton */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-6 w-6 bg-muted animate-pulse rounded"></div>
+            <div className="h-7 w-40 bg-muted animate-pulse rounded"></div>
+          </div>
+          <ProductGridSkeleton count={8} />
         </div>
       </div>
     );
@@ -271,6 +292,11 @@ function Home({ products, categories, collections, categorySectionSettings }: {
         <Hero />
       </div>
 
+      {/* Service Highlights - Right below hero */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <ServiceHighlights variant="horizontal" />
+      </div>
+
       <div className="w-full">
         {/* Categories Section - With customizable background */}
         {categories.length > 0 && (
@@ -363,6 +389,19 @@ function Home({ products, categories, collections, categorySectionSettings }: {
             productIds={collections.bestSellers}
             viewAllLink="/products?filter=bestsellers"
           />
+          
+          {/* Promotional Banner */}
+          {collections.bestSellers.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <PromoBanner 
+                title="🎉 Special Offers!" 
+                subtitle="Get up to 30% off on selected items. Limited time only."
+                ctaText="Shop Deals"
+                ctaLink="/products?filter=deals"
+              />
+            </div>
+          )}
+
           <CollectionSection
             title="New Arrivals"
             icon={Sparkles}

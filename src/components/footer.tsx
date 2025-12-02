@@ -142,19 +142,22 @@ export default function Footer() {
   ].filter(link => link.url);
 
   return (
-    <footer className="border-t bg-muted/20">
-      {/* Trust Banner */}
-      <div className="bg-primary/5 border-b">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+    <footer className="border-t bg-gradient-to-b from-muted/10 to-muted/30">
+      {/* Trust Banner - Enhanced */}
+      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-accent/5 border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
             {trustBadges.map((badge, index) => {
               const IconComponent = trustBadgeIcons[index]?.icon || Shield;
               const iconColor = trustBadgeIcons[index]?.color || 'text-primary';
+              const bgColors = ['bg-green-50', 'bg-blue-50', 'bg-purple-50', 'bg-orange-50', 'bg-red-50'];
               return (
-                <div key={index} className={`flex flex-col items-center ${index === 4 ? 'col-span-2 md:col-span-1' : ''}`}>
-                  <IconComponent className={`h-8 w-8 ${iconColor} mb-2`} />
-                  <span className="text-sm font-medium">{badge.title}</span>
-                  <span className="text-xs text-muted-foreground">{badge.subtitle}</span>
+                <div key={index} className={`flex flex-col items-center p-3 rounded-xl hover:bg-white/50 transition-colors ${index === 4 ? 'col-span-2 md:col-span-1' : ''}`}>
+                  <div className={`p-3 rounded-full ${bgColors[index]} mb-3`}>
+                    <IconComponent className={`h-6 w-6 md:h-7 md:w-7 ${iconColor}`} />
+                  </div>
+                  <span className="text-sm font-semibold">{badge.title}</span>
+                  <span className="text-xs text-muted-foreground mt-0.5">{badge.subtitle}</span>
                 </div>
               );
             })}
@@ -163,33 +166,39 @@ export default function Footer() {
       </div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
           {/* Company Info */}
           <div className="md:col-span-2">
-            <h3 className="font-headline text-xl font-bold mb-3">{settings.storeName}</h3>
-            <p className="text-sm text-foreground/80 mb-4">{settings.storeTagline}</p>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h3 className="font-headline text-2xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{settings.storeName}</h3>
+            <p className="text-sm font-medium text-foreground/80 mb-3">{settings.storeTagline}</p>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               {settings.footerDescription}
             </p>
             
             {/* Contact Info */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-3 mb-6">
               {settings.footerEmail && (
-                <a href={`mailto:${settings.footerEmail}`} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary transition-colors">
-                  <Mail className="h-4 w-4" />
+                <a href={`mailto:${settings.footerEmail}`} className="flex items-center gap-3 text-sm text-foreground/80 hover:text-primary transition-colors group">
+                  <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
+                    <Mail className="h-4 w-4" />
+                  </div>
                   {settings.footerEmail}
                 </a>
               )}
               {settings.footerPhone && (
-                <a href={`tel:${settings.footerPhone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary transition-colors">
-                  <Phone className="h-4 w-4" />
+                <a href={`tel:${settings.footerPhone.replace(/\s/g, '')}`} className="flex items-center gap-3 text-sm text-foreground/80 hover:text-primary transition-colors group">
+                  <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
+                    <Phone className="h-4 w-4" />
+                  </div>
                   {settings.footerPhone}
                 </a>
               )}
               {settings.footerWhatsApp && (
-                <a href={`https://wa.me/${settings.footerWhatsApp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary transition-colors">
-                  <MessageCircle className="h-4 w-4" />
+                <a href={`https://wa.me/${settings.footerWhatsApp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground/80 hover:text-primary transition-colors group">
+                  <div className="p-2 rounded-lg bg-muted group-hover:bg-green-100 transition-colors">
+                    <MessageCircle className="h-4 w-4" />
+                  </div>
                   WhatsApp Support
                 </a>
               )}
@@ -197,14 +206,14 @@ export default function Footer() {
 
             {/* Social Media */}
             {socialLinks.length > 0 && (
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {socialLinks.map((social, index) => (
                   <a 
                     key={index}
                     href={social.url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-white transition-colors" 
+                    className="p-2.5 rounded-xl bg-muted hover:bg-primary hover:text-white transition-all hover:scale-110" 
                     aria-label={social.label}
                   >
                     <social.icon className="h-5 w-5" />
@@ -251,25 +260,31 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Payment & Delivery Partners */}
-        <div className="mt-8 pt-6 border-t">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Payment & Delivery Partners - Enhanced */}
+        <div className="mt-10 pt-8 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {paymentMethods.length > 0 && (
-              <div>
-                <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Payment Methods</h5>
+              <div className="bg-white/50 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <h5 className="text-sm font-semibold text-foreground">Payment Methods</h5>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {paymentMethods.map((method, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-muted rounded-md text-xs font-medium">{method}</span>
+                    <span key={index} className="px-4 py-2 bg-white rounded-xl text-sm font-medium shadow-sm border hover:border-primary/30 transition-colors">{method}</span>
                   ))}
                 </div>
               </div>
             )}
             {deliveryCountries.length > 0 && (
-              <div>
-                <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">We Deliver To</h5>
+              <div className="bg-white/50 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Truck className="h-5 w-5 text-primary" />
+                  <h5 className="text-sm font-semibold text-foreground">We Deliver To</h5>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {deliveryCountries.map((country, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-muted rounded-md text-xs font-medium">{country}</span>
+                    <span key={index} className="px-4 py-2 bg-white rounded-xl text-sm font-medium shadow-sm border hover:border-primary/30 transition-colors">{country}</span>
                   ))}
                 </div>
               </div>
@@ -278,7 +293,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-6 border-t">
+        <div className="mt-10 pt-6 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left">
               <p className="text-sm text-foreground/80">&copy; {new Date().getFullYear()} {settings.footerCopyright}</p>

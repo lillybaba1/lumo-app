@@ -3,12 +3,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import SearchBar from "./search-bar";
 
 interface UserData {
   uid: string;
@@ -222,7 +223,13 @@ export default function Header({ children }: { children: React.ReactNode }) {
               </Link>
             )}
           </div>
-          <div className="flex flex-1 items-center justify-end space-x-2">
+          
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:flex flex-1 justify-center px-4">
+            <SearchBar variant="header" placeholder="Search products..." className="max-w-md" />
+          </div>
+
+          <div className="flex items-center justify-end space-x-2">
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-2">
               {children}
@@ -261,8 +268,20 @@ export default function Header({ children }: { children: React.ReactNode }) {
               </Button>
             </nav>
 
-            {/* Mobile Navigation - Only Cart (menu is handled by left sidebar) */}
+            {/* Mobile Navigation */}
             <div className="flex md:hidden items-center space-x-2">
+              {/* Search Button - Mobile */}
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-9 w-9" 
+                asChild 
+                style={buttonStyle}
+              >
+                <Link href="/?focus=search">
+                  <Search className="h-4 w-4" />
+                </Link>
+              </Button>
               {/* Cart Button - Always visible on mobile */}
               <Button variant="outline" size="icon" className="h-9 w-9 relative" asChild style={buttonStyle}>
                 <Link href="/cart">

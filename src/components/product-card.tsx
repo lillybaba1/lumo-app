@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getSettings } from '@/app/admin/settings/actions';
 import Link from 'next/link';
@@ -15,6 +15,7 @@ import { WishlistButton } from '@/components/wishlist-button';
 
 interface ProductCardProps {
   product: Product;
+  showQuickView?: boolean;
 }
 type Settings = { currency?: string };
 
@@ -24,11 +25,48 @@ function getCurrencySymbol(currencyCode: string | undefined) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+// Star rating display component
+function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number; reviews?: number; size?: 'sm' | 'md' }) {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      stars.push(<Star key={i} className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} fill-yellow-400 text-yellow-400`} />);
+    } else if (i === fullStars && hasHalfStar) {
+      stars.push(
+        <div key={i} className="relative">
+          <Star className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} text-gray-200`} />
+          <div className="absolute inset-0 overflow-hidden w-1/2">
+            <Star className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} fill-yellow-400 text-yellow-400`} />
+          </div>
+        </div>
+      );
+    } else {
+      stars.push(<Star key={i} className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} text-gray-200`} />);
+    }
+  }
+  
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex">{stars}</div>
+      {reviews > 0 && (
+        <span className={`text-muted-foreground ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
+          ({reviews})
+        </span>
+      )}
+    </div>
+  );
+}
+
+export default function ProductCard({ product, showQuickView = true }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const [settings, setSettings] = useState<Settings>({});
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const [isHovered, setIsHovered] = useState(false);
+  
   // Get base image URL
   const baseImageUrl = (product.productImages && product.productImages.length > 0)
     ? product.productImages[0]
@@ -41,6 +79,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? (baseImageUrl.includes('?') ? `${baseImageUrl}&v=${product.id}` : `${baseImageUrl}?v=${product.id}`)
     : baseImageUrl;
 
+  // Calculate a mock rating based on product id for demo (replace with real data later)
+  const mockRating = ((parseInt(product.id.slice(-2), 16) || 0) % 20 + 35) / 10; // 3.5 - 5.0 range
+  const mockReviews = ((parseInt(product.id.slice(-4), 16) || 0) % 100) + 5; // 5 - 104 range
 
   useEffect(() => {
     getSettings().then(s => setSettings(s || {}));
@@ -71,21 +112,40 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <Card
-          className="group flex flex-col overflow-hidden h-full transition-all duration-300 hover:-translate-y-1 rounded-2xl border bg-white/80 shadow-sm hover:shadow-md"
+          className="group flex flex-col overflow-hidden h-full transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg rounded-2xl border bg-white/90 shadow-sm"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-        <CardHeader className="p-0 relative">
+        <CardHeader className="p-0 relative overflow-hidden">
             {/* Fixed 4:5 aspect ratio as per requirements */}
             <div className="relative" style={{ aspectRatio: '4/5' }}>
             <Image
                 src={imageUrl}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 unoptimized
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
+            {/* Gradient overlay on hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
+            
+            {/* Badges */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+              {product.stock === 0 && (
+                <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] md:text-xs font-medium rounded-full">
+                  Out of Stock
+                </span>
+              )}
+              {product.stock > 0 && product.stock <= 5 && (
+                <span className="px-2 py-0.5 bg-orange-500 text-white text-[10px] md:text-xs font-medium rounded-full">
+                  Low Stock
+                </span>
+              )}
+            </div>
+            
             {/* Wishlist button in top-right corner */}
             <div className="absolute top-2 right-2 z-10" onClick={(e) => e.preventDefault()}>
               <WishlistButton
@@ -95,40 +155,65 @@ export default function ProductCard({ product }: ProductCardProps) {
                 isInWishlist={false}
               />
             </div>
+
+            {/* Quick view button on hover */}
+            {showQuickView && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/95 backdrop-blur-sm hover:bg-white shadow-md rounded-full px-4 h-8 text-xs font-medium"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Could open a quick view modal here
+                  }}
+                >
+                  <Eye className="h-3 w-3 mr-1.5" />
+                  Quick View
+                </Button>
+              </div>
+            )}
         </CardHeader>
         <CardContent className="flex-grow p-2 md:p-4 flex flex-col min-w-0">
             <CardTitle
-              className="text-xs md:text-lg mb-1 md:mb-2 min-h-[2rem] md:min-h-[2.5rem] leading-tight line-clamp-2"
+              className="text-xs md:text-base mb-1 md:mb-1.5 min-h-[2rem] md:min-h-[2.5rem] leading-tight line-clamp-2 font-semibold"
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontWeight: 'var(--font-weight-semibold)',
                 color: 'var(--color-text-primary)',
               }}
             >
               {product.name}
             </CardTitle>
+            
+            {/* Star Rating */}
+            <div className="mb-1 md:mb-2 hidden md:block">
+              <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
+            </div>
+            
             <p
-              className="text-xs md:text-sm flex-grow hidden md:line-clamp-2"
-              style={{
-                color: 'var(--color-text-secondary)',
-                lineHeight: 'var(--line-height-normal)',
-              }}
+              className="text-xs md:text-sm flex-grow hidden md:line-clamp-2 text-muted-foreground"
             >
               {product.description}
             </p>
         </CardContent>
-        <CardFooter className="p-2 md:p-4 flex flex-col gap-1.5 md:gap-2 mt-auto">
+        <CardFooter className="p-2 md:p-4 flex flex-col gap-1.5 md:gap-2 mt-auto pt-0">
             <div className="flex justify-between items-center w-full">
-              <p
-                className="text-sm md:text-xl font-bold whitespace-nowrap"
-                style={{
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                {currencySymbol}{product.price.toFixed(2)}
-              </p>
+              <div className="flex flex-col">
+                <p
+                  className="text-sm md:text-xl font-bold whitespace-nowrap"
+                  style={{
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  {currencySymbol}{product.price.toFixed(2)}
+                </p>
+                {/* Mobile star rating */}
+                <div className="md:hidden">
+                  <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
+                </div>
+              </div>
               {product.stock > 0 && product.stock <= 5 && (
-                <span className="text-[8px] md:text-xs text-orange-600 font-medium">
+                <span className="text-[8px] md:text-xs text-orange-600 font-medium hidden md:inline">
                   Only {product.stock} left
                 </span>
               )}
@@ -136,11 +221,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Button
               onClick={handleAddToCart}
               size="sm"
+              disabled={product.stock === 0}
               aria-label={`Add ${product.name} to cart`}
-              className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 bg-black/90 text-white hover:bg-black rounded-xl h-7 md:h-9 text-[10px] md:text-sm"
+              className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-primary/90 text-white rounded-xl h-8 md:h-9 text-[10px] md:text-sm font-medium shadow-sm"
             >
-              <ShoppingCart className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-              <span>Add</span>
+              <ShoppingCart className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
             </Button>
         </CardFooter>
         </Card>
