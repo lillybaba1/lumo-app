@@ -1,7 +1,7 @@
+"use client";
+
 import Link from 'next/link';
 import { Home, Search, ShoppingBag, ArrowLeft } from 'lucide-react';
-
-export const dynamic = 'force-static';
 
 export default function NotFound() {
   return (
@@ -43,7 +43,7 @@ export default function NotFound() {
 
         {/* Back Link */}
         <button 
-          onClick={() => typeof window !== 'undefined' && window.history.back()}
+          onClick={() => window.history.back()}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
