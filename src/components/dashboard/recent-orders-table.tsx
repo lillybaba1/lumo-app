@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { getOrders } from '@/services/orderService';
 import { Skeleton } from '../ui/skeleton';
 import { getSettings } from '@/app/admin/settings/actions';
+import { getCurrencySymbol } from '@/lib/currency';
 
 type Settings = { currency?: string };
 
@@ -26,12 +27,6 @@ const statusVariant = {
     'Delivered': 'outline',
     'Cancelled': 'destructive',
 } as const;
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
 
 
 export default function RecentOrdersTable() {

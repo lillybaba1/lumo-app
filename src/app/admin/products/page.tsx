@@ -28,14 +28,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getSettings } from '../settings/actions';
 import { bulkUpdateProducts, bulkDeleteProducts } from './bulk-actions';
 import { getCategories } from '@/services/categoryService';
+import { getCurrencySymbol } from '@/lib/currency';
 
 type Settings = { currency?: string };
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);

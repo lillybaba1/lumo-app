@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { getOrderById } from '@/services/orderService';
 import { getPaymentByOrder } from '@/services/paymentService';
 import { getSettings } from '@/app/admin/settings/actions';
+import { getCurrencySymbol } from '@/lib/currency';
 
 const statusVariant = {
   'Pending': 'default',
@@ -23,14 +24,6 @@ const paymentStatusVariant = {
   'Paid': 'outline',
   'Failed': 'destructive',
 } as const;
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-  if (!currencyCode) return '$';
-  if (currencyCode === 'GMD') return 'D';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode })
-    .formatToParts(1)
-    .find(p => p.type === 'currency')?.value || '$';
-}
 
 function formatCurrency(amount: number, currencySymbol: string) {
   return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

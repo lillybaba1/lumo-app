@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getOrders } from '@/services/orderService';
 import { getSettings } from '@/app/admin/settings/actions';
+import { getCurrencySymbol } from '@/lib/currency';
 
 const statusVariant = {
     'Pending': 'default',
@@ -19,12 +20,6 @@ const statusVariant = {
     'Delivered': 'outline',
     'Cancelled': 'destructive',
 } as const;
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
 
 export default async function OrdersPage() {
   const orders = await getOrders();

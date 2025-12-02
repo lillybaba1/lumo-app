@@ -5,12 +5,7 @@ import SalesChart from '@/components/dashboard/sales-chart';
 import RecentOrdersTable from '@/components/dashboard/recent-orders-table';
 import { getSettings } from '@/app/admin/settings/actions';
 import { getAnalytics } from '@/services/analyticsService';
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
+import { getCurrencySymbol } from '@/lib/currency';
 
 function formatCurrency(amount: number, currencySymbol: string) {
   return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

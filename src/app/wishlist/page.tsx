@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { getSettings } from '@/app/admin/settings/actions';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getCurrencySymbol } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,12 +41,6 @@ function TrustBadges() {
   );
 }
 
-async function getCurrencySymbol(currencyCode: string | undefined) {
-  if (!currencyCode) return '$';
-  if (currencyCode === 'GMD') return 'D';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
-
 export default async function WishlistPage() {
   // Get current authenticated user
   const supabase = await createClient();
@@ -54,7 +49,7 @@ export default async function WishlistPage() {
   const currentUserId = user?.id;
 
   const settings = await getSettings();
-  const currencySymbol = await getCurrencySymbol(settings?.currency);
+  const currencySymbol = getCurrencySymbol(settings?.currency);
 
   if (!currentUserId) {
     return (

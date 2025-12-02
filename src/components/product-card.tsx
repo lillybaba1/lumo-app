@@ -12,18 +12,13 @@ import { useEffect, useState } from 'react';
 import { getSettings } from '@/app/admin/settings/actions';
 import Link from 'next/link';
 import { WishlistButton } from '@/components/wishlist-button';
+import { getCurrencySymbol } from '@/lib/currency';
 
 interface ProductCardProps {
   product: Product;
   showQuickView?: boolean;
 }
 type Settings = { currency?: string };
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
 
 // Star rating display component
 function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number; reviews?: number; size?: 'sm' | 'md' }) {

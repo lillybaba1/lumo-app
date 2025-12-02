@@ -19,14 +19,9 @@ import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2 } from 'lucide-react';
 import { CheckoutConsent } from '@/components/checkout-consent';
+import { getCurrencySymbol } from '@/lib/currency';
 
 type Settings = { currency?: string };
-
-function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
-    if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
-}
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
