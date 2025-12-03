@@ -11,12 +11,14 @@ import { SUBSCRIPTION_TIERS } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function BusinessBoutiquePage() {
-  const { businessAccount } = await requireBusiness();
+  const { user, businessAccount } = await requireBusiness();
   const boutique = await getBoutiqueByBusinessAccount(businessAccount.id);
   
-  const tier = businessAccount.subscriptionTier || 'free';
+  // Platform admin always gets enterprise tier with full access
+  const isAdmin = user.role === 'APP_OWNER_ADMIN' || user.role === 'admin';
+  const tier = isAdmin ? 'enterprise' : (businessAccount.subscriptionTier || 'free');
   const tierDetails = SUBSCRIPTION_TIERS[tier as keyof typeof SUBSCRIPTION_TIERS];
-  const canCustomize = tierDetails?.features?.customBoutique || false;
+  const canCustomize = isAdmin || tierDetails?.features?.customBoutique || false;
 
   return (
     <div>
@@ -31,12 +33,12 @@ export default async function BusinessBoutiquePage() {
           </p>
         </div>
         <Badge variant="outline" className="text-sm">
-          {tierDetails?.name || 'Starter'} Plan
+          {isAdmin ? 'Platform Owner' : (tierDetails?.name || 'Starter')} Plan
         </Badge>
       </div>
 
-      {/* Upgrade CTA for free tier */}
-      {tier === 'free' && (
+      {/* Upgrade CTA for free tier - never show for admins */}
+      {!isAdmin && tier === 'free' && (
         <Card className="mb-6 border-primary/50 bg-gradient-to-r from-primary/5 to-accent/5">
           <CardContent className="py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -71,12 +73,14 @@ export default async function BusinessBoutiquePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="text-muted-foreground">Commission Rate</p>
-              <p className="text-xl font-bold text-primary">{tierDetails?.commissionRate}%</p>
+              <p className="text-xl font-bold text-primary">
+                {isAdmin ? '0%' : `${tierDetails?.commissionRate}%`}
+              </p>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="text-muted-foreground">Max Products</p>
               <p className="text-xl font-bold">
-                {tierDetails?.features?.maxProducts === -1 ? '∞' : tierDetails?.features?.maxProducts}
+                {isAdmin || tierDetails?.features?.maxProducts === -1 ? '∞' : tierDetails?.features?.maxProducts}
               </p>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
@@ -87,7 +91,9 @@ export default async function BusinessBoutiquePage() {
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="text-muted-foreground">Featured Slots</p>
-              <p className="text-xl font-bold">{tierDetails?.features?.featuredListings}/mo</p>
+              <p className="text-xl font-bold">
+                {isAdmin ? '∞' : `${tierDetails?.features?.featuredListings}/mo`}
+              </p>
             </div>
           </div>
         </CardContent>
