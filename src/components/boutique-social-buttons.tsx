@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { Heart, UserPlus, UserMinus, Loader2, Bell, BellOff } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +18,7 @@ import {
   likeBoutique,
   unlikeBoutique,
   getBoutiqueSocialStats,
+  toggleFollowNotifications,
 } from '@/services/boutiqueSocialService';
 import { cn } from '@/lib/utils';
 
@@ -32,11 +40,13 @@ export function BoutiqueSocialButtons({
   const { toast } = useToast();
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [hasLiked, setHasLiked] = useState(false);
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
   const [isLoadingLike, setIsLoadingLike] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Load initial state
@@ -47,6 +57,7 @@ export function BoutiqueSocialButtons({
         setFollowerCount(stats.followerCount);
         setLikeCount(stats.likeCount);
         setIsFollowing(stats.isFollowing);
+        setNotificationsEnabled(stats.notificationsEnabled);
         setHasLiked(stats.hasLiked);
       } catch (error) {
         console.error('Error loading social stats:', error);
@@ -57,7 +68,7 @@ export function BoutiqueSocialButtons({
     loadStats();
   }, [boutiqueId]);
 
-  const handleFollow = async () => {
+  const handleFollow = async (withNotifications: boolean = true) => {
     if (!isAuthenticated) {
       toast({
         title: 'Sign in required',
@@ -70,33 +81,63 @@ export function BoutiqueSocialButtons({
 
     setIsLoadingFollow(true);
     try {
-      if (isFollowing) {
-        const result = await unfollowBoutique(boutiqueId);
-        if (result.success) {
-          setIsFollowing(false);
-          setFollowerCount(prev => Math.max(0, prev - 1));
-          toast({
-            title: 'Unfollowed',
-            description: 'You are no longer following this boutique.',
-          });
-        } else {
-          toast({ title: 'Error', description: result.error, variant: 'destructive' });
-        }
+      const result = await followBoutique(boutiqueId, withNotifications);
+      if (result.success) {
+        setIsFollowing(true);
+        setNotificationsEnabled(withNotifications);
+        setFollowerCount(prev => prev + 1);
+        toast({
+          title: 'Following!',
+          description: withNotifications 
+            ? 'You will be notified about new products and updates.' 
+            : 'You are now following this boutique.',
+        });
       } else {
-        const result = await followBoutique(boutiqueId);
-        if (result.success) {
-          setIsFollowing(true);
-          setFollowerCount(prev => prev + 1);
-          toast({
-            title: 'Following!',
-            description: 'You will be notified about new products.',
-          });
-        } else {
-          toast({ title: 'Error', description: result.error, variant: 'destructive' });
-        }
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
       }
     } finally {
       setIsLoadingFollow(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    setIsLoadingFollow(true);
+    try {
+      const result = await unfollowBoutique(boutiqueId);
+      if (result.success) {
+        setIsFollowing(false);
+        setNotificationsEnabled(true);
+        setFollowerCount(prev => Math.max(0, prev - 1));
+        toast({
+          title: 'Unfollowed',
+          description: 'You are no longer following this boutique.',
+        });
+      } else {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+      }
+    } finally {
+      setIsLoadingFollow(false);
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    setIsLoadingNotifications(true);
+    try {
+      const newValue = !notificationsEnabled;
+      const result = await toggleFollowNotifications(boutiqueId, newValue);
+      if (result.success) {
+        setNotificationsEnabled(newValue);
+        toast({
+          title: newValue ? 'Notifications enabled' : 'Notifications disabled',
+          description: newValue 
+            ? 'You will receive notifications from this boutique.'
+            : 'You will no longer receive notifications from this boutique.',
+        });
+      } else {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+      }
+    } finally {
+      setIsLoadingNotifications(false);
     }
   };
 
@@ -159,31 +200,85 @@ export function BoutiqueSocialButtons({
         )}
       </Button>
 
-      {/* Follow Button */}
-      <Button
-        variant={isFollowing ? "default" : "outline"}
-        size="sm"
-        className={cn(
-          "rounded-full gap-1.5 transition-all",
-          isFollowing && "bg-primary text-primary-foreground"
-        )}
-        onClick={handleFollow}
-        disabled={isLoadingFollow || !isInitialized}
-      >
-        {isLoadingFollow ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isFollowing ? (
-          <>
-            <UserMinus className="h-4 w-4" />
-            Following
-          </>
-        ) : (
-          <>
-            <UserPlus className="h-4 w-4" />
-            Follow
-          </>
-        )}
-      </Button>
+      {/* Follow Button with Dropdown */}
+      {isFollowing ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="default"
+              size="sm"
+              className="rounded-full gap-1.5 transition-all bg-primary text-primary-foreground"
+              disabled={isLoadingFollow || !isInitialized}
+            >
+              {isLoadingFollow ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {notificationsEnabled ? (
+                    <Bell className="h-4 w-4" />
+                  ) : (
+                    <BellOff className="h-4 w-4" />
+                  )}
+                  Following
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={handleToggleNotifications}
+              disabled={isLoadingNotifications}
+            >
+              {isLoadingNotifications ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : notificationsEnabled ? (
+                <BellOff className="h-4 w-4 mr-2" />
+              ) : (
+                <Bell className="h-4 w-4 mr-2" />
+              )}
+              {notificationsEnabled ? 'Turn off notifications' : 'Turn on notifications'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleUnfollow}
+              className="text-destructive focus:text-destructive"
+            >
+              <UserMinus className="h-4 w-4 mr-2" />
+              Unfollow
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5 transition-all"
+              disabled={isLoadingFollow || !isInitialized}
+            >
+              {isLoadingFollow ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4" />
+                  Follow
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => handleFollow(true)}>
+              <Bell className="h-4 w-4 mr-2" />
+              Follow with notifications
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFollow(false)}>
+              <BellOff className="h-4 w-4 mr-2" />
+              Follow without notifications
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
@@ -204,6 +299,7 @@ export function FollowButton({
   const { toast } = useToast();
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -212,6 +308,7 @@ export function FollowButton({
       try {
         const stats = await getBoutiqueSocialStats(boutiqueId);
         setIsFollowing(stats.isFollowing);
+        setNotificationsEnabled(stats.notificationsEnabled);
       } catch (error) {
         console.error('Error checking follow status:', error);
       } finally {
@@ -221,7 +318,7 @@ export function FollowButton({
     checkFollowing();
   }, [boutiqueId]);
 
-  const handleClick = async () => {
+  const handleFollow = async (withNotifications: boolean) => {
     if (!isAuthenticated) {
       toast({
         title: 'Sign in required',
@@ -233,38 +330,128 @@ export function FollowButton({
 
     setIsLoading(true);
     try {
-      if (isFollowing) {
-        const result = await unfollowBoutique(boutiqueId);
-        if (result.success) {
-          setIsFollowing(false);
-          toast({ title: 'Unfollowed', description: 'You are no longer following this boutique.' });
-        }
-      } else {
-        const result = await followBoutique(boutiqueId);
-        if (result.success) {
-          setIsFollowing(true);
-          toast({ title: 'Following!', description: 'You will be notified about new products.' });
-        }
+      const result = await followBoutique(boutiqueId, withNotifications);
+      if (result.success) {
+        setIsFollowing(true);
+        setNotificationsEnabled(withNotifications);
+        toast({ 
+          title: 'Following!', 
+          description: withNotifications 
+            ? 'You will be notified about new products.' 
+            : 'You are now following this boutique.'
+        });
       }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleUnfollow = async () => {
+    setIsLoading(true);
+    try {
+      const result = await unfollowBoutique(boutiqueId);
+      if (result.success) {
+        setIsFollowing(false);
+        toast({ title: 'Unfollowed', description: 'You are no longer following this boutique.' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const newValue = !notificationsEnabled;
+      const result = await toggleFollowNotifications(boutiqueId, newValue);
+      if (result.success) {
+        setNotificationsEnabled(newValue);
+        toast({
+          title: newValue ? 'Notifications enabled' : 'Notifications disabled',
+          description: newValue 
+            ? 'You will receive notifications from this boutique.'
+            : 'You will no longer receive notifications.',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isFollowing) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            size={size}
+            className={cn("gap-2", className)}
+            disabled={isLoading || !isInitialized}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : notificationsEnabled ? (
+              <Bell className="h-4 w-4" />
+            ) : (
+              <BellOff className="h-4 w-4" />
+            )}
+            Following
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center" className="w-48">
+          <DropdownMenuItem onClick={handleToggleNotifications}>
+            {notificationsEnabled ? (
+              <>
+                <BellOff className="h-4 w-4 mr-2" />
+                Turn off notifications
+              </>
+            ) : (
+              <>
+                <Bell className="h-4 w-4 mr-2" />
+                Turn on notifications
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={handleUnfollow}
+            className="text-destructive focus:text-destructive"
+          >
+            <UserMinus className="h-4 w-4 mr-2" />
+            Unfollow
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
   return (
-    <Button
-      variant={isFollowing ? "secondary" : "default"}
-      size={size}
-      className={cn("gap-2", className)}
-      onClick={handleClick}
-      disabled={isLoading || !isInitialized}
-    >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Heart className={cn("h-4 w-4", isFollowing && "fill-current text-red-500")} />
-      )}
-      {isFollowing ? 'Following' : 'Follow This Boutique'}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="default"
+          size={size}
+          className={cn("gap-2", className)}
+          disabled={isLoading || !isInitialized}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Heart className="h-4 w-4" />
+          )}
+          Follow This Boutique
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="w-56">
+        <DropdownMenuItem onClick={() => handleFollow(true)}>
+          <Bell className="h-4 w-4 mr-2" />
+          Follow with notifications
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleFollow(false)}>
+          <BellOff className="h-4 w-4 mr-2" />
+          Follow without notifications
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

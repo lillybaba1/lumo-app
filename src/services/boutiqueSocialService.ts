@@ -21,26 +21,32 @@ export interface BoutiqueComment {
 /**
  * Check if the current user is following a boutique
  */
-export async function isFollowingBoutique(boutiqueId: string): Promise<boolean> {
+export async function isFollowingBoutique(boutiqueId: string): Promise<{ following: boolean; notificationsEnabled: boolean }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  if (!user) return false;
+  if (!user) return { following: false, notificationsEnabled: false };
 
   const { data } = await supabase
     .from('boutique_followers')
-    .select('id')
+    .select('id, notifications_enabled')
     .eq('boutique_id', boutiqueId)
     .eq('user_id', user.id)
     .single();
 
-  return !!data;
+  return { 
+    following: !!data, 
+    notificationsEnabled: data?.notifications_enabled ?? true 
+  };
 }
 
 /**
  * Follow a boutique
  */
-export async function followBoutique(boutiqueId: string): Promise<{ success: boolean; error?: string }> {
+export async function followBoutique(
+  boutiqueId: string, 
+  notificationsEnabled: boolean = true
+): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -50,7 +56,11 @@ export async function followBoutique(boutiqueId: string): Promise<{ success: boo
 
   const { error } = await supabase
     .from('boutique_followers')
-    .insert({ boutique_id: boutiqueId, user_id: user.id });
+    .insert({ 
+      boutique_id: boutiqueId, 
+      user_id: user.id,
+      notifications_enabled: notificationsEnabled,
+    });
 
   if (error) {
     if (error.code === '23505') {
@@ -58,6 +68,34 @@ export async function followBoutique(boutiqueId: string): Promise<{ success: boo
     }
     console.error('Error following boutique:', error);
     return { success: false, error: 'Failed to follow boutique' };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Toggle notifications for a followed boutique
+ */
+export async function toggleFollowNotifications(
+  boutiqueId: string, 
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { success: false, error: 'You must be logged in' };
+  }
+
+  const { error } = await supabase
+    .from('boutique_followers')
+    .update({ notifications_enabled: enabled })
+    .eq('boutique_id', boutiqueId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error toggling notifications:', error);
+    return { success: false, error: 'Failed to update notification settings' };
   }
 
   return { success: true };
@@ -348,6 +386,7 @@ export async function getBoutiqueSocialStats(boutiqueId: string): Promise<{
   likeCount: number;
   commentCount: number;
   isFollowing: boolean;
+  notificationsEnabled: boolean;
   hasLiked: boolean;
 }> {
   const supabase = createClient();
@@ -361,17 +400,19 @@ export async function getBoutiqueSocialStats(boutiqueId: string): Promise<{
     .single();
 
   let isFollowing = false;
+  let notificationsEnabled = true;
   let hasLiked = false;
 
   if (user) {
-    // Check if user is following
+    // Check if user is following and their notification preference
     const { data: followData } = await supabase
       .from('boutique_followers')
-      .select('id')
+      .select('id, notifications_enabled')
       .eq('boutique_id', boutiqueId)
       .eq('user_id', user.id)
       .single();
     isFollowing = !!followData;
+    notificationsEnabled = followData?.notifications_enabled ?? true;
 
     // Check if user has liked
     const { data: likeData } = await supabase
@@ -388,6 +429,7 @@ export async function getBoutiqueSocialStats(boutiqueId: string): Promise<{
     likeCount: boutique?.like_count || 0,
     commentCount: boutique?.comment_count || 0,
     isFollowing,
+    notificationsEnabled,
     hasLiked,
   };
 }
