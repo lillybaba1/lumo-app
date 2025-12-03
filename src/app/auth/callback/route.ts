@@ -127,6 +127,20 @@ async function processUserAfterVerification(
   origin: string,
   response: NextResponse
 ) {
+  // First, check if user already exists to preserve their role
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  // Preserve existing role if user already exists (e.g., business account created during signup)
+  const existingRole = existingUser?.role
+  const metadataRole = user.user_metadata?.role
+  const role = existingRole || metadataRole || 'PERSONAL_ACCOUNT'
+  
+  console.log('[Auth Callback] User role resolution:', { existingRole, metadataRole, finalRole: role })
+
   // Create or update user in the users table (the main user table)
   const { error: profileError } = await supabase
     .from('users')
@@ -135,7 +149,7 @@ async function processUserAfterVerification(
       email: user.email,
       name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
       phone_number: user.user_metadata?.phone_number || user.phone || null,
-      role: user.user_metadata?.role || 'PERSONAL_ACCOUNT',
+      role: role, // Preserve existing role
       email_verified: true,
       updated_at: new Date().toISOString()
     }, {
@@ -146,7 +160,7 @@ async function processUserAfterVerification(
     console.error('[Auth Callback] User profile creation error:', profileError)
     // Continue anyway - user is authenticated
   } else {
-    console.log('[Auth Callback] User profile created/updated successfully in users table')
+    console.log('[Auth Callback] User profile created/updated successfully in users table with role:', role)
   }
 }
 
@@ -156,15 +170,29 @@ async function getBusinessRedirectIfNeeded(
   userId: string, 
   origin: string
 ): Promise<string | null> {
-  // Check if user has a business account with PENDING_VERIFICATION status
+  // Check if user has a business account
   const { data: businessAccount } = await supabase
     .from('business_accounts')
-    .select('id, status')
+    .select('id, status, account_approved, boutique_submitted, boutique_approved')
     .eq('owner_user_id', userId)
     .single()
 
-  if (businessAccount && businessAccount.status === 'PENDING_VERIFICATION') {
-    console.log('[Auth Callback] Business account found, updating to PENDING_APPROVAL:', businessAccount.id)
+  if (!businessAccount) {
+    return null
+  }
+
+  console.log('[Auth Callback] Business account state:', {
+    id: businessAccount.id,
+    status: businessAccount.status,
+    accountApproved: businessAccount.account_approved,
+    boutiqueSubmitted: businessAccount.boutique_submitted,
+    boutiqueApproved: businessAccount.boutique_approved,
+  })
+
+  // If status is PENDING_VERIFICATION, this is first email verification
+  // Update status to PENDING_APPROVAL (waiting for admin account approval)
+  if (businessAccount.status === 'PENDING_VERIFICATION') {
+    console.log('[Auth Callback] First verification - updating status to PENDING_APPROVAL')
     const { error: businessError } = await supabase
       .from('business_accounts')
       .update({
@@ -175,12 +203,38 @@ async function getBusinessRedirectIfNeeded(
 
     if (businessError) {
       console.error('[Auth Callback] Error updating business account status:', businessError)
-    } else {
-      console.log('[Auth Callback] Business account status updated to PENDING_APPROVAL')
-      // Redirect business users to the pending page
-      return `${origin}/business/pending`
     }
+    
+    // Always redirect to pending page for new business accounts
+    return `${origin}/business/pending`
   }
 
-  return null
+  // Multi-phase state machine for returning business users
+  // State D: Fully approved - go to dashboard
+  if (businessAccount.account_approved && businessAccount.boutique_approved) {
+    return `${origin}/business/dashboard`
+  }
+
+  // State C: Account approved, boutique submitted but not approved yet
+  if (businessAccount.account_approved && businessAccount.boutique_submitted && !businessAccount.boutique_approved) {
+    return `${origin}/business/pending-boutique-review`
+  }
+
+  // State B: Account approved but boutique not set up yet
+  if (businessAccount.account_approved && !businessAccount.boutique_submitted) {
+    return `${origin}/business/setup-boutique`
+  }
+
+  // State A: Account not approved yet - pending admin approval
+  if (!businessAccount.account_approved) {
+    return `${origin}/business/pending`
+  }
+
+  // Legacy: ACTIVE status means fully approved
+  if (businessAccount.status === 'ACTIVE') {
+    return `${origin}/business/dashboard`
+  }
+
+  // Default to pending page for any other state
+  return `${origin}/business/pending`
 }
