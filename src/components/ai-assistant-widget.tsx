@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import { Bot, X, MessageCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { ChatInterface } from './chat-interface';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 
 export type Message = {
@@ -28,11 +29,15 @@ interface ChatbotSettings {
 }
 
 export function AIAssistantWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [settings, setSettings] = useState<ChatbotSettings>({});
   const timeoutRef = useRef<any>(null);
   const [isPending, startTransition] = useTransition();
+  
+  // Detect if on business dashboard
+  const isBusinessDashboard = pathname?.startsWith('/business');
   
   // Draggable state
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -147,7 +152,10 @@ export function AIAssistantWidget() {
 
     startTransition(async () => {
       try {
-        const res = await fetch('/api/assistant', {
+        // Use seller AI for business dashboard, customer AI otherwise
+        const apiEndpoint = isBusinessDashboard ? '/api/seller/ai-assistant' : '/api/assistant';
+        
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query, history: updatedHistory }),
@@ -217,6 +225,7 @@ export function AIAssistantWidget() {
              messages={messages}
              onQuerySubmit={handleQuerySubmit}
              isPending={isPending}
+             isSellerMode={isBusinessDashboard}
            />
         </div>
       )}

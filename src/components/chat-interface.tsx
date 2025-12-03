@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, User, Send, Loader2 } from 'lucide-react';
+import { Bot, User, Send, Loader2, Store } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/card';
@@ -13,9 +13,10 @@ type ChatInterfaceProps = {
     messages: Message[];
     onQuerySubmit: (query: string) => void;
     isPending: boolean;
+    isSellerMode?: boolean;
 };
 
-export function ChatInterface({ messages, onQuerySubmit, isPending }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onQuerySubmit, isPending, isSellerMode = false }: ChatInterfaceProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
   
@@ -39,7 +40,15 @@ export function ChatInterface({ messages, onQuerySubmit, isPending }: ChatInterf
     <Card className="w-full max-w-md h-[60vh] flex flex-col shadow-2xl rounded-xl">
       <CardHeader>
         <CardTitle className="font-headline flex items-center">
-          <Bot className="mr-2" /> AI Shopping Assistant
+          {isSellerMode ? (
+            <>
+              <Store className="mr-2" /> Seller Assistant
+            </>
+          ) : (
+            <>
+              <Bot className="mr-2" /> AI Shopping Assistant
+            </>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
@@ -80,7 +89,7 @@ export function ChatInterface({ messages, onQuerySubmit, isPending }: ChatInterf
         <form ref={formRef} onSubmit={handleSubmit} className="w-full flex items-center gap-2">
           <Input 
             name="query" 
-            placeholder="Ask about products, prices..." 
+            placeholder={isSellerMode ? "Ask about inventory, orders..." : "Ask about products, prices..."} 
             required 
             autoComplete="off"
             value={query}
