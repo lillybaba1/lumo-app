@@ -105,13 +105,33 @@ export async function requireBusiness(
       return fail('Your business account has been suspended. Please contact support.', 'unauthorized');
     }
 
-    // Check if business account is pending approval
-    if (businessAccount.status === 'PENDING_APPROVAL' || businessAccount.status === 'PENDING_VERIFICATION') {
+    // Multi-phase approval state machine
+    // State A: Account not approved yet (email verified but waiting for admin)
+    if (!businessAccount.accountApproved && businessAccount.status !== 'ACTIVE') {
       if (redirectOnFail) {
         redirect('/business/pending');
       }
       throw new UnauthorizedError('Your business account is pending approval. Please wait for admin review.');
     }
+
+    // State B: Account approved, but boutique not set up yet
+    if (businessAccount.accountApproved && !businessAccount.boutiqueSubmitted && businessAccount.status !== 'ACTIVE') {
+      if (redirectOnFail) {
+        redirect('/business/setup-boutique');
+      }
+      throw new UnauthorizedError('Please set up your boutique to continue.');
+    }
+
+    // State C: Boutique submitted but not approved yet
+    if (businessAccount.accountApproved && businessAccount.boutiqueSubmitted && !businessAccount.boutiqueApproved && businessAccount.status !== 'ACTIVE') {
+      if (redirectOnFail) {
+        redirect('/business/pending-boutique-review');
+      }
+      throw new UnauthorizedError('Your boutique is pending approval.');
+    }
+
+    // State D: Fully approved OR legacy ACTIVE status - allow access
+    // (businessAccount.boutiqueApproved === true OR businessAccount.status === 'ACTIVE')
 
     const user: User = {
       uid: userData.id,

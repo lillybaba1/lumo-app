@@ -268,6 +268,16 @@ export interface BusinessAccount {
   description?: string;
   logo?: string;
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'PENDING_APPROVAL';
+  // Multi-phase approval tracking
+  accountApproved: boolean;
+  accountApprovedAt?: string;
+  accountApprovedBy?: string;
+  boutiqueSubmitted: boolean;
+  boutiqueSubmittedAt?: string;
+  boutiqueApproved: boolean;
+  boutiqueApprovedAt?: string;
+  boutiqueApprovedBy?: string;
+  boutiqueRejectionReason?: string;
   // NEW: Seller Type
   sellerType: SellerType;
   // NEW: Subscription

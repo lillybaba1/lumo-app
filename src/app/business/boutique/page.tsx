@@ -15,7 +15,7 @@ export default async function BusinessBoutiquePage() {
   const boutique = await getBoutiqueByBusinessAccount(businessAccount.id);
   
   // Platform admin always gets enterprise tier with full access
-  const isAdmin = user.role === 'APP_OWNER_ADMIN' || user.role === 'admin';
+  const isAdmin = user.role === 'APP_OWNER_ADMIN' || (user.role as string) === 'admin';
   const tier = isAdmin ? 'enterprise' : (businessAccount.subscriptionTier || 'free');
   const tierDetails = SUBSCRIPTION_TIERS[tier as keyof typeof SUBSCRIPTION_TIERS];
   const canCustomize = isAdmin || tierDetails?.features?.customBoutique || false;

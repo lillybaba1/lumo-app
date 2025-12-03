@@ -266,3 +266,95 @@ export async function deleteSellerAction(
     return { success: false, error: error.message || 'An error occurred' };
   }
 }
+
+// Approve a business account (Phase 1 approval)
+export async function approveAccountAction(
+  sellerId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { userId } = await requireAdmin();
+    
+    const { updateBusinessAccount } = await import('@/services/businessAccountService');
+    
+    const success = await updateBusinessAccount(sellerId, {
+      accountApproved: true,
+      accountApprovedAt: new Date().toISOString(),
+      accountApprovedBy: userId,
+      status: 'PENDING_APPROVAL', // Keep pending until boutique is also approved
+    });
+    
+    if (success) {
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      revalidatePath('/business/pending');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to approve account' };
+  } catch (error: any) {
+    console.error('Error approving account:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
+
+// Approve a boutique (Phase 2 approval - grants full seller access)
+export async function approveBoutiqueAction(
+  sellerId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { userId } = await requireAdmin();
+    
+    const { updateBusinessAccount } = await import('@/services/businessAccountService');
+    
+    const success = await updateBusinessAccount(sellerId, {
+      boutiqueApproved: true,
+      boutiqueApprovedAt: new Date().toISOString(),
+      boutiqueApprovedBy: userId,
+      status: 'ACTIVE', // Now fully active!
+    });
+    
+    if (success) {
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      revalidatePath('/business/pending-boutique-review');
+      revalidatePath('/business/dashboard');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to approve boutique' };
+  } catch (error: any) {
+    console.error('Error approving boutique:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
+
+// Reject a boutique submission (sends back to setup)
+export async function rejectBoutiqueAction(
+  sellerId: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    
+    const { updateBusinessAccount } = await import('@/services/businessAccountService');
+    
+    const success = await updateBusinessAccount(sellerId, {
+      boutiqueSubmitted: false, // Reset to allow resubmission
+      boutiqueApproved: false,
+      boutiqueRejectionReason: reason,
+    });
+    
+    if (success) {
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      revalidatePath('/business/setup-boutique');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to reject boutique' };
+  } catch (error: any) {
+    console.error('Error rejecting boutique:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
+

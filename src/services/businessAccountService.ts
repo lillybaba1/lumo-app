@@ -180,6 +180,16 @@ export async function updateBusinessAccount(
     if (updates.totalEarnings !== undefined) dbUpdates.total_earnings = updates.totalEarnings;
     if (updates.totalCommissionPaid !== undefined) dbUpdates.total_commission_paid = updates.totalCommissionPaid;
     if (updates.pendingPayout !== undefined) dbUpdates.pending_payout = updates.pendingPayout;
+    // Multi-phase approval fields
+    if (updates.accountApproved !== undefined) dbUpdates.account_approved = updates.accountApproved;
+    if (updates.accountApprovedAt !== undefined) dbUpdates.account_approved_at = updates.accountApprovedAt;
+    if (updates.accountApprovedBy !== undefined) dbUpdates.account_approved_by = updates.accountApprovedBy;
+    if (updates.boutiqueSubmitted !== undefined) dbUpdates.boutique_submitted = updates.boutiqueSubmitted;
+    if (updates.boutiqueSubmittedAt !== undefined) dbUpdates.boutique_submitted_at = updates.boutiqueSubmittedAt;
+    if (updates.boutiqueApproved !== undefined) dbUpdates.boutique_approved = updates.boutiqueApproved;
+    if (updates.boutiqueApprovedAt !== undefined) dbUpdates.boutique_approved_at = updates.boutiqueApprovedAt;
+    if (updates.boutiqueApprovedBy !== undefined) dbUpdates.boutique_approved_by = updates.boutiqueApprovedBy;
+    if (updates.boutiqueRejectionReason !== undefined) dbUpdates.boutique_rejection_reason = updates.boutiqueRejectionReason;
 
     const { data, error } = await supabaseAdmin
       .from('business_accounts')
@@ -243,6 +253,16 @@ function mapDbToBusinessAccount(dbRecord: any): BusinessAccount {
     description: dbRecord.description,
     logo: dbRecord.logo,
     status: dbRecord.status,
+    // Multi-phase approval tracking
+    accountApproved: dbRecord.account_approved ?? false,
+    accountApprovedAt: dbRecord.account_approved_at,
+    accountApprovedBy: dbRecord.account_approved_by,
+    boutiqueSubmitted: dbRecord.boutique_submitted ?? false,
+    boutiqueSubmittedAt: dbRecord.boutique_submitted_at,
+    boutiqueApproved: dbRecord.boutique_approved ?? false,
+    boutiqueApprovedAt: dbRecord.boutique_approved_at,
+    boutiqueApprovedBy: dbRecord.boutique_approved_by,
+    boutiqueRejectionReason: dbRecord.boutique_rejection_reason,
     // New boutique fields
     sellerType: dbRecord.seller_type || 'individual',
     subscriptionTier: dbRecord.subscription_tier || 'free',

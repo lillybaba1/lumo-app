@@ -16,7 +16,10 @@ import {
   toggleBoutiqueFeaturedAction,
   banBoutiqueAction,
   deleteBoutiqueAction,
-  deleteSellerAction
+  deleteSellerAction,
+  approveAccountAction,
+  approveBoutiqueAction,
+  rejectBoutiqueAction
 } from './actions';
 import { 
   Loader2, Users, Search, Crown, Sparkles, User, Shield,
@@ -226,6 +229,81 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
     }
   };
 
+  // Approve business account (Phase 1)
+  const handleApproveAccount = async (sellerId: string, businessName: string) => {
+    setIsLoading(sellerId);
+    try {
+      const result = await approveAccountAction(sellerId);
+      
+      if (result.success) {
+        toast({
+          title: 'Account Approved',
+          description: `${businessName} can now set up their boutique.`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to approve account',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  // Approve boutique (Phase 2 - Full access)
+  const handleApproveBoutique = async (sellerId: string, businessName: string) => {
+    setIsLoading(sellerId);
+    try {
+      const result = await approveBoutiqueAction(sellerId);
+      
+      if (result.success) {
+        toast({
+          title: 'Boutique Approved',
+          description: `${businessName} now has full seller access!`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to approve boutique',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  // Reject boutique submission
+  const handleRejectBoutique = async (sellerId: string, businessName: string) => {
+    const reason = prompt(`Why are you rejecting the boutique for "${businessName}"? This will be shown to the seller.`);
+    if (!reason) return;
+
+    setIsLoading(sellerId);
+    try {
+      const result = await rejectBoutiqueAction(sellerId, reason);
+      
+      if (result.success) {
+        toast({
+          title: 'Boutique Rejected',
+          description: `${businessName} will need to resubmit their boutique.`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to reject boutique',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const handleBulkAction = async (action: string) => {
     if (selectedSellers.length === 0) {
       toast({
@@ -278,8 +356,20 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (seller: BusinessAccount) => {
+    // Multi-phase approval status
+    if (!seller.accountApproved && seller.status !== 'ACTIVE') {
+      return <Badge className="bg-orange-100 text-orange-800 border-orange-200"><Clock className="h-3 w-3 mr-1" />Pending Account</Badge>;
+    }
+    if (seller.accountApproved && seller.boutiqueSubmitted && !seller.boutiqueApproved && seller.status !== 'ACTIVE') {
+      return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><Store className="h-3 w-3 mr-1" />Pending Boutique</Badge>;
+    }
+    if (seller.accountApproved && !seller.boutiqueSubmitted && seller.status !== 'ACTIVE') {
+      return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><AlertTriangle className="h-3 w-3 mr-1" />Setup Pending</Badge>;
+    }
+    
+    // Legacy status badges
+    switch (seller.status) {
       case 'ACTIVE':
         return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Active</Badge>;
       case 'SUSPENDED':
@@ -287,7 +377,7 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
       case 'PENDING_APPROVAL':
         return <Badge className="bg-orange-100 text-orange-800 border-orange-200"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{seller.status}</Badge>;
     }
   };
 
@@ -466,7 +556,7 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {getStatusBadge(seller.status)}
+                      {getStatusBadge(seller)}
                       {getTierBadge(seller.subscriptionTier)}
                     </div>
 
@@ -483,6 +573,37 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        
+                        {/* Approval Actions - shown based on state */}
+                        {!seller.accountApproved && seller.status !== 'ACTIVE' && (
+                          <DropdownMenuItem
+                            onClick={() => handleApproveAccount(seller.id, seller.businessName)}
+                            className="text-green-600 focus:text-green-600 focus:bg-green-50"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Approve Account
+                          </DropdownMenuItem>
+                        )}
+
+                        {seller.accountApproved && seller.boutiqueSubmitted && !seller.boutiqueApproved && seller.status !== 'ACTIVE' && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => handleApproveBoutique(seller.id, seller.businessName)}
+                              className="text-green-600 focus:text-green-600 focus:bg-green-50"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve Boutique
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleRejectBoutique(seller.id, seller.businessName)}
+                              className="text-orange-600 focus:text-orange-600 focus:bg-orange-50"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Reject Boutique
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
                         
                         <DropdownMenuItem asChild>
                           <Link href={`/admin/sellers/${seller.id}`}>
