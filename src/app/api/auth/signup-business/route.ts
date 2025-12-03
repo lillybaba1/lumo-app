@@ -57,16 +57,22 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
+    // Get the site URL for redirects
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    
     // Step 1: Create auth user with Supabase
     console.log('[Business Signup] Attempting to create auth user for:', email);
+    console.log('[Business Signup] Using redirect URL:', `${siteUrl}/auth/callback`);
+    
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
         data: {
           name,
           phone_number: phone,
+          role: 'BUSINESS_ACCOUNT',
         }
       }
     });

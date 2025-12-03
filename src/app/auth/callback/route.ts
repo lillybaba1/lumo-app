@@ -11,9 +11,14 @@ export async function GET(request: NextRequest) {
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/auth/verified'
 
-  console.log('[Auth Callback] Params:', { 
+  console.log('[Auth Callback] Full URL:', request.url)
+  console.log('[Auth Callback] Origin:', origin)
+  console.log('[Auth Callback] All params:', Object.fromEntries(searchParams.entries()))
+  console.log('[Auth Callback] Key params:', { 
     hasCode: !!code, 
+    codeLength: code?.length,
     hasTokenHash: !!token_hash,
+    tokenHashLength: token_hash?.length,
     type,
     error, 
     error_description 
