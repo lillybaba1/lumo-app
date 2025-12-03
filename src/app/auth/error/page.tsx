@@ -34,6 +34,10 @@ function AuthErrorContent() {
       title: 'Invalid Verification Link',
       description: 'This verification link is not valid. Please check your email for the correct link.',
     },
+    invalid_link: {
+      title: 'Invalid or Expired Link',
+      description: 'The verification link is invalid or has expired. Please request a new verification email.',
+    },
     unknown_error: {
       title: 'Authentication Error',
       description: 'An unexpected error occurred during authentication.',
@@ -43,17 +47,25 @@ function AuthErrorContent() {
   // Check if details contain specific error types
   const getErrorType = () => {
     const detailsLower = details.toLowerCase();
-    if (detailsLower.includes('expired') || detailsLower.includes('otp')) {
+    const messageLower = message.toLowerCase();
+    
+    if (detailsLower.includes('expired') || detailsLower.includes('otp') || messageLower.includes('expired')) {
       return 'expired_link';
     }
-    if (detailsLower.includes('invalid')) {
-      return 'invalid_token';
+    if (detailsLower.includes('invalid') || messageLower.includes('invalid')) {
+      return 'invalid_link';
     }
-    return message;
+    if (message === 'invalid_link') {
+      return 'invalid_link';
+    }
+    if (message === 'verification_failed') {
+      return 'verification_failed';
+    }
+    return 'unknown_error';
   };
 
   const error = errorMessages[getErrorType()] || errorMessages.unknown_error;
-  const isExpiredError = getErrorType() === 'expired_link' || getErrorType() === 'verification_failed';
+  const isExpiredError = getErrorType() === 'expired_link' || getErrorType() === 'verification_failed' || getErrorType() === 'invalid_link';
 
   const handleResendVerification = async (e: React.FormEvent) => {
     e.preventDefault();
