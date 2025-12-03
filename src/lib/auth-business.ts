@@ -61,8 +61,11 @@ export async function requireBusiness(
       return fail('User not found', 'login');
     }
 
-    // Check if user has BUSINESS_ACCOUNT role
-    if (userData.role !== 'BUSINESS_ACCOUNT') {
+    // Check if user has BUSINESS_ACCOUNT role OR is an admin (APP_OWNER_ADMIN can access seller dashboard)
+    const isAdmin = userData.role === 'APP_OWNER_ADMIN' || userData.role === 'admin';
+    const isBusiness = userData.role === 'BUSINESS_ACCOUNT';
+    
+    if (!isBusiness && !isAdmin) {
       return fail('Business account required', 'unauthorized');
     }
 
@@ -70,6 +73,10 @@ export async function requireBusiness(
     const businessAccount = await getBusinessAccountByOwner(userId);
 
     if (!businessAccount) {
+      // For admins without a business account, redirect to admin panel instead
+      if (isAdmin) {
+        return fail('No business account found. Use Admin > Products to create products, or create a Lumo Official business account.', 'unauthorized');
+      }
       return fail('Business account not found. Please complete your business registration.', 'unauthorized');
     }
 
