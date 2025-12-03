@@ -1,0 +1,16 @@
+name: Scheduled Vercel Deploy
+
+on:
+  schedule:
+    # Run at 12:35 UTC (approximately 3 hours from now - Dec 3, 2025)
+    - cron: '35 12 3 12 *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+          echo "Deployment triggered!"
