@@ -8,17 +8,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Globe, Instagram, Facebook, Twitter, Eye, ExternalLink, Upload } from 'lucide-react';
+import { Loader2, Store, Globe, Instagram, Facebook, Twitter, Eye, ExternalLink, Palette, Lock } from 'lucide-react';
 import { Boutique } from '@/lib/types';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageUploadBox from '@/components/image-upload-box';
+import { uploadBoutiqueImage, deleteBoutiqueImage, BOUTIQUE_IMAGE_SPECS } from '@/services/boutiqueStorageService';
 
 interface BoutiqueFormProps {
   boutique: Boutique | null;
   businessAccountId: string;
   canCustomize: boolean; // Based on subscription tier
 }
+
+// Preset color themes
+const COLOR_PRESETS = [
+  { name: 'Indigo', color: '#6366f1' },
+  { name: 'Rose', color: '#f43f5e' },
+  { name: 'Emerald', color: '#10b981' },
+  { name: 'Amber', color: '#f59e0b' },
+  { name: 'Sky', color: '#0ea5e9' },
+  { name: 'Violet', color: '#8b5cf6' },
+  { name: 'Slate', color: '#475569' },
+  { name: 'Coral', color: '#ff6b6b' },
+];
 
 export default function BoutiqueForm({ boutique, businessAccountId, canCustomize }: BoutiqueFormProps) {
   const router = useRouter();
@@ -44,6 +59,32 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
     },
     isPublished: boutique?.isPublished || false,
   });
+
+  const handleLogoUpload = async (file: File): Promise<string> => {
+    const url = await uploadBoutiqueImage(file, businessAccountId, 'logo');
+    setFormData(prev => ({ ...prev, logo: url }));
+    return url;
+  };
+
+  const handleLogoDelete = async (): Promise<void> => {
+    if (formData.logo) {
+      await deleteBoutiqueImage(formData.logo);
+      setFormData(prev => ({ ...prev, logo: '' }));
+    }
+  };
+
+  const handleBannerUpload = async (file: File): Promise<string> => {
+    const url = await uploadBoutiqueImage(file, businessAccountId, 'banner');
+    setFormData(prev => ({ ...prev, bannerImage: url }));
+    return url;
+  };
+
+  const handleBannerDelete = async (): Promise<void> => {
+    if (formData.bannerImage) {
+      await deleteBoutiqueImage(formData.bannerImage);
+      setFormData(prev => ({ ...prev, bannerImage: '' }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,109 +211,140 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
       </Card>
 
       {/* Branding */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Branding</CardTitle>
+      <Card className="overflow-hidden border-2 border-primary/10">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5 text-primary" />
+            Branding
+          </CardTitle>
           <CardDescription>
             Customize your boutique's appearance
             {!canCustomize && (
-              <span className="block mt-1 text-yellow-600">
+              <span className="flex items-center gap-1 mt-1 text-amber-600">
+                <Lock className="h-3 w-3" />
                 Upgrade to Pro or Enterprise to unlock custom branding
               </span>
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-6 sm:grid-cols-2">
-            {/* Logo */}
-            <div className="space-y-2">
-              <Label htmlFor="logo">Logo URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="logo"
-                  value={formData.logo}
-                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  placeholder="https://..."
-                  disabled={!canCustomize}
-                />
+        <CardContent className="pt-6 space-y-8">
+          {/* Banner Image */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <Label className="text-base font-semibold">Banner Image</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {BOUTIQUE_IMAGE_SPECS.banner.description}
+                </p>
               </div>
-              {formData.logo && (
-                <div className="w-16 h-16 rounded-lg border overflow-hidden">
-                  <Image
-                    src={formData.logo}
-                    alt="Logo preview"
-                    width={64}
-                    height={64}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              )}
+              <Badge variant="outline" className="text-xs">
+                {BOUTIQUE_IMAGE_SPECS.banner.maxSize} max
+              </Badge>
             </div>
-
-            {/* Banner */}
-            <div className="space-y-2">
-              <Label htmlFor="bannerImage">Banner Image URL</Label>
-              <Input
-                id="bannerImage"
-                value={formData.bannerImage}
-                onChange={(e) => setFormData({ ...formData, bannerImage: e.target.value })}
-                placeholder="https://..."
-                disabled={!canCustomize}
-              />
-              {formData.bannerImage && (
-                <div className="w-full h-20 rounded-lg border overflow-hidden">
-                  <Image
-                    src={formData.bannerImage}
-                    alt="Banner preview"
-                    width={400}
-                    height={80}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              )}
-            </div>
+            <ImageUploadBox
+              value={formData.bannerImage || null}
+              onUpload={handleBannerUpload}
+              onDelete={handleBannerDelete}
+              variant="banner"
+              description="1200 × 300px recommended"
+              disabled={!canCustomize}
+            />
           </div>
 
-          {/* Colors */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="themeColor">Primary Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="themeColor"
-                  type="color"
-                  value={formData.themeColor}
-                  onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
-                  className="w-12 h-10 p-1 cursor-pointer"
-                  disabled={!canCustomize}
-                />
-                <Input
-                  value={formData.themeColor}
-                  onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
-                  placeholder="#8b5cf6"
-                  className="flex-1"
+          <Separator />
+
+          {/* Logo and Colors side by side */}
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Logo */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <Label className="text-base font-semibold">Logo</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {BOUTIQUE_IMAGE_SPECS.logo.description}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {BOUTIQUE_IMAGE_SPECS.logo.maxSize} max
+                </Badge>
+              </div>
+              <div className="max-w-[200px]">
+                <ImageUploadBox
+                  value={formData.logo || null}
+                  onUpload={handleLogoUpload}
+                  onDelete={handleLogoDelete}
+                  variant="square"
+                  description="400 × 400px"
                   disabled={!canCustomize}
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="accentColor">Accent Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="accentColor"
-                  type="color"
-                  value={formData.accentColor}
-                  onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
-                  className="w-12 h-10 p-1 cursor-pointer"
-                  disabled={!canCustomize}
-                />
-                <Input
-                  value={formData.accentColor}
-                  onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
-                  placeholder="#ec4899"
-                  className="flex-1"
-                  disabled={!canCustomize}
-                />
+
+            {/* Theme Colors */}
+            <div className="space-y-6">
+              {/* Primary Color */}
+              <div>
+                <Label className="text-base font-semibold mb-3 block">Primary Color</Label>
+                
+                {/* Color Presets */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {COLOR_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => canCustomize && setFormData({ ...formData, themeColor: preset.color })}
+                      className={`
+                        w-8 h-8 rounded-full transition-all
+                        ${formData.themeColor === preset.color 
+                          ? 'ring-2 ring-offset-2 ring-primary scale-110' 
+                          : 'hover:scale-105 opacity-80 hover:opacity-100'}
+                        ${!canCustomize && 'opacity-50 cursor-not-allowed'}
+                      `}
+                      style={{ backgroundColor: preset.color }}
+                      title={preset.name}
+                      disabled={!canCustomize}
+                    />
+                  ))}
+                </div>
+
+                {/* Custom Color Picker */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={formData.themeColor}
+                    onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                    className="w-10 h-10 rounded-lg border-2 border-muted cursor-pointer"
+                    disabled={!canCustomize}
+                  />
+                  <Input
+                    value={formData.themeColor}
+                    onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                    placeholder="#8b5cf6"
+                    className="w-28 font-mono text-sm"
+                    disabled={!canCustomize}
+                  />
+                </div>
+              </div>
+
+              {/* Accent Color */}
+              <div>
+                <Label className="text-base font-semibold mb-3 block">Accent Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={formData.accentColor}
+                    onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
+                    className="w-10 h-10 rounded-lg border-2 border-muted cursor-pointer"
+                    disabled={!canCustomize}
+                  />
+                  <Input
+                    value={formData.accentColor}
+                    onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
+                    placeholder="#ec4899"
+                    className="w-28 font-mono text-sm"
+                    disabled={!canCustomize}
+                  />
+                </div>
               </div>
             </div>
           </div>
