@@ -1,11 +1,17 @@
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth-admin';
 import { getClientIdentifier, checkRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('AI Assistant API');
+
+// ==========================================
+// CUSTOMER SHOPPING ASSISTANT API
+// ==========================================
+// This is the PUBLIC shopping assistant for customers.
+// It ONLY has access to product information.
+// Admins use /api/admin/ai-assistant instead.
 
 export async function POST(req: Request) {
   try {
@@ -41,49 +47,23 @@ export async function POST(req: Request) {
       });
     }
 
-    // Get current user to determine role
-    let userRole: 'customer' | 'admin' = 'customer';
-    let userId: string | undefined;
-
-    try {
-      const user = await getCurrentUser();
-      if (user) {
-        userId = user.userId;
-        if (user.role === 'admin') {
-          userRole = 'admin';
-          logger.debug('Admin user detected', { userId });
-        } else {
-          logger.debug('Regular customer user detected', { userId, role: user.role });
-        }
-      } else {
-        logger.debug('No authenticated user - defaulting to customer');
-      }
-    } catch (error) {
-      // User not logged in or error - default to customer
-      logger.debug('User authentication error - defaulting to customer', { error });
-    }
-
-    // Log the final userRole for security auditing
-    console.log('[AI Assistant] Request:', {
-      userId: userId || 'anonymous',
-      userRole,
+    // Log request (customer only - no admin detection needed)
+    console.log('[Shopping AI] Customer query:', {
       queryPreview: query.substring(0, 50),
     });
 
-    logger.info('Processing AI request', {
-      userRole,
-      userId,
+    logger.info('Processing shopping AI request', {
       queryLength: query.length,
       historyLength: history?.length || 0,
     });
 
-    // Import the server-side assistant (this file runs in Node runtime)
+    // Import the customer shopping assistant
     const { shoppingAssistant } = await import('@/ai/flows/shopping-assistant');
 
-    const result = await shoppingAssistant({ query, history, userRole });
+    // Customer-only - no admin features
+    const result = await shoppingAssistant({ query, history });
 
-    logger.info('AI request completed', {
-      userId,
+    logger.info('Shopping AI request completed', {
       answerLength: result.answer?.length || 0,
     });
 
@@ -95,26 +75,21 @@ export async function POST(req: Request) {
       },
     });
   } catch (err: any) {
-    logger.error('AI assistant error', err);
+    logger.error('Shopping AI error', err);
 
-    // In production, provide a sanitized error message that helps debugging
-    // without exposing sensitive internal details to end users
     const isDevelopment = process.env.NODE_ENV === 'development';
     const errorMessage = isDevelopment
       ? err?.message || 'Internal server error'
       : 'AI service is currently unavailable. Please try again later.';
 
-    // Always log detailed error for debugging
-    console.error('[AI Assistant] Error details:', {
+    console.error('[Shopping AI] Error details:', {
       message: err?.message,
       name: err?.name,
       stack: err?.stack,
-      cause: err?.cause,
     });
 
     return new Response(JSON.stringify({
       error: errorMessage,
-      // Include error type for debugging (safe to expose)
       errorType: err?.name || 'UnknownError'
     }), {
       status: 500,

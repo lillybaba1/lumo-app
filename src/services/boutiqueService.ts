@@ -207,6 +207,66 @@ export async function updateBoutique(
 }
 
 /**
+ * Delete boutique (admin only)
+ */
+export async function deleteBoutique(boutiqueId: string): Promise<boolean> {
+  try {
+    const { error } = await supabaseAdmin
+      .from('boutiques')
+      .delete()
+      .eq('id', boutiqueId);
+
+    if (error) {
+      console.error('Error deleting boutique:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteBoutique:', error);
+    return false;
+  }
+}
+
+/**
+ * Ban boutique (sets it to unpublished and marks business as suspended)
+ */
+export async function banBoutique(boutiqueId: string): Promise<boolean> {
+  try {
+    // Get boutique to find business account
+    const boutique = await getBoutiqueById(boutiqueId);
+    if (!boutique) return false;
+
+    // Unpublish the boutique
+    const { error: boutiqueError } = await supabaseAdmin
+      .from('boutiques')
+      .update({ is_published: false, is_featured: false })
+      .eq('id', boutiqueId);
+
+    if (boutiqueError) {
+      console.error('Error banning boutique:', boutiqueError);
+      return false;
+    }
+
+    // Suspend the business account
+    const { error: businessError } = await supabaseAdmin
+      .from('business_accounts')
+      .update({ status: 'SUSPENDED' })
+      .eq('id', boutique.businessAccountId);
+
+    if (businessError) {
+      console.error('Error suspending business account:', businessError);
+      // Boutique is already unpublished, so partial success
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in banBoutique:', error);
+    return false;
+  }
+}
+
+/**
  * Get all published boutiques (for browse/discover page)
  */
 export async function getPublishedBoutiques(options?: {

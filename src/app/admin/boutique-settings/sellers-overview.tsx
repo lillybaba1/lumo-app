@@ -13,12 +13,15 @@ import {
   bulkUpdateSellersAction, 
   toggleSellerStatusAction, 
   forceUpgradeSellerAction,
-  toggleBoutiqueFeaturedAction 
+  toggleBoutiqueFeaturedAction,
+  banBoutiqueAction,
+  deleteBoutiqueAction,
+  deleteSellerAction
 } from './actions';
 import { 
   Loader2, Users, Search, Crown, Sparkles, User, Shield,
   CheckCircle, XCircle, Clock, AlertTriangle, Store, Star,
-  MoreVertical, Ban, Play, ArrowUpCircle
+  MoreVertical, Ban, Play, ArrowUpCircle, ShieldOff, Trash2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -129,6 +132,92 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
         toast({
           title: 'Error',
           description: result.error || 'Failed to update featured status',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleBanBoutique = async (boutiqueId: string, businessName: string) => {
+    if (!confirm(`Are you sure you want to BAN the boutique for "${businessName}"? This will unpublish their boutique and suspend the seller.`)) {
+      return;
+    }
+
+    setIsLoading(boutiqueId);
+    try {
+      const result = await banBoutiqueAction(boutiqueId);
+      
+      if (result.success) {
+        toast({
+          title: 'Boutique Banned',
+          description: `The boutique for "${businessName}" has been banned.`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to ban boutique',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleDeleteBoutique = async (boutiqueId: string, businessName: string) => {
+    if (!confirm(`⚠️ DANGER: Are you sure you want to DELETE the boutique for "${businessName}"? This action cannot be undone!`)) {
+      return;
+    }
+
+    // Double confirmation for destructive action
+    if (!confirm(`This is a PERMANENT deletion. Type 'delete' in your mind and confirm to proceed.`)) {
+      return;
+    }
+
+    setIsLoading(boutiqueId);
+    try {
+      const result = await deleteBoutiqueAction(boutiqueId);
+      
+      if (result.success) {
+        toast({
+          title: 'Boutique Deleted',
+          description: `The boutique for "${businessName}" has been permanently deleted.`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to delete boutique',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleDeleteSeller = async (sellerId: string, businessName: string) => {
+    if (!confirm(`⚠️ DANGER: Are you sure you want to DELETE the seller account "${businessName}"? This will suspend the account and remove access.`)) {
+      return;
+    }
+
+    setIsLoading(sellerId);
+    try {
+      const result = await deleteSellerAction(sellerId);
+      
+      if (result.success) {
+        toast({
+          title: 'Seller Deleted',
+          description: `The seller account "${businessName}" has been deleted.`,
+        });
+        router.refresh();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to delete seller',
           variant: 'destructive',
         });
       }
@@ -461,6 +550,40 @@ export default function SellersOverview({ businessAccounts, boutiques, settings 
                             Downgrade to Free
                           </DropdownMenuItem>
                         )}
+
+                        {boutique && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel className="text-xs text-red-600">
+                              Danger Zone
+                            </DropdownMenuLabel>
+                            
+                            <DropdownMenuItem
+                              onClick={() => handleBanBoutique(boutique.id, seller.businessName)}
+                              className="text-orange-600 focus:text-orange-600 focus:bg-orange-50"
+                            >
+                              <ShieldOff className="h-4 w-4 mr-2" />
+                              Ban Boutique
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteBoutique(boutique.id, seller.businessName)}
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Boutique
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteSeller(seller.id, seller.businessName)}
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Seller Account
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

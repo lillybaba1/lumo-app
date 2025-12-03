@@ -191,3 +191,78 @@ export async function forceUpgradeSellerAction(
     return { success: false, error: error.message || 'An error occurred' };
   }
 }
+
+// Ban a boutique (unpublish + suspend seller)
+export async function banBoutiqueAction(
+  boutiqueId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    
+    const { banBoutique } = await import('@/services/boutiqueService');
+    
+    const success = await banBoutique(boutiqueId);
+    
+    if (success) {
+      revalidatePath('/boutiques');
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to ban boutique' };
+  } catch (error: any) {
+    console.error('Error banning boutique:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
+
+// Delete a boutique completely (admin only - use with caution)
+export async function deleteBoutiqueAction(
+  boutiqueId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    
+    const { deleteBoutique } = await import('@/services/boutiqueService');
+    
+    const success = await deleteBoutique(boutiqueId);
+    
+    if (success) {
+      revalidatePath('/boutiques');
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to delete boutique' };
+  } catch (error: any) {
+    console.error('Error deleting boutique:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
+
+// Delete a business account and its boutique completely
+export async function deleteSellerAction(
+  sellerId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    
+    const { deleteBusinessAccount } = await import('@/services/businessAccountService');
+    
+    const success = await deleteBusinessAccount(sellerId);
+    
+    if (success) {
+      revalidatePath('/boutiques');
+      revalidatePath('/admin/boutique-settings');
+      revalidatePath('/admin/sellers');
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Failed to delete seller' };
+  } catch (error: any) {
+    console.error('Error deleting seller:', error);
+    return { success: false, error: error.message || 'An error occurred' };
+  }
+}
