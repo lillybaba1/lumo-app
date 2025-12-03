@@ -1,6 +1,18 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+// Helper to create redirect response with cookies
+function createRedirectWithCookies(
+  url: string, 
+  cookies: { name: string; value: string; options?: any }[]
+): NextResponse {
+  const response = NextResponse.redirect(url)
+  cookies.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options)
+  })
+  return response
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -33,8 +45,10 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Collect cookies to set
+  const cookiesToSet: { name: string; value: string; options?: any }[] = []
+
   // Create Supabase client for this request
-  const response = NextResponse.redirect(`${origin}${next}`)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -43,10 +57,10 @@ export async function GET(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
+        setAll(cookies) {
+          cookies.forEach(({ name, value, options }) => {
+            cookiesToSet.push({ name, value, options })
+          })
         },
       },
     }
@@ -72,15 +86,17 @@ export async function GET(request: NextRequest) {
       
       // Process user profile and business account
       const user = data.session.user
-      await processUserAfterVerification(supabase, user, origin, response)
+      await processUserAfterVerification(supabase, user)
       
       // Check for business account redirect
       const redirectUrl = await getBusinessRedirectIfNeeded(supabase, user.id, origin)
       if (redirectUrl) {
-        return NextResponse.redirect(redirectUrl)
+        console.log('[Auth Callback] Redirecting business user to:', redirectUrl)
+        return createRedirectWithCookies(redirectUrl, cookiesToSet)
       }
       
-      return response
+      // Default redirect for non-business users
+      return createRedirectWithCookies(`${origin}${next}`, cookiesToSet)
     }
   }
 
@@ -101,15 +117,17 @@ export async function GET(request: NextRequest) {
 
       // Process user profile and business account
       const user = data.session.user
-      await processUserAfterVerification(supabase, user, origin, response)
+      await processUserAfterVerification(supabase, user)
       
       // Check for business account redirect
       const redirectUrl = await getBusinessRedirectIfNeeded(supabase, user.id, origin)
       if (redirectUrl) {
-        return NextResponse.redirect(redirectUrl)
+        console.log('[Auth Callback] Redirecting business user to:', redirectUrl)
+        return createRedirectWithCookies(redirectUrl, cookiesToSet)
       }
 
-      return response
+      // Default redirect for non-business users
+      return createRedirectWithCookies(`${origin}${next}`, cookiesToSet)
     }
   }
 
@@ -123,9 +141,7 @@ export async function GET(request: NextRequest) {
 // Helper function to process user after verification
 async function processUserAfterVerification(
   supabase: any, 
-  user: any, 
-  origin: string,
-  response: NextResponse
+  user: any
 ) {
   // First, check if user already exists to preserve their role
   const { data: existingUser } = await supabase
