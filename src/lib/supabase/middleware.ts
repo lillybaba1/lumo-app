@@ -1,6 +1,25 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Business routes that require full approval (boutique_approved = true)
+const PROTECTED_BUSINESS_ROUTES = [
+  '/business/dashboard',
+  '/business/products',
+  '/business/orders',
+  '/business/analytics',
+  '/business/earnings',
+  '/business/payout',
+  '/business/shipping',
+  '/business/settings',
+  '/business/subscription',
+]
+
+// Routes that are allowed during different states
+const PENDING_ACCOUNT_ROUTES = ['/business/pending']
+const SETUP_BOUTIQUE_ROUTES = ['/business/setup-boutique', '/business/boutique']
+const PENDING_BOUTIQUE_ROUTES = ['/business/pending-boutique-review']
+const BUSINESS_PROFILE_ROUTES = ['/business/profile', '/business/verification']
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -43,25 +62,118 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+
   // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
+  if (pathname.startsWith('/admin') && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin/login'
     return NextResponse.redirect(url)
   }
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely.
+  // Protect ALL business routes - require authentication
+  if (pathname.startsWith('/business')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
 
+    // Check business account status and enforce state machine
+    const redirectUrl = await enforceBusinessWorkflow(supabase, user.id, pathname, request.nextUrl.origin)
+    if (redirectUrl && redirectUrl !== pathname) {
+      return NextResponse.redirect(new URL(redirectUrl, request.nextUrl.origin))
+    }
+  }
+
+  // IMPORTANT: You *must* return the supabaseResponse object as it is.
   return supabaseResponse
+}
+
+/**
+ * Enforce the multi-phase business approval workflow
+ * Returns the URL to redirect to, or null if current route is allowed
+ */
+async function enforceBusinessWorkflow(
+  supabase: any,
+  userId: string,
+  currentPath: string,
+  origin: string
+): Promise<string | null> {
+  // Fetch business account status
+  const { data: businessAccount, error } = await supabase
+    .from('business_accounts')
+    .select('id, status, account_approved, boutique_submitted, boutique_approved')
+    .eq('owner_user_id', userId)
+    .single()
+
+  // No business account - shouldn't be on business routes
+  if (error || !businessAccount) {
+    console.log('[Middleware] No business account found for user:', userId)
+    return '/signup?type=business'
+  }
+
+  const { account_approved, boutique_submitted, boutique_approved, status } = businessAccount
+
+  console.log('[Middleware] Business workflow check:', {
+    currentPath,
+    account_approved,
+    boutique_submitted,
+    boutique_approved,
+    status
+  })
+
+  // STATE D: Fully approved (account + boutique both approved)
+  // Can access all business routes
+  if (account_approved && boutique_approved) {
+    // If trying to access pending pages, redirect to dashboard
+    if (currentPath === '/business/pending' || 
+        currentPath === '/business/pending-boutique-review' ||
+        currentPath === '/business/setup-boutique') {
+      return '/business/dashboard'
+    }
+    return null // Allow access
+  }
+
+  // STATE C: Account approved, boutique submitted but pending review
+  if (account_approved && boutique_submitted && !boutique_approved) {
+    // Allowed: pending-boutique-review, profile, verification
+    if (currentPath === '/business/pending-boutique-review' ||
+        BUSINESS_PROFILE_ROUTES.some(r => currentPath.startsWith(r))) {
+      return null
+    }
+    // Redirect everything else to pending boutique review
+    return '/business/pending-boutique-review'
+  }
+
+  // STATE B: Account approved, need to set up boutique
+  if (account_approved && !boutique_submitted) {
+    // Allowed: setup-boutique, boutique form, profile
+    if (SETUP_BOUTIQUE_ROUTES.some(r => currentPath.startsWith(r)) ||
+        BUSINESS_PROFILE_ROUTES.some(r => currentPath.startsWith(r))) {
+      return null
+    }
+    // Redirect everything else to setup boutique
+    return '/business/setup-boutique'
+  }
+
+  // STATE A: Account not yet approved (waiting for admin)
+  if (!account_approved) {
+    // Only allowed: pending page and profile
+    if (currentPath === '/business/pending' ||
+        BUSINESS_PROFILE_ROUTES.some(r => currentPath.startsWith(r))) {
+      return null
+    }
+    // Redirect everything else to pending
+    return '/business/pending'
+  }
+
+  // Legacy check for ACTIVE status (backwards compatibility)
+  if (status === 'ACTIVE') {
+    return null // Allow access
+  }
+
+  // Default: redirect to pending
+  return '/business/pending'
 }
