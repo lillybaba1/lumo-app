@@ -570,3 +570,163 @@ export interface Payment {
   createdAt: string;
   updatedAt?: string;
 }
+
+// ============================================
+// PLATFORM SETTINGS (Admin Configurable)
+// ============================================
+
+// Platform-wide boutique settings that admin can configure
+export interface BoutiqueSystemSettings {
+  // General Settings
+  enabled: boolean; // Enable/disable boutique system entirely
+  allowNewSellers: boolean; // Allow new seller registrations
+  requireApproval: boolean; // Require admin approval for new sellers
+  requireVerification: boolean; // Require seller verification
+  
+  // Commission Settings (override default tier rates)
+  defaultCommissionRate: number; // Default platform commission %
+  minCommissionRate: number; // Minimum allowed commission
+  maxCommissionRate: number; // Maximum allowed commission
+  
+  // Subscription Tier Settings (can be customized per tier)
+  tiers: {
+    free: SubscriptionTierSettings;
+    pro: SubscriptionTierSettings;
+    enterprise: SubscriptionTierSettings;
+  };
+  
+  // Feature Flags
+  features: {
+    customBoutiques: boolean; // Allow custom boutique pages
+    sellerAnalytics: boolean; // Enable seller analytics
+    promotionalTools: boolean; // Enable promotional tools
+    sellerMessaging: boolean; // Enable customer-seller messaging
+    sellerReviews: boolean; // Enable seller reviews
+    automaticPayouts: boolean; // Enable automatic payouts
+  };
+  
+  // Payout Settings
+  payouts: {
+    minimumPayout: number; // Minimum amount for payout
+    payoutSchedule: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+    payoutMethods: string[]; // Enabled payout methods
+    holdPeriodDays: number; // Days to hold funds before payout
+  };
+  
+  // Content Settings
+  content: {
+    boutiquePageTitle: string;
+    boutiquePageDescription: string;
+    sellerSignupTitle: string;
+    sellerSignupDescription: string;
+    termsAndConditionsUrl: string;
+    sellerAgreementUrl: string;
+  };
+}
+
+export interface SubscriptionTierSettings {
+  enabled: boolean;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  commissionRate: number;
+  maxProducts: number; // -1 for unlimited
+  maxMonthlyOrders: number; // -1 for unlimited
+  featuredListings: number;
+  customBoutique: boolean;
+  prioritySupport: boolean;
+  analyticsAdvanced: boolean;
+  promotionalTools: boolean;
+  verifiedBadge: boolean;
+}
+
+// Platform settings stored in database
+export interface PlatformSettings {
+  id: string;
+  key: string;
+  value: any;
+  category: 'general' | 'boutique' | 'payments' | 'notifications' | 'appearance' | 'seo';
+  description?: string;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+// Default boutique system settings
+export const DEFAULT_BOUTIQUE_SETTINGS: BoutiqueSystemSettings = {
+  enabled: true,
+  allowNewSellers: true,
+  requireApproval: true,
+  requireVerification: true,
+  defaultCommissionRate: 10,
+  minCommissionRate: 0,
+  maxCommissionRate: 30,
+  tiers: {
+    free: {
+      enabled: true,
+      name: 'Starter',
+      monthlyPrice: 0,
+      annualPrice: 0,
+      commissionRate: 15,
+      maxProducts: 10,
+      maxMonthlyOrders: 50,
+      featuredListings: 0,
+      customBoutique: false,
+      prioritySupport: false,
+      analyticsAdvanced: false,
+      promotionalTools: false,
+      verifiedBadge: false,
+    },
+    pro: {
+      enabled: true,
+      name: 'Professional',
+      monthlyPrice: 29.99,
+      annualPrice: 299.99,
+      commissionRate: 10,
+      maxProducts: 100,
+      maxMonthlyOrders: 500,
+      featuredListings: 5,
+      customBoutique: true,
+      prioritySupport: true,
+      analyticsAdvanced: true,
+      promotionalTools: true,
+      verifiedBadge: false,
+    },
+    enterprise: {
+      enabled: true,
+      name: 'Enterprise',
+      monthlyPrice: 99.99,
+      annualPrice: 999.99,
+      commissionRate: 5,
+      maxProducts: -1,
+      maxMonthlyOrders: -1,
+      featuredListings: 20,
+      customBoutique: true,
+      prioritySupport: true,
+      analyticsAdvanced: true,
+      promotionalTools: true,
+      verifiedBadge: true,
+    },
+  },
+  features: {
+    customBoutiques: true,
+    sellerAnalytics: true,
+    promotionalTools: true,
+    sellerMessaging: false,
+    sellerReviews: true,
+    automaticPayouts: false,
+  },
+  payouts: {
+    minimumPayout: 50,
+    payoutSchedule: 'weekly',
+    payoutMethods: ['bank_transfer', 'wave_money'],
+    holdPeriodDays: 7,
+  },
+  content: {
+    boutiquePageTitle: 'Discover Boutiques',
+    boutiquePageDescription: 'Shop from our curated collection of unique boutiques',
+    sellerSignupTitle: 'Start Your Own Boutique',
+    sellerSignupDescription: 'Join our marketplace and showcase your products to thousands of customers',
+    termsAndConditionsUrl: '/terms',
+    sellerAgreementUrl: '/seller-agreement',
+  },
+};

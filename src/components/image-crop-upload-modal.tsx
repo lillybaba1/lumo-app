@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Loader2, Crop, Maximize2, RotateCcw } from 'lucide-react';
+import { Loader2, Crop, Maximize2, RotateCcw, ZoomIn, ZoomOut, Image as ImageIcon } from 'lucide-react';
 
 export interface CropArea {
   x: number;
@@ -20,11 +20,15 @@ export interface ImageCropUploadModalProps {
   onClose: () => void;
   imageSrc: string;
   onComplete: (croppedFile: File) => void;
+  onUseOriginal?: (originalFile: File) => void; // New: callback for using original image
+  originalFile?: File; // New: the original file for "Use Original" option
   title?: string;
   description?: string;
   aspectRatios?: { label: string; value: string; ratio: number | undefined }[];
   defaultAspectRatio?: string;
   isUploading?: boolean;
+  allowOriginal?: boolean; // New: show "Use Original" button
+  quality?: number; // New: JPEG quality (0-1), default 0.95
 }
 
 const DEFAULT_ASPECT_RATIOS = [
@@ -41,11 +45,15 @@ export default function ImageCropUploadModal({
   onClose,
   imageSrc,
   onComplete,
+  onUseOriginal,
+  originalFile,
   title = 'Crop Image',
   description = 'Adjust the crop area, zoom, and rotation to fit your image perfectly.',
   aspectRatios = DEFAULT_ASPECT_RATIOS,
   defaultAspectRatio = 'free',
   isUploading = false,
+  allowOriginal = true,
+  quality = 0.95,
 }: ImageCropUploadModalProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -53,6 +61,23 @@ export default function ImageCropUploadModal({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>(defaultAspectRatio);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+
+  // Get image dimensions when image changes
+  useEffect(() => {
+    if (imageSrc) {
+      const img = new window.Image();
+      img.onload = () => {
+        setImageSize({ width: img.width, height: img.height });
+      };
+      img.src = imageSrc;
+    }
+  }, [imageSrc]);
+
+  // Zoom control functions
+  const zoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 3));
+  const zoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.3));
+  const resetZoom = () => setZoom(1);
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: CropArea) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -64,7 +89,7 @@ export default function ImageCropUploadModal({
     setIsProcessing(true);
 
     try {
-      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, quality);
       if (croppedFile) {
         onComplete(croppedFile);
       }
@@ -72,6 +97,19 @@ export default function ImageCropUploadModal({
       console.error('Error cropping image:', error);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleUseOriginal = () => {
+    if (originalFile && onUseOriginal) {
+      onUseOriginal(originalFile);
+      resetState();
+      onClose();
+    } else if (originalFile) {
+      // Use the onComplete callback with original file
+      onComplete(originalFile);
+      resetState();
+      onClose();
     }
   };
 
@@ -139,6 +177,8 @@ export default function ImageCropUploadModal({
                 onRotationChange={setRotation}
                 onCropComplete={onCropComplete}
                 showGrid={true}
+                minZoom={0.3}
+                maxZoom={3}
                 style={{
                   containerStyle: { borderRadius: '0.5rem' },
                 }}
@@ -147,21 +187,64 @@ export default function ImageCropUploadModal({
           </div>
 
           {/* Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            {/* Zoom Controls */}
             <div className="space-y-2">
-              <Label>Zoom: {zoom.toFixed(1)}x</Label>
-              <Slider
-                min={1}
-                max={3}
-                step={0.1}
-                value={[zoom]}
-                onValueChange={(value) => setZoom(value[0])}
-              />
+              <Label className="flex items-center gap-2">
+                <ZoomIn className="h-4 w-4" />
+                Zoom: {zoom.toFixed(1)}x
+              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={zoomOut}
+                  disabled={zoom <= 0.3}
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <Slider
+                  min={0.3}
+                  max={3}
+                  step={0.1}
+                  value={[zoom]}
+                  onValueChange={(value) => setZoom(value[0])}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={zoomIn}
+                  disabled={zoom >= 3}
+                  title="Zoom In"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetZoom}
+                  title="Reset Zoom"
+                >
+                  Reset
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tip: Zoom out (below 1x) to see the entire image and avoid cutting
+              </p>
             </div>
 
+            {/* Rotation Controls */}
             <div className="space-y-2">
-              <Label>Rotation: {rotation}°</Label>
-              <div className="flex gap-2">
+              <Label className="flex items-center gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Rotation: {rotation}°
+              </Label>
+              <div className="flex items-center gap-2">
                 <Slider
                   min={0}
                   max={360}
@@ -171,12 +254,13 @@ export default function ImageCropUploadModal({
                   className="flex-1"
                 />
                 <Button
-                  variant="outline"
-                  size="icon"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setRotation(0)}
-                  title="Reset rotation"
+                  title="Reset Rotation"
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  Reset
                 </Button>
               </div>
             </div>
@@ -200,21 +284,33 @@ export default function ImageCropUploadModal({
               </>
             )}
           </Button>
+          {allowOriginal && originalFile && (
+            <Button 
+              variant="secondary" 
+              onClick={handleUseOriginal}
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Use Original (No Crop)
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-// Helper function to create cropped image
+// Helper function to create cropped image with high quality
 async function getCroppedImg(
   imageSrc: string,
   pixelCrop: CropArea,
-  rotation = 0
+  rotation = 0,
+  quality = 0.95
 ): Promise<File | null> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
 
   if (!ctx) return null;
 
@@ -254,15 +350,24 @@ async function getCroppedImg(
   // Paste cropped image data
   ctx.putImageData(data, 0, 0);
 
-  // Convert to blob/file
+  // Convert to blob/file with high quality JPEG (better for photos)
+  // Use PNG for images that might have transparency
   return new Promise((resolve) => {
+    // First try JPEG for better quality with photos
     canvas.toBlob((blob) => {
       if (blob) {
-        resolve(new File([blob], 'cropped-image.png', { type: 'image/png' }));
+        resolve(new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }));
       } else {
-        resolve(null);
+        // Fallback to PNG if JPEG fails
+        canvas.toBlob((pngBlob) => {
+          if (pngBlob) {
+            resolve(new File([pngBlob], 'cropped-image.png', { type: 'image/png' }));
+          } else {
+            resolve(null);
+          }
+        }, 'image/png');
       }
-    }, 'image/png');
+    }, 'image/jpeg', quality);
   });
 }
 

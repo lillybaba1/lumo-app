@@ -226,6 +226,57 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         });
     };
 
+    // Handle using original image without cropping
+    const handleUseOriginal = async () => {
+        if (!pendingFile) return;
+
+        setIsUploading(true);
+
+        try {
+            const url = await uploadImageAndGetUrl(pendingFile, `products/${Date.now()}-${pendingFile.name}`);
+
+            // Add image to product images array (no crop data)
+            setProductImages(prev => [...prev, url]);
+
+            toast({
+                title: 'Upload successful',
+                description: 'Original image uploaded without cropping.',
+                variant: 'default'
+            });
+
+            URL.revokeObjectURL(currentCropImage);
+
+            // Process next file in queue
+            if (fileQueue.length > 0) {
+                const nextFile = fileQueue[0];
+                const remainingFiles = fileQueue.slice(1);
+                setFileQueue(remainingFiles);
+
+                const objectUrl = URL.createObjectURL(nextFile);
+                setCurrentCropImage(objectUrl);
+                setPendingFile(nextFile);
+                // Modal stays open for next file
+            } else {
+                // No more files, close modal and reset
+                setCropModalOpen(false);
+                setPendingFile(null);
+
+                // Reset file input
+                if (productImageInputRef.current) {
+                    productImageInputRef.current.value = '';
+                }
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Upload failed',
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleRemoveImage = (urlToRemove: string) => {
         setProductImages(prev => prev.filter(url => url !== urlToRemove));
 
@@ -680,6 +731,8 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 }}
                 imageSrc={currentCropImage}
                 onCropComplete={pendingFile ? handleCropComplete : handlePostUploadCropComplete}
+                onUseOriginal={pendingFile ? handleUseOriginal : undefined}
+                allowOriginal={!!pendingFile}
                 initialCrop={imageCropData.get(currentCropImage)}
             />
         </form>

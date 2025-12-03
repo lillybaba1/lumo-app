@@ -43,6 +43,7 @@ const navGroups: SidebarSection[] = [
     label: 'Management',
     items: [
       { href: '/admin/sellers', icon: Building2, label: 'Seller Accounts' },
+      { href: '/admin/boutique-settings', icon: Store, label: 'Boutique System' },
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
       { href: '/admin/privacy', icon: Shield, label: 'Privacy & Consent' },

@@ -31,6 +31,11 @@ export default async function BusinessLayout({
       </div>
     );
   } catch (error: any) {
+    // Re-throw NEXT_REDIRECT errors - these are intentional redirects from Next.js
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
+    
     console.error('Business layout error:', error);
 
     // If requireBusiness throws an error, it will redirect

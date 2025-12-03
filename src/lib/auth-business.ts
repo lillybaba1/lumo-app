@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { User, BusinessAccount } from '@/lib/types';
-import { getBusinessAccountByOwner } from '@/services/businessAccountService';
+import { getBusinessAccountByOwner, createBusinessAccount } from '@/services/businessAccountService';
 
 export class UnauthorizedError extends Error {
   statusCode: number;
@@ -70,14 +70,31 @@ export async function requireBusiness(
     }
 
     // Get business account
-    const businessAccount = await getBusinessAccountByOwner(userId);
+    let businessAccount = await getBusinessAccountByOwner(userId);
 
     if (!businessAccount) {
-      // For admins without a business account, redirect to admin panel instead
+      // For admins without a business account, auto-create "Lumo Official" account
       if (isAdmin) {
-        return fail('No business account found. Use Admin > Products to create products, or create a Lumo Official business account.', 'unauthorized');
+        console.log('Auto-creating Lumo Official business account for admin:', userId);
+        businessAccount = await createBusinessAccount({
+          businessName: 'Lumo Official',
+          ownerUserId: userId,
+          contactPersonName: userData.name || 'Platform Admin',
+          contactEmail: email,
+          businessAddress: 'Platform Headquarters',
+          status: 'ACTIVE',
+          subscriptionTier: 'enterprise',
+          subscriptionStatus: 'active',
+          verificationStatus: 'verified',
+          sellerType: 'platform',
+        });
+        
+        if (!businessAccount) {
+          return fail('Failed to create admin business account. Please try again.', 'unauthorized');
+        }
+      } else {
+        return fail('Business account not found. Please complete your business registration.', 'unauthorized');
       }
-      return fail('Business account not found. Please complete your business registration.', 'unauthorized');
     }
 
     // Check if business account is active
