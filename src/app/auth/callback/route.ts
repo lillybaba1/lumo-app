@@ -127,25 +127,26 @@ async function processUserAfterVerification(
   origin: string,
   response: NextResponse
 ) {
-  // Create or update user profile in the database
+  // Create or update user in the users table (the main user table)
   const { error: profileError } = await supabase
-    .from('user_profiles')
+    .from('users')
     .upsert({
       id: user.id,
       email: user.email,
       name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-      phone: user.user_metadata?.phone_number || user.phone || null,
+      phone_number: user.user_metadata?.phone_number || user.phone || null,
       role: user.user_metadata?.role || 'PERSONAL_ACCOUNT',
+      email_verified: true,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'id'
     })
 
   if (profileError) {
-    console.error('[Auth Callback] Profile creation error:', profileError)
+    console.error('[Auth Callback] User profile creation error:', profileError)
     // Continue anyway - user is authenticated
   } else {
-    console.log('[Auth Callback] User profile created/updated successfully')
+    console.log('[Auth Callback] User profile created/updated successfully in users table')
   }
 }
 

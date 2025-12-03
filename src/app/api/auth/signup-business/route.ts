@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         email: email.toLowerCase().trim(),
         name: name.trim(),
         phone_number: phone || null,
-        role: 'customer', // Use 'customer' role in users table, business status tracked in business_accounts
+        role: 'BUSINESS_ACCOUNT', // Business users get BUSINESS_ACCOUNT role
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'id',

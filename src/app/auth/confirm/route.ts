@@ -64,25 +64,26 @@ export async function GET(request: NextRequest) {
 
   console.log('[Auth Confirm] Verification successful for user:', data.session.user.id)
 
-  // Create or update user profile in the database
+  // Create or update user in the users table (the main user table)
   const user = data.session.user
   const { error: profileError } = await supabase
-    .from('user_profiles')
+    .from('users')
     .upsert({
       id: user.id,
       email: user.email,
       name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-      phone: user.user_metadata?.phone_number || user.phone || null,
+      phone_number: user.user_metadata?.phone_number || user.phone || null,
       role: user.user_metadata?.role || 'PERSONAL_ACCOUNT',
+      email_verified: true,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'id'
     })
 
   if (profileError) {
-    console.error('[Auth Confirm] Profile creation error:', profileError)
+    console.error('[Auth Confirm] User profile creation error:', profileError)
   } else {
-    console.log('[Auth Confirm] User profile created/updated')
+    console.log('[Auth Confirm] User profile created/updated in users table')
   }
 
   // Check if user has a business account with PENDING_VERIFICATION status

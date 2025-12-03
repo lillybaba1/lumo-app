@@ -65,12 +65,15 @@ export async function requireBusiness(
     const isAdmin = userData.role === 'APP_OWNER_ADMIN' || userData.role === 'admin';
     const isBusiness = userData.role === 'BUSINESS_ACCOUNT';
     
-    if (!isBusiness && !isAdmin) {
+    // Get business account first - this is the source of truth for business users
+    let businessAccount = await getBusinessAccountByOwner(userId);
+    
+    // If user has a business account, they're a business user regardless of role in users table
+    const hasBusinessAccount = !!businessAccount;
+    
+    if (!isBusiness && !isAdmin && !hasBusinessAccount) {
       return fail('Business account required', 'unauthorized');
     }
-
-    // Get business account
-    let businessAccount = await getBusinessAccountByOwner(userId);
 
     if (!businessAccount) {
       // For admins without a business account, auto-create "Lumo Official" account
