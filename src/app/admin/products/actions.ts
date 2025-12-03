@@ -7,6 +7,7 @@ import { saveProductImage, saveProductAttribute, getProductImages, getProductAtt
 import { revalidatePath } from 'next/cache';
 import { CropData } from '@/lib/types';
 import { requireAuth } from '@/lib/auth-roles';
+import { getBusinessAccountByOwner, createBusinessAccount } from '@/services/businessAccountService';
 
 const productSchema = z.object({
   id: z.string().optional(),
@@ -103,8 +104,30 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
         if (user.businessAccountId) {
           sellerId = user.businessAccountId;
         } else if (user.role === 'APP_OWNER_ADMIN' || (user.role as any) === 'admin') {
-          // Admin users can create products under their own user ID as seller
-          sellerId = user.uid;
+          // Admin needs a business account - check if they have one or create "Lumo Official"
+          let adminBusiness = await getBusinessAccountByOwner(user.uid);
+          
+          if (!adminBusiness) {
+            // Auto-create "Lumo Official" business account for admin
+            adminBusiness = await createBusinessAccount({
+              ownerUserId: user.uid,
+              businessName: 'Lumo Official',
+              contactPersonName: user.name || 'Lumo Admin',
+              contactEmail: user.email,
+              businessAddress: 'Lumo Headquarters',
+              description: 'Official Lumo Store - Quality products directly from Lumo',
+              status: 'ACTIVE',
+              sellerType: 'company',
+              subscriptionTier: 'enterprise',
+              verificationStatus: 'verified',
+            });
+          }
+          
+          if (adminBusiness) {
+            sellerId = adminBusiness.id;
+          } else {
+            return { success: false, message: 'Failed to create admin business account. Please try again.' };
+          }
         } else {
           return { success: false, message: 'You must have a business account to create products.' };
         }
