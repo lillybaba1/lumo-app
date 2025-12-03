@@ -1,4 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, createClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Business routes that require full approval (boutique_approved = true)
@@ -81,7 +82,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Check business account status and enforce state machine
-    const redirectUrl = await enforceBusinessWorkflow(supabase, user.id, pathname, request.nextUrl.origin)
+    const redirectUrl = await enforceBusinessWorkflow(user.id, pathname, request.nextUrl.origin)
     if (redirectUrl && redirectUrl !== pathname) {
       return NextResponse.redirect(new URL(redirectUrl, request.nextUrl.origin))
     }
@@ -96,13 +97,25 @@ export async function updateSession(request: NextRequest) {
  * Returns the URL to redirect to, or null if current route is allowed
  */
 async function enforceBusinessWorkflow(
-  supabase: any,
   userId: string,
   currentPath: string,
   origin: string
 ): Promise<string | null> {
+  // Use service role client to bypass RLS for business account check
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('[Middleware] Missing Supabase service role credentials')
+    return null // Allow access rather than break
+  }
+  
+  const supabaseAdmin = createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  })
+
   // Fetch business account status
-  const { data: businessAccount, error } = await supabase
+  const { data: businessAccount, error } = await supabaseAdmin
     .from('business_accounts')
     .select('id, status, account_approved, boutique_submitted, boutique_approved')
     .eq('owner_user_id', userId)
