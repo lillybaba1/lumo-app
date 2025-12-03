@@ -109,8 +109,7 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
           
           if (!adminBusiness) {
             // Auto-create "Lumo Official" business account for admin
-            adminBusiness = await createBusinessAccount({
-              ownerUserId: user.uid,
+            adminBusiness = await createBusinessAccount(user.uid, {
               businessName: 'Lumo Official',
               contactPersonName: user.name || 'Lumo Admin',
               contactEmail: user.email,

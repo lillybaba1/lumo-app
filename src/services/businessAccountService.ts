@@ -84,7 +84,7 @@ export async function createBusinessAccount(
   businessData: Partial<BusinessAccount>
 ): Promise<BusinessAccount | null> {
   try {
-    const dbData = {
+    const dbData: Record<string, any> = {
       owner_user_id: ownerUserId,
       business_name: businessData.businessName || '',
       contact_person_name: businessData.contactPersonName || '',
@@ -102,6 +102,11 @@ export async function createBusinessAccount(
       return_policy: businessData.returnPolicy,
       created_at: new Date().toISOString(),
     };
+    
+    // Add new boutique fields if provided
+    if (businessData.sellerType) dbData.seller_type = businessData.sellerType;
+    if (businessData.subscriptionTier) dbData.subscription_tier = businessData.subscriptionTier;
+    if (businessData.verificationStatus) dbData.verification_status = businessData.verificationStatus;
 
     console.log('[BusinessAccount] Attempting to create business account:', {
       ownerUserId,
