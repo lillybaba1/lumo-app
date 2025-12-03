@@ -102,6 +102,9 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
       if (!sellerId) {
         if (user.businessAccountId) {
           sellerId = user.businessAccountId;
+        } else if (user.role === 'APP_OWNER_ADMIN' || (user.role as any) === 'admin') {
+          // Admin users can create products under their own user ID as seller
+          sellerId = user.uid;
         } else {
           return { success: false, message: 'You must have a business account to create products.' };
         }
