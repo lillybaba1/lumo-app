@@ -15,7 +15,9 @@ import {
   HelpCircle,
   Tag,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  LogOut,
+  Mail
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +32,7 @@ import {
 } from '@/components/ui/sidebar';
 import { getCurrentUser } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
+import { SignOutButton } from '@/components/sign-out-button';
 
 export default async function UserSidebar() {
   let user = null;
@@ -254,8 +257,40 @@ export default async function UserSidebar() {
 
         </SidebarContent>
 
-        <SidebarFooter>
-          <div className="px-3 py-2 text-xs text-muted-foreground">
+        <SidebarFooter className="border-t mt-auto">
+          {user ? (
+            <div className="p-2 space-y-2">
+              {/* User info */}
+              <div className="flex items-center gap-3 px-2 py-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                  <span className="text-sm font-medium truncate">{user.displayName || 'User'}</span>
+                  <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                </div>
+              </div>
+              {/* Sign out button */}
+              <SignOutButton 
+                variant="ghost" 
+                className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
+              </SignOutButton>
+            </div>
+          ) : (
+            <div className="p-2">
+              <Link 
+                href="/login"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <User className="h-4 w-4" />
+                <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
+              </Link>
+            </div>
+          )}
+          <div className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             <p>© 2025 Lumo. All rights reserved.</p>
           </div>
         </SidebarFooter>
