@@ -175,7 +175,7 @@ export async function getBoutiqueComments(boutiqueId: string): Promise<BoutiqueC
       is_edited,
       created_at,
       updated_at,
-      users:user_id (name, email)
+      user_profiles:user_id (name)
     `)
     .eq('boutique_id', boutiqueId)
     .eq('is_hidden', false)
@@ -196,7 +196,7 @@ export async function getBoutiqueComments(boutiqueId: string): Promise<BoutiqueC
     isEdited: c.is_edited,
     createdAt: c.created_at,
     updatedAt: c.updated_at,
-    user: c.users ? { name: c.users.name, email: c.users.email } : undefined,
+    user: c.user_profiles ? { name: c.user_profiles.name || 'Anonymous', email: '' } : { name: 'Anonymous', email: '' },
     replies: [],
   }));
 
@@ -229,6 +229,13 @@ export async function addBoutiqueComment(
   if (!content.trim()) {
     return { success: false, error: 'Comment cannot be empty' };
   }
+
+  // First get the user's name from their profile
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('name')
+    .eq('id', user.id)
+    .single();
 
   const { data, error } = await supabase
     .from('boutique_comments')
@@ -266,6 +273,7 @@ export async function addBoutiqueComment(
       isEdited: data.is_edited,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
+      user: { name: profile?.name || 'Anonymous', email: '' },
       replies: [],
     }
   };
