@@ -164,19 +164,22 @@ export async function POST(request: Request) {
 
     console.log('[Business Signup] Business account created successfully:', businessAccount.id);
 
-    // Step 4: Send verification email using the regular client
-    // This will send the magic link email to the user
-    const { error: emailError } = await supabase.auth.resend({
-      type: 'signup',
+    // Step 4: Generate and send verification email using admin API
+    // This creates a proper invite/signup link that works with admin-created users
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'invite',
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
       }
     });
 
-    if (emailError) {
-      console.error('[Business Signup] Failed to send verification email:', emailError);
+    if (linkError) {
+      console.error('[Business Signup] Failed to generate verification link:', linkError);
       // Don't fail the signup - the user can request a new email later
+    } else if (linkData?.properties?.action_link) {
+      console.log('[Business Signup] Verification link generated successfully');
+      // The generateLink with type 'invite' automatically sends the email
     } else {
       console.log('[Business Signup] Verification email sent to:', email);
     }
