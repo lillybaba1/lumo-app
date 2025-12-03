@@ -60,36 +60,28 @@ export async function POST(request: Request) {
     // Get the site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     
-    // Step 1: Create auth user with Supabase
+    // Step 1: Create auth user with Supabase Admin API
+    // Using admin API ensures the user is created in auth.users immediately
+    // This is required because the users table has a FK to auth.users
     console.log('[Business Signup] Attempting to create auth user for:', email);
     console.log('[Business Signup] Using redirect URL:', `${siteUrl}/auth/callback`);
     
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { data: authData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-        data: {
-          name,
-          phone_number: phone,
-          role: 'BUSINESS_ACCOUNT',
-        }
+      email_confirm: false, // Require email confirmation
+      user_metadata: {
+        name,
+        phone_number: phone,
+        role: 'BUSINESS_ACCOUNT',
       }
     });
 
     if (signUpError) {
       const message = signUpError.message || 'Signup failed';
-      console.error('[Business Signup] Supabase signup error:', signUpError);
+      console.error('[Business Signup] Admin createUser error:', signUpError);
 
-      // Handle provider rate limiting gracefully
-      if (message.toLowerCase().includes('for security purposes') || signUpError.status === 429) {
-        return NextResponse.json(
-          { error: 'rate_limit', message },
-          { status: 429 }
-        );
-      }
-
-      if (message.includes('already registered') || message.includes('User already exists')) {
+      if (message.includes('already been registered') || message.includes('User already exists') || message.includes('already exists')) {
          return NextResponse.json(
           { error: 'Email already in use', details: { fieldErrors: { email: ['Email already in use'] } } },
           { status: 409 }
@@ -102,20 +94,23 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!data.user) {
+    if (!authData.user) {
       return NextResponse.json(
         { error: 'Failed to create user account' },
         { status: 500 }
       );
     }
 
+    const userId = authData.user.id;
+    console.log('[Business Signup] Auth user created:', userId);
+
     // Step 2: Create user profile in users table (same as personal signup for consistency)
     // Use upsert to handle cases where auth user exists but profile doesn't
-    console.log('[Business Signup] Creating user profile for:', data.user.id);
+    console.log('[Business Signup] Creating user profile for:', userId);
     const { error: profileError } = await supabaseAdmin
       .from('users')
       .upsert({
-        id: data.user.id,
+        id: userId,
         email: email.toLowerCase().trim(),
         name: name.trim(),
         phone_number: phone || null,
@@ -129,7 +124,7 @@ export async function POST(request: Request) {
       console.error('[Business Signup] Failed to create user profile:', JSON.stringify(profileError, null, 2));
       // Clean up auth user so we don't leave dangling accounts
       try {
-        await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+        await supabaseAdmin.auth.admin.deleteUser(userId);
       } catch (cleanupErr) {
         console.error('[Business Signup] Failed to cleanup auth user after profile error:', cleanupErr);
       }
@@ -144,7 +139,7 @@ export async function POST(request: Request) {
     // Step 3: Create business account (requires user profile to exist due to FK)
     let businessAccount;
     try {
-      businessAccount = await createBusinessAccount(data.user.id, {
+      businessAccount = await createBusinessAccount(userId, {
         businessName,
         contactPersonName: name,
         contactEmail: email,
@@ -160,7 +155,7 @@ export async function POST(request: Request) {
     }
 
     if (!businessAccount) {
-      console.error('[Business Signup] Failed to create business account for user', data.user.id);
+      console.error('[Business Signup] Failed to create business account for user', userId);
       return NextResponse.json(
         { error: 'Failed to create business account. Please contact support.' },
         { status: 500 }
@@ -169,12 +164,27 @@ export async function POST(request: Request) {
 
     console.log('[Business Signup] Business account created successfully:', businessAccount.id);
 
-    // Business status is tracked in business_accounts table, no need to update users.role
+    // Step 4: Send verification email using the regular client
+    // This will send the magic link email to the user
+    const { error: emailError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      }
+    });
+
+    if (emailError) {
+      console.error('[Business Signup] Failed to send verification email:', emailError);
+      // Don't fail the signup - the user can request a new email later
+    } else {
+      console.log('[Business Signup] Verification email sent to:', email);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Business account created successfully',
-      userId: data.user.id,
+      message: 'Business account created successfully. Please check your email to verify your account.',
+      userId: userId,
       businessAccountId: businessAccount.id,
     }, { status: 201 });
 
