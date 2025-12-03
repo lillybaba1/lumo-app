@@ -247,6 +247,10 @@ export interface Boutique {
   totalSales: number;
   averageRating: number;
   totalReviews: number;
+  // Social engagement counts
+  followerCount?: number;
+  likeCount?: number;
+  commentCount?: number;
   // Visibility
   isPublished: boolean;
   isFeatured: boolean; // Admin can feature top boutiques

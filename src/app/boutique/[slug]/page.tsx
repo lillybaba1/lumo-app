@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getBoutiqueBySlug, getBoutiqueProducts } from '@/services/boutiqueService';
 import { getBusinessAccount } from '@/services/businessAccountService';
+import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,9 +11,12 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Store, Star, Package, ShoppingBag, MapPin, Mail, Phone, 
   Globe, Instagram, Facebook, Twitter, CheckCircle, Shield,
-  Sparkles, Clock, Truck, ArrowRight, Heart, Share2, MessageCircle
+  Sparkles, Clock, Truck, ArrowRight, Heart, Share2, MessageCircle,
+  Users
 } from 'lucide-react';
 import ProductCard from '@/components/product-card';
+import { BoutiqueSocialButtons, FollowButton } from '@/components/boutique-social-buttons';
+import { BoutiqueComments } from '@/components/boutique-comments';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -45,8 +49,15 @@ export default async function BoutiquePage({ params }: Props) {
     notFound();
   }
 
-  const businessAccount = await getBusinessAccount(boutique.businessAccountId);
-  const products = await getBoutiqueProducts(boutique.id, { limit: 12 });
+  const [businessAccount, products, supabase] = await Promise.all([
+    getBusinessAccount(boutique.businessAccountId),
+    getBoutiqueProducts(boutique.id, { limit: 12 }),
+    createClient(),
+  ]);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
+  const currentUserId = user?.id;
 
   const isVerified = businessAccount?.verificationStatus === 'verified';
   const isEnterprise = businessAccount?.subscriptionTier === 'enterprise';
@@ -173,6 +184,13 @@ export default async function BoutiquePage({ params }: Props) {
                   <span className="font-bold text-lg">{boutique.totalSales}</span>
                   <span className="text-muted-foreground">Sales</span>
                 </div>
+                {(boutique.followerCount || 0) > 0 && (
+                  <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
+                    <Users className="h-5 w-5 text-blue-500" />
+                    <span className="font-bold text-lg">{boutique.followerCount}</span>
+                    <span className="text-muted-foreground">Followers</span>
+                  </div>
+                )}
                 {boutique.totalReviews > 0 && (
                   <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -185,12 +203,12 @@ export default async function BoutiquePage({ params }: Props) {
 
             {/* Action Buttons */}
             <div className="flex gap-2 flex-shrink-0">
-              <Button variant="outline" size="icon" className="rounded-full">
-                <Heart className="h-5 w-5" />
-              </Button>
-              <Button variant="outline" size="icon" className="rounded-full">
-                <MessageCircle className="h-5 w-5" />
-              </Button>
+              <BoutiqueSocialButtons 
+                boutiqueId={boutique.id} 
+                isAuthenticated={isAuthenticated}
+                initialLikeCount={boutique.likeCount || 0}
+                initialFollowerCount={boutique.followerCount || 0}
+              />
               {/* Social Links */}
               {boutique.socialLinks?.instagram && (
                 <Button variant="outline" size="icon" className="rounded-full" asChild>
@@ -371,10 +389,10 @@ export default async function BoutiquePage({ params }: Props) {
                     {boutique.displayName} is preparing amazing products for you. 
                     Follow this boutique to get notified when new items arrive!
                   </p>
-                  <Button variant="outline" className="gap-2">
-                    <Heart className="h-4 w-4" />
-                    Follow This Boutique
-                  </Button>
+                  <FollowButton 
+                    boutiqueId={boutique.id} 
+                    isAuthenticated={isAuthenticated}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -389,6 +407,15 @@ export default async function BoutiquePage({ params }: Props) {
                 </Button>
               </div>
             )}
+
+            {/* Comments Section */}
+            <div className="mt-12">
+              <BoutiqueComments
+                boutiqueId={boutique.id}
+                isAuthenticated={isAuthenticated}
+                currentUserId={currentUserId}
+              />
+            </div>
           </div>
         </div>
       </div>
