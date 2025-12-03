@@ -60,26 +60,26 @@ export async function POST(request: Request) {
     // Get the site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     
-    // Step 1: Create auth user with Supabase Admin API
-    // Using admin API ensures the user is created in auth.users immediately
-    // This is required because the users table has a FK to auth.users
-    console.log('[Business Signup] Attempting to create auth user for:', email);
+    // Step 1: Create auth user using regular signUp (this sends verification email automatically)
+    console.log('[Business Signup] Creating auth user for:', email);
     console.log('[Business Signup] Using redirect URL:', `${siteUrl}/auth/callback`);
     
-    const { data: authData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(),
       password,
-      email_confirm: false, // Require email confirmation
-      user_metadata: {
-        name,
-        phone_number: phone,
-        role: 'BUSINESS_ACCOUNT',
+      options: {
+        data: {
+          name,
+          phone_number: phone,
+          role: 'BUSINESS_ACCOUNT',
+        },
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       }
     });
 
     if (signUpError) {
       const message = signUpError.message || 'Signup failed';
-      console.error('[Business Signup] Admin createUser error:', signUpError);
+      console.error('[Business Signup] signUp error:', signUpError);
 
       if (message.includes('already been registered') || message.includes('User already exists') || message.includes('already exists')) {
          return NextResponse.json(
@@ -104,8 +104,8 @@ export async function POST(request: Request) {
     const userId = authData.user.id;
     console.log('[Business Signup] Auth user created:', userId);
 
-    // Step 2: Create user profile in users table (same as personal signup for consistency)
-    // Use upsert to handle cases where auth user exists but profile doesn't
+    // Step 2: Create user profile in users table using admin client (bypasses RLS)
+    // The regular signUp already created the user in auth.users, so FK is satisfied
     console.log('[Business Signup] Creating user profile for:', userId);
     const { error: profileError } = await supabaseAdmin
       .from('users')
@@ -164,25 +164,8 @@ export async function POST(request: Request) {
 
     console.log('[Business Signup] Business account created successfully:', businessAccount.id);
 
-    // Step 4: Generate and send verification email using admin API
-    // This creates a proper invite/signup link that works with admin-created users
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'invite',
-      email,
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      }
-    });
-
-    if (linkError) {
-      console.error('[Business Signup] Failed to generate verification link:', linkError);
-      // Don't fail the signup - the user can request a new email later
-    } else if (linkData?.properties?.action_link) {
-      console.log('[Business Signup] Verification link generated successfully');
-      // The generateLink with type 'invite' automatically sends the email
-    } else {
-      console.log('[Business Signup] Verification email sent to:', email);
-    }
+    // Note: Verification email was already sent by supabase.auth.signUp in Step 1
+    console.log('[Business Signup] Verification email sent automatically by signUp');
 
     return NextResponse.json({
       success: true,
