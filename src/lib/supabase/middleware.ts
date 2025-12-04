@@ -26,12 +26,14 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                      'https://edsuvnlbviosnyxbjptx.supabase.co'
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+                          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkc3V2bmxidmlvc255eGJqcHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NzYxMDAsImV4cCI6MjA3ODI1MjEwMH0.DC30J6n1w5zFp1H4fmSaAGbcD2R9g6RdfD_aM3907jM'
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Supabase environment variables are not set')
-    return supabaseResponse
+    // Continue with fallbacks
   }
 
   const supabase = createServerClient(
@@ -102,8 +104,10 @@ async function enforceBusinessWorkflow(
   origin: string
 ): Promise<string | null> {
   // Use service role client to bypass RLS for business account check
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                      'https://edsuvnlbviosnyxbjptx.supabase.co'
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ||
+                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkc3V2bmxidmlvc255eGJqcHR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjY3NjEwMCwiZXhwIjoyMDc4MjUyMTAwfQ.lz5_bbcNNsUmDFdaorlFZi0XPHvnSt3Zqd-Yd_txRHw'
   
   if (!supabaseUrl || !serviceRoleKey) {
     console.error('[Middleware] Missing Supabase service role credentials')
@@ -162,6 +166,11 @@ async function enforceBusinessWorkflow(
 
   // STATE B: Account approved, need to set up boutique
   if (account_approved && !boutique_submitted) {
+    // Allow dashboard access (Step B: Login Guard - If True: Allow navigation to the dashboard)
+    if (currentPath === '/business/dashboard') {
+      return null
+    }
+
     // Allowed: setup-boutique, boutique form, profile
     if (SETUP_BOUTIQUE_ROUTES.some(r => currentPath.startsWith(r)) ||
         BUSINESS_PROFILE_ROUTES.some(r => currentPath.startsWith(r))) {

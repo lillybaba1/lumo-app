@@ -242,7 +242,10 @@ export default async function SellerDetailPage({ params }: Props) {
             <CardContent>
               <SellerActionButtons 
                 businessId={businessAccount.id} 
-                status={businessAccount.status} 
+                status={businessAccount.status}
+                accountApproved={businessAccount.accountApproved}
+                boutiqueSubmitted={businessAccount.boutiqueSubmitted}
+                boutiqueApproved={businessAccount.boutiqueApproved}
               />
             </CardContent>
           </Card>

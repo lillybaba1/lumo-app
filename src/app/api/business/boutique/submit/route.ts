@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update business account with boutique data
+    // Step C: Boutique Creation - Status defaults to Pending (boutiqueApproved = false)
     const updatedAccount = await updateBusinessAccount(businessAccountId, {
       businessName: displayName,
       boutiqueSlug: slug,
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
       logo: logo || undefined,
       boutiqueSubmitted: true,
       boutiqueSubmittedAt: new Date().toISOString(),
+      boutiqueApproved: false, // Explicitly set to false (Pending)
     });
 
     if (!updatedAccount) {
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create admin notification
+    // Create admin notification (Step C: Notification)
     await supabaseAdmin.from('admin_notifications').insert({
       type: 'boutique_submitted',
       title: 'New Boutique Submission',
@@ -88,9 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Also store boutique-specific data in a separate boutiques table if it exists
-    // For now, we're storing it in business_accounts
-    
-    // Update or create boutique record if table exists
+    // Step C: Boutique Creation - Status defaults to 'pending'
     try {
       const { data: existingBoutique } = await supabaseAdmin
         .from('boutiques')
@@ -99,36 +99,35 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (existingBoutique) {
-        await supabaseAdmin
-          .from('boutiques')
-          .update({
-            display_name: displayName,
-            slug: slug,
-            tagline: tagline || null,
-            description: description,
-            theme_color: themeColor || '#6366f1',
-            logo: logo || null,
-            banner_image: bannerImage || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingBoutique.id);
+        await supabaseAdmin.from('boutiques').update({
+          slug,
+          display_name: displayName,
+          tagline: tagline || null,
+          description,
+          logo,
+          banner_image: bannerImage,
+          theme_color: themeColor,
+          is_published: false, // Step D: Not visible until active
+          status: 'pending', // Step C: Status defaults to pending
+          updated_at: new Date().toISOString(),
+        }).eq('id', existingBoutique.id);
       } else {
-        await supabaseAdmin
-          .from('boutiques')
-          .insert({
-            business_account_id: businessAccountId,
-            display_name: displayName,
-            slug: slug,
-            tagline: tagline || null,
-            description: description,
-            theme_color: themeColor || '#6366f1',
-            logo: logo || null,
-            banner_image: bannerImage || null,
-          });
+        await supabaseAdmin.from('boutiques').insert({
+          business_account_id: businessAccountId,
+          slug,
+          display_name: displayName,
+          tagline: tagline || null,
+          description,
+          logo,
+          banner_image: bannerImage,
+          theme_color: themeColor,
+          is_published: false, // Step D: Not visible until active
+          status: 'pending', // Step C: Status defaults to pending
+        });
       }
-    } catch (boutiqueError) {
-      // Boutiques table might not exist yet - that's okay
-      console.log('Boutiques table update skipped:', boutiqueError);
+    } catch (err) {
+      console.error('Error updating boutiques table:', err);
+      // Continue as business_accounts is the source of truth for now
     }
 
     return NextResponse.json({

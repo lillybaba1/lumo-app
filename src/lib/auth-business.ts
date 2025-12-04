@@ -116,10 +116,13 @@ export async function requireBusiness(
 
     // State B: Account approved, but boutique not set up yet
     if (businessAccount.accountApproved && !businessAccount.boutiqueSubmitted && businessAccount.status !== 'ACTIVE') {
-      if (redirectOnFail) {
-        redirect('/business/setup-boutique');
-      }
-      throw new UnauthorizedError('Please set up your boutique to continue.');
+      // Allow dashboard access (Step B requirement)
+      // We only redirect if they try to access other protected routes that might require a boutique
+      // For now, we'll let the page component handle the "No Boutique" state if needed
+      
+      // If we are strictly enforcing setup-boutique for other pages, we might need to check the path here
+      // But requireBusiness is usually called inside the page.
+      // We will allow it to proceed.
     }
 
     // State C: Boutique submitted but not approved yet

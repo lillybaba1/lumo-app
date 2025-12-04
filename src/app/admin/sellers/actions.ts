@@ -5,11 +5,19 @@ import { revalidatePath } from 'next/cache';
 
 export async function approveBusinessAccount(businessId: string) {
   try {
-    // Update business account status to ACTIVE
+    // Step 1: Approve Account
+    // This allows the user to access the dashboard and create a boutique
     const { error: businessError } = await supabaseAdmin
       .from('business_accounts')
       .update({
-        status: 'ACTIVE',
+        account_approved: true,
+        account_approved_at: new Date().toISOString(),
+        // We do NOT set status to ACTIVE yet, that happens after boutique approval
+        // But if status was PENDING_VERIFICATION, we might want to move it to PENDING_APPROVAL or similar?
+        // Actually, status is separate. Let's keep status as is or update if needed.
+        // If it was PENDING_APPROVAL, it remains so until boutique is approved?
+        // Or maybe we use a new status?
+        // For now, let's just set the flag.
         updated_at: new Date().toISOString()
       })
       .eq('id', businessId);
@@ -35,6 +43,8 @@ export async function approveBusinessAccount(businessId: string) {
           updated_at: new Date().toISOString()
         })
         .eq('id', businessAccount.owner_user_id);
+        
+      // Send notification to user? (TODO)
     }
 
     revalidatePath('/admin/sellers');
@@ -43,6 +53,49 @@ export async function approveBusinessAccount(businessId: string) {
     return { success: true };
   } catch (error) {
     console.error('Error in approveBusinessAccount:', error);
+    return { success: false, error: 'An unexpected error occurred' };
+  }
+}
+
+export async function approveBoutique(businessId: string) {
+  try {
+    // Step 2: Approve Boutique
+    // This makes the boutique visible and sets status to ACTIVE
+    const { error: businessError } = await supabaseAdmin
+      .from('business_accounts')
+      .update({
+        boutique_approved: true,
+        boutique_approved_at: new Date().toISOString(),
+        status: 'ACTIVE', // Now they are fully active
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', businessId);
+
+    if (businessError) {
+      console.error('Error approving boutique:', businessError);
+      return { success: false, error: 'Failed to approve boutique' };
+    }
+    
+    // Also update the boutiques table if it exists
+    try {
+      await supabaseAdmin
+        .from('boutiques')
+        .update({
+          is_published: true,
+          status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('business_account_id', businessId);
+    } catch (err) {
+      console.log('Boutiques table update skipped:', err);
+    }
+
+    revalidatePath('/admin/sellers');
+    revalidatePath(`/admin/sellers/${businessId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error in approveBoutique:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }

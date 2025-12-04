@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2, Ban, RotateCcw, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Ban, RotateCcw, Trash2, Store } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,27 +18,30 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { approveBusinessAccount, rejectBusinessAccount, suspendBusinessAccount, reactivateBusinessAccount, deleteBusinessAccountAndUser } from '../actions';
+import { approveBusinessAccount, approveBoutique, rejectBusinessAccount, suspendBusinessAccount, reactivateBusinessAccount, deleteBusinessAccountAndUser } from '../actions';
 
 interface Props {
   businessId: string;
   status: string;
+  accountApproved: boolean;
+  boutiqueSubmitted: boolean;
+  boutiqueApproved: boolean;
 }
 
-export function SellerActionButtons({ businessId, status }: Props) {
+export function SellerActionButtons({ businessId, status, accountApproved, boutiqueSubmitted, boutiqueApproved }: Props) {
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  const handleApprove = async () => {
-    setLoading('approve');
+  const handleApproveAccount = async () => {
+    setLoading('approve_account');
     try {
       const result = await approveBusinessAccount(businessId);
       if (result.success) {
         toast({
-          title: 'Seller Approved!',
-          description: 'The business account has been approved and activated.',
+          title: 'Account Approved!',
+          description: 'The user can now access the dashboard and set up their boutique.',
         });
         router.refresh();
       } else {
@@ -47,7 +50,31 @@ export function SellerActionButtons({ businessId, status }: Props) {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to approve seller',
+        description: error.message || 'Failed to approve account',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleApproveBoutique = async () => {
+    setLoading('approve_boutique');
+    try {
+      const result = await approveBoutique(businessId);
+      if (result.success) {
+        toast({
+          title: 'Boutique Approved!',
+          description: 'The boutique is now active and visible to customers.',
+        });
+        router.refresh();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to approve boutique',
         variant: 'destructive',
       });
     } finally {
@@ -153,20 +180,20 @@ export function SellerActionButtons({ businessId, status }: Props) {
   };
   return (
     <div className="space-y-3">
-      {/* Pending Approval Actions */}
-      {status === 'PENDING_APPROVAL' && (
+      {/* Stage 1: Account Approval */}
+      {!accountApproved && status !== 'SUSPENDED' && status !== 'PENDING_VERIFICATION' && (
         <>
           <Button 
             className="w-full bg-green-600 hover:bg-green-700" 
-            onClick={handleApprove}
+            onClick={handleApproveAccount}
             disabled={loading !== null}
           >
-            {loading === 'approve' ? (
+            {loading === 'approve_account' ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <CheckCircle className="h-4 w-4 mr-2" />
             )}
-            Approve Application
+            Approve Account
           </Button>
 
           <AlertDialog>
@@ -214,8 +241,40 @@ export function SellerActionButtons({ businessId, status }: Props) {
         </>
       )}
 
+      {/* Stage 2: Boutique Approval */}
+      {accountApproved && boutiqueSubmitted && !boutiqueApproved && status !== 'SUSPENDED' && (
+        <>
+          <Button 
+            className="w-full bg-blue-600 hover:bg-blue-700" 
+            onClick={handleApproveBoutique}
+            disabled={loading !== null}
+          >
+            {loading === 'approve_boutique' ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Store className="h-4 w-4 mr-2" />
+            )}
+            Approve Boutique
+          </Button>
+          
+          <p className="text-xs text-muted-foreground text-center">
+            Review the boutique details before approving.
+          </p>
+        </>
+      )}
+
+      {/* Waiting for Boutique */}
+      {accountApproved && !boutiqueSubmitted && status !== 'SUSPENDED' && (
+        <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border text-center">
+          <p className="text-sm font-medium">Account Approved</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Waiting for user to submit boutique details.
+          </p>
+        </div>
+      )}
+
       {/* Active Account Actions */}
-      {status === 'ACTIVE' && (
+      {boutiqueApproved && status === 'ACTIVE' && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button 
