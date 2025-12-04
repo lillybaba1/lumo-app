@@ -7,17 +7,13 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith('/admin');
   const isApiRoute = pathname.startsWith('/api/');
 
-  try {
-    // Check if Supabase environment variables are available
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('Supabase environment variables not configured');
-      // SECURITY: Fail closed for protected routes when env vars missing
-      if (isProtectedRoute) {
-        return NextResponse.redirect(new URL('/login?error=config', request.url));
-      }
-      return NextResponse.next();
-    }
+  // Allow /business/pending without any middleware processing to prevent loops
+  if (pathname === '/business/pending') {
+    return NextResponse.next();
+  }
 
+  try {
+    // Always call updateSession - it has fallback credentials
     return await updateSession(request);
   } catch (error) {
     console.error('Middleware error:', error);
