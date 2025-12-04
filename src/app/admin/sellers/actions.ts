@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { revalidatePath } from 'next/cache';
+import { sendEmail, getSellerApprovalEmail, getAccountApprovalEmail } from '@/lib/email';
 
 export async function approveBusinessAccount(businessId: string) {
   try {
@@ -27,10 +28,10 @@ export async function approveBusinessAccount(businessId: string) {
       return { success: false, error: 'Failed to approve business account' };
     }
 
-    // Get the business account to find owner
+    // Get the business account to find owner and send email
     const { data: businessAccount } = await supabaseAdmin
       .from('business_accounts')
-      .select('owner_user_id')
+      .select('owner_user_id, business_name, contact_person_name, contact_email')
       .eq('id', businessId)
       .single();
 
@@ -44,7 +45,27 @@ export async function approveBusinessAccount(businessId: string) {
         })
         .eq('id', businessAccount.owner_user_id);
         
-      // Send notification to user? (TODO)
+      // Send account approval email
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumo.gm';
+      const dashboardUrl = `${baseUrl}/business/setup-boutique`;
+      
+      const emailTemplate = getAccountApprovalEmail(
+        businessAccount.contact_person_name || 'Seller',
+        businessAccount.business_name,
+        dashboardUrl
+      );
+      
+      const emailResult = await sendEmail({
+        ...emailTemplate,
+        to: businessAccount.contact_email,
+      });
+      
+      if (!emailResult.success) {
+        console.error('Failed to send account approval email:', emailResult.error);
+        // Don't fail the approval, just log the error
+      } else {
+        console.log(`Account approval email sent to ${businessAccount.contact_email}`);
+      }
     }
 
     revalidatePath('/admin/sellers');
@@ -59,6 +80,20 @@ export async function approveBusinessAccount(businessId: string) {
 
 export async function approveBoutique(businessId: string) {
   try {
+    // Get business account details first for the email
+    const { data: businessAccount } = await supabaseAdmin
+      .from('business_accounts')
+      .select('owner_user_id, business_name, contact_person_name, contact_email')
+      .eq('id', businessId)
+      .single();
+      
+    // Get boutique slug for the email link
+    const { data: boutique } = await supabaseAdmin
+      .from('boutiques')
+      .select('slug, display_name')
+      .eq('business_account_id', businessId)
+      .single();
+
     // Step 2: Approve Boutique
     // This makes the boutique visible and sets status to ACTIVE
     const { error: businessError } = await supabaseAdmin
@@ -88,6 +123,32 @@ export async function approveBoutique(businessId: string) {
         .eq('business_account_id', businessId);
     } catch (err) {
       console.log('Boutiques table update skipped:', err);
+    }
+
+    // Send boutique approval email
+    if (businessAccount && businessAccount.contact_email) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumo.gm';
+      const boutiqueUrl = boutique?.slug 
+        ? `${baseUrl}/boutique/${boutique.slug}`
+        : `${baseUrl}/business/dashboard`;
+      
+      const emailTemplate = getSellerApprovalEmail(
+        businessAccount.contact_person_name || 'Seller',
+        boutique?.display_name || businessAccount.business_name,
+        boutiqueUrl
+      );
+      
+      const emailResult = await sendEmail({
+        ...emailTemplate,
+        to: businessAccount.contact_email,
+      });
+      
+      if (!emailResult.success) {
+        console.error('Failed to send boutique approval email:', emailResult.error);
+        // Don't fail the approval, just log the error
+      } else {
+        console.log(`Boutique approval email sent to ${businessAccount.contact_email}`);
+      }
     }
 
     revalidatePath('/admin/sellers');

@@ -181,18 +181,18 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <CardTitle className="font-headline">Customer Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{order.customerName}</p>
+                <p className="font-medium truncate">{order.customerName}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{order.customerEmail}</p>
+                <p className="font-medium break-all text-sm">{order.customerEmail}</p>
               </div>
               {order.customerPhone && (
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{order.customerPhone}</p>
+                  <p className="font-medium break-all">{order.customerPhone}</p>
                 </div>
               )}
               <div>

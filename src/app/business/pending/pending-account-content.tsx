@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Mail, Phone, Store, CheckCircle, ArrowRight, RefreshCw } from 'lucide-react';
+import { Clock, Mail, Phone, Store, CheckCircle, ArrowRight, RefreshCw, LogOut, Home } from 'lucide-react';
 import Link from 'next/link';
 import { BusinessAccount } from '@/lib/types';
 import { useEffect, useState } from 'react';
@@ -16,6 +16,7 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Check if we need to show a specific message
   const showBoutiqueRejected = searchParams.get('rejected') === 'true';
@@ -27,6 +28,18 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
     setTimeout(() => setIsRefreshing(false), 1000);
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        window.location.assign('/login');
+      }
+    } catch (error) {
+      setIsLoggingOut(false);
+    }
+  };
+
   // Auto-refresh every 30 seconds to check for status updates
   useEffect(() => {
     const interval = setInterval(() => {
@@ -36,18 +49,49 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-orange-500">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mb-4">
-            <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-pulse" />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Simple Header */}
+      <header className="bg-white dark:bg-gray-800 border-b shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground font-bold">
+              <Store className="h-6 w-6" />
+            </div>
+            <span className="text-xl font-bold">Lumo</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/">
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+            </Button>
           </div>
-          <CardTitle className="text-2xl font-headline">Waiting for Account Approval</CardTitle>
-          <CardDescription>
-            Please wait for the support team to approve your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex items-center justify-center p-4 py-12">
+        <Card className="w-full max-w-lg border-orange-500">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mb-4">
+              <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-pulse" />
+            </div>
+            <CardTitle className="text-2xl font-headline">Waiting for Account Approval</CardTitle>
+            <CardDescription>
+              Please wait for the support team to approve your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
           {/* Rejection Notice if boutique was rejected and needs to start over */}
           {showBoutiqueRejected && rejectionReason && (
             <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -163,17 +207,13 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
               )}
               Check Status
             </Button>
-            <Button asChild variant="ghost" className="w-full">
-              <Link href="/">
-                Continue Shopping
-              </Link>
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-xs text-muted-foreground pt-2">
               Need help? Contact us at <a href="mailto:support@lumo.app" className="underline">support@lumo.app</a>
             </p>
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -426,8 +426,8 @@ export default function ProductsPage() {
                     data-ai-hint={`${product.category} product`}
                   />
                 </TableCell>
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{product.category}</TableCell>
+                <TableCell className="font-medium max-w-[200px] truncate">{product.name}</TableCell>
+                <TableCell className="max-w-[120px] truncate">{product.category}</TableCell>
                 <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
                 <TableCell>
                   <span className={product.stock && product.stock < 10 ? 'text-orange-600 font-semibold' : ''}>

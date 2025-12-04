@@ -133,8 +133,8 @@ export default function CustomersPage() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.uid}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="font-medium max-w-[150px] truncate">{user.name}</TableCell>
+                  <TableCell className="max-w-[200px] break-all text-sm">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'APP_OWNER_ADMIN' ? 'default' : 'secondary'}>{user.role}</Badge>
                   </TableCell>

@@ -147,6 +147,18 @@ async function enforceBusinessWorkflow(
   })
 
   // STATE D: Fully approved (account + boutique both approved)
+  // LEGACY CHECK FIRST: If status is ACTIVE, allow access regardless of approval flags
+  // This handles accounts created before the multi-phase approval system
+  if (status === 'ACTIVE') {
+    // If trying to access pending pages with ACTIVE status, redirect to dashboard
+    if (currentPath === '/business/pending' || 
+        currentPath === '/business/pending-boutique-review' ||
+        currentPath === '/business/setup-boutique') {
+      return '/business/dashboard'
+    }
+    return null // Allow access
+  }
+
   // Can access all business routes
   if (account_approved && boutique_approved) {
     // If trying to access pending pages, redirect to dashboard
@@ -194,11 +206,6 @@ async function enforceBusinessWorkflow(
     }
     // Redirect everything else to pending
     return '/business/pending'
-  }
-
-  // Legacy check for ACTIVE status (backwards compatibility)
-  if (status === 'ACTIVE') {
-    return null // Allow access
   }
 
   // Default: redirect to pending

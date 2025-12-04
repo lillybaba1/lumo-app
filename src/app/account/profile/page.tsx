@@ -103,10 +103,10 @@ export default async function ProfilePage() {
               <Separator />
 
               <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
+                <Mail className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Email Address</p>
-                  <p className="text-lg">{userData.email}</p>
+                  <p className="text-lg break-all">{userData.email}</p>
                   <Badge variant="outline" className="mt-1">Verified</Badge>
                 </div>
               </div>
@@ -114,10 +114,10 @@ export default async function ProfilePage() {
               <Separator />
 
               <div className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
+                <Phone className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Phone Number</p>
-                  <p className="text-lg">{userData.phone_number || 'Not provided'}</p>
+                  <p className="text-lg break-all">{userData.phone_number || 'Not provided'}</p>
                   {userData.phone_number && (
                     <Badge variant={userData.phone_verified ? "outline" : "secondary"} className="mt-1">
                       {userData.phone_verified ? 'Verified' : 'Not verified'}

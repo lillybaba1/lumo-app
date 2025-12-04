@@ -84,13 +84,13 @@ export default async function SellerDetailPage({ params }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-medium text-muted-foreground">Business Name</label>
-                  <p className="text-lg font-semibold">{businessAccount.businessName}</p>
+                  <p className="text-lg font-semibold truncate">{businessAccount.businessName}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-medium text-muted-foreground">Tax ID / Registration</label>
-                  <p className="text-lg">{businessAccount.taxId || 'Not provided'}</p>
+                  <p className="text-lg truncate">{businessAccount.taxId || 'Not provided'}</p>
                 </div>
               </div>
 
@@ -138,26 +138,26 @@ export default async function SellerDetailPage({ params }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-medium text-muted-foreground">Name</label>
-                  <p className="text-lg font-semibold">{businessAccount.contactPersonName}</p>
+                  <p className="text-lg font-semibold truncate">{businessAccount.contactPersonName}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Mail className="h-4 w-4" /> Email
                   </label>
-                  <a href={`mailto:${businessAccount.contactEmail}`} className="text-primary hover:underline">
+                  <a href={`mailto:${businessAccount.contactEmail}`} className="text-primary hover:underline break-all text-sm">
                     {businessAccount.contactEmail}
                   </a>
                 </div>
               </div>
 
               {businessAccount.businessPhone && (
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Phone className="h-4 w-4" /> Phone
                   </label>
-                  <a href={`tel:${businessAccount.businessPhone}`} className="text-primary hover:underline">
+                  <a href={`tel:${businessAccount.businessPhone}`} className="text-primary hover:underline break-all text-sm">
                     {businessAccount.businessPhone}
                   </a>
                 </div>
@@ -177,13 +177,13 @@ export default async function SellerDetailPage({ params }: Props) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="min-w-0">
                     <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p>{ownerUser.name}</p>
+                    <p className="truncate">{ownerUser.name}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <p>{ownerUser.email}</p>
+                    <p className="break-all text-sm">{ownerUser.email}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Email Verified</label>

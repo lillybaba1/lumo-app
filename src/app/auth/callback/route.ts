@@ -93,6 +93,9 @@ export async function GET(request: NextRequest) {
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
       
+      // Update business account status if applicable
+      await updateBusinessAccountAfterVerification(supabase, user.id)
+      
       // Sign out the user - they should manually login after verification
       await supabase.auth.signOut()
       console.log('[Auth Callback] User signed out after verification')
@@ -121,6 +124,9 @@ export async function GET(request: NextRequest) {
       // Process user profile and business account
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
+      
+      // Update business account status if applicable
+      await updateBusinessAccountAfterVerification(supabase, user.id)
       
       // Sign out the user - they should manually login after verification
       await supabase.auth.signOut()
@@ -167,7 +173,6 @@ async function processUserAfterVerification(
       name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
       phone_number: user.user_metadata?.phone_number || user.phone || null,
       role: role, // Preserve existing role
-      email_verified: true,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'id'
@@ -178,6 +183,44 @@ async function processUserAfterVerification(
     // Continue anyway - user is authenticated
   } else {
     console.log('[Auth Callback] User profile created/updated successfully in users table with role:', role)
+  }
+}
+
+// Helper function to update business account status after email verification
+async function updateBusinessAccountAfterVerification(
+  supabase: any,
+  userId: string
+) {
+  // Check if user has a business account
+  const { data: businessAccount } = await supabase
+    .from('business_accounts')
+    .select('id, status')
+    .eq('owner_user_id', userId)
+    .single()
+
+  if (!businessAccount) {
+    console.log('[Auth Callback] No business account found for user:', userId)
+    return
+  }
+
+  console.log('[Auth Callback] Business account found:', { id: businessAccount.id, status: businessAccount.status })
+
+  // If status is PENDING_VERIFICATION, update to PENDING_APPROVAL
+  if (businessAccount.status === 'PENDING_VERIFICATION') {
+    console.log('[Auth Callback] Updating business account status to PENDING_APPROVAL')
+    const { error: updateError } = await supabase
+      .from('business_accounts')
+      .update({
+        status: 'PENDING_APPROVAL',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', businessAccount.id)
+
+    if (updateError) {
+      console.error('[Auth Callback] Error updating business account status:', updateError)
+    } else {
+      console.log('[Auth Callback] Business account status updated to PENDING_APPROVAL')
+    }
   }
 }
 

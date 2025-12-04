@@ -53,12 +53,12 @@ export default async function OrdersPage() {
           <TableBody>
             {orders.map((order) => (
               <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-medium">
+                <TableCell className="font-medium max-w-[120px] truncate">
                   <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
                     {order.id}
                   </Link>
                 </TableCell>
-                <TableCell>{order.customerName}</TableCell>
+                <TableCell className="max-w-[150px] truncate">{order.customerName}</TableCell>
                 <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>{order.paymentMethod}</TableCell>
                 <TableCell>

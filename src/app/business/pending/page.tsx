@@ -41,6 +41,13 @@ export default async function BusinessPendingPage() {
   let businessAccount = null;
   try {
     businessAccount = await getBusinessAccountByOwner(authUser.id);
+    console.log('[BusinessPending] Business account state:', {
+      id: businessAccount?.id,
+      status: businessAccount?.status,
+      accountApproved: businessAccount?.accountApproved,
+      boutiqueSubmitted: businessAccount?.boutiqueSubmitted,
+      boutiqueApproved: businessAccount?.boutiqueApproved,
+    });
   } catch (error) {
     console.error('[BusinessPending] Error getting business account:', error);
   }
@@ -67,6 +74,12 @@ export default async function BusinessPendingPage() {
     );
   }
 
+  // LEGACY CHECK FIRST: If status is ACTIVE, treat as fully approved (backwards compatibility)
+  // This handles accounts created before the multi-phase approval system
+  if (businessAccount.status === 'ACTIVE') {
+    redirect('/business/dashboard');
+  }
+
   // Multi-phase approval state machine
   // State D: Fully approved - go to dashboard
   if (businessAccount.accountApproved && businessAccount.boutiqueApproved) {
@@ -81,11 +94,6 @@ export default async function BusinessPendingPage() {
   // State B: Account approved but boutique not set up yet
   if (businessAccount.accountApproved && !businessAccount.boutiqueSubmitted) {
     redirect('/business/setup-boutique');
-  }
-
-  // Legacy check: If status is ACTIVE but new fields not set, treat as fully approved
-  if (businessAccount.status === 'ACTIVE') {
-    redirect('/business/dashboard');
   }
 
   // If suspended, show suspension message

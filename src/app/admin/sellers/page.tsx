@@ -113,16 +113,16 @@ export default async function AdminSellersPage() {
               {pendingApproval.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-orange-50 dark:bg-orange-950/50"
+                  className="flex items-center justify-between p-4 border rounded-lg bg-orange-50 dark:bg-orange-950/50 gap-4"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-orange-200 dark:bg-orange-800 flex items-center justify-center">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-orange-200 dark:bg-orange-800 flex items-center justify-center flex-shrink-0">
                       <Store className="h-5 w-5 text-orange-700 dark:text-orange-300" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{account.businessName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {account.contactPersonName} • {account.contactEmail}
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">{account.businessName}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {account.contactPersonName} • <span className="break-all">{account.contactEmail}</span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Applied: {new Date(account.createdAt).toLocaleDateString()}
@@ -163,21 +163,21 @@ export default async function AdminSellersPage() {
               {businessAccounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                       <Store className="h-5 w-5" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{account.businessName}</h3>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold truncate">{account.businessName}</h3>
                         {getStatusBadge(account.status)}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {account.contactPersonName} • {account.contactEmail}
+                      <p className="text-sm text-muted-foreground truncate">
+                        {account.contactPersonName} • <span className="break-all">{account.contactEmail}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {account.businessAddress}
                       </p>
                     </div>
