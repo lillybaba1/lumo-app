@@ -93,15 +93,9 @@ export async function GET(request: NextRequest) {
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
       
-      // Check for business account redirect
-      const redirectUrl = await getBusinessRedirectIfNeeded(supabase, user.id, origin)
-      if (redirectUrl) {
-        console.log('[Auth Callback] Redirecting business user to:', redirectUrl)
-        return createRedirectWithCookies(redirectUrl, cookiesToSet)
-      }
-      
-      // Default redirect for non-business users
-      return createRedirectWithCookies(`${origin}${next}`, cookiesToSet)
+      // Always redirect to verified page - user will manually go to login
+      console.log('[Auth Callback] Redirecting to verified page')
+      return createRedirectWithCookies(`${origin}/auth/verified`, cookiesToSet)
     }
   }
 
@@ -124,15 +118,9 @@ export async function GET(request: NextRequest) {
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
       
-      // Check for business account redirect
-      const redirectUrl = await getBusinessRedirectIfNeeded(supabase, user.id, origin)
-      if (redirectUrl) {
-        console.log('[Auth Callback] Redirecting business user to:', redirectUrl)
-        return createRedirectWithCookies(redirectUrl, cookiesToSet)
-      }
-
-      // Default redirect for non-business users
-      return createRedirectWithCookies(`${origin}${next}`, cookiesToSet)
+      // Always redirect to verified page - user will manually go to login
+      console.log('[Auth Callback] Redirecting to verified page')
+      return createRedirectWithCookies(`${origin}/auth/verified`, cookiesToSet)
     }
   }
 

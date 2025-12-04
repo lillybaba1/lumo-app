@@ -92,13 +92,9 @@ export default function LoginForm() {
       
       if (businessAccount) {
         console.log('Business account found:', businessAccount.status);
-        // Business user - redirect based on status
-        if (businessAccount.status === 'ACTIVE') {
-          window.location.href = '/business/dashboard';
-        } else {
-          // Pending verification, pending approval, or suspended
-          window.location.href = '/business/pending';
-        }
+        // Business user - always go to pending page first
+        // The pending page will handle the redirect logic based on approval status
+        window.location.href = '/business/pending';
         return;
       }
       
