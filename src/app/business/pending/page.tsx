@@ -13,7 +13,21 @@ export default async function BusinessPendingPage() {
   const { data: { user: authUser } } = await supabase.auth.getUser();
 
   if (!authUser) {
-    redirect('/login?redirect=/business/pending');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>Session Expired</CardTitle>
+            <CardDescription>Please log in again to continue.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button asChild>
+              <Link href="/login?redirect=/business/pending">Log In</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Get business account

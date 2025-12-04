@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail } from 'lucide-react';
+import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createClient } from '@/lib/supabase/client';
 
@@ -19,6 +19,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/';
 
@@ -31,7 +32,7 @@ export default function LoginForm() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!cancelled && session) {
-          window.location.href = next;
+          setHasSession(true);
         }
       } catch (error) {
         console.error('Session pre-check failed:', error);
@@ -173,6 +174,22 @@ export default function LoginForm() {
             <CardDescription>Welcome back! Please log in to your account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {hasSession && (
+              <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <AlertDescription className="text-green-800 dark:text-green-300">
+                  You are already logged in.
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-semibold underline ml-1 text-green-700 dark:text-green-300"
+                    onClick={() => window.location.href = next}
+                    type="button"
+                  >
+                    Continue to Dashboard
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             {error && (
               <Alert variant={needsVerification ? "default" : "destructive"}>
                 {needsVerification ? <Mail className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}

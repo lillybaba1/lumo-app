@@ -32,7 +32,12 @@ export default async function BusinessLayout({
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
     if (!authUser || authError) {
-      redirect('/login?redirect=/business/dashboard');
+      // If on pending page, allow rendering to avoid redirect loops
+      // The page itself will handle the "no user" state by showing a UI
+      if (currentPath === '/business/pending') {
+        return <>{children}</>;
+      }
+      redirect('/login?redirect=' + currentPath);
     }
 
     // Get user data
