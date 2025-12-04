@@ -4,7 +4,7 @@ import { getProductById } from '@/services/productService';
 import { getReviewsByProduct, getProductStats, getUserReviewForProduct } from '@/services/reviewService';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
+import { ShoppingCart, Package, TruckIcon, Store, BadgeCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { getSettings } from '@/app/admin/settings/actions';
@@ -182,6 +182,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <Card className="bg-muted/50">
             <CardContent className="pt-6">
               <div className="space-y-2 text-sm">
+                {/* Seller Info */}
+                {product.sellerName && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Store className="h-4 w-4" />
+                      Sold by:
+                    </span>
+                    <span className="font-medium flex items-center gap-1">
+                      {product.sellerName}
+                      {product.sellerVerified && (
+                        <BadgeCheck className="h-4 w-4 text-blue-500" />
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">SKU:</span>
                   <span className="font-medium">{product.id.substring(0, 8).toUpperCase()}</span>

@@ -32,6 +32,39 @@ export default function LoginForm() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!cancelled && session) {
+          // Check if this is a business user and redirect them appropriately
+          const { data: businessAccount } = await supabase
+            .from('business_accounts')
+            .select('id, status, account_approved, boutique_approved')
+            .eq('owner_user_id', session.user.id)
+            .single();
+          
+          if (businessAccount) {
+            // Business user - redirect based on their approval status
+            const isFullyApproved = businessAccount.status === 'ACTIVE' ||
+              (businessAccount.account_approved && businessAccount.boutique_approved);
+            
+            if (isFullyApproved) {
+              window.location.href = '/business/dashboard';
+            } else {
+              window.location.href = '/business/pending';
+            }
+            return;
+          }
+          
+          // Check if admin
+          const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userData?.role === 'admin' || userData?.role === 'APP_OWNER_ADMIN') {
+            window.location.href = '/admin/dashboard';
+            return;
+          }
+          
+          // Regular user - just show the "already logged in" message
           setHasSession(true);
         }
       } catch (error) {

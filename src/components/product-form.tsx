@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 type ProductFormProps = {
     product?: Product | null;
     categories: Category[];
+    userType?: 'admin' | 'seller';
 };
 
 function SubmitButton() {
@@ -37,12 +38,20 @@ function SubmitButton() {
 
 const initialState = { success: false, message: '' };
 
-export default function ProductForm({ product = null, categories }: ProductFormProps) {
+export default function ProductForm({ product = null, categories, userType = 'admin' }: ProductFormProps) {
     const { toast } = useToast();
     const router = useRouter();
     const [state, formAction] = useFormState(saveProduct, initialState);
     const [imageUrls, setImageUrls] = React.useState<string[]>(product?.imageUrls || []);
     // Initialize productImages from structured data if available, otherwise fall back to legacy imageUrls
+    
+    // Determine API endpoint based on user type
+    const aiEndpoint = userType === 'seller' 
+        ? '/api/business/ai/generate-description' 
+        : '/api/admin/ai/generate-description';
+    
+    // Determine redirect URL based on user type
+    const redirectUrl = userType === 'seller' ? '/business/products' : '/admin/products';
     const [productImages, setProductImages] = React.useState<string[]>(
         (product?.productImages && product.productImages.length > 0) 
             ? product.productImages 
@@ -86,7 +95,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 title: 'Success',
                 description: product ? 'Product updated successfully' : 'Product created successfully',
             });
-            router.push('/admin/products');
+            router.push(redirectUrl);
         } else if (state.message) {
             toast({
                 title: 'Error',
@@ -94,7 +103,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
                 variant: 'destructive',
             });
         }
-    }, [state, product, router, toast]);
+    }, [state, product, router, toast, redirectUrl]);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -310,7 +319,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         try {
             const imagesToAnalyze = productImages.slice(0, 5);
 
-            const response = await fetch('/api/admin/ai/generate-description', {
+            const response = await fetch(aiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -366,7 +375,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         try {
             const imagesToAnalyze = productImages.slice(0, 5);
 
-            const response = await fetch('/api/admin/ai/generate-description', {
+            const response = await fetch(aiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -422,7 +431,7 @@ export default function ProductForm({ product = null, categories }: ProductFormP
         try {
             const imagesToAnalyze = productImages.slice(0, 5);
 
-            const response = await fetch('/api/admin/ai/generate-description', {
+            const response = await fetch(aiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

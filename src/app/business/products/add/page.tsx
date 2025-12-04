@@ -59,7 +59,7 @@ export default function AddProductPage() {
         <h1 className="text-3xl font-headline font-bold">Add Product</h1>
         <p className="text-muted-foreground mt-1">Create a new product listing</p>
       </div>
-      <ProductForm categories={categories} />
+      <ProductForm categories={categories} userType="seller" />
     </div>
   );
 }

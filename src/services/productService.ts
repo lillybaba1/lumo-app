@@ -72,7 +72,7 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 /**
- * Get a single product by ID
+ * Get a single product by ID with seller info
  */
 export async function getProductById(id: string): Promise<Product | null> {
   try {
@@ -97,6 +97,12 @@ export async function getProductById(id: string): Promise<Product | null> {
           alt_text,
           created_at,
           updated_at
+        ),
+        business_accounts:seller_id (
+          id,
+          business_name,
+          contact_person_name,
+          verification_status
         )
       `)
       .eq('id', id)
@@ -137,6 +143,8 @@ export async function getProductById(id: string): Promise<Product | null> {
       weight: data.weight ? parseFloat(data.weight) : undefined,
       dimensions: data.dimensions,
       sellerId: data.seller_id,
+      sellerName: data.business_accounts?.business_name,
+      sellerVerified: data.business_accounts?.verification_status === 'verified',
     };
   } catch (error) {
     console.error(`Failed to fetch product ${id}:`, error);
