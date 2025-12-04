@@ -119,8 +119,8 @@ export default function ProductCard({ product, showQuickView = true }: ProductCa
                 alt={product.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                unoptimized
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                loading="lazy"
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
             {/* Gradient overlay on hover */}

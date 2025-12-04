@@ -26,12 +26,13 @@ type ProductFormProps = {
     userType?: 'admin' | 'seller';
 };
 
-function SubmitButton() {
+function SubmitButton({ isSubmitting }: { isSubmitting?: boolean }) {
     const { pending } = useFormStatus();
+    const disabled = pending || isSubmitting;
     return (
-        <Button type="submit" disabled={pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {pending ? 'Saving...' : 'Save Product'}
+        <Button type="submit" disabled={disabled}>
+            {disabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {disabled ? 'Saving...' : 'Save Product'}
         </Button>
     );
 }
@@ -58,6 +59,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
             : (product?.imageUrls || [])
     );
     const [isUploading, setIsUploading] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const productImageInputRef = React.useRef<HTMLInputElement>(null);
 
     // Crop data state
@@ -102,6 +104,8 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                 description: state.message,
                 variant: 'destructive',
             });
+            // Reset submission state on error so user can retry
+            setIsSubmitting(false);
         }
     }, [state, product, router, toast, redirectUrl]);
 
@@ -485,11 +489,19 @@ export default function ProductForm({ product = null, categories, userType = 'ad
     };
 
     const handleSubmit = (formData: FormData) => {
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log('[Product Form] Ignoring duplicate submission');
+            return;
+        }
+        
         if (productImages.length === 0 && imageUrls.length === 0) {
             toast({ title: 'Image Required', description: 'Please upload at least one product image.', variant: 'destructive' });
             return;
         }
 
+        setIsSubmitting(true);
+        
         // Add crop data to form
         const cropDataObj: Record<string, CropData> = {};
         imageCropData.forEach((crop, url) => {
@@ -644,7 +656,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                             {productImages.map(url => (
                                 <div key={url} className="relative space-y-2">
                                     <div className="relative w-full aspect-square rounded-md overflow-hidden border">
-                                        <Image src={url} alt="Product" fill className="object-cover" unoptimized/>
+                                        <Image src={url} alt="Product" fill className="object-cover" />
                                         <Button
                                             variant="destructive"
                                             size="icon"
@@ -726,7 +738,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
             </CardContent>
             <CardFooter className="flex justify-between">
                 <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-                <SubmitButton />
+                <SubmitButton isSubmitting={isSubmitting} />
             </CardFooter>
 
             {/* Image Crop Modal */}

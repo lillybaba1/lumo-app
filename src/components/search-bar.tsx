@@ -215,8 +215,8 @@ export default function SearchBar({
                       src={getProductImage(product)}
                       alt={product.name}
                       fill
+                      sizes="48px"
                       className="object-cover"
-                      unoptimized
                     />
                   </div>
                   <div className="flex-1 min-w-0">

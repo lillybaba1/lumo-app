@@ -75,9 +75,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         alt={`${product.name} - Image ${index + 1}`}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        unoptimized
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                         priority={index === 0}
+                        loading={index === 0 ? undefined : "lazy"}
                       />
                     </div>
                   </CarouselItem>
