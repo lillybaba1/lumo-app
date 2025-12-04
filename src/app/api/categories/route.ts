@@ -2,9 +2,6 @@
 import { NextResponse } from 'next/server';
 import { getCategories } from '@/services/categoryService';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export async function GET() {
   try {
     const categories = await getCategories();
@@ -12,7 +9,8 @@ export async function GET() {
       { categories },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          // Categories don't change often - cache for 5 minutes, revalidate for 30 minutes
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800',
         },
       }
     );

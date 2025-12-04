@@ -2,17 +2,13 @@ import { NextResponse } from 'next/server';
 import { getSettings, saveSettings } from '@/services/settingsService';
 import { createClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export async function GET() {
   try {
     const settings = await getSettings();
     return NextResponse.json(settings, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        // Settings don't change often - cache for 2 minutes, revalidate for 10 minutes
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
       },
     });
   } catch (error) {

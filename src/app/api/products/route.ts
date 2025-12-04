@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(products, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        // Allow browser caching for 60 seconds, revalidate in background for up to 5 minutes
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },
     });
   } catch (error) {
