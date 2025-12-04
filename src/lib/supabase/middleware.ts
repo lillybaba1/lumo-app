@@ -76,6 +76,11 @@ export async function updateSession(request: NextRequest) {
 
   // Protect ALL business routes - require authentication
   if (pathname.startsWith('/business')) {
+    // Allow /business/pending without any redirects to prevent loops
+    if (pathname === '/business/pending') {
+      return supabaseResponse
+    }
+
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'

@@ -93,9 +93,13 @@ export async function GET(request: NextRequest) {
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
       
-      // Always redirect to verified page - user will manually go to login
+      // Sign out the user - they should manually login after verification
+      await supabase.auth.signOut()
+      console.log('[Auth Callback] User signed out after verification')
+      
+      // Redirect to verified page without session cookies
       console.log('[Auth Callback] Redirecting to verified page')
-      return createRedirectWithCookies(`${origin}/auth/verified`, cookiesToSet)
+      return NextResponse.redirect(`${origin}/auth/verified`)
     }
   }
 
@@ -118,9 +122,13 @@ export async function GET(request: NextRequest) {
       const user = data.session.user
       await processUserAfterVerification(supabase, user)
       
-      // Always redirect to verified page - user will manually go to login
+      // Sign out the user - they should manually login after verification
+      await supabase.auth.signOut()
+      console.log('[Auth Callback] User signed out after verification')
+      
+      // Redirect to verified page without session
       console.log('[Auth Callback] Redirecting to verified page')
-      return createRedirectWithCookies(`${origin}/auth/verified`, cookiesToSet)
+      return NextResponse.redirect(`${origin}/auth/verified`)
     }
   }
 
