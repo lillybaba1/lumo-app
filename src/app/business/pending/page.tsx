@@ -9,8 +9,15 @@ import { Suspense } from 'react';
 import PendingAccountContent from './pending-account-content';
 
 export default async function BusinessPendingPage() {
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  let authUser = null;
+  
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    authUser = data?.user;
+  } catch (error) {
+    console.error('[BusinessPending] Error getting user:', error);
+  }
 
   if (!authUser) {
     return (
@@ -22,7 +29,7 @@ export default async function BusinessPendingPage() {
           </CardHeader>
           <CardContent className="flex justify-center">
             <Button asChild>
-              <Link href="/login?redirect=/business/pending">Log In</Link>
+              <Link href="/login">Log In</Link>
             </Button>
           </CardContent>
         </Card>
@@ -31,11 +38,33 @@ export default async function BusinessPendingPage() {
   }
 
   // Get business account
-  const businessAccount = await getBusinessAccountByOwner(authUser.id);
+  let businessAccount = null;
+  try {
+    businessAccount = await getBusinessAccountByOwner(authUser.id);
+  } catch (error) {
+    console.error('[BusinessPending] Error getting business account:', error);
+  }
 
   if (!businessAccount) {
-    // No business account - redirect to signup
-    redirect('/signup');
+    // No business account - show error instead of redirect
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>No Business Account</CardTitle>
+            <CardDescription>You don&apos;t have a business account yet.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 items-center">
+            <Button asChild>
+              <Link href="/signup?type=business">Sign Up as Business</Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link href="/">Go Home</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Multi-phase approval state machine
