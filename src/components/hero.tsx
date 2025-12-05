@@ -13,6 +13,11 @@ type HeroSettings = {
   heroBackgroundImage?: string;
   heroImageObjectPosition?: string;
   heroImageFit?: 'cover' | 'contain';
+  heroHeadingColor?: string;
+  heroTaglineColor?: string;
+  heroHeadingPosition?: { x: number; y: number };
+  heroTaglinePosition?: { x: number; y: number };
+  heroCtaPosition?: { x: number; y: number };
 };
 
 interface HeroProps {
@@ -32,6 +37,11 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
   const heroImageFit = settings?.heroImageFit || 'cover';
+  const heroHeadingColor = settings?.heroHeadingColor || '#ffffff';
+  const heroTaglineColor = settings?.heroTaglineColor || '#ffffff';
+  const heroHeadingPosition = settings?.heroHeadingPosition || { x: 5, y: 35 };
+  const heroTaglinePosition = settings?.heroTaglinePosition || { x: 5, y: 50 };
+  const heroCtaPosition = settings?.heroCtaPosition || { x: 5, y: 65 };
 
   useEffect(() => {
     // Fetch data with cache-busting but don't fail all if one request fails
@@ -260,71 +270,80 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         </div>
       )}
 
-      {/* Content */}
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-12 md:py-32 lg:py-40">
-          <div className="max-w-2xl">
-            {/* Heading */}
-            <h1
-              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6"
+      {/* Content - Positioned elements */}
+      <div className="relative w-full h-full min-h-[400px] md:min-h-[500px]">
+        {/* Heading - Absolutely positioned */}
+        <h1
+          className="absolute text-4xl md:text-6xl lg:text-7xl font-bold max-w-2xl px-4"
+          style={{
+            left: `${heroHeadingPosition.x}%`,
+            top: `${heroHeadingPosition.y}%`,
+            transform: 'translateY(-50%)',
+            color: heroHeadingColor,
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--font-weight-bold)',
+            lineHeight: 'var(--line-height-tight)',
+          }}
+        >
+          {heroHeading}
+        </h1>
+
+        {/* Tagline - Absolutely positioned */}
+        <p
+          className="absolute text-base md:text-xl max-w-xl px-4"
+          style={{
+            left: `${heroTaglinePosition.x}%`,
+            top: `${heroTaglinePosition.y}%`,
+            transform: 'translateY(-50%)',
+            color: heroTaglineColor,
+            opacity: 0.95,
+            lineHeight: 'var(--line-height-relaxed)',
+          }}
+        >
+          {heroTagline}
+        </p>
+
+        {/* CTAs - Absolutely positioned */}
+        <div 
+          className="absolute flex flex-col sm:flex-row gap-3 md:gap-4 px-4"
+          style={{
+            left: `${heroCtaPosition.x}%`,
+            top: `${heroCtaPosition.y}%`,
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <Link href="/products?filter=new">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
               style={{
-                color: 'var(--color-text-inverse)',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 'var(--font-weight-bold)',
-                lineHeight: 'var(--line-height-tight)',
+                backgroundColor: 'var(--button-primary-bg)',
+                color: 'var(--button-primary-fg)',
+                borderRadius: 'var(--radius-button)',
+                padding: '0 var(--spacing-xl)',
               }}
             >
-              {heroHeading}
-            </h1>
+              Shop New Arrivals
+              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+          </Link>
 
-            {/* Tagline */}
-            <p
-              className="text-base md:text-xl mb-6 md:mb-8 max-w-xl"
+          <Link href="/products">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
               style={{
+                backgroundColor: 'var(--button-secondary-bg)',
                 color: 'var(--color-text-inverse)',
-                opacity: 0.95,
-                lineHeight: 'var(--line-height-relaxed)',
+                borderColor: 'var(--color-text-inverse)',
+                borderRadius: 'var(--radius-button)',
+                padding: '0 var(--spacing-xl)',
               }}
             >
-              {heroTagline}
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-              <Link href="/products?filter=new">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
-                  style={{
-                    backgroundColor: 'var(--button-primary-bg)',
-                    color: 'var(--button-primary-fg)',
-                    borderRadius: 'var(--radius-button)',
-                    padding: '0 var(--spacing-xl)',
-                  }}
-                >
-                  Shop New Arrivals
-                  <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-                </Button>
-              </Link>
-
-              <Link href="/products">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
-                  style={{
-                    backgroundColor: 'var(--button-secondary-bg)',
-                    color: 'var(--color-text-inverse)',
-                    borderColor: 'var(--color-text-inverse)',
-                    borderRadius: 'var(--radius-button)',
-                    padding: '0 var(--spacing-xl)',
-                  }}
-                >
-                  Browse Collections
-                </Button>
-              </Link>
-            </div>
-          </div>
+              Browse Collections
+            </Button>
+          </Link>
         </div>
       </div>
 

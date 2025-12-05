@@ -57,6 +57,13 @@ export interface Settings {
     heroCropHeight?: number;
     heroImageObjectPosition?: string; // e.g., 'center', 'top', '50% 30%'
     heroImageFit?: 'cover' | 'contain'; // How the image should fit
+    
+    // Hero text styling
+    heroHeadingColor?: string;
+    heroTaglineColor?: string;
+    heroHeadingPosition?: { x: number; y: number };
+    heroTaglinePosition?: { x: number; y: number };
+    heroCtaPosition?: { x: number; y: number }; // Shop New Arrivals + Browse Collections buttons
 
     // Chatbot Settings
     chatbotImage?: string;
@@ -152,6 +159,11 @@ const defaultSettings: Settings = {
     heroTagline: 'Discover exceptional products crafted with care. Your journey to quality starts here.',
     heroBackgroundImage: '',
     heroImageObjectPosition: 'center',
+    heroHeadingColor: '#ffffff',
+    heroTaglineColor: '#ffffff',
+    heroHeadingPosition: { x: 5, y: 35 },
+    heroTaglinePosition: { x: 5, y: 50 },
+    heroCtaPosition: { x: 5, y: 65 },
     chatbotImage: '',
     chatbotName: 'Luna',
     chatbotEnabled: true,

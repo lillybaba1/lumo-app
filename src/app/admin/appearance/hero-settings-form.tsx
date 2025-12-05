@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Image as ImageIcon, Upload, Crop } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Upload, Crop, Move } from 'lucide-react';
 import { getHeroSettings, updateHeroSettings } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
 import ImageCropUploadModal from '@/components/image-crop-upload-modal';
+import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -42,6 +43,13 @@ export default function HeroSettingsForm() {
   const [heroImageObjectPosition, setHeroImageObjectPosition] = useState('center');
   const [heroImageFit, setHeroImageFit] = useState<'cover' | 'contain'>('cover');
   const [customPosition, setCustomPosition] = useState('');
+  
+  // New text styling fields
+  const [heroHeadingColor, setHeroHeadingColor] = useState('#ffffff');
+  const [heroTaglineColor, setHeroTaglineColor] = useState('#ffffff');
+  const [heroHeadingPosition, setHeroHeadingPosition] = useState({ x: 5, y: 35 });
+  const [heroTaglinePosition, setHeroTaglinePosition] = useState({ x: 5, y: 50 });
+  const [heroCtaPosition, setHeroCtaPosition] = useState({ x: 5, y: 65 });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +70,11 @@ export default function HeroSettingsForm() {
         setHeroBackgroundImage(settings.heroBackgroundImage);
         setHeroImageObjectPosition(settings.heroImageObjectPosition);
         setHeroImageFit(settings.heroImageFit || 'cover');
+        setHeroHeadingColor(settings.heroHeadingColor || '#ffffff');
+        setHeroTaglineColor(settings.heroTaglineColor || '#ffffff');
+        setHeroHeadingPosition(settings.heroHeadingPosition || { x: 5, y: 35 });
+        setHeroTaglinePosition(settings.heroTaglinePosition || { x: 5, y: 50 });
+        setHeroCtaPosition(settings.heroCtaPosition || { x: 5, y: 65 });
 
         // If it's a custom position (not in preset list), set it to custom
         const presets = ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'];
@@ -148,6 +161,11 @@ export default function HeroSettingsForm() {
         heroBackgroundImage,
         heroImageObjectPosition: finalPosition,
         heroImageFit,
+        heroHeadingColor,
+        heroTaglineColor,
+        heroHeadingPosition,
+        heroTaglinePosition,
+        heroCtaPosition,
       });
 
       toast({
@@ -198,30 +216,161 @@ export default function HeroSettingsForm() {
           {/* Hero Heading */}
           <div className="space-y-2">
             <Label htmlFor="hero-heading">Hero Heading</Label>
-            <Input
-              id="hero-heading"
-              value={heroHeading}
-              onChange={(e) => {
-                setHeroHeading(e.target.value);
-                setHasUnsavedChanges(true);
-              }}
-              placeholder="Step into Lumo"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="hero-heading"
+                value={heroHeading}
+                onChange={(e) => {
+                  setHeroHeading(e.target.value);
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Step into Lumo"
+                className="flex-1"
+              />
+              <div className="flex items-center gap-2">
+                <Label htmlFor="heading-color" className="text-xs text-muted-foreground whitespace-nowrap">Color:</Label>
+                <input
+                  type="color"
+                  id="heading-color"
+                  value={heroHeadingColor}
+                  onChange={(e) => {
+                    setHeroHeadingColor(e.target.value);
+                    setHasUnsavedChanges(true);
+                  }}
+                  className="w-10 h-10 rounded cursor-pointer border"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Heading Position */}
+          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Move className="h-4 w-4" />
+                Heading X Position: {heroHeadingPosition.x}%
+              </Label>
+              <Slider
+                value={[heroHeadingPosition.x]}
+                onValueChange={([x]) => {
+                  setHeroHeadingPosition({ ...heroHeadingPosition, x });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Heading Y Position: {heroHeadingPosition.y}%</Label>
+              <Slider
+                value={[heroHeadingPosition.y]}
+                onValueChange={([y]) => {
+                  setHeroHeadingPosition({ ...heroHeadingPosition, y });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
           </div>
 
           {/* Hero Tagline */}
           <div className="space-y-2">
             <Label htmlFor="hero-tagline">Hero Tagline</Label>
-            <Textarea
-              id="hero-tagline"
-              value={heroTagline}
-              onChange={(e) => {
-                setHeroTagline(e.target.value);
-                setHasUnsavedChanges(true);
-              }}
-              placeholder="Discover exceptional products crafted with care..."
-              rows={3}
-            />
+            <div className="flex gap-2">
+              <Textarea
+                id="hero-tagline"
+                value={heroTagline}
+                onChange={(e) => {
+                  setHeroTagline(e.target.value);
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Discover exceptional products crafted with care..."
+                rows={3}
+                className="flex-1"
+              />
+              <div className="flex flex-col items-center gap-1">
+                <Label htmlFor="tagline-color" className="text-xs text-muted-foreground">Color:</Label>
+                <input
+                  type="color"
+                  id="tagline-color"
+                  value={heroTaglineColor}
+                  onChange={(e) => {
+                    setHeroTaglineColor(e.target.value);
+                    setHasUnsavedChanges(true);
+                  }}
+                  className="w-10 h-10 rounded cursor-pointer border"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tagline Position */}
+          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Move className="h-4 w-4" />
+                Tagline X Position: {heroTaglinePosition.x}%
+              </Label>
+              <Slider
+                value={[heroTaglinePosition.x]}
+                onValueChange={([x]) => {
+                  setHeroTaglinePosition({ ...heroTaglinePosition, x });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tagline Y Position: {heroTaglinePosition.y}%</Label>
+              <Slider
+                value={[heroTaglinePosition.y]}
+                onValueChange={([y]) => {
+                  setHeroTaglinePosition({ ...heroTaglinePosition, y });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
+          </div>
+
+          {/* CTA Buttons Position */}
+          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Move className="h-4 w-4" />
+                CTA Buttons X Position: {heroCtaPosition.x}%
+              </Label>
+              <Slider
+                value={[heroCtaPosition.x]}
+                onValueChange={([x]) => {
+                  setHeroCtaPosition({ ...heroCtaPosition, x });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CTA Buttons Y Position: {heroCtaPosition.y}%</Label>
+              <Slider
+                value={[heroCtaPosition.y]}
+                onValueChange={([y]) => {
+                  setHeroCtaPosition({ ...heroCtaPosition, y });
+                  setHasUnsavedChanges(true);
+                }}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
           </div>
 
           {/* Background Image */}

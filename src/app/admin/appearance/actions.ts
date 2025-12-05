@@ -51,6 +51,11 @@ export async function getHeroSettings(): Promise<{
   heroBackgroundImage: string;
   heroImageObjectPosition: string;
   heroImageFit: 'cover' | 'contain';
+  heroHeadingColor: string;
+  heroTaglineColor: string;
+  heroHeadingPosition: { x: number; y: number };
+  heroTaglinePosition: { x: number; y: number };
+  heroCtaPosition: { x: number; y: number };
 }> {
   const settings = await getSettings();
   return {
@@ -59,6 +64,11 @@ export async function getHeroSettings(): Promise<{
     heroBackgroundImage: settings.heroBackgroundImage || '',
     heroImageObjectPosition: settings.heroImageObjectPosition || 'center',
     heroImageFit: settings.heroImageFit || 'cover',
+    heroHeadingColor: settings.heroHeadingColor || '#ffffff',
+    heroTaglineColor: settings.heroTaglineColor || '#ffffff',
+    heroHeadingPosition: settings.heroHeadingPosition || { x: 5, y: 35 },
+    heroTaglinePosition: settings.heroTaglinePosition || { x: 5, y: 50 },
+    heroCtaPosition: settings.heroCtaPosition || { x: 5, y: 65 },
   };
 }
 
@@ -71,6 +81,11 @@ export async function updateHeroSettings(heroData: {
   heroBackgroundImage: string;
   heroImageObjectPosition: string;
   heroImageFit: 'cover' | 'contain';
+  heroHeadingColor: string;
+  heroTaglineColor: string;
+  heroHeadingPosition: { x: number; y: number };
+  heroTaglinePosition: { x: number; y: number };
+  heroCtaPosition: { x: number; y: number };
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const currentSettings = await getSettings();
@@ -111,6 +126,11 @@ export async function updateHeroSettings(heroData: {
       heroBackgroundImage: heroData.heroBackgroundImage,
       heroImageObjectPosition: heroData.heroImageObjectPosition,
       heroImageFit: heroData.heroImageFit,
+      heroHeadingColor: heroData.heroHeadingColor,
+      heroTaglineColor: heroData.heroTaglineColor,
+      heroHeadingPosition: heroData.heroHeadingPosition,
+      heroTaglinePosition: heroData.heroTaglinePosition,
+      heroCtaPosition: heroData.heroCtaPosition,
     });
 
     // Revalidate ALL pages to force refresh
