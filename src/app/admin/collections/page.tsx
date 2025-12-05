@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search } from 'lucide-react';
-import { getCollections, saveCollections, getBestSellersAnalytics } from './actions';
+import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search, Flame } from 'lucide-react';
+import { getCollections, saveCollections, getBestSellersAnalytics, getTrendingProducts, saveTrendingProducts } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -38,10 +38,12 @@ type AnalyticsSuggestion = {
 export default function CollectionsPage() {
   const { toast } = useToast();
   const [collections, setCollections] = useState<Collections | null>(null);
+  const [trendingProducts, setTrendingProducts] = useState<string[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingTrending, setIsSavingTrending] = useState(false);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
   useEffect(() => {
@@ -50,12 +52,14 @@ export default function CollectionsPage() {
 
   const loadData = async () => {
     try {
-      const [collectionsData, productsData] = await Promise.all([
+      const [collectionsData, productsData, trendingData] = await Promise.all([
         getCollections(),
-        fetch('/api/products').then(r => r.json())
+        fetch('/api/products').then(r => r.json()),
+        getTrendingProducts()
       ]);
       setCollections(collectionsData || { bestSellers: [], newArrivals: [], deals: [] });
       setAllProducts(Array.isArray(productsData) ? productsData : []);
+      setTrendingProducts(trendingData || []);
     } catch (error) {
       console.error('Failed to load data:', error);
       setCollections({ bestSellers: [], newArrivals: [], deals: [] });
@@ -100,6 +104,35 @@ export default function CollectionsPage() {
     }
   };
 
+  const handleSaveTrending = async () => {
+    setIsSavingTrending(true);
+    try {
+      await saveTrendingProducts(trendingProducts);
+      toast({
+        title: "Trending Updated",
+        description: "Trending products have been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save trending products.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingTrending(false);
+    }
+  };
+
+  const addToTrending = (productId: string) => {
+    if (!trendingProducts.includes(productId)) {
+      setTrendingProducts([...trendingProducts, productId]);
+    }
+  };
+
+  const removeFromTrending = (productId: string) => {
+    setTrendingProducts(trendingProducts.filter(id => id !== productId));
+  };
+
   const addToCollection = (type: keyof Collections, productId: string) => {
     if (!collections) return;
     if (!collections[type].includes(productId)) {
@@ -131,6 +164,190 @@ export default function CollectionsPage() {
       </div>
     );
   }
+
+  // Trending Editor Component
+  const TrendingEditor = () => {
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const availableProducts = allProducts.filter(p => !trendingProducts.includes(p.id));
+    const filteredProducts = availableProducts.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <CardTitle>Trending Now</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{trendingProducts.length} selected</Badge>
+              <Button onClick={handleSaveTrending} disabled={isSavingTrending} size="sm">
+                {isSavingTrending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isSavingTrending ? 'Saving...' : 'Save Trending'}
+              </Button>
+            </div>
+          </div>
+          <CardDescription>
+            Manually select products to appear in the Trending section. The top 15 best-selling products from the last 30 days will also be included automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              onClick={loadAnalytics}
+              disabled={loadingAnalytics}
+              className="w-full"
+            >
+              {loadingAnalytics ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <TrendingUp className="mr-2 h-4 w-4" />
+              )}
+              {loadingAnalytics ? 'Loading...' : 'View Top Selling Products'}
+            </Button>
+
+            {analytics.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-semibold">Top Sellers (Last 90 Days) - These are auto-included</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {analytics.slice(0, 15).map(({ product, unitsSold, revenue }) => (
+                    <div key={product.id} className="flex items-center justify-between p-2 border rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 relative bg-muted rounded">
+                          {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                            <Image
+                              src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                              alt={product.name}
+                              fill
+                              className="object-cover rounded"
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {unitsSold} sold • ${revenue.toFixed(2)} revenue
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-600">Auto-included</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="text-sm font-semibold mb-2">Manually Selected Products</p>
+            <Popover open={searchOpen} onOpenChange={(open) => { setSearchOpen(open); if (!open) setSearchQuery(''); }}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Products to Trending
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <div className="p-2 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                <ScrollArea className="h-[300px]">
+                  {filteredProducts.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No products found.
+                    </div>
+                  ) : (
+                    <div className="p-2">
+                      {filteredProducts.slice(0, 50).map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            addToTrending(product.id);
+                            setSearchOpen(false);
+                            setSearchQuery('');
+                          }}
+                          className="w-full flex items-center gap-2 p-2 rounded hover:bg-accent transition-colors text-left"
+                        >
+                          <div className="w-10 h-10 relative bg-muted rounded flex-shrink-0">
+                            {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                              <Image
+                                src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                                alt={product.name}
+                                fill
+                                className="object-cover rounded"
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">${product.price.toFixed(2)}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            <div className="space-y-2 mt-4">
+              {trendingProducts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No products manually selected. Top selling products will still appear in Trending automatically.
+                </p>
+              ) : (
+                trendingProducts.map(productId => {
+                  const product = getProductById(productId);
+                  if (!product) return null;
+                  return (
+                    <div key={productId} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 relative bg-muted rounded">
+                          {(product.productImages?.[0] || product.imageUrls?.[0]) && (
+                            <Image
+                              src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                              alt={product.name}
+                              fill
+                              className="object-cover rounded"
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ${product.price.toFixed(2)} • {product.category}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFromTrending(productId)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const CollectionEditor = ({
     type,
@@ -347,8 +564,12 @@ export default function CollectionsPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="best-sellers" className="space-y-4">
+      <Tabs defaultValue="trending" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="trending">
+            <Flame className="mr-2 h-4 w-4" />
+            Trending
+          </TabsTrigger>
           <TabsTrigger value="best-sellers">
             <TrendingUp className="mr-2 h-4 w-4" />
             Best Sellers
@@ -362,6 +583,10 @@ export default function CollectionsPage() {
             Deals & Offers
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="trending" className="space-y-4">
+          <TrendingEditor />
+        </TabsContent>
 
         <TabsContent value="best-sellers" className="space-y-4">
           <CollectionEditor

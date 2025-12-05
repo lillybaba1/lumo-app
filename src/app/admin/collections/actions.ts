@@ -111,3 +111,43 @@ export async function getBestSellersAnalytics(): Promise<AnalyticsSuggestion[]> 
     return [];
   }
 }
+
+// Trending products management
+export async function getTrendingProducts(): Promise<string[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'trending_products')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return []; // No data found
+      }
+      throw error;
+    }
+
+    return data?.value?.productIds || [];
+  } catch (error) {
+    console.error('Failed to get trending products:', error);
+    return [];
+  }
+}
+
+export async function saveTrendingProducts(productIds: string[]) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('site_settings')
+      .upsert({
+        key: 'trending_products',
+        value: { productIds },
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to save trending products:', error);
+    throw new Error('Failed to save trending products.');
+  }
+}

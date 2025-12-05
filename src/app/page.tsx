@@ -45,6 +45,7 @@ type CategorySectionSettings = {
 
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collections>({ bestSellers: [], newArrivals: [], deals: [] });
   const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
@@ -55,15 +56,17 @@ export default function HomePageDataContainer() {
     async function fetchData() {
       // Fetch all data in parallel using API routes for better performance
       const nocache = Date.now();
-      const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes] = await Promise.all([
+      const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes] = await Promise.all([
         fetch(`/api/products?nocache=${nocache}`).then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch(`/api/categories?nocache=${nocache}`).then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
         fetch(`/api/settings?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
         fetch(`/api/hero?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+        fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
       ]);
       
       setProducts(Array.isArray(productsRes) ? productsRes : (productsRes.products || []));
+      setTrendingProducts(trendingRes.products || []);
       setCategories(categoriesRes.categories || (Array.isArray(categoriesRes) ? categoriesRes : []));
       setCollections(collectionsRes);
       setHeroSettings({ ...settingsRes, ...heroRes });
@@ -360,8 +363,8 @@ function Home({ products, categories, collections, categorySectionSettings }: {
         )}
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-          {/* Trending Products - Always show some products immediately */}
-          {products.length > 0 && (
+          {/* Trending Products - Only shows top 15 best sellers or admin-selected trending */}
+          {trendingProducts.length > 0 && (
             <div className="mb-8 md:mb-12">
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3">
@@ -375,7 +378,7 @@ function Home({ products, categories, collections, categorySectionSettings }: {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-                {products.slice(0, 4).map((product) => (
+                {trendingProducts.slice(0, 4).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

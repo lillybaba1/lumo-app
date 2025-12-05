@@ -701,7 +701,8 @@ export default function ProductForm({ product = null, categories, userType = 'ad
 
                 <Separator className="my-8" />
 
-                {/* Product Attributes Section */}
+                {/* Product Attributes Section - Only for admins */}
+                {userType === 'admin' && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -734,6 +735,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                         onChange={setAttributes}
                     />
                 </div>
+                )}
 
             </CardContent>
             <CardFooter className="flex justify-between">
