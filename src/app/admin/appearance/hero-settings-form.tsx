@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Image as ImageIcon, Upload, Crop, Move } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Upload, Crop, Move, ArrowRight, Maximize2, Minimize2 } from 'lucide-react';
 import { getHeroSettings, updateHeroSettings } from './actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
 import ImageCropUploadModal from '@/components/image-crop-upload-modal';
@@ -55,6 +55,7 @@ export default function HeroSettingsForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [previewExpanded, setPreviewExpanded] = useState(true);
 
   // Crop modal state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -203,6 +204,123 @@ export default function HeroSettingsForm() {
   }
 
   return (
+    <div className="space-y-6">
+      {/* Large Live Preview */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Live Preview
+              </CardTitle>
+              <CardDescription>
+                See your changes in real-time
+              </CardDescription>
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => setPreviewExpanded(!previewExpanded)}
+            >
+              {previewExpanded ? (
+                <>
+                  <Minimize2 className="h-4 w-4 mr-1" />
+                  Collapse
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4 mr-1" />
+                  Expand
+                </>
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div 
+            className={`relative w-full overflow-hidden rounded-lg border transition-all ${previewExpanded ? 'aspect-[16/7]' : 'aspect-[21/6]'}`}
+            style={{ minHeight: previewExpanded ? '400px' : '200px' }}
+          >
+            {/* Background */}
+            {heroBackgroundImage ? (
+              <div className="absolute inset-0">
+                <Image
+                  src={heroBackgroundImage}
+                  alt="Hero preview"
+                  fill
+                  className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
+                  style={{ 
+                    objectPosition: heroImageObjectPosition === 'custom' ? customPosition : heroImageObjectPosition,
+                    backgroundColor: heroImageFit === 'contain' ? '#1a1a2e' : undefined 
+                  }}
+                  unoptimized
+                />
+                {heroImageFit === 'cover' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+                )}
+              </div>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
+            )}
+
+            {/* Heading */}
+            <div
+              className="absolute text-2xl md:text-4xl lg:text-5xl font-bold max-w-[60%] px-4 leading-tight"
+              style={{
+                left: `${heroHeadingPosition.x}%`,
+                top: `${heroHeadingPosition.y}%`,
+                transform: 'translateY(-50%)',
+                color: heroHeadingColor,
+              }}
+            >
+              {heroHeading || 'Step into Lumo'}
+            </div>
+
+            {/* Tagline */}
+            <div
+              className="absolute text-sm md:text-base lg:text-lg max-w-[50%] px-4"
+              style={{
+                left: `${heroTaglinePosition.x}%`,
+                top: `${heroTaglinePosition.y}%`,
+                transform: 'translateY(-50%)',
+                color: heroTaglineColor,
+                opacity: 0.95,
+              }}
+            >
+              {heroTagline || 'Discover exceptional products crafted with care.'}
+            </div>
+
+            {/* CTA Buttons */}
+            <div 
+              className="absolute flex gap-2 px-4"
+              style={{
+                left: `${heroCtaPosition.x}%`,
+                top: `${heroCtaPosition.y}%`,
+                transform: 'translateY(-50%)',
+              }}
+            >
+              <div className="bg-primary text-primary-foreground text-xs md:text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1">
+                Shop New Arrivals
+                <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
+              </div>
+              <div className="bg-white/10 backdrop-blur text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-md border border-white/30">
+                Browse Collections
+              </div>
+            </div>
+
+            {/* Position indicators */}
+            {previewExpanded && (
+              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                Heading: {heroHeadingPosition.x}%, {heroHeadingPosition.y}% | 
+                Tagline: {heroTaglinePosition.x}%, {heroTaglinePosition.y}% | 
+                CTA: {heroCtaPosition.x}%, {heroCtaPosition.y}%
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
@@ -530,5 +648,6 @@ export default function HeroSettingsForm() {
         isUploading={isUploading}
       />
     </Card>
+    </div>
   );
 }
