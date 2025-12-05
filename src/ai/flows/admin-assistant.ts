@@ -9,6 +9,7 @@ import { getSettings } from '@/services/settingsService';
 import { getAllBusinessAccounts } from '@/services/businessAccountService';
 import { getPublishedBoutiques } from '@/services/boutiqueService';
 import { getBoutiqueSettings } from '@/services/platformSettingsService';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // ==========================================
 // ADMIN AI ASSISTANT
@@ -268,6 +269,301 @@ function getCategoryBreakdown(products: any[]): string {
 }
 
 // ==========================================
+// CUSTOMER EXPERIENCE FUNCTIONS
+// ==========================================
+
+async function getCustomerInsights(): Promise<string> {
+  const orders = await getOrders();
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  // Recent orders (last 30 days)
+  const recentOrders = orders.filter(o => new Date(o.createdAt) >= thirtyDaysAgo);
+  
+  // Calculate metrics
+  const totalOrders = recentOrders.length;
+  const avgOrderValue = totalOrders > 0 
+    ? recentOrders.reduce((sum, o) => sum + o.total, 0) / totalOrders 
+    : 0;
+  
+  // Order status breakdown
+  const statusCounts: Record<string, number> = {
+    Pending: 0,
+    Processing: 0,
+    Shipped: 0,
+    Delivered: 0,
+    Cancelled: 0
+  };
+  recentOrders.forEach(o => {
+    statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+  });
+  
+  // Calculate fulfillment rate
+  const completedOrders = statusCounts.Delivered + statusCounts.Shipped;
+  const fulfillmentRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
+  
+  // Calculate cancellation rate
+  const cancellationRate = totalOrders > 0 ? (statusCounts.Cancelled / totalOrders) * 100 : 0;
+  
+  // Find slow-processing orders (pending for more than 2 days)
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const slowOrders = recentOrders.filter(o => 
+    o.status === 'Pending' && new Date(o.createdAt) < twoDaysAgo
+  );
+  
+  // Unique customers
+  const uniqueCustomers = new Set(recentOrders.map(o => o.customerEmail)).size;
+  
+  // Repeat customers (approximate)
+  const customerOrderCounts: Record<string, number> = {};
+  recentOrders.forEach(o => {
+    customerOrderCounts[o.customerEmail] = (customerOrderCounts[o.customerEmail] || 0) + 1;
+  });
+  const repeatCustomers = Object.values(customerOrderCounts).filter(count => count > 1).length;
+
+  return `
+👥 **CUSTOMER EXPERIENCE INSIGHTS (Last 30 Days)**
+
+**📊 Order Metrics:**
+• Total Orders: ${totalOrders}
+• Unique Customers: ${uniqueCustomers}
+• Repeat Customers: ${repeatCustomers} (${uniqueCustomers > 0 ? ((repeatCustomers / uniqueCustomers) * 100).toFixed(1) : 0}%)
+• Average Order Value: $${avgOrderValue.toFixed(2)}
+
+**🚀 Fulfillment Performance:**
+• Fulfillment Rate: ${fulfillmentRate.toFixed(1)}%
+• Cancellation Rate: ${cancellationRate.toFixed(1)}% ${cancellationRate > 10 ? '⚠️ HIGH' : '✅'}
+• Orders Pending: ${statusCounts.Pending} ${slowOrders.length > 0 ? `(${slowOrders.length} delayed ⚠️)` : ''}
+• Orders Processing: ${statusCounts.Processing}
+• Orders Shipped: ${statusCounts.Shipped}
+• Orders Delivered: ${statusCounts.Delivered}
+
+**⚠️ Attention Needed:**
+${slowOrders.length > 0 ? `• ${slowOrders.length} orders pending for 2+ days - customers may be frustrated!` : '• No delayed orders - great job!'}
+${cancellationRate > 10 ? '• High cancellation rate - investigate causes' : ''}
+${statusCounts.Pending > 5 ? `• ${statusCounts.Pending} orders waiting - consider hiring more staff` : ''}
+`.trim();
+}
+
+async function getSellerPerformance(): Promise<string> {
+  const [orders, businessAccounts, boutiques] = await Promise.all([
+    getOrders(),
+    getAllBusinessAccounts(),
+    getPublishedBoutiques({ limit: 100 })
+  ]);
+
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const recentOrders = orders.filter(o => new Date(o.createdAt) >= thirtyDaysAgo);
+
+  // Calculate seller metrics
+  const sellerMetrics: Record<string, {
+    name: string;
+    totalSales: number;
+    totalRevenue: number;
+    ordersCount: number;
+    avgOrderValue: number;
+  }> = {};
+
+  recentOrders.forEach(order => {
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        const sellerId = item.product?.sellerId;
+        if (sellerId) {
+          if (!sellerMetrics[sellerId]) {
+            const seller = businessAccounts.find(b => b.id === sellerId);
+            sellerMetrics[sellerId] = {
+              name: seller?.businessName || 'Unknown Seller',
+              totalSales: 0,
+              totalRevenue: 0,
+              ordersCount: 0,
+              avgOrderValue: 0
+            };
+          }
+          sellerMetrics[sellerId].totalSales += item.quantity;
+          sellerMetrics[sellerId].totalRevenue += item.product.price * item.quantity;
+          sellerMetrics[sellerId].ordersCount++;
+        }
+      });
+    }
+  });
+
+  // Sort by revenue
+  const topSellers = Object.entries(sellerMetrics)
+    .map(([id, data]) => ({
+      ...data,
+      avgOrderValue: data.ordersCount > 0 ? data.totalRevenue / data.ordersCount : 0
+    }))
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+    .slice(0, 10);
+
+  // Active vs inactive sellers
+  const activeSellers = businessAccounts.filter(b => b.status === 'ACTIVE').length;
+  const inactiveSellers = businessAccounts.filter(b => b.status !== 'ACTIVE').length;
+
+  let result = `
+🏪 **SELLER PERFORMANCE (Last 30 Days)**
+
+**Overview:**
+• Active Sellers: ${activeSellers}
+• Inactive/Pending: ${inactiveSellers}
+• Published Boutiques: ${boutiques.length}
+
+**🏆 Top Performing Sellers:**
+`;
+
+  if (topSellers.length === 0) {
+    result += 'No sales data available yet.\n';
+  } else {
+    topSellers.forEach((seller, idx) => {
+      result += `${idx + 1}. **${seller.name}**\n`;
+      result += `   Revenue: $${seller.totalRevenue.toFixed(2)} | Sales: ${seller.totalSales} | Orders: ${seller.ordersCount}\n`;
+    });
+  }
+
+  return result.trim();
+}
+
+async function getCustomerFeedback(): Promise<string> {
+  // Get product reviews from database
+  try {
+    const { data: reviews } = await supabaseAdmin
+      .from('reviews')
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        products:product_id (name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!reviews || reviews.length === 0) {
+      return `📝 **CUSTOMER FEEDBACK**
+
+No reviews available yet. Encourage customers to leave reviews after their purchases!
+
+**Tips to get more reviews:**
+• Send follow-up emails after delivery
+• Offer incentives for honest reviews
+• Make the review process simple`;
+    }
+
+    // Calculate average rating
+    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    
+    // Rating distribution
+    const ratingDist: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(r => {
+      ratingDist[r.rating] = (ratingDist[r.rating] || 0) + 1;
+    });
+
+    // Low-rated reviews (potential issues)
+    const lowRated = reviews.filter(r => r.rating <= 2);
+    
+    let result = `
+📝 **CUSTOMER FEEDBACK ANALYSIS**
+
+**Overall Rating:** ${'⭐'.repeat(Math.round(avgRating))} ${avgRating.toFixed(1)}/5
+**Total Reviews:** ${reviews.length}
+
+**Rating Distribution:**
+• ⭐⭐⭐⭐⭐ (5): ${ratingDist[5]} reviews
+• ⭐⭐⭐⭐ (4): ${ratingDist[4]} reviews
+• ⭐⭐⭐ (3): ${ratingDist[3]} reviews
+• ⭐⭐ (2): ${ratingDist[2]} reviews
+• ⭐ (1): ${ratingDist[1]} reviews
+`;
+
+    if (lowRated.length > 0) {
+      result += `\n**⚠️ Potential Issues (Low-Rated Reviews):**\n`;
+      lowRated.slice(0, 5).forEach(r => {
+        const productName = (r.products as any)?.name || 'Unknown Product';
+        result += `• "${r.comment?.substring(0, 60) || 'No comment'}..." - ${productName}\n`;
+      });
+    } else {
+      result += `\n✅ **No concerning low-rated reviews!**`;
+    }
+
+    return result.trim();
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return 'Unable to fetch customer feedback at this time.';
+  }
+}
+
+async function getSalesAnalytics(): Promise<string> {
+  const orders = await getOrders();
+  const now = new Date();
+  
+  // Time periods
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  const calcMetrics = (filteredOrders: any[]) => {
+    const completed = filteredOrders.filter(o => o.status !== 'Cancelled');
+    return {
+      count: completed.length,
+      revenue: completed.reduce((sum, o) => sum + o.total, 0)
+    };
+  };
+
+  const todayOrders = orders.filter(o => new Date(o.createdAt) >= today);
+  const yesterdayOrders = orders.filter(o => {
+    const d = new Date(o.createdAt);
+    return d >= yesterday && d < today;
+  });
+  const thisWeekOrders = orders.filter(o => new Date(o.createdAt) >= thisWeek);
+  const thisMonthOrders = orders.filter(o => new Date(o.createdAt) >= thisMonth);
+  const lastMonthOrders = orders.filter(o => {
+    const d = new Date(o.createdAt);
+    return d >= lastMonth && d <= lastMonthEnd;
+  });
+
+  const todayMetrics = calcMetrics(todayOrders);
+  const yesterdayMetrics = calcMetrics(yesterdayOrders);
+  const thisWeekMetrics = calcMetrics(thisWeekOrders);
+  const thisMonthMetrics = calcMetrics(thisMonthOrders);
+  const lastMonthMetrics = calcMetrics(lastMonthOrders);
+
+  // Calculate growth
+  const dailyGrowth = yesterdayMetrics.revenue > 0 
+    ? ((todayMetrics.revenue - yesterdayMetrics.revenue) / yesterdayMetrics.revenue * 100)
+    : (todayMetrics.revenue > 0 ? 100 : 0);
+  
+  const monthlyGrowth = lastMonthMetrics.revenue > 0
+    ? ((thisMonthMetrics.revenue - lastMonthMetrics.revenue) / lastMonthMetrics.revenue * 100)
+    : (thisMonthMetrics.revenue > 0 ? 100 : 0);
+
+  return `
+💰 **SALES ANALYTICS**
+
+**Today:**
+• Orders: ${todayMetrics.count}
+• Revenue: $${todayMetrics.revenue.toFixed(2)}
+${dailyGrowth >= 0 ? `• 📈 +${dailyGrowth.toFixed(1)}% vs yesterday` : `• 📉 ${dailyGrowth.toFixed(1)}% vs yesterday`}
+
+**This Week:**
+• Orders: ${thisWeekMetrics.count}
+• Revenue: $${thisWeekMetrics.revenue.toFixed(2)}
+
+**This Month:**
+• Orders: ${thisMonthMetrics.count}
+• Revenue: $${thisMonthMetrics.revenue.toFixed(2)}
+${monthlyGrowth >= 0 ? `• 📈 +${monthlyGrowth.toFixed(1)}% vs last month` : `• 📉 ${monthlyGrowth.toFixed(1)}% vs last month`}
+
+**Last Month:**
+• Orders: ${lastMonthMetrics.count}
+• Revenue: $${lastMonthMetrics.revenue.toFixed(2)}
+`.trim();
+}
+
+// ==========================================
 // ANALYTICS & INSIGHTS FUNCTIONS  
 // ==========================================
 
@@ -384,9 +680,19 @@ I have full admin access and can help you with:
 
 **📊 Analytics & Insights:**
 • "Show me the dashboard" - Platform overview
+• "Sales analytics" - Revenue by day/week/month
 • "Top selling products" - Best performers
 • "Recent orders" - Latest activity
-• "Revenue report" - Financial summary
+
+**👥 Customer Experience:**
+• "Customer insights" - Order metrics & customer behavior
+• "Customer feedback" - Review analysis & ratings
+• "Fulfillment status" - Delivery performance
+
+**🏪 Seller Management:**
+• "Seller performance" - Top sellers & revenue by seller
+• "Show sellers" - All seller accounts
+• "Pending approvals" - Sellers awaiting review
 
 **📦 Inventory Management:**
 • "Low stock report" - Items needing restock
@@ -397,10 +703,6 @@ I have full admin access and can help you with:
 • "Write a description for [product]" - Product copy
 • "Create an announcement" - Promo banners
 • "Draft an email" - Customer communications
-
-**👥 Seller Management:**
-• "Show sellers" - All seller accounts
-• "Pending approvals" - Sellers awaiting review
 
 **What would you like help with?**`
       };
@@ -461,6 +763,39 @@ ${overview}
     if (q.includes('order') || q.includes('recent')) {
       const orders = await getRecentOrders();
       return { answer: orders };
+    }
+
+    // ==========================================
+    // CUSTOMER EXPERIENCE QUERIES
+    // ==========================================
+
+    if (q.includes('customer insight') || q.includes('customer experience') || 
+        q.includes('customer metric') || q.includes('fulfillment') ||
+        q.includes('what are customers experiencing') || q.includes('customer behavior')) {
+      const insights = await getCustomerInsights();
+      return { answer: insights };
+    }
+
+    if (q.includes('feedback') || q.includes('review') || q.includes('rating') ||
+        q.includes('complaint') || q.includes('what customers think')) {
+      const feedback = await getCustomerFeedback();
+      return { answer: feedback };
+    }
+
+    if (q.includes('sales analytic') || q.includes('revenue') || 
+        q.includes('sales report') || q.includes('how are sales')) {
+      const sales = await getSalesAnalytics();
+      return { answer: sales };
+    }
+
+    // ==========================================
+    // SELLER QUERIES
+    // ==========================================
+
+    if (q.includes('seller performance') || q.includes('top seller') ||
+        q.includes('best seller') || q.includes('seller revenue')) {
+      const performance = await getSellerPerformance();
+      return { answer: performance };
     }
 
     if (q.includes('seller') || q.includes('boutique')) {

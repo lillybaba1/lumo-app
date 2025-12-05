@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { Search, X, TrendingUp, Clock, ArrowRight, Store } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -17,6 +17,15 @@ interface Product {
   productImages?: string[];
 }
 
+interface Boutique {
+  id: string;
+  slug: string;
+  displayName: string;
+  tagline?: string;
+  logo?: string;
+  totalProducts: number;
+}
+
 interface SearchBarProps {
   variant?: 'header' | 'hero' | 'full';
   placeholder?: string;
@@ -26,7 +35,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ 
   variant = 'header', 
-  placeholder = 'Search products...', 
+  placeholder = 'Search products or boutiques...', 
   className = '',
   onSearch 
 }: SearchBarProps) {
@@ -34,6 +43,7 @@ export default function SearchBar({
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [boutiqueSuggestions, setBoutiqueSuggestions] = useState<Boutique[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,16 +73,27 @@ export default function SearchBar({
   useEffect(() => {
     if (query.length < 2) {
       setSuggestions([]);
+      setBoutiqueSuggestions([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=5`);
-        if (res.ok) {
-          const data = await res.json();
+        // Fetch products and boutiques in parallel
+        const [productsRes, boutiquesRes] = await Promise.all([
+          fetch(`/api/products?search=${encodeURIComponent(query)}&limit=5`),
+          fetch(`/api/boutiques/search?q=${encodeURIComponent(query)}&limit=3`)
+        ]);
+        
+        if (productsRes.ok) {
+          const data = await productsRes.json();
           setSuggestions(Array.isArray(data) ? data.slice(0, 5) : (data.products || []).slice(0, 5));
+        }
+        
+        if (boutiquesRes.ok) {
+          const data = await boutiquesRes.json();
+          setBoutiqueSuggestions(Array.isArray(data) ? data.slice(0, 3) : (data.boutiques || []).slice(0, 3));
         }
       } catch (error) {
         console.error('Search error:', error);
@@ -198,36 +219,85 @@ export default function SearchBar({
           )}
 
           {/* Suggestions */}
-          {!loading && suggestions.length > 0 && (
+          {!loading && (suggestions.length > 0 || boutiqueSuggestions.length > 0) && (
             <div className="p-2">
-              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <TrendingUp className="h-3 w-3" />
-                Products
-              </div>
-              {suggestions.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => handleSuggestionClick(product)}
-                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    <Image
-                      src={getProductImage(product)}
-                      alt={product.name}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
+              {/* Boutique suggestions */}
+              {boutiqueSuggestions.length > 0 && (
+                <>
+                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <Store className="h-3 w-3" />
+                    Boutiques
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                  {boutiqueSuggestions.map((boutique) => (
+                    <Link
+                      key={boutique.id}
+                      href={`/boutique/${boutique.slug}`}
+                      onClick={() => {
+                        saveRecentSearch(boutique.displayName);
+                        setIsOpen(false);
+                        setQuery('');
+                      }}
+                      className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0 flex items-center justify-center">
+                        {boutique.logo ? (
+                          <Image
+                            src={boutique.logo}
+                            alt={boutique.displayName}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <Store className="h-6 w-6 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{boutique.displayName}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {boutique.tagline || `${boutique.totalProducts} products`}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))}
+                </>
+              )}
+              
+              {/* Product suggestions */}
+              {suggestions.length > 0 && (
+                <>
+                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    <TrendingUp className="h-3 w-3" />
+                    Products
                   </div>
-                  <span className="text-sm font-semibold text-primary">
-                    ${product.price.toFixed(2)}
-                  </span>
-                </button>
-              ))}
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleSuggestionClick(product)}
+                      className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <Image
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.category}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-primary">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    </button>
+                  ))}
+                </>
+              )}
+              
               {query && (
                 <Link
                   href={`/?search=${encodeURIComponent(query)}`}
@@ -245,9 +315,9 @@ export default function SearchBar({
           )}
 
           {/* No results */}
-          {!loading && query.length >= 2 && suggestions.length === 0 && (
+          {!loading && query.length >= 2 && suggestions.length === 0 && boutiqueSuggestions.length === 0 && (
             <div className="p-4 text-center text-muted-foreground text-sm">
-              No products found for "{query}"
+              No products or boutiques found for "{query}"
             </div>
           )}
 

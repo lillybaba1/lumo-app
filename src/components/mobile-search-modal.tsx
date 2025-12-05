@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { Search, X, TrendingUp, Clock, ArrowRight, Store } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface Product {
   id: string;
@@ -14,6 +15,15 @@ interface Product {
   category: string;
   imageUrls?: string[];
   productImages?: string[];
+}
+
+interface Boutique {
+  id: string;
+  slug: string;
+  displayName: string;
+  tagline?: string;
+  logo?: string;
+  totalProducts: number;
 }
 
 interface MobileSearchModalProps {
@@ -25,6 +35,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [boutiqueSuggestions, setBoutiqueSuggestions] = useState<Boutique[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,16 +71,26 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
   useEffect(() => {
     if (query.length < 2) {
       setSuggestions([]);
+      setBoutiqueSuggestions([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=5`);
-        if (res.ok) {
-          const data = await res.json();
+        const [productsRes, boutiquesRes] = await Promise.all([
+          fetch(`/api/products?search=${encodeURIComponent(query)}&limit=5`),
+          fetch(`/api/boutiques/search?q=${encodeURIComponent(query)}&limit=3`)
+        ]);
+        
+        if (productsRes.ok) {
+          const data = await productsRes.json();
           setSuggestions(Array.isArray(data) ? data.slice(0, 5) : (data.products || []).slice(0, 5));
+        }
+        
+        if (boutiquesRes.ok) {
+          const data = await boutiquesRes.json();
+          setBoutiqueSuggestions(Array.isArray(data) ? data.slice(0, 3) : (data.boutiques || []).slice(0, 3));
         }
       } catch (error) {
         console.error('Search error:', error);
@@ -173,38 +194,87 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
         )}
 
         {/* Suggestions */}
-        {!loading && suggestions.length > 0 && (
+        {!loading && (suggestions.length > 0 || boutiqueSuggestions.length > 0) && (
           <div className="p-4">
-            <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-              <TrendingUp className="h-3 w-3" />
-              Products
-            </div>
-            <div className="space-y-1">
-              {suggestions.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => handleSuggestionClick(product)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    <Image
-                      src={getProductImage(product)}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.category}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-primary">
-                    ${product.price.toFixed(2)}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {/* Boutique suggestions */}
+            {boutiqueSuggestions.length > 0 && (
+              <>
+                <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Store className="h-3 w-3" />
+                  Boutiques
+                </div>
+                <div className="space-y-1 mb-4">
+                  {boutiqueSuggestions.map((boutique) => (
+                    <Link
+                      key={boutique.id}
+                      href={`/boutique/${boutique.slug}`}
+                      onClick={() => {
+                        saveRecentSearch(boutique.displayName);
+                        onClose();
+                        setQuery('');
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0 flex items-center justify-center">
+                        {boutique.logo ? (
+                          <Image
+                            src={boutique.logo}
+                            alt={boutique.displayName}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <Store className="h-7 w-7 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{boutique.displayName}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {boutique.tagline || `${boutique.totalProducts} products`}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+            
+            {/* Product suggestions */}
+            {suggestions.length > 0 && (
+              <>
+                <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <TrendingUp className="h-3 w-3" />
+                  Products
+                </div>
+                <div className="space-y-1">
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleSuggestionClick(product)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <Image
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.category}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-primary">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            
             {query && (
               <button
                 onClick={() => {
@@ -222,9 +292,9 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
         )}
 
         {/* No results */}
-        {!loading && query.length >= 2 && suggestions.length === 0 && (
+        {!loading && query.length >= 2 && suggestions.length === 0 && boutiqueSuggestions.length === 0 && (
           <div className="p-6 text-center text-muted-foreground">
-            No products found for "{query}"
+            No products or boutiques found for "{query}"
           </div>
         )}
 

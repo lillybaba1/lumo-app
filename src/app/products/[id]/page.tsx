@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getProductById } from '@/services/productService';
 import { getReviewsByProduct, getProductStats, getUserReviewForProduct } from '@/services/reviewService';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Package, TruckIcon, Store, BadgeCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -189,12 +190,24 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       <Store className="h-4 w-4" />
                       Sold by:
                     </span>
-                    <span className="font-medium flex items-center gap-1">
-                      {product.sellerName}
-                      {product.sellerVerified && (
-                        <BadgeCheck className="h-4 w-4 text-blue-500" />
-                      )}
-                    </span>
+                    {product.boutiqueSlug ? (
+                      <Link 
+                        href={`/boutique/${product.boutiqueSlug}`}
+                        className="font-medium flex items-center gap-1 text-primary hover:underline"
+                      >
+                        {product.sellerName}
+                        {product.sellerVerified && (
+                          <BadgeCheck className="h-4 w-4 text-blue-500" />
+                        )}
+                      </Link>
+                    ) : (
+                      <span className="font-medium flex items-center gap-1">
+                        {product.sellerName}
+                        {product.sellerVerified && (
+                          <BadgeCheck className="h-4 w-4 text-blue-500" />
+                        )}
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between">

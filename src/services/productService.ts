@@ -102,7 +102,13 @@ export async function getProductById(id: string): Promise<Product | null> {
           id,
           business_name,
           contact_person_name,
-          verification_status
+          verification_status,
+          boutiques (
+            id,
+            slug,
+            display_name,
+            is_published
+          )
         )
       `)
       .eq('id', id)
@@ -121,6 +127,10 @@ export async function getProductById(id: string): Promise<Product | null> {
     const orderedImageUrls = images
       .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
       .map((img: any) => img.image_url);
+
+    // Get boutique info if available
+    const boutique = data.business_accounts?.boutiques?.[0];
+    const boutiqueSlug = boutique?.is_published ? boutique.slug : null;
 
     return {
       id: data.id,
@@ -145,6 +155,7 @@ export async function getProductById(id: string): Promise<Product | null> {
       sellerId: data.seller_id,
       sellerName: data.business_accounts?.business_name,
       sellerVerified: data.business_accounts?.verification_status === 'verified',
+      boutiqueSlug,
     };
   } catch (error) {
     console.error(`Failed to fetch product ${id}:`, error);

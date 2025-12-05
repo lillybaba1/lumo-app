@@ -78,6 +78,7 @@ export interface Product {
   // Seller info (populated when fetching single product details)
   sellerName?: string;
   sellerVerified?: boolean;
+  boutiqueSlug?: string; // Slug for navigating to seller's boutique
 }
 
 export interface Category {
