@@ -117,14 +117,15 @@ export default function HomePageDataContainer() {
     );
   }
 
-  return <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} />;
+  return <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} trendingProducts={trendingProducts} />;
 }
 
-function Home({ products, categories, collections, categorySectionSettings }: { 
+function Home({ products, categories, collections, categorySectionSettings, trendingProducts }: { 
   products: Product[], 
   categories: Category[], 
   collections: Collections,
-  categorySectionSettings: CategorySectionSettings 
+  categorySectionSettings: CategorySectionSettings,
+  trendingProducts: Product[]
 }) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
