@@ -19,6 +19,16 @@ function mapDbToBoutique(data: any): Boutique {
     socialLinks: data.social_links || {},
     contactEmail: data.contact_email,
     contactPhone: data.contact_phone,
+    whatsapp: data.whatsapp,
+    storeAddress: data.store_address,
+    storeCity: data.store_city,
+    storeCountry: data.store_country,
+    storeLocation: data.store_location,
+    businessHours: data.business_hours,
+    establishedYear: data.established_year,
+    trustBadges: data.trust_badges || [],
+    specializations: data.specializations || [],
+    acceptedPayments: data.accepted_payments || [],
     shippingInfo: data.shipping_info,
     returnPolicy: data.return_policy,
     totalProducts: data.total_products || 0,
@@ -183,6 +193,16 @@ export async function updateBoutique(
     if (updates.socialLinks !== undefined) updateData.social_links = updates.socialLinks;
     if (updates.contactEmail !== undefined) updateData.contact_email = updates.contactEmail;
     if (updates.contactPhone !== undefined) updateData.contact_phone = updates.contactPhone;
+    if (updates.whatsapp !== undefined) updateData.whatsapp = updates.whatsapp;
+    if (updates.storeAddress !== undefined) updateData.store_address = updates.storeAddress;
+    if (updates.storeCity !== undefined) updateData.store_city = updates.storeCity;
+    if (updates.storeCountry !== undefined) updateData.store_country = updates.storeCountry;
+    if (updates.storeLocation !== undefined) updateData.store_location = updates.storeLocation;
+    if (updates.businessHours !== undefined) updateData.business_hours = updates.businessHours;
+    if (updates.establishedYear !== undefined) updateData.established_year = updates.establishedYear;
+    if (updates.trustBadges !== undefined) updateData.trust_badges = updates.trustBadges;
+    if (updates.specializations !== undefined) updateData.specializations = updates.specializations;
+    if (updates.acceptedPayments !== undefined) updateData.accepted_payments = updates.acceptedPayments;
     if (updates.shippingInfo !== undefined) updateData.shipping_info = updates.shippingInfo;
     if (updates.returnPolicy !== undefined) updateData.return_policy = updates.returnPolicy;
     if (updates.isPublished !== undefined) updateData.is_published = updates.isPublished;

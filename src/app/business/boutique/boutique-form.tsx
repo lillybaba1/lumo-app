@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Store, Globe, Instagram, Facebook, Twitter, Eye, ExternalLink, Palette, Lock } from 'lucide-react';
+import { Loader2, Store, Globe, Instagram, Facebook, Twitter, Eye, ExternalLink, Palette, Lock, MapPin, Clock, Phone, Shield, Tag, CreditCard, MessageCircle } from 'lucide-react';
 import { Boutique } from '@/lib/types';
 import Link from 'next/link';
 import ImageUploadBox from '@/components/image-upload-box';
@@ -50,6 +50,16 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
     accentColor: boutique?.accentColor || '#ec4899',
     contactEmail: boutique?.contactEmail || '',
     contactPhone: boutique?.contactPhone || '',
+    whatsapp: boutique?.whatsapp || '',
+    storeAddress: boutique?.storeAddress || '',
+    storeCity: boutique?.storeCity || '',
+    storeCountry: boutique?.storeCountry || '',
+    storeLocation: boutique?.storeLocation || '',
+    businessHours: boutique?.businessHours || '',
+    establishedYear: boutique?.establishedYear || '',
+    trustBadges: boutique?.trustBadges || [],
+    specializations: boutique?.specializations || [],
+    acceptedPayments: boutique?.acceptedPayments || [],
     shippingInfo: boutique?.shippingInfo || '',
     returnPolicy: boutique?.returnPolicy || '',
     socialLinks: {
@@ -351,18 +361,21 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
         </CardContent>
       </Card>
 
-      {/* Contact & Social */}
+      {/* Contact & Location */}
       <Card>
         <CardHeader>
-          <CardTitle>Contact & Social</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Contact & Location
+          </CardTitle>
           <CardDescription>
-            Help customers reach you
+            Public contact info for your boutique (separate from your personal business details)
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Label htmlFor="contactEmail">Boutique Email</Label>
               <Input
                 id="contactEmail"
                 type="email"
@@ -372,52 +385,205 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contactPhone">Contact Phone</Label>
+              <Label htmlFor="contactPhone">Boutique Phone</Label>
               <Input
                 id="contactPhone"
                 value={formData.contactPhone}
                 onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                placeholder="+1 (555) 123-4567"
+                placeholder="+220 700 1234"
               />
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp Number
+            </Label>
+            <Input
+              id="whatsapp"
+              value={formData.whatsapp}
+              onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+              placeholder="+220 700 1234"
+            />
+            <p className="text-xs text-muted-foreground">Customers can message you directly on WhatsApp</p>
+          </div>
+
+          <Separator />
+
           <div className="space-y-4">
-            <Label>Social Media Links</Label>
-            <div className="grid gap-3">
-              <div className="flex items-center gap-2">
-                <Instagram className="h-5 w-5 text-muted-foreground" />
+            <Label className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Store Location
+            </Label>
+            <p className="text-xs text-muted-foreground -mt-2">Where customers can find you (if you have a physical store)</p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="storeAddress">Street Address</Label>
+              <Input
+                id="storeAddress"
+                value={formData.storeAddress}
+                onChange={(e) => setFormData({ ...formData, storeAddress: e.target.value })}
+                placeholder="123 Market Street"
+              />
+            </div>
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="storeCity">City</Label>
                 <Input
-                  value={formData.socialLinks.instagram}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    socialLinks: { ...formData.socialLinks, instagram: e.target.value }
-                  })}
-                  placeholder="https://instagram.com/yourboutique"
+                  id="storeCity"
+                  value={formData.storeCity}
+                  onChange={(e) => setFormData({ ...formData, storeCity: e.target.value })}
+                  placeholder="Serrekunda"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Facebook className="h-5 w-5 text-muted-foreground" />
+              <div className="space-y-2">
+                <Label htmlFor="storeCountry">Country</Label>
                 <Input
-                  value={formData.socialLinks.facebook}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    socialLinks: { ...formData.socialLinks, facebook: e.target.value }
-                  })}
-                  placeholder="https://facebook.com/yourboutique"
+                  id="storeCountry"
+                  value={formData.storeCountry}
+                  onChange={(e) => setFormData({ ...formData, storeCountry: e.target.value })}
+                  placeholder="The Gambia"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Twitter className="h-5 w-5 text-muted-foreground" />
-                <Input
-                  value={formData.socialLinks.twitter}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    socialLinks: { ...formData.socialLinks, twitter: e.target.value }
-                  })}
-                  placeholder="https://twitter.com/yourboutique"
-                />
-              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="storeLocation">Location Description</Label>
+              <Input
+                id="storeLocation"
+                value={formData.storeLocation}
+                onChange={(e) => setFormData({ ...formData, storeLocation: e.target.value })}
+                placeholder="Near Serrekunda Market, opposite the main mosque"
+              />
+              <p className="text-xs text-muted-foreground">Help customers find you with landmarks</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="businessHours" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Business Hours
+            </Label>
+            <Input
+              id="businessHours"
+              value={formData.businessHours}
+              onChange={(e) => setFormData({ ...formData, businessHours: e.target.value })}
+              placeholder="Mon-Fri 9am-6pm, Sat 10am-4pm"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Trust & Credibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Trust & Credibility
+          </CardTitle>
+          <CardDescription>
+            Build buyer confidence with important business information
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="establishedYear">Year Established</Label>
+            <Input
+              id="establishedYear"
+              value={formData.establishedYear}
+              onChange={(e) => setFormData({ ...formData, establishedYear: e.target.value })}
+              placeholder="2020"
+              maxLength={4}
+              className="w-32"
+            />
+            <p className="text-xs text-muted-foreground">Show buyers how long you've been in business</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="specializations" className="flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              Specializations
+            </Label>
+            <Input
+              id="specializations"
+              value={formData.specializations.join(', ')}
+              onChange={(e) => setFormData({ ...formData, specializations: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Electronics, Phone Accessories, Repairs"
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list of what you specialize in</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="acceptedPayments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Accepted Payment Methods
+            </Label>
+            <Input
+              id="acceptedPayments"
+              value={formData.acceptedPayments.join(', ')}
+              onChange={(e) => setFormData({ ...formData, acceptedPayments: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Cash, Wave, Orange Money, Bank Transfer"
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list of payment methods you accept</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="trustBadges">Trust Highlights</Label>
+            <Input
+              id="trustBadges"
+              value={formData.trustBadges.join(', ')}
+              onChange={(e) => setFormData({ ...formData, trustBadges: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+              placeholder="Fast Shipping, Money Back Guarantee, Original Products Only"
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list of trust badges to display</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Social Media */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Social Media</CardTitle>
+          <CardDescription>
+            Connect your social accounts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3">
+            <div className="flex items-center gap-2">
+              <Instagram className="h-5 w-5 text-muted-foreground" />
+              <Input
+                value={formData.socialLinks.instagram}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  socialLinks: { ...formData.socialLinks, instagram: e.target.value }
+                })}
+                placeholder="https://instagram.com/yourboutique"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Facebook className="h-5 w-5 text-muted-foreground" />
+              <Input
+                value={formData.socialLinks.facebook}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  socialLinks: { ...formData.socialLinks, facebook: e.target.value }
+                })}
+                placeholder="https://facebook.com/yourboutique"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Twitter className="h-5 w-5 text-muted-foreground" />
+              <Input
+                value={formData.socialLinks.twitter}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  socialLinks: { ...formData.socialLinks, twitter: e.target.value }
+                })}
+                placeholder="https://twitter.com/yourboutique"
+              />
             </div>
           </div>
         </CardContent>

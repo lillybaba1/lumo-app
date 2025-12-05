@@ -310,10 +310,33 @@ export default async function BoutiquePage({ params }: Props) {
                       <span className="text-sm">{boutique.contactPhone}</span>
                     </a>
                   )}
-                  {businessAccount?.businessAddress && (
+                  {boutique.whatsapp && (
+                    <a 
+                      href={`https://wa.me/${boutique.whatsapp.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                    >
+                      <MessageCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm text-green-700 dark:text-green-400">Chat on WhatsApp</span>
+                    </a>
+                  )}
+                  {(boutique.storeAddress || boutique.storeLocation || boutique.storeCity) && (
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                      <span className="text-sm text-muted-foreground">{businessAccount.businessAddress}</span>
+                      <div className="text-sm text-muted-foreground">
+                        {boutique.storeAddress && <p>{boutique.storeAddress}</p>}
+                        {(boutique.storeCity || boutique.storeCountry) && (
+                          <p>{[boutique.storeCity, boutique.storeCountry].filter(Boolean).join(', ')}</p>
+                        )}
+                        {boutique.storeLocation && <p className="text-xs mt-1">{boutique.storeLocation}</p>}
+                      </div>
+                    </div>
+                  )}
+                  {boutique.businessHours && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{boutique.businessHours}</span>
                     </div>
                   )}
                   {businessAccount?.website && (
@@ -328,6 +351,65 @@ export default async function BoutiquePage({ params }: Props) {
                       <ArrowRight className="h-3 w-3 ml-auto" />
                     </a>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Trust & Credibility */}
+            {(boutique.establishedYear || boutique.specializations?.length || boutique.acceptedPayments?.length || boutique.trustBadges?.length) && (
+              <Card>
+                <CardContent className="pt-5 space-y-4">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    About This Seller
+                  </h3>
+                  <div className="space-y-3">
+                    {boutique.establishedYear && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Established:</span>
+                        <span className="font-medium">{boutique.establishedYear}</span>
+                      </div>
+                    )}
+                    {boutique.specializations && boutique.specializations.length > 0 && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Specializes in:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {boutique.specializations.map((spec: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {boutique.acceptedPayments && boutique.acceptedPayments.length > 0 && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Accepts:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {boutique.acceptedPayments.map((payment: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {payment}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {boutique.trustBadges && boutique.trustBadges.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <div className="flex flex-wrap gap-2">
+                          {boutique.trustBadges.map((badge: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              {badge}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
                 </div>
               </CardContent>
             </Card>

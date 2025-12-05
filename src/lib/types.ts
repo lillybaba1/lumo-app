@@ -233,7 +233,7 @@ export interface Boutique {
   bannerImage?: string;
   themeColor?: string; // Primary color for boutique branding
   accentColor?: string;
-  // Social & Contact
+  // Social & Contact (Boutique's own - separate from seller's personal info)
   socialLinks?: {
     instagram?: string;
     facebook?: string;
@@ -241,8 +241,20 @@ export interface Boutique {
     tiktok?: string;
     youtube?: string;
   };
-  contactEmail?: string;
-  contactPhone?: string;
+  contactEmail?: string; // Boutique's public contact email
+  contactPhone?: string; // Boutique's public phone
+  whatsapp?: string; // WhatsApp for quick customer contact
+  // Boutique Location (public store info, not seller's personal address)
+  storeAddress?: string; // Physical store address if applicable
+  storeCity?: string;
+  storeCountry?: string;
+  storeLocation?: string; // General location description, e.g., "Serrekunda, The Gambia"
+  businessHours?: string; // e.g., "Mon-Fri 9am-6pm, Sat 10am-4pm"
+  // Trust Building Info
+  establishedYear?: string; // e.g., "2020" - shows how long they've been in business
+  trustBadges?: string[]; // e.g., ["Verified Seller", "Fast Shipping", "Money Back Guarantee"]
+  specializations?: string[]; // e.g., ["Electronics", "Phone Accessories", "Repairs"]
+  acceptedPayments?: string[]; // e.g., ["Cash", "Wave", "Orange Money", "Bank Transfer"]
   // Policies displayed on boutique
   shippingInfo?: string;
   returnPolicy?: string;
