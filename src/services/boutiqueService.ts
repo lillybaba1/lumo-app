@@ -329,7 +329,7 @@ export async function getBoutiqueProducts(boutiqueId: string, options?: {
       .from('products')
       .select('*')
       .eq('seller_id', boutique.business_account_id)
-      .eq('status', 'active')
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (options?.categoryId) {

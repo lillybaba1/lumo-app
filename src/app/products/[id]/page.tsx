@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import AddToCartButton from './add-to-cart-button';
 import { WishlistButton } from '@/components/wishlist-button';
 import { getCurrentUser } from '@/lib/auth-admin';
+import { isInWishlist } from '@/services/wishlistService';
 import { getUserById } from '@/services/userService';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
@@ -44,6 +45,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const currentUserId = currentUser?.userId;
   const currentUserName = currentUser?.userId ? (await getUserById(currentUser.userId))?.name : undefined;
   const userReview = currentUserId ? await getUserReviewForProduct(currentUserId, id) : null;
+  const productInWishlist = currentUserId ? await isInWishlist(currentUserId, id) : false;
 
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const isOutOfStock = product.stock === 0;
@@ -167,7 +169,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 productId={product.id}
                 productName={product.name}
                 currentUserId={currentUserId}
-                isInWishlist={false}
+                isInWishlist={productInWishlist}
                 variant="button"
                 size="default"
               />
@@ -193,8 +195,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     {product.boutiqueSlug ? (
                       <Link 
                         href={`/boutique/${product.boutiqueSlug}`}
-                        className="font-medium flex items-center gap-1 text-primary hover:underline"
+                        className="font-bold flex items-center gap-1.5 text-primary hover:underline transition-colors"
                       >
+                        <Store className="h-4 w-4" />
                         {product.sellerName}
                         {product.sellerVerified && (
                           <BadgeCheck className="h-4 w-4 text-blue-500" />
