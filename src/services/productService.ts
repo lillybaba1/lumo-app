@@ -102,13 +102,7 @@ export async function getProductById(id: string): Promise<Product | null> {
           id,
           business_name,
           contact_person_name,
-          verification_status,
-          boutiques (
-            id,
-            slug,
-            display_name,
-            is_published
-          )
+          verification_status
         )
       `)
       .eq('id', id)
@@ -128,9 +122,24 @@ export async function getProductById(id: string): Promise<Product | null> {
       .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
       .map((img: any) => img.image_url);
 
-    // Get boutique info if available
-    const boutique = data.business_accounts?.boutiques?.[0];
-    const boutiqueSlug = boutique?.is_published ? boutique.slug : null;
+    // Get boutique slug separately if seller exists
+    let boutiqueSlug: string | null = null;
+    if (data.seller_id) {
+      try {
+        const { data: boutique } = await supabaseAdmin
+          .from('boutiques')
+          .select('slug, is_published')
+          .eq('business_account_id', data.seller_id)
+          .eq('is_published', true)
+          .single();
+        
+        if (boutique) {
+          boutiqueSlug = boutique.slug;
+        }
+      } catch (e) {
+        // Boutique not found or error - that's ok
+      }
+    }
 
     return {
       id: data.id,
