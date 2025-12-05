@@ -410,9 +410,6 @@ export default async function BoutiquePage({ params }: Props) {
                 </CardContent>
               </Card>
             )}
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Policies */}
             {(boutique.shippingInfo || boutique.returnPolicy) && (
