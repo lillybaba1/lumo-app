@@ -176,7 +176,7 @@ export default async function BoutiquePage({ params }: Props) {
               <div className="flex flex-wrap gap-6 mt-4">
                 <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
                   <Package className="h-5 w-5 text-primary" />
-                  <span className="font-bold text-lg">{boutique.totalProducts}</span>
+                  <span className="font-bold text-lg">{products.length}</span>
                   <span className="text-muted-foreground">Products</span>
                 </div>
                 <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
@@ -364,7 +364,7 @@ export default async function BoutiquePage({ params }: Props) {
                 Products
               </h2>
               <Badge variant="outline" className="text-base px-3 py-1">
-                {boutique.totalProducts} items
+                {products.length} items
               </Badge>
             </div>
 

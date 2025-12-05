@@ -327,7 +327,18 @@ export async function getBoutiqueProducts(boutiqueId: string, options?: {
 
     let query = supabaseAdmin
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        categories:category_id (
+          id,
+          name
+        ),
+        product_images!left (
+          image_url,
+          display_order,
+          is_primary
+        )
+      `)
       .eq('seller_id', boutique.business_account_id)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
@@ -351,7 +362,26 @@ export async function getBoutiqueProducts(boutiqueId: string, options?: {
       return [];
     }
 
-    return data || [];
+    // Map to Product type
+    return (data || []).map((product: any) => {
+      const images = Array.isArray(product.product_images) ? product.product_images : [];
+      const orderedImageUrls = images
+        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img: any) => img.image_url);
+
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: parseFloat(product.price),
+        imageUrls: product.image_urls || [],
+        productImages: orderedImageUrls,
+        category: product.categories?.name || '',
+        categoryId: product.category_id || '',
+        stock: product.stock || 0,
+        sellerId: product.seller_id,
+      };
+    });
   } catch (error) {
     console.error('Error in getBoutiqueProducts:', error);
     return [];
