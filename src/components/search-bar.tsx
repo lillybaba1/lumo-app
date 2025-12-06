@@ -122,6 +122,8 @@ export default function SearchBar({
       saveRecentSearch(query.trim());
       if (onSearch) {
         onSearch(query.trim());
+      } else if (variant === 'header') {
+        router.push(`/search?q=${encodeURIComponent(query.trim())}`);
       } else {
         router.push(`/?search=${encodeURIComponent(query.trim())}`);
       }
@@ -299,17 +301,22 @@ export default function SearchBar({
               )}
               
               {query && (
-                <Link
-                  href={`/?search=${encodeURIComponent(query)}`}
+                <button
                   onClick={() => {
                     saveRecentSearch(query);
                     setIsOpen(false);
+                    setQuery('');
+                    if (variant === 'header') {
+                      router.push(`/search?q=${encodeURIComponent(query)}`);
+                    } else {
+                      router.push(`/?search=${encodeURIComponent(query)}`);
+                    }
                   }}
-                  className="flex items-center justify-between p-3 text-sm text-primary hover:bg-primary/5 rounded-xl transition-colors mt-1"
+                  className="w-full flex items-center justify-between p-3 text-sm text-primary hover:bg-primary/5 rounded-xl transition-colors mt-1"
                 >
                   <span>View all results for "{query}"</span>
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </button>
               )}
             </div>
           )}

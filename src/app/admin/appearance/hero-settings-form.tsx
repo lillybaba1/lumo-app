@@ -318,19 +318,42 @@ export default function HeroSettingsForm() {
 
             {/* CTA Buttons */}
             <div 
-              className="absolute flex gap-2 px-4"
+              className="absolute flex flex-wrap gap-2 px-4"
               style={{
                 left: `${heroCtaPosition.x}%`,
                 top: `${heroCtaPosition.y}%`,
                 transform: 'translateY(-50%)',
               }}
             >
-              <div className="bg-primary text-primary-foreground text-xs md:text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1">
+              <div 
+                className="text-xs md:text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1"
+                style={{
+                  backgroundColor: heroButton1BgColor,
+                  color: heroButton1TextColor,
+                }}
+              >
                 Shop New Arrivals
                 <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
               </div>
-              <div className="bg-white/10 backdrop-blur text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-md border border-white/30">
+              <div 
+                className="text-xs md:text-sm font-semibold px-4 py-2 rounded-md border"
+                style={{
+                  backgroundColor: heroButton2BgColor === 'transparent' ? 'rgba(255,255,255,0.1)' : heroButton2BgColor,
+                  color: heroButton2TextColor,
+                  borderColor: heroButton2BorderColor,
+                }}
+              >
                 Browse Collections
+              </div>
+              <div 
+                className="text-xs md:text-sm font-semibold px-4 py-2 rounded-full flex items-center gap-1 shadow-lg"
+                style={{
+                  backgroundColor: heroButton3BgColor,
+                  color: heroButton3TextColor,
+                }}
+              >
+                Featured
+                <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
               </div>
             </div>
 

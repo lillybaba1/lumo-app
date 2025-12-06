@@ -292,6 +292,25 @@ export default async function BoutiquePage({ params }: Props) {
                   Contact
                 </h3>
                 <div className="space-y-3">
+                  {/* In-App Message Button */}
+                  {isAuthenticated && (
+                    <Link
+                      href={`/messages?boutique=${boutique.id}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20"
+                    >
+                      <MessageCircle className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-primary">Message Seller</span>
+                    </Link>
+                  )}
+                  {!isAuthenticated && (
+                    <Link
+                      href={`/login?redirect=/boutique/${slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Sign in to message seller</span>
+                    </Link>
+                  )}
                   {boutique.contactEmail && (
                     <a 
                       href={`mailto:${boutique.contactEmail}`}

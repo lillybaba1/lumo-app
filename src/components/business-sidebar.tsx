@@ -20,7 +20,10 @@ import {
   User,
   Crown,
   Shield,
-  Wallet
+  Wallet,
+  Tag,
+  MessageSquare,
+  Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +58,14 @@ const navGroups = [
     items: [
       { href: '/business/orders', icon: ShoppingCart, label: 'Orders' },
       { href: '/business/earnings', icon: Wallet, label: 'Earnings' },
+    ]
+  },
+  {
+    label: 'Marketing',
+    items: [
+      { href: '/business/promotions', icon: Tag, label: 'Promotions' },
+      { href: '/business/messages', icon: MessageSquare, label: 'Messages' },
+      { href: '/business/marketing', icon: Megaphone, label: 'Marketing' },
     ]
   },
   {

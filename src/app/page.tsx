@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,6 +43,8 @@ type CategorySectionSettings = {
   categorySectionTextColor?: string;
 };
 
+type SettingsResponse = HeroSettings & CategorySectionSettings;
+
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
@@ -54,14 +56,13 @@ export default function HomePageDataContainer() {
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch all data in parallel using API routes for better performance
       const nocache = Date.now();
       const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes] = await Promise.all([
         fetch(`/api/products?nocache=${nocache}`).then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch(`/api/categories?nocache=${nocache}`).then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
-        fetch(`/api/settings?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
-        fetch(`/api/hero?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+        fetch(`/api/settings?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
+        fetch(`/api/hero?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
         fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
       ]);
       
@@ -117,7 +118,11 @@ export default function HomePageDataContainer() {
     );
   }
 
-  return <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} trendingProducts={trendingProducts} />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>}>
+      <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} trendingProducts={trendingProducts} />
+    </Suspense>
+  );
 }
 
 function Home({ products, categories, collections, categorySectionSettings, trendingProducts }: { 
@@ -166,6 +171,18 @@ function Home({ products, categories, collections, categorySectionSettings, tren
   useEffect(() => {
     const cat = searchParams?.get('category');
     if (cat) setSelectedCategory(cat);
+    
+    const search = searchParams?.get('search');
+    if (search) {
+      setSearchQuery(search);
+      // Scroll to products section after a short delay
+      setTimeout(() => {
+        const productsSection = document.getElementById('products-section');
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
   }, [searchParams]);
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -442,7 +459,7 @@ function Home({ products, categories, collections, categorySectionSettings, tren
           )}
 
           {/* Enhanced Search and Sort Bar */}
-          <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div id="products-section" className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">
               <Input
                 placeholder="Search for products..."
