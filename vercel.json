@@ -5,8 +5,5 @@
     "src/app/api/**": {
       "maxDuration": 60
     }
-  },
-  "toolbar": {
-    "enabled": false
   }
 }
