@@ -189,18 +189,19 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
-      {/* Hero Label - Clickable Featured Button */}
+      {/* Hero Label - Clickable Featured Button - Desktop only */}
       {heroData?.heroLabelText && (
-        <Link
-          href="/products?filter=featured"
-          className="absolute hidden md:flex"
-          style={{
-            left: `${heroData.heroLabelPosition?.x ?? 10}%`,
-            top: `${heroData.heroLabelPosition?.y ?? 15}%`,
-            transform: 'translate(-50%, -50%)',
-            zIndex: 5,
-          }}
-        >
+        <div className="hidden md:block">
+          <Link
+            href="/products?filter=featured"
+            className="absolute flex"
+            style={{
+              left: `${heroData.heroLabelPosition?.x ?? 10}%`,
+              top: `${heroData.heroLabelPosition?.y ?? 15}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 5,
+            }}
+          >
           <Button
             size="lg"
             className="font-semibold text-sm md:text-base h-10 md:h-11 gap-2 rounded-full shadow-lg"
@@ -216,6 +217,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </Link>
+        </div>
       )}
 
       {/* Hero Products Overlay - desktop */}
