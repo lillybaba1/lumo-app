@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
-import { AIAssistantWidget } from '@/components/ai-assistant-widget';
+// import { AIAssistantWidget } from '@/components/ai-assistant-widget';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -95,7 +95,7 @@ export default async function RootLayout({
                 <Footer />
               </div>
               <Toaster />
-              <AIAssistantWidget />
+              {/* <AIAssistantWidget /> */}
               <CookieConsent />
               <VisitorTracker />
             </LocationProvider>

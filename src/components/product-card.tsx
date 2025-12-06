@@ -192,8 +192,8 @@ export default function ProductCard({ product, showQuickView = true }: ProductCa
             </p>
         </CardContent>
         <CardFooter className="p-2 md:p-4 flex flex-col gap-1.5 md:gap-2 mt-auto pt-0">
-            <div className="flex justify-between items-center w-full">
-              <div className="flex flex-col">
+            <div className="flex flex-col w-full gap-1">
+              <div className="flex justify-between items-center">
                 <p
                   className="text-sm md:text-xl font-bold whitespace-nowrap"
                   style={{
@@ -202,16 +202,16 @@ export default function ProductCard({ product, showQuickView = true }: ProductCa
                 >
                   {currencySymbol}{product.price.toFixed(2)}
                 </p>
-                {/* Mobile star rating */}
-                <div className="md:hidden">
-                  <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
-                </div>
+                {product.stock > 0 && product.stock <= 5 && (
+                  <span className="text-[8px] md:text-xs text-orange-600 font-medium whitespace-nowrap ml-2">
+                    Only {product.stock} left
+                  </span>
+                )}
               </div>
-              {product.stock > 0 && product.stock <= 5 && (
-                <span className="text-[8px] md:text-xs text-orange-600 font-medium hidden md:inline">
-                  Only {product.stock} left
-                </span>
-              )}
+              {/* Mobile star rating */}
+              <div className="md:hidden">
+                <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
+              </div>
             </div>
             <Button
               onClick={handleAddToCart}
