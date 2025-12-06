@@ -96,7 +96,9 @@ export default function Footer() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/settings');
+        const response = await fetch('/api/settings', {
+          cache: 'no-store'
+        });
         if (response.ok) {
           const data = await response.json();
           setSettings({ ...defaultSettings, ...data });

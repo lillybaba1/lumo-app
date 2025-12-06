@@ -38,6 +38,37 @@ export async function saveSettings(
         // Inventory
         lowStockThreshold: parseInt(formData.get('lowStockThreshold') as string) || 10,
         enableLowStockAlerts: formData.get('enableLowStockAlerts') === 'true',
+
+        // Footer Settings
+        footerDescription: formData.get('footerDescription') as string || undefined,
+        footerCopyright: formData.get('footerCopyright') as string || undefined,
+        footerTagline: formData.get('footerTagline') as string || undefined,
+        footerEmail: formData.get('footerEmail') as string || undefined,
+        footerPhone: formData.get('footerPhone') as string || undefined,
+        footerWhatsApp: formData.get('footerWhatsApp') as string || undefined,
+
+        // Social Media
+        socialFacebook: formData.get('socialFacebook') as string || undefined,
+        socialInstagram: formData.get('socialInstagram') as string || undefined,
+        socialX: formData.get('socialX') as string || undefined,
+        socialTiktok: formData.get('socialTiktok') as string || undefined,
+        socialYoutube: formData.get('socialYoutube') as string || undefined,
+
+        // Trust Badges
+        trustBadge1Title: formData.get('trustBadge1Title') as string || undefined,
+        trustBadge1Subtitle: formData.get('trustBadge1Subtitle') as string || undefined,
+        trustBadge2Title: formData.get('trustBadge2Title') as string || undefined,
+        trustBadge2Subtitle: formData.get('trustBadge2Subtitle') as string || undefined,
+        trustBadge3Title: formData.get('trustBadge3Title') as string || undefined,
+        trustBadge3Subtitle: formData.get('trustBadge3Subtitle') as string || undefined,
+        trustBadge4Title: formData.get('trustBadge4Title') as string || undefined,
+        trustBadge4Subtitle: formData.get('trustBadge4Subtitle') as string || undefined,
+        trustBadge5Title: formData.get('trustBadge5Title') as string || undefined,
+        trustBadge5Subtitle: formData.get('trustBadge5Subtitle') as string || undefined,
+
+        // Payment & Delivery
+        footerPaymentMethods: formData.get('footerPaymentMethods') as string || undefined,
+        footerDeliveryCountries: formData.get('footerDeliveryCountries') as string || undefined,
     };
 
     await saveSettingsToDb(settingsToSave);
