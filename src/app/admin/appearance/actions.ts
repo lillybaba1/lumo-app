@@ -56,6 +56,13 @@ export async function getHeroSettings(): Promise<{
   heroHeadingPosition: { x: number; y: number };
   heroTaglinePosition: { x: number; y: number };
   heroCtaPosition: { x: number; y: number };
+  heroButton1BgColor: string;
+  heroButton1TextColor: string;
+  heroButton2BgColor: string;
+  heroButton2TextColor: string;
+  heroButton2BorderColor: string;
+  heroButton3BgColor: string;
+  heroButton3TextColor: string;
 }> {
   const settings = await getSettings();
   return {
@@ -69,6 +76,13 @@ export async function getHeroSettings(): Promise<{
     heroHeadingPosition: settings.heroHeadingPosition || { x: 5, y: 35 },
     heroTaglinePosition: settings.heroTaglinePosition || { x: 5, y: 50 },
     heroCtaPosition: settings.heroCtaPosition || { x: 5, y: 65 },
+    heroButton1BgColor: settings.heroButton1BgColor || '#3b82f6',
+    heroButton1TextColor: settings.heroButton1TextColor || '#ffffff',
+    heroButton2BgColor: settings.heroButton2BgColor || 'transparent',
+    heroButton2TextColor: settings.heroButton2TextColor || '#ffffff',
+    heroButton2BorderColor: settings.heroButton2BorderColor || '#ffffff',
+    heroButton3BgColor: settings.heroButton3BgColor || '#3b82f6',
+    heroButton3TextColor: settings.heroButton3TextColor || '#ffffff',
   };
 }
 
@@ -86,6 +100,13 @@ export async function updateHeroSettings(heroData: {
   heroHeadingPosition: { x: number; y: number };
   heroTaglinePosition: { x: number; y: number };
   heroCtaPosition: { x: number; y: number };
+  heroButton1BgColor: string;
+  heroButton1TextColor: string;
+  heroButton2BgColor: string;
+  heroButton2TextColor: string;
+  heroButton2BorderColor: string;
+  heroButton3BgColor: string;
+  heroButton3TextColor: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const currentSettings = await getSettings();
@@ -131,6 +152,13 @@ export async function updateHeroSettings(heroData: {
       heroHeadingPosition: heroData.heroHeadingPosition,
       heroTaglinePosition: heroData.heroTaglinePosition,
       heroCtaPosition: heroData.heroCtaPosition,
+      heroButton1BgColor: heroData.heroButton1BgColor,
+      heroButton1TextColor: heroData.heroButton1TextColor,
+      heroButton2BgColor: heroData.heroButton2BgColor,
+      heroButton2TextColor: heroData.heroButton2TextColor,
+      heroButton2BorderColor: heroData.heroButton2BorderColor,
+      heroButton3BgColor: heroData.heroButton3BgColor,
+      heroButton3TextColor: heroData.heroButton3TextColor,
     });
 
     // Revalidate ALL pages to force refresh

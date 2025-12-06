@@ -51,6 +51,15 @@ export default function HeroSettingsForm() {
   const [heroTaglinePosition, setHeroTaglinePosition] = useState({ x: 5, y: 50 });
   const [heroCtaPosition, setHeroCtaPosition] = useState({ x: 5, y: 65 });
 
+  // Button color fields
+  const [heroButton1BgColor, setHeroButton1BgColor] = useState('#3b82f6');
+  const [heroButton1TextColor, setHeroButton1TextColor] = useState('#ffffff');
+  const [heroButton2BgColor, setHeroButton2BgColor] = useState('transparent');
+  const [heroButton2TextColor, setHeroButton2TextColor] = useState('#ffffff');
+  const [heroButton2BorderColor, setHeroButton2BorderColor] = useState('#ffffff');
+  const [heroButton3BgColor, setHeroButton3BgColor] = useState('#3b82f6');
+  const [heroButton3TextColor, setHeroButton3TextColor] = useState('#ffffff');
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -76,6 +85,15 @@ export default function HeroSettingsForm() {
         setHeroHeadingPosition(settings.heroHeadingPosition || { x: 5, y: 35 });
         setHeroTaglinePosition(settings.heroTaglinePosition || { x: 5, y: 50 });
         setHeroCtaPosition(settings.heroCtaPosition || { x: 5, y: 65 });
+        
+        // Load button colors
+        setHeroButton1BgColor(settings.heroButton1BgColor || '#3b82f6');
+        setHeroButton1TextColor(settings.heroButton1TextColor || '#ffffff');
+        setHeroButton2BgColor(settings.heroButton2BgColor || 'transparent');
+        setHeroButton2TextColor(settings.heroButton2TextColor || '#ffffff');
+        setHeroButton2BorderColor(settings.heroButton2BorderColor || '#ffffff');
+        setHeroButton3BgColor(settings.heroButton3BgColor || '#3b82f6');
+        setHeroButton3TextColor(settings.heroButton3TextColor || '#ffffff');
 
         // If it's a custom position (not in preset list), set it to custom
         const presets = ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'];
@@ -167,6 +185,13 @@ export default function HeroSettingsForm() {
         heroHeadingPosition,
         heroTaglinePosition,
         heroCtaPosition,
+        heroButton1BgColor,
+        heroButton1TextColor,
+        heroButton2BgColor,
+        heroButton2TextColor,
+        heroButton2BorderColor,
+        heroButton3BgColor,
+        heroButton3TextColor,
       });
 
       toast({
@@ -488,6 +513,123 @@ export default function HeroSettingsForm() {
                 max={100}
                 step={1}
               />
+            </div>
+          </div>
+
+          {/* CTA Button Colors */}
+          <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+            <Label className="text-base font-semibold">Button Colors</Label>
+            
+            {/* Button 1: Shop New Arrivals */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Shop New Arrivals Button</Label>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn1-bg" className="text-xs whitespace-nowrap">Background:</Label>
+                  <input
+                    type="color"
+                    id="btn1-bg"
+                    value={heroButton1BgColor}
+                    onChange={(e) => {
+                      setHeroButton1BgColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn1-text" className="text-xs whitespace-nowrap">Text:</Label>
+                  <input
+                    type="color"
+                    id="btn1-text"
+                    value={heroButton1TextColor}
+                    onChange={(e) => {
+                      setHeroButton1TextColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Button 2: Browse Collections */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Browse Collections Button</Label>
+              <div className="flex gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn2-bg" className="text-xs whitespace-nowrap">Background:</Label>
+                  <input
+                    type="color"
+                    id="btn2-bg"
+                    value={heroButton2BgColor === 'transparent' ? '#000000' : heroButton2BgColor}
+                    onChange={(e) => {
+                      setHeroButton2BgColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn2-text" className="text-xs whitespace-nowrap">Text:</Label>
+                  <input
+                    type="color"
+                    id="btn2-text"
+                    value={heroButton2TextColor}
+                    onChange={(e) => {
+                      setHeroButton2TextColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn2-border" className="text-xs whitespace-nowrap">Border:</Label>
+                  <input
+                    type="color"
+                    id="btn2-border"
+                    value={heroButton2BorderColor}
+                    onChange={(e) => {
+                      setHeroButton2BorderColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Button 3: Featured */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Featured Button</Label>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn3-bg" className="text-xs whitespace-nowrap">Background:</Label>
+                  <input
+                    type="color"
+                    id="btn3-bg"
+                    value={heroButton3BgColor}
+                    onChange={(e) => {
+                      setHeroButton3BgColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="btn3-text" className="text-xs whitespace-nowrap">Text:</Label>
+                  <input
+                    type="color"
+                    id="btn3-text"
+                    value={heroButton3TextColor}
+                    onChange={(e) => {
+                      setHeroButton3TextColor(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

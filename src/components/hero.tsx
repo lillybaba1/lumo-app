@@ -18,6 +18,14 @@ type HeroSettings = {
   heroHeadingPosition?: { x: number; y: number };
   heroTaglinePosition?: { x: number; y: number };
   heroCtaPosition?: { x: number; y: number };
+  // Button colors
+  heroButton1BgColor?: string;
+  heroButton1TextColor?: string;
+  heroButton2BgColor?: string;
+  heroButton2TextColor?: string;
+  heroButton2BorderColor?: string;
+  heroButton3BgColor?: string;
+  heroButton3TextColor?: string;
 };
 
 interface HeroProps {
@@ -42,6 +50,15 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const heroHeadingPosition = settings?.heroHeadingPosition || { x: 5, y: 35 };
   const heroTaglinePosition = settings?.heroTaglinePosition || { x: 5, y: 50 };
   const heroCtaPosition = settings?.heroCtaPosition || { x: 5, y: 65 };
+  
+  // Button colors
+  const heroButton1BgColor = settings?.heroButton1BgColor || '#3b82f6';
+  const heroButton1TextColor = settings?.heroButton1TextColor || '#ffffff';
+  const heroButton2BgColor = settings?.heroButton2BgColor || 'transparent';
+  const heroButton2TextColor = settings?.heroButton2TextColor || '#ffffff';
+  const heroButton2BorderColor = settings?.heroButton2BorderColor || '#ffffff';
+  const heroButton3BgColor = settings?.heroButton3BgColor || '#3b82f6';
+  const heroButton3TextColor = settings?.heroButton3TextColor || '#ffffff';
 
   useEffect(() => {
     // Fetch data with cache-busting but don't fail all if one request fails
@@ -189,37 +206,6 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
-      {/* Hero Label - Clickable Featured Button - Desktop only */}
-      {heroData?.heroLabelText && (
-        <div className="hidden md:block">
-          <Link
-            href="/products?filter=featured"
-            className="absolute flex"
-            style={{
-              left: `${heroData.heroLabelPosition?.x ?? 10}%`,
-              top: `${heroData.heroLabelPosition?.y ?? 15}%`,
-              transform: 'translate(-50%, -50%)',
-              zIndex: 5,
-            }}
-          >
-          <Button
-            size="lg"
-            className="font-semibold text-sm md:text-base h-10 md:h-11 gap-2 rounded-full shadow-lg"
-            style={{
-              backgroundColor: 'var(--button-primary-bg)',
-              color: 'var(--button-primary-text)',
-              borderRadius: 'var(--radius-button)',
-              padding: '0 var(--spacing-xl)',
-            }}
-          >
-            <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
-            {heroData.heroLabelText}
-            <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        </Link>
-        </div>
-      )}
-
       {/* Hero Products Overlay - desktop */}
       {heroProducts.length > 0 && (
         <div className="absolute inset-0 hidden md:block">
@@ -319,8 +305,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               size="lg"
               className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
               style={{
-                backgroundColor: 'var(--button-primary-bg)',
-                color: 'var(--button-primary-fg)',
+                backgroundColor: heroButton1BgColor,
+                color: heroButton1TextColor,
                 borderRadius: 'var(--radius-button)',
                 padding: '0 var(--spacing-xl)',
               }}
@@ -336,9 +322,9 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               variant="outline"
               className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
               style={{
-                backgroundColor: 'var(--button-secondary-bg)',
-                color: 'var(--color-text-inverse)',
-                borderColor: 'var(--color-text-inverse)',
+                backgroundColor: heroButton2BgColor,
+                color: heroButton2TextColor,
+                borderColor: heroButton2BorderColor,
                 borderRadius: 'var(--radius-button)',
                 padding: '0 var(--spacing-xl)',
               }}
@@ -346,6 +332,25 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               Browse Collections
             </Button>
           </Link>
+
+          {heroData?.heroLabelText && (
+            <Link href="/products?filter=featured">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11 gap-2 rounded-full shadow-lg"
+                style={{
+                  backgroundColor: heroButton3BgColor,
+                  color: heroButton3TextColor,
+                  borderRadius: 'var(--radius-button)',
+                  padding: '0 var(--spacing-xl)',
+                }}
+              >
+                <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
+                {heroData.heroLabelText}
+                <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

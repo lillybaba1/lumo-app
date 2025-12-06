@@ -65,6 +65,15 @@ export interface Settings {
     heroTaglinePosition?: { x: number; y: number };
     heroCtaPosition?: { x: number; y: number }; // Shop New Arrivals + Browse Collections buttons
 
+    // Hero Button Colors
+    heroButton1BgColor?: string; // Shop New Arrivals background
+    heroButton1TextColor?: string; // Shop New Arrivals text
+    heroButton2BgColor?: string; // Browse Collections background
+    heroButton2TextColor?: string; // Browse Collections text
+    heroButton2BorderColor?: string; // Browse Collections border
+    heroButton3BgColor?: string; // Featured button background
+    heroButton3TextColor?: string; // Featured button text
+
     // Chatbot Settings
     chatbotImage?: string;
     chatbotName?: string;
