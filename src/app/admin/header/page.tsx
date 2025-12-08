@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getSettings, saveSettings, type Settings } from '@/services/settingsService';
-import { Save, Eye, Megaphone, Palette, Home, ShoppingBag, Heart, User } from 'lucide-react';
+import { Save, Eye, Palette, Home, ShoppingBag, Heart, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
@@ -23,11 +22,6 @@ export default function HeaderSettingsPage() {
         headerButtonColor: '#8b5cf6',
         homeButtonGradientFrom: '#8b5cf6',
         homeButtonGradientTo: '#ec4899',
-        announcementEnabled: false,
-        announcementText: '',
-        announcementBgColor: '#8b5cf6',
-        announcementTextColor: '#ffffff',
-        announcementLink: '',
     });
 
     useEffect(() => {
@@ -41,11 +35,6 @@ export default function HeaderSettingsPage() {
                     headerButtonColor: data.headerButtonColor || '#8b5cf6',
                     homeButtonGradientFrom: data.homeButtonGradientFrom || '#8b5cf6',
                     homeButtonGradientTo: data.homeButtonGradientTo || '#ec4899',
-                    announcementEnabled: data.announcementEnabled || false,
-                    announcementText: data.announcementText || '',
-                    announcementBgColor: data.announcementBgColor || '#8b5cf6',
-                    announcementTextColor: data.announcementTextColor || '#ffffff',
-                    announcementLink: data.announcementLink || '',
                 });
             } catch (error) {
                 console.error('Failed to load settings:', error);
@@ -89,7 +78,7 @@ export default function HeaderSettingsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Header Settings</h1>
-                    <p className="text-muted-foreground">Customize your store header and announcement bar</p>
+                    <p className="text-muted-foreground">Customize your store header styling</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" asChild>
@@ -116,19 +105,6 @@ export default function HeaderSettingsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="border rounded-lg overflow-hidden">
-                        {/* Announcement Bar Preview */}
-                        {settings.announcementEnabled && settings.announcementText && (
-                            <div 
-                                className="py-2 px-4 text-center text-sm font-medium"
-                                style={{
-                                    backgroundColor: settings.announcementBgColor,
-                                    color: settings.announcementTextColor,
-                                }}
-                            >
-                                {settings.announcementText}
-                            </div>
-                        )}
-                        
                         {/* Header Preview */}
                         <div 
                             className="flex items-center justify-between px-6 py-4"
@@ -187,84 +163,6 @@ export default function HeaderSettingsPage() {
             </Card>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Announcement Bar Settings */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Megaphone className="h-5 w-5" />
-                            Announcement Bar
-                        </CardTitle>
-                        <CardDescription>Display important messages at the top of your site</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="announcement-enabled">Enable Announcement Bar</Label>
-                            <Switch
-                                id="announcement-enabled"
-                                checked={settings.announcementEnabled}
-                                onCheckedChange={(checked) => setSettings({ ...settings, announcementEnabled: checked })}
-                            />
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <Label htmlFor="announcement-text">Announcement Text</Label>
-                            <Input
-                                id="announcement-text"
-                                value={settings.announcementText}
-                                onChange={(e) => setSettings({ ...settings, announcementText: e.target.value })}
-                                placeholder="🎉 Free shipping on orders over $50!"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="announcement-link">Link URL (optional)</Label>
-                            <Input
-                                id="announcement-link"
-                                value={settings.announcementLink}
-                                onChange={(e) => setSettings({ ...settings, announcementLink: e.target.value })}
-                                placeholder="/products or https://example.com"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="announcement-bg">Background Color</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        type="color"
-                                        id="announcement-bg"
-                                        value={settings.announcementBgColor}
-                                        onChange={(e) => setSettings({ ...settings, announcementBgColor: e.target.value })}
-                                        className="w-12 h-10 p-1 cursor-pointer"
-                                    />
-                                    <Input
-                                        value={settings.announcementBgColor}
-                                        onChange={(e) => setSettings({ ...settings, announcementBgColor: e.target.value })}
-                                        className="flex-1"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="announcement-text-color">Text Color</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        type="color"
-                                        id="announcement-text-color"
-                                        value={settings.announcementTextColor}
-                                        onChange={(e) => setSettings({ ...settings, announcementTextColor: e.target.value })}
-                                        className="w-12 h-10 p-1 cursor-pointer"
-                                    />
-                                    <Input
-                                        value={settings.announcementTextColor}
-                                        onChange={(e) => setSettings({ ...settings, announcementTextColor: e.target.value })}
-                                        className="flex-1"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
                 {/* Header Style Settings */}
                 <Card>
                     <CardHeader>

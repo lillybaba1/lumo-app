@@ -310,3 +310,20 @@ button, a, input, select, textarea {
 .animate-pulse-ring {
   animation: pulse-ring 2s ease-in-out infinite;
 }
+
+/* Shake animation for announcements */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(-50%);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(calc(-50% - 4px));
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(calc(-50% + 4px));
+  }
+}
+
+.animate-shake {
+  animation: shake 0.8s ease-in-out infinite;
+}

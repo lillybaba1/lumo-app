@@ -20,6 +20,31 @@ export default function HeroAdminPage() {
   const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>('');
   const [heroHeading, setHeroHeading] = useState<string>('Step into Lumo');
   const [heroTagline, setHeroTagline] = useState<string>('Discover exceptional products crafted with care. Your journey to quality starts here.');
+  // Button colors
+  const [heroButton1BgColor, setHeroButton1BgColor] = useState<string>('#3b82f6');
+  const [heroButton1TextColor, setHeroButton1TextColor] = useState<string>('#ffffff');
+  const [heroButton2BgColor, setHeroButton2BgColor] = useState<string>('transparent');
+  const [heroButton2TextColor, setHeroButton2TextColor] = useState<string>('#ffffff');
+  const [heroButton2BorderColor, setHeroButton2BorderColor] = useState<string>('#ffffff');
+  const [heroButton3BgColor, setHeroButton3BgColor] = useState<string>('#3b82f6');
+  const [heroButton3TextColor, setHeroButton3TextColor] = useState<string>('#ffffff');
+  // Hero Announcement
+  const [heroAnnouncement, setHeroAnnouncement] = useState<{
+    enabled: boolean;
+    text: string;
+    bgColor: string;
+    textColor: string;
+    borderColor: string;
+    borderRadius: number;
+    fontSize: string;
+    fontWeight: string;
+    positionX: number;
+    positionY: number;
+    width: number;
+    padding: string;
+    shadow: boolean;
+    animation: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,6 +89,31 @@ export default function HeroAdminPage() {
       setHeroBackgroundImage(settingsData?.heroBackgroundImage || '');
       setHeroHeading(settingsData?.heroHeading || 'Step into Lumo');
       setHeroTagline(settingsData?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.');
+      // Load button colors
+      setHeroButton1BgColor(settingsData?.heroButton1BgColor || '#3b82f6');
+      setHeroButton1TextColor(settingsData?.heroButton1TextColor || '#ffffff');
+      setHeroButton2BgColor(settingsData?.heroButton2BgColor || 'transparent');
+      setHeroButton2TextColor(settingsData?.heroButton2TextColor || '#ffffff');
+      setHeroButton2BorderColor(settingsData?.heroButton2BorderColor || '#ffffff');
+      setHeroButton3BgColor(settingsData?.heroButton3BgColor || '#3b82f6');
+      setHeroButton3TextColor(settingsData?.heroButton3TextColor || '#ffffff');
+      // Load hero announcement settings
+      setHeroAnnouncement({
+        enabled: settingsData?.heroAnnouncementEnabled ?? false,
+        text: settingsData?.heroAnnouncementText || '',
+        bgColor: settingsData?.heroAnnouncementBgColor || '#8b5cf6',
+        textColor: settingsData?.heroAnnouncementTextColor || '#ffffff',
+        borderColor: settingsData?.heroAnnouncementBorderColor || '#ffffff',
+        borderRadius: settingsData?.heroAnnouncementBorderRadius ?? 12,
+        fontSize: settingsData?.heroAnnouncementFontSize || 'base',
+        fontWeight: settingsData?.heroAnnouncementFontWeight || 'semibold',
+        positionX: settingsData?.heroAnnouncementPositionX ?? 50,
+        positionY: settingsData?.heroAnnouncementPositionY ?? 10,
+        width: settingsData?.heroAnnouncementWidth ?? 400,
+        padding: settingsData?.heroAnnouncementPadding || 'md',
+        shadow: settingsData?.heroAnnouncementShadow ?? true,
+        animation: settingsData?.heroAnnouncementAnimation || 'none',
+      });
     } catch (error) {
       console.error('Failed to load data:', error);
       setHeroData({ products: [], heroLabelText: 'Featured', heroLabelPosition: { x: 10, y: 15 } });
@@ -396,15 +446,68 @@ export default function HeroAdminPage() {
                 <h2 className="text-2xl font-bold text-white mb-2 leading-tight">{heroHeading}</h2>
                 <p className="text-white/80 text-sm mb-4 line-clamp-2">{heroTagline}</p>
                 <div className="flex gap-2">
-                  <Button size="sm" className="gap-1 text-xs pointer-events-none">
+                  <Button 
+                    size="sm" 
+                    className="gap-1 text-xs pointer-events-none"
+                    style={{
+                      backgroundColor: heroButton1BgColor,
+                      color: heroButton1TextColor,
+                    }}
+                  >
                     Shop New Arrivals
                     <ArrowRight className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" className="text-xs bg-white/90 text-slate-900 hover:bg-white pointer-events-none">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs pointer-events-none"
+                    style={{
+                      backgroundColor: heroButton2BgColor,
+                      color: heroButton2TextColor,
+                      borderColor: heroButton2BorderColor,
+                    }}
+                  >
                     Browse Collections
                   </Button>
                 </div>
               </div>
+
+              {/* Hero Announcement Overlay Preview */}
+              {heroAnnouncement?.enabled && heroAnnouncement?.text && (
+                <div
+                  className={`absolute text-center z-20 ${
+                    heroAnnouncement.animation === 'pulse' ? 'animate-pulse' :
+                    heroAnnouncement.animation === 'bounce' ? 'animate-bounce' :
+                    heroAnnouncement.animation === 'shake' ? 'animate-shake' : ''
+                  }`}
+                  style={{
+                    left: `${heroAnnouncement.positionX}%`,
+                    top: `${heroAnnouncement.positionY}%`,
+                    transform: heroAnnouncement.positionX === 50 ? 'translateX(-50%)' : 
+                               heroAnnouncement.positionX > 50 ? `translateX(-${(heroAnnouncement.positionX - 50) * 2}%)` : 'none',
+                    width: `${Math.min(heroAnnouncement.width * 0.3, 150)}px`,
+                    backgroundColor: heroAnnouncement.bgColor,
+                    color: heroAnnouncement.textColor,
+                    borderColor: heroAnnouncement.borderColor,
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderRadius: `${heroAnnouncement.borderRadius}px`,
+                    padding: heroAnnouncement.padding === 'sm' ? '2px 6px' :
+                             heroAnnouncement.padding === 'lg' ? '8px 16px' : '4px 10px',
+                    fontSize: '9px',
+                    fontWeight: heroAnnouncement.fontWeight === 'normal' ? 400 :
+                                heroAnnouncement.fontWeight === 'medium' ? 500 :
+                                heroAnnouncement.fontWeight === 'bold' ? 700 : 600,
+                    boxShadow: heroAnnouncement.shadow ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '200px',
+                  }}
+                >
+                  {heroAnnouncement.text}
+                </div>
+              )}
 
               {/* Label - styled like homepage */}
               {heroData?.heroLabelText && (
@@ -421,6 +524,10 @@ export default function HeroAdminPage() {
                   <Button
                     size="sm"
                     className="font-semibold text-xs gap-1.5 rounded-full shadow-lg cursor-move"
+                    style={{
+                      backgroundColor: heroButton3BgColor,
+                      color: heroButton3TextColor,
+                    }}
                   >
                     <ShoppingBag className="h-3 w-3" />
                     {heroData.heroLabelText}

@@ -43,7 +43,36 @@ type CategorySectionSettings = {
   categorySectionTextColor?: string;
 };
 
-type SettingsResponse = HeroSettings & CategorySectionSettings;
+type LumoPromiseSettings = {
+  lumoPromiseEnabled?: boolean;
+  lumoPromiseTitle?: string;
+  lumoPromiseDescription?: string;
+  lumoPromiseBgColor?: string;
+  lumoPromiseTextColor?: string;
+  lumoPromiseTitleSize?: string;
+  lumoPromiseTitleWeight?: string;
+  lumoPromiseFeature1Icon?: string;
+  lumoPromiseFeature1Title?: string;
+  lumoPromiseFeature1Subtitle?: string;
+  lumoPromiseFeature2Icon?: string;
+  lumoPromiseFeature2Title?: string;
+  lumoPromiseFeature2Subtitle?: string;
+  lumoPromiseFeature3Icon?: string;
+  lumoPromiseFeature3Title?: string;
+  lumoPromiseFeature3Subtitle?: string;
+};
+
+type MeetMakersSettings = {
+  meetMakersEnabled?: boolean;
+  meetMakersTitle?: string;
+  meetMakersDescription?: string;
+  meetMakersBgColor?: string;
+  meetMakersTextColor?: string;
+  meetMakersTitleSize?: string;
+  meetMakersTitleWeight?: string;
+};
+
+type SettingsResponse = HeroSettings & CategorySectionSettings & LumoPromiseSettings & MeetMakersSettings;
 
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,6 +81,8 @@ export default function HomePageDataContainer() {
   const [collections, setCollections] = useState<Collections>({ bestSellers: [], newArrivals: [], deals: [] });
   const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
   const [categorySectionSettings, setCategorySectionSettings] = useState<CategorySectionSettings>({});
+  const [lumoPromiseSettings, setLumoPromiseSettings] = useState<LumoPromiseSettings>({});
+  const [meetMakersSettings, setMeetMakersSettings] = useState<MeetMakersSettings>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -79,6 +110,33 @@ export default function HomePageDataContainer() {
         categorySectionBgGradientTo: settingsRes.categorySectionBgGradientTo,
         categorySectionBgGradientDirection: settingsRes.categorySectionBgGradientDirection,
         categorySectionTextColor: settingsRes.categorySectionTextColor,
+      });
+      setLumoPromiseSettings({
+        lumoPromiseEnabled: settingsRes.lumoPromiseEnabled ?? true,
+        lumoPromiseTitle: settingsRes.lumoPromiseTitle,
+        lumoPromiseDescription: settingsRes.lumoPromiseDescription,
+        lumoPromiseBgColor: settingsRes.lumoPromiseBgColor,
+        lumoPromiseTextColor: settingsRes.lumoPromiseTextColor,
+        lumoPromiseTitleSize: settingsRes.lumoPromiseTitleSize,
+        lumoPromiseTitleWeight: settingsRes.lumoPromiseTitleWeight,
+        lumoPromiseFeature1Icon: settingsRes.lumoPromiseFeature1Icon,
+        lumoPromiseFeature1Title: settingsRes.lumoPromiseFeature1Title,
+        lumoPromiseFeature1Subtitle: settingsRes.lumoPromiseFeature1Subtitle,
+        lumoPromiseFeature2Icon: settingsRes.lumoPromiseFeature2Icon,
+        lumoPromiseFeature2Title: settingsRes.lumoPromiseFeature2Title,
+        lumoPromiseFeature2Subtitle: settingsRes.lumoPromiseFeature2Subtitle,
+        lumoPromiseFeature3Icon: settingsRes.lumoPromiseFeature3Icon,
+        lumoPromiseFeature3Title: settingsRes.lumoPromiseFeature3Title,
+        lumoPromiseFeature3Subtitle: settingsRes.lumoPromiseFeature3Subtitle,
+      });
+      setMeetMakersSettings({
+        meetMakersEnabled: settingsRes.meetMakersEnabled ?? true,
+        meetMakersTitle: settingsRes.meetMakersTitle,
+        meetMakersDescription: settingsRes.meetMakersDescription,
+        meetMakersBgColor: settingsRes.meetMakersBgColor,
+        meetMakersTextColor: settingsRes.meetMakersTextColor,
+        meetMakersTitleSize: settingsRes.meetMakersTitleSize,
+        meetMakersTitleWeight: settingsRes.meetMakersTitleWeight,
       });
       setLoading(false);
     }
@@ -120,18 +178,29 @@ export default function HomePageDataContainer() {
 
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>}>
-      <Home products={products} categories={categories} collections={collections} categorySectionSettings={categorySectionSettings} trendingProducts={trendingProducts} />
+      <Home 
+        products={products} 
+        categories={categories} 
+        collections={collections} 
+        categorySectionSettings={categorySectionSettings} 
+        trendingProducts={trendingProducts}
+        lumoPromiseSettings={lumoPromiseSettings}
+        meetMakersSettings={meetMakersSettings}
+      />
     </Suspense>
   );
 }
 
-function Home({ products, categories, collections, categorySectionSettings, trendingProducts }: { 
+function Home(props: { 
   products: Product[], 
   categories: Category[], 
   collections: Collections,
   categorySectionSettings: CategorySectionSettings,
-  trendingProducts: Product[]
+  trendingProducts: Product[],
+  lumoPromiseSettings: LumoPromiseSettings,
+  meetMakersSettings: MeetMakersSettings
 }) {
+  const { products, categories, collections, categorySectionSettings, trendingProducts, lumoPromiseSettings, meetMakersSettings } = props;
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -382,7 +451,7 @@ function Home({ products, categories, collections, categorySectionSettings, tren
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Trending Products - Only shows top 15 best sellers or admin-selected trending */}
-          {trendingProducts.length > 0 && (
+          {trendingProducts && trendingProducts.length > 0 && (
             <div className="mb-8 md:mb-12">
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3">
@@ -626,67 +695,73 @@ function Home({ products, categories, collections, categorySectionSettings, tren
           </div>
 
           {/* Trust & Story Sections */}
-          <section className="mt-16 space-y-12">
+          <section className="mt-12 md:mt-16 space-y-6 md:space-y-12">
             {/* The Lumo Promise */}
-            <Card className="overflow-hidden rounded-2xl border bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm shadow-sm">
-              <CardContent className="p-8 md:p-12">
-                <div className="max-w-3xl mx-auto text-center space-y-4">
-                  <h2 className="font-headline font-bold text-3xl md:text-4xl">
-                    The Lumo Promise
-                  </h2>
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Every product in our collection is carefully curated with ethics,
-                    craftsmanship, and sustainability at its core. We partner with artisans
-                    and makers who share our commitment to quality and responsible practices.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                    <div className="space-y-2">
-                      <div className="text-2xl">🌱</div>
-                      <h3 className="font-semibold">Sustainable</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Eco-friendly materials and processes
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="text-2xl">✨</div>
-                      <h3 className="font-semibold">Quality Crafted</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Handpicked for excellence
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="text-2xl">🤝</div>
-                      <h3 className="font-semibold">Fair Trade</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Supporting artisan communities
-                      </p>
+            {lumoPromiseSettings.lumoPromiseEnabled !== false && (
+              <Card 
+                className="overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm"
+                style={{ backgroundColor: lumoPromiseSettings.lumoPromiseBgColor || '#ffffff' }}
+              >
+                <CardContent className="p-4 md:p-12">
+                  <div className="max-w-3xl mx-auto text-center space-y-3 md:space-y-4" style={{ color: lumoPromiseSettings.lumoPromiseTextColor || '#000000' }}>
+                    <h2 
+                      className={`font-headline text-${lumoPromiseSettings.lumoPromiseTitleSize || 'xl'} md:text-4xl font-${lumoPromiseSettings.lumoPromiseTitleWeight || 'bold'}`}
+                      style={{ fontWeight: lumoPromiseSettings.lumoPromiseTitleWeight === 'extrabold' ? 800 : lumoPromiseSettings.lumoPromiseTitleWeight === 'bold' ? 700 : lumoPromiseSettings.lumoPromiseTitleWeight === 'semibold' ? 600 : lumoPromiseSettings.lumoPromiseTitleWeight === 'medium' ? 500 : 400 }}
+                    >
+                      {lumoPromiseSettings.lumoPromiseTitle || 'The Lumo Promise'}
+                    </h2>
+                    <p className="text-sm md:text-lg leading-relaxed opacity-80">
+                      {lumoPromiseSettings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.'}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 md:gap-6 mt-4 md:mt-8">
+                      <div className="space-y-1 md:space-y-2">
+                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature1Icon || '🌱'}</div>
+                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature1Title || 'Sustainable'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature1Subtitle || 'Eco-friendly materials and processes'}
+                        </p>
+                      </div>
+                      <div className="space-y-1 md:space-y-2">
+                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature2Icon || '✨'}</div>
+                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature2Title || 'Quality Crafted'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature2Subtitle || 'Handpicked for excellence'}
+                        </p>
+                      </div>
+                      <div className="space-y-1 md:space-y-2">
+                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature3Icon || '🤝'}</div>
+                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature3Title || 'Fair Trade'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature3Subtitle || 'Supporting artisan communities'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Meet the Makers */}
-            <Card className="overflow-hidden rounded-2xl border bg-white/80 backdrop-blur-sm shadow-sm">
-              <CardContent className="p-8 md:p-12">
-                <div className="max-w-3xl mx-auto space-y-4">
-                  <h2 className="font-headline font-bold text-3xl md:text-4xl text-center">
-                    Meet the Makers
-                  </h2>
-                  <p className="text-lg text-muted-foreground leading-relaxed text-center">
-                    Behind every product is a story of skilled artisans dedicated to their craft.
-                    From traditional techniques passed down through generations to innovative
-                    approaches that honor heritage while embracing the future, each piece
-                    represents a commitment to authenticity and excellence.
-                  </p>
-                  <p className="text-base text-muted-foreground leading-relaxed text-center">
-                    We're proud to work directly with makers from diverse communities,
-                    ensuring fair compensation and celebrating the unique cultural traditions
-                    that make each product special.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {meetMakersSettings.meetMakersEnabled !== false && (
+              <Card 
+                className="overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm"
+                style={{ backgroundColor: meetMakersSettings.meetMakersBgColor || '#ffffff' }}
+              >
+                <CardContent className="p-4 md:p-12">
+                  <div className="max-w-3xl mx-auto space-y-2 md:space-y-4" style={{ color: meetMakersSettings.meetMakersTextColor || '#000000' }}>
+                    <h2 
+                      className={`font-headline text-${meetMakersSettings.meetMakersTitleSize || 'xl'} md:text-4xl text-center`}
+                      style={{ fontWeight: meetMakersSettings.meetMakersTitleWeight === 'extrabold' ? 800 : meetMakersSettings.meetMakersTitleWeight === 'bold' ? 700 : meetMakersSettings.meetMakersTitleWeight === 'semibold' ? 600 : meetMakersSettings.meetMakersTitleWeight === 'medium' ? 500 : 400 }}
+                    >
+                      {meetMakersSettings.meetMakersTitle || 'Meet the Makers'}
+                    </h2>
+                    <p className="text-sm md:text-lg leading-relaxed text-center opacity-80">
+                      {meetMakersSettings.meetMakersDescription || 'Behind every product is a story of skilled artisans dedicated to their craft, using traditional techniques passed down through generations.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </section>
         </div>
       </div>

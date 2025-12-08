@@ -29,6 +29,7 @@ type SidebarProps = {
   mobileIcon?: ReactNode;
   defaultCollapsed?: boolean;
   mobileOffsetClassName?: string;
+  mobileTopOffset?: string;
   onLogoClick?: () => void;
 };
 
@@ -42,6 +43,7 @@ export function AppSidebar({
   mobileIcon,
   defaultCollapsed = false,
   mobileOffsetClassName = 'top-0',
+  mobileTopOffset,
   onLogoClick,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -49,6 +51,22 @@ export function AppSidebar({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
+  // Calculate the top offset for mobile sidebar/overlay
+  // Extract numeric value from mobileOffsetClassName (e.g., "top-16" -> 64, "top-[104px]" -> 104)
+  const getMobileOffset = (): string => {
+    if (mobileTopOffset) return mobileTopOffset;
+    if (mobileOffsetClassName.includes('[')) {
+      const match = mobileOffsetClassName.match(/\[(\d+)px\]/);
+      return match ? `${parseInt(match[1]) + 52}px` : '52px';
+    }
+    // Default tailwind top values: top-16 = 64px, so sidebar should be 64px + some buffer
+    if (mobileOffsetClassName.includes('top-16')) return '116px';
+    if (mobileOffsetClassName.includes('top-[104px]')) return '156px';
+    return '52px';
+  };
+
+  const sidebarTopOffset = getMobileOffset();
 
   // Function to close the mobile sidebar
   const closeSidebar = () => {
@@ -166,7 +184,7 @@ export function AppSidebar({
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
-          style={{ top: '52px' }}
+          style={{ top: sidebarTopOffset }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -177,7 +195,7 @@ export function AppSidebar({
           "lg:hidden fixed left-0 z-[60] w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ top: '52px', height: 'calc(100vh - 52px)' }}
+        style={{ top: sidebarTopOffset, height: `calc(100vh - ${sidebarTopOffset})` }}
       >
         <div className="flex flex-col h-full overflow-hidden">
           {header && (

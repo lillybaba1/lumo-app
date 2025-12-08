@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Store, DollarSign, Truck, Mail, Package, Globe, Share2, Shield, MessageCircle } from 'lucide-react';
+import { Save, Loader2, Store, DollarSign, Truck, Mail, Package, Globe, Share2, Shield, MessageCircle, Heart, Users } from 'lucide-react';
 import { saveSettings } from './actions';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -85,6 +85,52 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
     trustBadge5Subtitle: settings.trustBadge5Subtitle || 'Built for Africa',
     footerPaymentMethods: settings.footerPaymentMethods || 'Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery',
     footerDeliveryCountries: settings.footerDeliveryCountries || '🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria,🇬🇭 Ghana,🇰🇪 Kenya',
+
+    // Lumo Promise Section
+    lumoPromiseEnabled: settings.lumoPromiseEnabled ?? true,
+    lumoPromiseTitle: settings.lumoPromiseTitle || 'The Lumo Promise',
+    lumoPromiseDescription: settings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.',
+    lumoPromiseBgColor: settings.lumoPromiseBgColor || '#ffffff',
+    lumoPromiseTextColor: settings.lumoPromiseTextColor || '#000000',
+    lumoPromiseTitleSize: settings.lumoPromiseTitleSize || 'xl',
+    lumoPromiseTitleWeight: settings.lumoPromiseTitleWeight || 'bold',
+    lumoPromiseFeature1Icon: settings.lumoPromiseFeature1Icon || '🌱',
+    lumoPromiseFeature1Title: settings.lumoPromiseFeature1Title || 'Sustainable',
+    lumoPromiseFeature1Subtitle: settings.lumoPromiseFeature1Subtitle || 'Eco-friendly materials and processes',
+    lumoPromiseFeature2Icon: settings.lumoPromiseFeature2Icon || '✨',
+    lumoPromiseFeature2Title: settings.lumoPromiseFeature2Title || 'Quality Crafted',
+    lumoPromiseFeature2Subtitle: settings.lumoPromiseFeature2Subtitle || 'Handpicked for excellence',
+    lumoPromiseFeature3Icon: settings.lumoPromiseFeature3Icon || '🤝',
+    lumoPromiseFeature3Title: settings.lumoPromiseFeature3Title || 'Fair Trade',
+    lumoPromiseFeature3Subtitle: settings.lumoPromiseFeature3Subtitle || 'Supporting artisan communities',
+
+    // Meet the Makers Section
+    meetMakersEnabled: settings.meetMakersEnabled ?? true,
+    meetMakersTitle: settings.meetMakersTitle || 'Meet the Makers',
+    meetMakersDescription: settings.meetMakersDescription || 'Behind every product is a story of skilled artisans dedicated to their craft, using traditional techniques passed down through generations.',
+    meetMakersBgColor: settings.meetMakersBgColor || '#ffffff',
+    meetMakersTextColor: settings.meetMakersTextColor || '#000000',
+    meetMakersTitleSize: settings.meetMakersTitleSize || 'xl',
+    meetMakersTitleWeight: settings.meetMakersTitleWeight || 'bold',
+
+    // Hero Announcement Overlay
+    heroAnnouncementEnabled: settings.heroAnnouncementEnabled ?? false,
+    heroAnnouncementText: settings.heroAnnouncementText || '🔥 Free Shipping on Orders Over $50! 🔥',
+    heroAnnouncementBgColor: settings.heroAnnouncementBgColor || '#8b5cf6',
+    heroAnnouncementTextColor: settings.heroAnnouncementTextColor || '#ffffff',
+    heroAnnouncementBorderColor: settings.heroAnnouncementBorderColor || '#ffffff',
+    heroAnnouncementBorderRadius: settings.heroAnnouncementBorderRadius ?? 12,
+    heroAnnouncementFontSize: settings.heroAnnouncementFontSize || 'base',
+    heroAnnouncementFontWeight: settings.heroAnnouncementFontWeight || 'semibold',
+    heroAnnouncementPositionX: settings.heroAnnouncementPositionX ?? 50,
+    heroAnnouncementPositionY: settings.heroAnnouncementPositionY ?? 10,
+    heroAnnouncementWidth: settings.heroAnnouncementWidth ?? 400,
+    heroAnnouncementPadding: settings.heroAnnouncementPadding || 'md',
+    heroAnnouncementMobileWidth: settings.heroAnnouncementMobileWidth ?? 90,
+    heroAnnouncementMobileFontSize: settings.heroAnnouncementMobileFontSize || 'sm',
+    heroAnnouncementLink: settings.heroAnnouncementLink || '',
+    heroAnnouncementShadow: settings.heroAnnouncementShadow ?? true,
+    heroAnnouncementAnimation: settings.heroAnnouncementAnimation || 'none',
   });
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -665,6 +711,680 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               onChange={(e) => updateField('footerDeliveryCountries', e.target.value)}
             />
             <p className="text-xs text-muted-foreground">Comma-separated list with emoji flags (e.g., 🇬🇲 Gambia)</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lumo Promise Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Heart className="h-5 w-5" />
+            <CardTitle>Lumo Promise Section</CardTitle>
+          </div>
+          <CardDescription>
+            Customize the &quot;Lumo Promise&quot; section on the homepage
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="lumoPromiseEnabled"
+              checked={formState.lumoPromiseEnabled}
+              onCheckedChange={(checked) => updateField('lumoPromiseEnabled', checked)}
+            />
+            <Label htmlFor="lumoPromiseEnabled">Show Lumo Promise Section</Label>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseTitle">Section Title</Label>
+              <Input
+                id="lumoPromiseTitle"
+                placeholder="The Lumo Promise"
+                value={formState.lumoPromiseTitle}
+                onChange={(e) => updateField('lumoPromiseTitle', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseTitleSize">Title Size</Label>
+              <Select value={formState.lumoPromiseTitleSize} onValueChange={(val) => updateField('lumoPromiseTitleSize', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="base">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                  <SelectItem value="xl">Extra Large</SelectItem>
+                  <SelectItem value="2xl">2X Large</SelectItem>
+                  <SelectItem value="3xl">3X Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseTitleWeight">Title Weight</Label>
+              <Select value={formState.lumoPromiseTitleWeight} onValueChange={(val) => updateField('lumoPromiseTitleWeight', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                  <SelectItem value="extrabold">Extra Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseBgColor">Background Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  id="lumoPromiseBgColor"
+                  value={formState.lumoPromiseBgColor}
+                  onChange={(e) => updateField('lumoPromiseBgColor', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer"
+                />
+                <Input
+                  value={formState.lumoPromiseBgColor}
+                  onChange={(e) => updateField('lumoPromiseBgColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lumoPromiseTextColor">Text Color</Label>
+            <div className="flex gap-2">
+              <Input
+                type="color"
+                id="lumoPromiseTextColor"
+                value={formState.lumoPromiseTextColor}
+                onChange={(e) => updateField('lumoPromiseTextColor', e.target.value)}
+                className="w-12 h-10 p-1 cursor-pointer"
+              />
+              <Input
+                value={formState.lumoPromiseTextColor}
+                onChange={(e) => updateField('lumoPromiseTextColor', e.target.value)}
+                placeholder="#000000"
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lumoPromiseDescription">Description</Label>
+            <Textarea
+              id="lumoPromiseDescription"
+              placeholder="Every product in our collection is carefully curated..."
+              value={formState.lumoPromiseDescription}
+              onChange={(e) => updateField('lumoPromiseDescription', e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <Separator />
+          <h4 className="font-medium">Feature 1</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature1Icon">Icon (emoji)</Label>
+              <Input
+                id="lumoPromiseFeature1Icon"
+                placeholder="🌱"
+                value={formState.lumoPromiseFeature1Icon}
+                onChange={(e) => updateField('lumoPromiseFeature1Icon', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature1Title">Title</Label>
+              <Input
+                id="lumoPromiseFeature1Title"
+                placeholder="Sustainable"
+                value={formState.lumoPromiseFeature1Title}
+                onChange={(e) => updateField('lumoPromiseFeature1Title', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature1Subtitle">Subtitle</Label>
+              <Input
+                id="lumoPromiseFeature1Subtitle"
+                placeholder="Eco-friendly materials"
+                value={formState.lumoPromiseFeature1Subtitle}
+                onChange={(e) => updateField('lumoPromiseFeature1Subtitle', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <h4 className="font-medium">Feature 2</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature2Icon">Icon (emoji)</Label>
+              <Input
+                id="lumoPromiseFeature2Icon"
+                placeholder="✨"
+                value={formState.lumoPromiseFeature2Icon}
+                onChange={(e) => updateField('lumoPromiseFeature2Icon', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature2Title">Title</Label>
+              <Input
+                id="lumoPromiseFeature2Title"
+                placeholder="Quality Crafted"
+                value={formState.lumoPromiseFeature2Title}
+                onChange={(e) => updateField('lumoPromiseFeature2Title', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature2Subtitle">Subtitle</Label>
+              <Input
+                id="lumoPromiseFeature2Subtitle"
+                placeholder="Handpicked for excellence"
+                value={formState.lumoPromiseFeature2Subtitle}
+                onChange={(e) => updateField('lumoPromiseFeature2Subtitle', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <h4 className="font-medium">Feature 3</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature3Icon">Icon (emoji)</Label>
+              <Input
+                id="lumoPromiseFeature3Icon"
+                placeholder="🤝"
+                value={formState.lumoPromiseFeature3Icon}
+                onChange={(e) => updateField('lumoPromiseFeature3Icon', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature3Title">Title</Label>
+              <Input
+                id="lumoPromiseFeature3Title"
+                placeholder="Fair Trade"
+                value={formState.lumoPromiseFeature3Title}
+                onChange={(e) => updateField('lumoPromiseFeature3Title', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lumoPromiseFeature3Subtitle">Subtitle</Label>
+              <Input
+                id="lumoPromiseFeature3Subtitle"
+                placeholder="Supporting artisan communities"
+                value={formState.lumoPromiseFeature3Subtitle}
+                onChange={(e) => updateField('lumoPromiseFeature3Subtitle', e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Meet the Makers Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <CardTitle>Meet the Makers Section</CardTitle>
+          </div>
+          <CardDescription>
+            Customize the &quot;Meet the Makers&quot; section on the homepage
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="meetMakersEnabled"
+              checked={formState.meetMakersEnabled}
+              onCheckedChange={(checked) => updateField('meetMakersEnabled', checked)}
+            />
+            <Label htmlFor="meetMakersEnabled">Show Meet the Makers Section</Label>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="meetMakersTitle">Section Title</Label>
+              <Input
+                id="meetMakersTitle"
+                placeholder="Meet the Makers"
+                value={formState.meetMakersTitle}
+                onChange={(e) => updateField('meetMakersTitle', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meetMakersTitleSize">Title Size</Label>
+              <Select value={formState.meetMakersTitleSize} onValueChange={(val) => updateField('meetMakersTitleSize', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="base">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                  <SelectItem value="xl">Extra Large</SelectItem>
+                  <SelectItem value="2xl">2X Large</SelectItem>
+                  <SelectItem value="3xl">3X Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="meetMakersTitleWeight">Title Weight</Label>
+              <Select value={formState.meetMakersTitleWeight} onValueChange={(val) => updateField('meetMakersTitleWeight', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                  <SelectItem value="extrabold">Extra Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meetMakersBgColor">Background Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  id="meetMakersBgColor"
+                  value={formState.meetMakersBgColor}
+                  onChange={(e) => updateField('meetMakersBgColor', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer"
+                />
+                <Input
+                  value={formState.meetMakersBgColor}
+                  onChange={(e) => updateField('meetMakersBgColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meetMakersTextColor">Text Color</Label>
+            <div className="flex gap-2">
+              <Input
+                type="color"
+                id="meetMakersTextColor"
+                value={formState.meetMakersTextColor}
+                onChange={(e) => updateField('meetMakersTextColor', e.target.value)}
+                className="w-12 h-10 p-1 cursor-pointer"
+              />
+              <Input
+                value={formState.meetMakersTextColor}
+                onChange={(e) => updateField('meetMakersTextColor', e.target.value)}
+                placeholder="#000000"
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meetMakersDescription">Description</Label>
+            <Textarea
+              id="meetMakersDescription"
+              placeholder="Behind every product is a story of skilled artisans..."
+              value={formState.meetMakersDescription}
+              onChange={(e) => updateField('meetMakersDescription', e.target.value)}
+              rows={4}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Hero Announcement Overlay Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            <CardTitle>Hero Announcement Overlay</CardTitle>
+          </div>
+          <CardDescription>
+            Add a customizable announcement banner on top of the hero section
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Live Preview */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Live Preview</Label>
+            <div className="relative w-full h-48 bg-gradient-to-r from-slate-800 to-slate-600 rounded-lg overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-white/50 text-sm">
+                  Hero Section Preview
+                </div>
+              </div>
+              {formState.heroAnnouncementEnabled && formState.heroAnnouncementText && (
+                <div
+                  className={`absolute text-center ${
+                    formState.heroAnnouncementAnimation === 'pulse' ? 'animate-pulse' :
+                    formState.heroAnnouncementAnimation === 'bounce' ? 'animate-bounce' :
+                    formState.heroAnnouncementAnimation === 'shake' ? 'animate-shake' : ''
+                  }`}
+                  style={{
+                    left: `${formState.heroAnnouncementPositionX}%`,
+                    top: `${formState.heroAnnouncementPositionY}%`,
+                    transform: formState.heroAnnouncementPositionX === 50 ? 'translateX(-50%)' : 
+                               formState.heroAnnouncementPositionX > 50 ? `translateX(-${(formState.heroAnnouncementPositionX - 50) * 2}%)` : 'none',
+                    width: `${Math.min(formState.heroAnnouncementWidth * 0.5, 200)}px`,
+                    backgroundColor: formState.heroAnnouncementBgColor,
+                    color: formState.heroAnnouncementTextColor,
+                    borderColor: formState.heroAnnouncementBorderColor,
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderRadius: `${formState.heroAnnouncementBorderRadius}px`,
+                    padding: formState.heroAnnouncementPadding === 'sm' ? '4px 8px' :
+                             formState.heroAnnouncementPadding === 'lg' ? '12px 24px' : '8px 16px',
+                    fontSize: formState.heroAnnouncementFontSize === 'xs' ? '10px' :
+                              formState.heroAnnouncementFontSize === 'sm' ? '11px' :
+                              formState.heroAnnouncementFontSize === 'lg' ? '14px' :
+                              formState.heroAnnouncementFontSize === 'xl' ? '16px' :
+                              formState.heroAnnouncementFontSize === '2xl' ? '18px' : '12px',
+                    fontWeight: formState.heroAnnouncementFontWeight === 'normal' ? 400 :
+                                formState.heroAnnouncementFontWeight === 'medium' ? 500 :
+                                formState.heroAnnouncementFontWeight === 'bold' ? 700 : 600,
+                    boxShadow: formState.heroAnnouncementShadow ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+                  }}
+                >
+                  {formState.heroAnnouncementText}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This preview shows a scaled version. Actual sizes will differ on the homepage.
+            </p>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="heroAnnouncementEnabled">Enable Hero Announcement</Label>
+            <Switch
+              id="heroAnnouncementEnabled"
+              checked={formState.heroAnnouncementEnabled}
+              onCheckedChange={(checked) => updateField('heroAnnouncementEnabled', checked)}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label htmlFor="heroAnnouncementText">Announcement Text (supports emojis 🎉)</Label>
+            <Textarea
+              id="heroAnnouncementText"
+              placeholder="🔥 Free Shipping on Orders Over $50! 🔥"
+              value={formState.heroAnnouncementText}
+              onChange={(e) => updateField('heroAnnouncementText', e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="heroAnnouncementLink">Link URL (optional)</Label>
+            <Input
+              id="heroAnnouncementLink"
+              placeholder="https://example.com/sale"
+              value={formState.heroAnnouncementLink}
+              onChange={(e) => updateField('heroAnnouncementLink', e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementBgColor">Background Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  id="heroAnnouncementBgColor"
+                  value={formState.heroAnnouncementBgColor}
+                  onChange={(e) => updateField('heroAnnouncementBgColor', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer"
+                />
+                <Input
+                  value={formState.heroAnnouncementBgColor}
+                  onChange={(e) => updateField('heroAnnouncementBgColor', e.target.value)}
+                  placeholder="#8b5cf6"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementTextColor">Text Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  id="heroAnnouncementTextColor"
+                  value={formState.heroAnnouncementTextColor}
+                  onChange={(e) => updateField('heroAnnouncementTextColor', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer"
+                />
+                <Input
+                  value={formState.heroAnnouncementTextColor}
+                  onChange={(e) => updateField('heroAnnouncementTextColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementBorderColor">Border Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  id="heroAnnouncementBorderColor"
+                  value={formState.heroAnnouncementBorderColor}
+                  onChange={(e) => updateField('heroAnnouncementBorderColor', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer"
+                />
+                <Input
+                  value={formState.heroAnnouncementBorderColor}
+                  onChange={(e) => updateField('heroAnnouncementBorderColor', e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementBorderRadius">Border Radius (px)</Label>
+              <Input
+                id="heroAnnouncementBorderRadius"
+                type="number"
+                min={0}
+                max={50}
+                value={formState.heroAnnouncementBorderRadius}
+                onChange={(e) => updateField('heroAnnouncementBorderRadius', parseInt(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementFontSize">Font Size (Desktop)</Label>
+              <Select
+                value={formState.heroAnnouncementFontSize}
+                onValueChange={(value) => updateField('heroAnnouncementFontSize', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra Small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="base">Base</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                  <SelectItem value="xl">Extra Large</SelectItem>
+                  <SelectItem value="2xl">2X Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementMobileFontSize">Font Size (Mobile)</Label>
+              <Select
+                value={formState.heroAnnouncementMobileFontSize}
+                onValueChange={(value) => updateField('heroAnnouncementMobileFontSize', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">Extra Small</SelectItem>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="base">Base</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                  <SelectItem value="xl">Extra Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementFontWeight">Font Weight</Label>
+              <Select
+                value={formState.heroAnnouncementFontWeight}
+                onValueChange={(value) => updateField('heroAnnouncementFontWeight', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select weight" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="semibold">Semibold</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementPadding">Padding</Label>
+              <Select
+                value={formState.heroAnnouncementPadding}
+                onValueChange={(value) => updateField('heroAnnouncementPadding', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select padding" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sm">Small</SelectItem>
+                  <SelectItem value="md">Medium</SelectItem>
+                  <SelectItem value="lg">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementPositionX">Horizontal Position (%)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="heroAnnouncementPositionX"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={formState.heroAnnouncementPositionX}
+                  onChange={(e) => updateField('heroAnnouncementPositionX', parseInt(e.target.value) || 0)}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">0 = Left, 50 = Center, 100 = Right</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementPositionY">Vertical Position (%)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="heroAnnouncementPositionY"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={formState.heroAnnouncementPositionY}
+                  onChange={(e) => updateField('heroAnnouncementPositionY', parseInt(e.target.value) || 0)}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">0 = Top, 50 = Middle, 100 = Bottom</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementWidth">Width (Desktop - px)</Label>
+              <Input
+                id="heroAnnouncementWidth"
+                type="number"
+                min={100}
+                max={800}
+                value={formState.heroAnnouncementWidth}
+                onChange={(e) => updateField('heroAnnouncementWidth', parseInt(e.target.value) || 400)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementMobileWidth">Width (Mobile - %)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="heroAnnouncementMobileWidth"
+                  type="number"
+                  min={50}
+                  max={100}
+                  value={formState.heroAnnouncementMobileWidth}
+                  onChange={(e) => updateField('heroAnnouncementMobileWidth', parseInt(e.target.value) || 90)}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">% of screen width</span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="heroAnnouncementShadow">Enable Shadow</Label>
+              <Switch
+                id="heroAnnouncementShadow"
+                checked={formState.heroAnnouncementShadow}
+                onCheckedChange={(checked) => updateField('heroAnnouncementShadow', checked)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="heroAnnouncementAnimation">Animation</Label>
+              <Select
+                value={formState.heroAnnouncementAnimation}
+                onValueChange={(value) => updateField('heroAnnouncementAnimation', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select animation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="pulse">Pulse</SelectItem>
+                  <SelectItem value="bounce">Bounce</SelectItem>
+                  <SelectItem value="shake">Shake</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, X, Search, Store } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, Search, Store } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -28,11 +28,6 @@ interface HeaderSettings {
   headerButtonColor?: string;
   homeButtonGradientFrom?: string;
   homeButtonGradientTo?: string;
-  announcementEnabled?: boolean;
-  announcementText?: string;
-  announcementBgColor?: string;
-  announcementTextColor?: string;
-  announcementLink?: string;
   logoUrl?: string;
   logoAlt?: string;
   logoWidth?: number;
@@ -47,11 +42,6 @@ const defaultHeaderSettings: HeaderSettings = {
   headerButtonColor: '#8b5cf6',
   homeButtonGradientFrom: '#8b5cf6',
   homeButtonGradientTo: '#ec4899',
-  announcementEnabled: false,
-  announcementText: '',
-  announcementBgColor: '#8b5cf6',
-  announcementTextColor: '#ffffff',
-  announcementLink: '',
   logoUrl: '',
   logoAlt: 'Lumo',
   logoWidth: 200,
@@ -68,7 +58,6 @@ export default function Header({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   
   // Check if we're on the homepage
@@ -119,11 +108,6 @@ export default function Header({ children }: { children: React.ReactNode }) {
             headerButtonColor: data.headerButtonColor || defaultHeaderSettings.headerButtonColor,
             homeButtonGradientFrom: data.homeButtonGradientFrom || defaultHeaderSettings.homeButtonGradientFrom,
             homeButtonGradientTo: data.homeButtonGradientTo || defaultHeaderSettings.homeButtonGradientTo,
-            announcementEnabled: data.announcementEnabled ?? defaultHeaderSettings.announcementEnabled,
-            announcementText: data.announcementText || defaultHeaderSettings.announcementText,
-            announcementBgColor: data.announcementBgColor || defaultHeaderSettings.announcementBgColor,
-            announcementTextColor: data.announcementTextColor || defaultHeaderSettings.announcementTextColor,
-            announcementLink: data.announcementLink || defaultHeaderSettings.announcementLink,
             logoUrl: data.logoUrl || defaultHeaderSettings.logoUrl,
             logoAlt: data.logoAlt || defaultHeaderSettings.logoAlt,
             logoWidth: data.logoWidth || defaultHeaderSettings.logoWidth,
@@ -146,40 +130,10 @@ export default function Header({ children }: { children: React.ReactNode }) {
     ? { backgroundColor: 'transparent', color: settings.headerTextColor, borderColor: 'transparent' }
     : { backgroundColor: 'transparent', color: settings.headerTextColor, borderColor: settings.headerButtonColor };
 
-  const AnnouncementContent = () => (
-    <span className="font-medium">{settings.announcementText}</span>
-  );
-
   return (
     <>
-      {/* Announcement Bar */}
-      {settings.announcementEnabled && settings.announcementText && !announcementDismissed && (
-        <div 
-          className="relative py-2 px-4 text-center text-sm"
-          style={{ 
-            backgroundColor: settings.announcementBgColor,
-            color: settings.announcementTextColor,
-          }}
-        >
-          {settings.announcementLink ? (
-            <Link href={settings.announcementLink} className="hover:underline">
-              <AnnouncementContent />
-            </Link>
-          ) : (
-            <AnnouncementContent />
-          )}
-          <button 
-            onClick={() => setAnnouncementDismissed(true)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/20 transition-colors"
-            aria-label="Dismiss announcement"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
       <header 
-        className="sticky top-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
         style={{ 
           backgroundColor: settings.headerBgColor,
           color: settings.headerTextColor,

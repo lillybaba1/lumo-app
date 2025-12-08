@@ -144,6 +144,52 @@ export interface Settings {
     categorySectionBgGradientDirection?: string;
     categorySectionTextColor?: string;
     categorySectionPadding?: string;
+
+    // Lumo Promise Section
+    lumoPromiseEnabled?: boolean;
+    lumoPromiseTitle?: string;
+    lumoPromiseDescription?: string;
+    lumoPromiseBgColor?: string;
+    lumoPromiseTextColor?: string;
+    lumoPromiseTitleSize?: string;
+    lumoPromiseTitleWeight?: string;
+    lumoPromiseFeature1Icon?: string;
+    lumoPromiseFeature1Title?: string;
+    lumoPromiseFeature1Subtitle?: string;
+    lumoPromiseFeature2Icon?: string;
+    lumoPromiseFeature2Title?: string;
+    lumoPromiseFeature2Subtitle?: string;
+    lumoPromiseFeature3Icon?: string;
+    lumoPromiseFeature3Title?: string;
+    lumoPromiseFeature3Subtitle?: string;
+
+    // Meet the Makers Section
+    meetMakersEnabled?: boolean;
+    meetMakersTitle?: string;
+    meetMakersDescription?: string;
+    meetMakersBgColor?: string;
+    meetMakersTextColor?: string;
+    meetMakersTitleSize?: string;
+    meetMakersTitleWeight?: string;
+
+    // Hero Announcement Overlay
+    heroAnnouncementEnabled?: boolean;
+    heroAnnouncementText?: string;
+    heroAnnouncementBgColor?: string;
+    heroAnnouncementTextColor?: string;
+    heroAnnouncementBorderColor?: string;
+    heroAnnouncementBorderRadius?: number;
+    heroAnnouncementFontSize?: string; // 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl'
+    heroAnnouncementFontWeight?: string; // 'normal' | 'medium' | 'semibold' | 'bold'
+    heroAnnouncementPositionX?: number; // 0-100 percentage
+    heroAnnouncementPositionY?: number; // 0-100 percentage
+    heroAnnouncementWidth?: number; // Desktop width in pixels
+    heroAnnouncementPadding?: string; // 'sm' | 'md' | 'lg'
+    heroAnnouncementMobileWidth?: number; // Mobile width percentage (0-100)
+    heroAnnouncementMobileFontSize?: string; // Mobile font size
+    heroAnnouncementLink?: string; // Optional link URL
+    heroAnnouncementShadow?: boolean; // Enable box shadow
+    heroAnnouncementAnimation?: string; // 'none' | 'pulse' | 'bounce' | 'shake'
 }
 
 const defaultSettings: Settings = {
@@ -217,6 +263,24 @@ const defaultSettings: Settings = {
     trustBadge5Subtitle: 'Built for Africa',
     footerPaymentMethods: 'Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery',
     footerDeliveryCountries: '🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria,🇬🇭 Ghana,🇰🇪 Kenya',
+    // Hero Announcement Overlay defaults
+    heroAnnouncementEnabled: false,
+    heroAnnouncementText: '🔥 Free Shipping on Orders Over $50! 🔥',
+    heroAnnouncementBgColor: '#8b5cf6',
+    heroAnnouncementTextColor: '#ffffff',
+    heroAnnouncementBorderColor: '#ffffff',
+    heroAnnouncementBorderRadius: 12,
+    heroAnnouncementFontSize: 'base',
+    heroAnnouncementFontWeight: 'semibold',
+    heroAnnouncementPositionX: 50,
+    heroAnnouncementPositionY: 10,
+    heroAnnouncementWidth: 400,
+    heroAnnouncementPadding: 'md',
+    heroAnnouncementMobileWidth: 90,
+    heroAnnouncementMobileFontSize: 'sm',
+    heroAnnouncementLink: '',
+    heroAnnouncementShadow: true,
+    heroAnnouncementAnimation: 'none',
 };
 
 export async function getSettings(): Promise<Settings> {

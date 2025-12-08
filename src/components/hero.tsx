@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingBag } from 'lucide-react';
 import { HeroData, HeroProduct, Product } from '@/lib/types';
 import Image from 'next/image';
+import HeroAnnouncement, { HeroAnnouncementSettings } from './hero-announcement';
 
 type HeroSettings = {
   heroHeading?: string;
@@ -26,7 +27,7 @@ type HeroSettings = {
   heroButton2BorderColor?: string;
   heroButton3BgColor?: string;
   heroButton3TextColor?: string;
-};
+} & HeroAnnouncementSettings;
 
 interface HeroProps {
   initialSettings?: HeroSettings;
@@ -260,6 +261,9 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
       {/* Content - Positioned elements */}
       <div className="relative w-full h-full min-h-[400px] md:min-h-[500px]">
+        {/* Hero Announcement Overlay */}
+        {settings && <HeroAnnouncement settings={settings} />}
+
         {/* Heading - Absolutely positioned */}
         <h1
           className="absolute text-4xl md:text-6xl lg:text-7xl font-bold max-w-2xl px-4"

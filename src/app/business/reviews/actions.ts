@@ -119,17 +119,27 @@ export async function getBadges() {
       .from('seller_badge_assignments')
       .select(`
         earned_at,
-        badge:seller_badges(*)
+        badge:seller_badges(id, name, description, icon, color, tier)
       `)
       .eq('boutique_id', boutiqueId)
       .is('expires_at', null);
 
     if (error) throw error;
 
-    const badges = (data || []).map(item => ({
-      ...item.badge,
-      earned_at: item.earned_at,
-    }));
+    const badges = (data || [])
+      .filter(item => item.badge)
+      .map(item => {
+        const badge = item.badge as any;
+        return {
+          id: badge.id,
+          name: badge.name,
+          description: badge.description,
+          icon: badge.icon,
+          color: badge.color,
+          tier: badge.tier,
+          earned_at: item.earned_at,
+        };
+      });
 
     return { success: true, data: badges };
   } catch (error: any) {

@@ -56,7 +56,7 @@ const navGroups: SidebarSection[] = [
     items: [
       { href: '/admin/appearance', icon: Brush, label: 'Appearance' },
       { href: '/admin/logo', icon: Image, label: 'Logo & Branding' },
-      { href: '/admin/header', icon: PanelTop, label: 'Header & Announcement' },
+      { href: '/admin/header', icon: PanelTop, label: 'Header Styling' },
       { href: '/admin/hero', icon: ImageIcon, label: 'Hero Products' },
       { href: '/admin/collections', icon: TrendingUp, label: 'Collections' },
       { href: '/admin/pages', icon: FileText, label: 'Pages' },

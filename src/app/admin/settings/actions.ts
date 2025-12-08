@@ -69,6 +69,52 @@ export async function saveSettings(
         // Payment & Delivery
         footerPaymentMethods: formData.get('footerPaymentMethods') as string || undefined,
         footerDeliveryCountries: formData.get('footerDeliveryCountries') as string || undefined,
+
+        // Lumo Promise Section
+        lumoPromiseEnabled: formData.get('lumoPromiseEnabled') === 'true',
+        lumoPromiseTitle: formData.get('lumoPromiseTitle') as string || undefined,
+        lumoPromiseDescription: formData.get('lumoPromiseDescription') as string || undefined,
+        lumoPromiseBgColor: formData.get('lumoPromiseBgColor') as string || undefined,
+        lumoPromiseTextColor: formData.get('lumoPromiseTextColor') as string || undefined,
+        lumoPromiseTitleSize: formData.get('lumoPromiseTitleSize') as string || undefined,
+        lumoPromiseTitleWeight: formData.get('lumoPromiseTitleWeight') as string || undefined,
+        lumoPromiseFeature1Icon: formData.get('lumoPromiseFeature1Icon') as string || undefined,
+        lumoPromiseFeature1Title: formData.get('lumoPromiseFeature1Title') as string || undefined,
+        lumoPromiseFeature1Subtitle: formData.get('lumoPromiseFeature1Subtitle') as string || undefined,
+        lumoPromiseFeature2Icon: formData.get('lumoPromiseFeature2Icon') as string || undefined,
+        lumoPromiseFeature2Title: formData.get('lumoPromiseFeature2Title') as string || undefined,
+        lumoPromiseFeature2Subtitle: formData.get('lumoPromiseFeature2Subtitle') as string || undefined,
+        lumoPromiseFeature3Icon: formData.get('lumoPromiseFeature3Icon') as string || undefined,
+        lumoPromiseFeature3Title: formData.get('lumoPromiseFeature3Title') as string || undefined,
+        lumoPromiseFeature3Subtitle: formData.get('lumoPromiseFeature3Subtitle') as string || undefined,
+
+        // Meet the Makers Section
+        meetMakersEnabled: formData.get('meetMakersEnabled') === 'true',
+        meetMakersTitle: formData.get('meetMakersTitle') as string || undefined,
+        meetMakersDescription: formData.get('meetMakersDescription') as string || undefined,
+        meetMakersBgColor: formData.get('meetMakersBgColor') as string || undefined,
+        meetMakersTextColor: formData.get('meetMakersTextColor') as string || undefined,
+        meetMakersTitleSize: formData.get('meetMakersTitleSize') as string || undefined,
+        meetMakersTitleWeight: formData.get('meetMakersTitleWeight') as string || undefined,
+
+        // Hero Announcement Overlay
+        heroAnnouncementEnabled: formData.get('heroAnnouncementEnabled') === 'true',
+        heroAnnouncementText: formData.get('heroAnnouncementText') as string || undefined,
+        heroAnnouncementBgColor: formData.get('heroAnnouncementBgColor') as string || undefined,
+        heroAnnouncementTextColor: formData.get('heroAnnouncementTextColor') as string || undefined,
+        heroAnnouncementBorderColor: formData.get('heroAnnouncementBorderColor') as string || undefined,
+        heroAnnouncementBorderRadius: parseInt(formData.get('heroAnnouncementBorderRadius') as string) || 12,
+        heroAnnouncementFontSize: formData.get('heroAnnouncementFontSize') as string || undefined,
+        heroAnnouncementFontWeight: formData.get('heroAnnouncementFontWeight') as string || undefined,
+        heroAnnouncementPositionX: parseInt(formData.get('heroAnnouncementPositionX') as string) || 50,
+        heroAnnouncementPositionY: parseInt(formData.get('heroAnnouncementPositionY') as string) || 10,
+        heroAnnouncementWidth: parseInt(formData.get('heroAnnouncementWidth') as string) || 400,
+        heroAnnouncementPadding: formData.get('heroAnnouncementPadding') as string || undefined,
+        heroAnnouncementMobileWidth: parseInt(formData.get('heroAnnouncementMobileWidth') as string) || 90,
+        heroAnnouncementMobileFontSize: formData.get('heroAnnouncementMobileFontSize') as string || undefined,
+        heroAnnouncementLink: formData.get('heroAnnouncementLink') as string || undefined,
+        heroAnnouncementShadow: formData.get('heroAnnouncementShadow') === 'true',
+        heroAnnouncementAnimation: formData.get('heroAnnouncementAnimation') as string || undefined,
     };
 
     await saveSettingsToDb(settingsToSave);
