@@ -143,7 +143,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time</li>
               </ul>
               <p>
-                To exercise these rights, please contact us at <a href="mailto:privacy@lumo.shop" className="text-primary underline">privacy@lumo.shop</a>
+                To exercise these rights, please contact us at <a href="mailto:privacy@julazone.com" className="text-primary underline">privacy@julazone.com</a>
               </p>
             </section>
 
@@ -200,8 +200,8 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-2xl font-semibold mb-4">Contact Us</h2>
               <p>If you have any questions about this Privacy Policy, please contact us:</p>
               <ul className="list-none mb-4">
-                <li><strong>Email:</strong> <a href="mailto:privacy@lumo.shop" className="text-primary underline">privacy@lumo.shop</a></li>
-                <li><strong>Support Email:</strong> <a href="mailto:support@lumo.shop" className="text-primary underline">support@lumo.shop</a></li>
+                <li><strong>Email:</strong> <a href="mailto:privacy@julazone.com" className="text-primary underline">privacy@julazone.com</a></li>
+                <li><strong>Support Email:</strong> <a href="mailto:support@julazone.com" className="text-primary underline">support@julazone.com</a></li>
               </ul>
             </section>
           </CardContent>

@@ -386,7 +386,7 @@ export default function SignupForm() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@lumo.com"
+                  placeholder="you@julazone.com"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}

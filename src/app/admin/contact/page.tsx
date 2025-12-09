@@ -140,7 +140,7 @@ export default function ContactAdminPage() {
                 type="email"
                 value={contactData?.email || ''}
                 onChange={(e) => setContactData(prev => prev ? { ...prev, email: e.target.value } : null)}
-                placeholder="support@lumo.com"
+                placeholder="support@julazone.com"
               />
             </div>
             <div className="space-y-2">

@@ -236,8 +236,8 @@ export default function TermsOfServicePage() {
               <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
               <p>If you have any questions about these Terms, please contact us:</p>
               <ul className="list-none mb-4">
-                <li><strong>Email:</strong> <a href="mailto:legal@lumo.shop" className="text-primary underline">legal@lumo.shop</a></li>
-                <li><strong>Support:</strong> <a href="mailto:support@lumo.shop" className="text-primary underline">support@lumo.shop</a></li>
+                <li><strong>Email:</strong> <a href="mailto:legal@julazone.com" className="text-primary underline">legal@julazone.com</a></li>
+                <li><strong>Support:</strong> <a href="mailto:support@julazone.com" className="text-primary underline">support@julazone.com</a></li>
               </ul>
             </section>
 

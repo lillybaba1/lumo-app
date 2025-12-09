@@ -17,7 +17,7 @@ export async function getContactData(): Promise<ContactData | null> {
         return {
           title: 'Contact Us',
           introText: 'We\'d love to hear from you! Get in touch with us using the information below.',
-          email: 'support@lumo.com',
+          email: 'support@julazone.com',
           phone: '(123) 456-7890',
           address: '',
           socialLinks: {}

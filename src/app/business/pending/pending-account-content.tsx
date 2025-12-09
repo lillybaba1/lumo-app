@@ -208,7 +208,7 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
               Check Status
             </Button>
             <p className="text-center text-xs text-muted-foreground pt-2">
-              Need help? Contact us at <a href="mailto:support@lumo.app" className="underline">support@lumo.app</a>
+              Need help? Contact us at <a href="mailto:support@julazone.com" className="underline">support@julazone.com</a>
             </p>
           </div>
         </CardContent>

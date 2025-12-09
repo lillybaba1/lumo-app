@@ -118,7 +118,7 @@ export default async function BusinessPendingPage() {
 
             <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <p className="text-sm text-red-800 dark:text-red-200">
-                Contact support at <a href="mailto:support@lumo.app" className="underline font-medium">support@lumo.app</a>
+                Contact support at <a href="mailto:support@julazone.com" className="underline font-medium">support@julazone.com</a>
               </p>
             </div>
 

@@ -326,7 +326,7 @@ export default function SetupBoutiqueForm({ businessAccount }: SetupBoutiqueForm
                 </Label>
                 <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 pr-3">
                   <span className="text-sm text-muted-foreground px-3 py-2">
-                    lumo.app/boutique/
+                    julazone.com/boutique/
                   </span>
                   <Input
                     id="slug"
@@ -444,7 +444,7 @@ export default function SetupBoutiqueForm({ businessAccount }: SetupBoutiqueForm
                           Open
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          lumo.app/boutique/{formData.slug || 'your-slug'}
+                          julazone.com/boutique/{formData.slug || 'your-slug'}
                         </span>
                       </div>
                     </div>

@@ -46,7 +46,7 @@ export async function approveBusinessAccount(businessId: string) {
         .eq('id', businessAccount.owner_user_id);
         
       // Send account approval email
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumo.gm';
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://julazone.com';
       const dashboardUrl = `${baseUrl}/business/setup-boutique`;
       
       const emailTemplate = getAccountApprovalEmail(
@@ -127,7 +127,7 @@ export async function approveBoutique(businessId: string) {
 
     // Send boutique approval email
     if (businessAccount && businessAccount.contact_email) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumo.gm';
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://julazone.com';
       const boutiqueUrl = boutique?.slug 
         ? `${baseUrl}/boutique/${boutique.slug}`
         : `${baseUrl}/business/dashboard`;
