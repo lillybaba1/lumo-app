@@ -323,7 +323,7 @@ export async function sellerAssistant(
     
     try {
       const result = await ai.generate({
-        prompt: `You are a helpful AI assistant for an e-commerce seller on Lumo marketplace.
+        prompt: `You are a helpful AI assistant for an e-commerce seller on JulaZone marketplace.
 
 The seller is asking: "${query}"
 

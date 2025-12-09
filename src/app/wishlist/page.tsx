@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 function TrustBadges() {
   return (
     <div className="mt-8 w-full max-w-2xl mx-auto">
-      <p className="text-sm text-muted-foreground mb-4 text-center">Why shop with Lumo?</p>
+      <p className="text-sm text-muted-foreground mb-4 text-center">Why shop with JulaZone?</p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
           <Shield className="h-6 w-6 text-green-600 mb-2" />

@@ -66,7 +66,7 @@ export async function getHeroSettings(): Promise<{
 }> {
   const settings = await getSettings();
   return {
-    heroHeading: settings.heroHeading || 'Step into Lumo',
+    heroHeading: settings.heroHeading || 'Step into JulaZone',
     heroTagline: settings.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.',
     heroBackgroundImage: settings.heroBackgroundImage || '',
     heroImageObjectPosition: settings.heroImageObjectPosition || 'center',

@@ -118,7 +118,7 @@ export default function HeaderSettingsPage() {
                                     <span className="text-white font-bold text-lg">✓</span>
                                 </div>
                                 <span className="text-xl font-bold" style={{ color: settings.headerTextColor }}>
-                                    Lumo
+                                    JulaZone
                                 </span>
                                 <button
                                     className="ml-2 px-3 py-1.5 rounded-full text-sm font-medium text-white flex items-center gap-1.5"

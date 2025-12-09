@@ -104,17 +104,17 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
         if (user.businessAccountId) {
           sellerId = user.businessAccountId;
         } else if (user.role === 'APP_OWNER_ADMIN' || (user.role as any) === 'admin') {
-          // Admin needs a business account - check if they have one or create "Lumo Official"
+          // Admin needs a business account - check if they have one or create "JulaZone Official"
           let adminBusiness = await getBusinessAccountByOwner(user.uid);
           
           if (!adminBusiness) {
-            // Auto-create "Lumo Official" business account for admin
+            // Auto-create "JulaZone Official" business account for admin
             adminBusiness = await createBusinessAccount(user.uid, {
-              businessName: 'Lumo Official',
-              contactPersonName: user.name || 'Lumo Admin',
+              businessName: 'JulaZone Official',
+              contactPersonName: user.name || 'JulaZone Admin',
               contactEmail: user.email,
-              businessAddress: 'Lumo Headquarters',
-              description: 'Official Lumo Store - Quality products directly from Lumo',
+              businessAddress: 'JulaZone Headquarters',
+              description: 'Official JulaZone Store - Quality products directly from JulaZone',
               status: 'ACTIVE',
               sellerType: 'company',
               subscriptionTier: 'enterprise',

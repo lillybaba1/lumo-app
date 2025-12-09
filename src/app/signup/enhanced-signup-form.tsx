@@ -348,7 +348,7 @@ export default function EnhancedSignupForm() {
                 <ShoppingBag className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="font-headline text-2xl">Create Your Account</CardTitle>
-              <CardDescription>Join Lumo - Shop with confidence</CardDescription>
+              <CardDescription>Join JulaZone - Shop with confidence</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">

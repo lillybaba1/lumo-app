@@ -53,7 +53,7 @@ export default async function UserSidebar() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-bold font-headline">Lumo</span>
+                <span className="text-base font-bold font-headline">JulaZone</span>
                 <span className="text-xs text-muted-foreground">Shop & Discover</span>
               </div>
             </Link>
@@ -291,7 +291,7 @@ export default async function UserSidebar() {
             </div>
           )}
           <div className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            <p>© 2025 Lumo. All rights reserved.</p>
+            <p>© 2025 JulaZone. All rights reserved.</p>
           </div>
         </SidebarFooter>
     </Sidebar>

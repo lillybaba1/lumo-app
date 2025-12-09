@@ -105,7 +105,7 @@ export default function Hero3D({ theme }: Hero3DProps) {
         <div className="absolute inset-0 bg-black/40 z-10"></div>
         <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="text-center md:text-left" style={textStyle}>
-            <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into Lumo</h1>
+            <h1 className="font-headline text-4xl md:text-7xl font-bold tracking-tight drop-shadow-lg">Step into JulaZone</h1>
             <p className="mt-4 md:mt-6 text-base md:text-xl max-w-2xl drop-shadow-md mx-auto md:mx-0">An immersive shopping experience designed just for you. Explore our collections in a new dimension.</p>
           </div>
           <div className="relative h-full w-full hidden md:block">

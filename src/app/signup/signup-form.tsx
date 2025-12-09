@@ -335,7 +335,7 @@ export default function SignupForm() {
               <CardDescription>
                 {accountType === 'BUSINESS_ACCOUNT'
                   ? 'Join as a seller and start selling today'
-                  : 'Join the Lumo family today!'}
+                  : 'Join the JulaZone family today!'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

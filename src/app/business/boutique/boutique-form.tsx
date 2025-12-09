@@ -149,7 +149,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
             <div>
               <p className="text-sm font-medium">Your Boutique URL</p>
               <p className="text-xs text-muted-foreground">
-                lumo-app.org/boutique/{boutique.slug}
+                julazone.com/boutique/{boutique.slug}
               </p>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
             </Button>
             {boutique.isPublished && (
               <Button type="button" variant="outline" size="sm" asChild>
-                <a href={`https://lumo-app.org/boutique/${boutique.slug}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://julazone.com/boutique/${boutique.slug}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-4 w-4 mr-1" />
                   Visit
                 </a>

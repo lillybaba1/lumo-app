@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     
     // Use uploaded favicon or fallback to default
     const faviconUrl = settings?.faviconUrl || '/icon.svg';
-    const siteName = settings?.storeName || 'Lumo';
+    const siteName = settings?.storeName || 'JulaZone';
     
     return {
       title: siteName,
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch (error) {
     // Fallback if settings fetch fails
     return {
-      title: 'Lumo',
+      title: 'JulaZone',
       description: 'Your modern e-commerce experience.',
       icons: {
         icon: [

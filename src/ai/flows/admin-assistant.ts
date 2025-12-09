@@ -836,7 +836,7 @@ Recent Products: ${products.slice(0, 5).map(p => p.name).join(', ')}
 `;
       
       const result = await ai.generate({
-        prompt: `You are an AI admin assistant for Lumo e-commerce platform. 
+        prompt: `You are an AI admin assistant for JulaZone e-commerce platform. 
         
 Context: ${context}
 

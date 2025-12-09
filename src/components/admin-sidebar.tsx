@@ -104,7 +104,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   return (
     <AppSidebar
       sections={navGroups}
-      mobileTitle="Lumo Admin"
+      mobileTitle="JulaZone Admin"
       mobileIcon={
         <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold">
           <Store className="h-5 w-5" />
@@ -124,7 +124,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <h1 className="text-xl font-headline font-bold">Lumo</h1>
+              <h1 className="text-xl font-headline font-bold">JulaZone</h1>
               <span className="text-xs text-muted-foreground">Admin Dashboard</span>
             </div>
           )}

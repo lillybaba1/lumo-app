@@ -299,7 +299,7 @@ export default function HeroSettingsForm() {
                 color: heroHeadingColor,
               }}
             >
-              {heroHeading || 'Step into Lumo'}
+              {heroHeading || 'Step into JulaZone'}
             </div>
 
             {/* Tagline */}
@@ -390,7 +390,7 @@ export default function HeroSettingsForm() {
                   setHeroHeading(e.target.value);
                   setHasUnsavedChanges(true);
                 }}
-                placeholder="Step into Lumo"
+                placeholder="Step into JulaZone"
                 className="flex-1"
               />
               <div className="flex items-center gap-2">

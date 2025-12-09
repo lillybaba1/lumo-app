@@ -18,7 +18,7 @@ export default function HeroAdminPage() {
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [heroBackgroundImage, setHeroBackgroundImage] = useState<string>('');
-  const [heroHeading, setHeroHeading] = useState<string>('Step into Lumo');
+  const [heroHeading, setHeroHeading] = useState<string>('Step into JulaZone');
   const [heroTagline, setHeroTagline] = useState<string>('Discover exceptional products crafted with care. Your journey to quality starts here.');
   // Button colors
   const [heroButton1BgColor, setHeroButton1BgColor] = useState<string>('#3b82f6');
@@ -87,7 +87,7 @@ export default function HeroAdminPage() {
       setHeroData(mergedData);
       setAllProducts(Array.isArray(productsData) ? productsData : []);
       setHeroBackgroundImage(settingsData?.heroBackgroundImage || '');
-      setHeroHeading(settingsData?.heroHeading || 'Step into Lumo');
+      setHeroHeading(settingsData?.heroHeading || 'Step into JulaZone');
       setHeroTagline(settingsData?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.');
       // Load button colors
       setHeroButton1BgColor(settingsData?.heroButton1BgColor || '#3b82f6');

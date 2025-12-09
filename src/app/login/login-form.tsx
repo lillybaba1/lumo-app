@@ -199,7 +199,7 @@ export default function LoginForm() {
             <div className="flex justify-center mb-4">
                  <ShoppingBag className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="font-headline text-2xl">Login to Lumo</CardTitle>
+            <CardTitle className="font-headline text-2xl">Login to JulaZone</CardTitle>
             <CardDescription>Welcome back! Please log in to your account.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

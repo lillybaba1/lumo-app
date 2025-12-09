@@ -88,7 +88,7 @@ export default function PublicSidebar() {
   return (
     <AppSidebar
       sections={sections}
-      mobileTitle="Browse Lumo"
+      mobileTitle="Browse JulaZone"
       mobileIcon={
         <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30">
           <ShoppingBag className="h-5 w-5" />
@@ -109,7 +109,7 @@ export default function PublicSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-base font-bold font-headline">Lumo</span>
+              <span className="text-base font-bold font-headline">JulaZone</span>
               <span className="text-xs text-muted-foreground">Shop & Discover</span>
             </div>
           )}
@@ -127,7 +127,7 @@ export default function PublicSidebar() {
                 <span>Sign Out</span>
               </button>
             )}
-            <p className="text-xs text-muted-foreground">© 2025 Lumo. All rights reserved.</p>
+            <p className="text-xs text-muted-foreground">© 2025 JulaZone. All rights reserved.</p>
           </div>
         ) : null
       }

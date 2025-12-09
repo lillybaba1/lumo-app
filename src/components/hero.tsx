@@ -41,7 +41,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [mobileIndex, setMobileIndex] = useState(0);
 
   // Use initial settings for immediate render, then fetch fresh data
-  const heroHeading = settings?.heroHeading || 'Step into Lumo';
+  const heroHeading = settings?.heroHeading || 'Step into JulaZone';
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
   const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';

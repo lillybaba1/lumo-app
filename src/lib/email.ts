@@ -21,7 +21,7 @@ export interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
   try {
     const fromEmail = process.env.ZOHO_EMAIL;
-    const fromName = process.env.ZOHO_FROM_NAME || 'Lumo';
+    const fromName = process.env.ZOHO_FROM_NAME || 'JulaZone';
 
     if (!fromEmail) {
       console.error('ZOHO_EMAIL environment variable is not set');
@@ -46,7 +46,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
 
 // Email templates
 export function getSellerApprovalEmail(sellerName: string, businessName: string, boutiqueUrl: string): EmailOptions {
-  const subject = `🎉 Congratulations! Your Boutique "${businessName}" is Now Live on Lumo!`;
+  const subject = `🎉 Congratulations! Your Boutique "${businessName}" is Now Live on JulaZone!`;
   
   const html = `
     <!DOCTYPE html>
@@ -66,7 +66,7 @@ export function getSellerApprovalEmail(sellerName: string, businessName: string,
               <tr>
                 <td style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); padding: 40px 40px; text-align: center;">
                   <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">
-                    🎉 Welcome to Lumo!
+                    🎉 Welcome to JulaZone!
                   </h1>
                 </td>
               </tr>
@@ -79,7 +79,7 @@ export function getSellerApprovalEmail(sellerName: string, businessName: string,
                   </h2>
                   
                   <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Great news! Your boutique <strong>"${businessName}"</strong> has been approved and is now <strong>live on Lumo</strong>!
+                    Great news! Your boutique <strong>"${businessName}"</strong> has been approved and is now <strong>live on JulaZone</strong>!
                   </p>
                   
                   <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
@@ -122,10 +122,10 @@ export function getSellerApprovalEmail(sellerName: string, businessName: string,
               <tr>
                 <td style="background-color: #f4f4f5; padding: 30px 40px; text-align: center; border-top: 1px solid #e4e4e7;">
                   <p style="color: #71717a; font-size: 14px; margin: 0 0 10px 0;">
-                    Thank you for choosing Lumo!
+                    Thank you for choosing JulaZone!
                   </p>
                   <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                    © ${new Date().getFullYear()} Lumo. All rights reserved.
+                    © ${new Date().getFullYear()} JulaZone. All rights reserved.
                   </p>
                 </td>
               </tr>
@@ -183,7 +183,7 @@ export function getAccountApprovalEmail(sellerName: string, businessName: string
                   </p>
                   
                   <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    <strong>Next Step:</strong> Set up your boutique to start selling on Lumo. You'll be able to:
+                    <strong>Next Step:</strong> Set up your boutique to start selling on JulaZone. You'll be able to:
                   </p>
                   
                   <ul style="color: #52525b; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0; padding-left: 20px;">
@@ -215,10 +215,10 @@ export function getAccountApprovalEmail(sellerName: string, businessName: string
               <tr>
                 <td style="background-color: #f4f4f5; padding: 30px 40px; text-align: center; border-top: 1px solid #e4e4e7;">
                   <p style="color: #71717a; font-size: 14px; margin: 0 0 10px 0;">
-                    Thank you for joining Lumo!
+                    Thank you for joining JulaZone!
                   </p>
                   <p style="color: #a1a1aa; font-size: 12px; margin: 0;">
-                    © ${new Date().getFullYear()} Lumo. All rights reserved.
+                    © ${new Date().getFullYear()} JulaZone. All rights reserved.
                   </p>
                 </td>
               </tr>

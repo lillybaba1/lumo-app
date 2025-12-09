@@ -18,7 +18,7 @@ async function getCurrentUser(): Promise<User | null> {
   if (error || !userData) return null;
 
   let businessAccountId: string | undefined;
-  // Check for business account for both BUSINESS_ACCOUNT and APP_OWNER_ADMIN (Lumo Official)
+  // Check for business account for both BUSINESS_ACCOUNT and APP_OWNER_ADMIN (JulaZone Official)
   if (userData.role === 'BUSINESS_ACCOUNT' || userData.role === 'APP_OWNER_ADMIN' || userData.role === 'admin') {
       const business = await getBusinessAccountByOwner(authUser.id);
       if (business) {

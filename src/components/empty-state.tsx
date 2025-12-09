@@ -17,7 +17,7 @@ export default function EmptyState({ title, description, showTrustBadges = true 
       
       {showTrustBadges && (
         <div className="w-full max-w-2xl">
-          <p className="text-sm text-muted-foreground mb-4">Why shop with Lumo?</p>
+          <p className="text-sm text-muted-foreground mb-4">Why shop with JulaZone?</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
               <Shield className="h-6 w-6 text-green-600 mb-2" />

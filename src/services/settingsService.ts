@@ -145,7 +145,7 @@ export interface Settings {
     categorySectionTextColor?: string;
     categorySectionPadding?: string;
 
-    // Lumo Promise Section
+    // JulaZone Promise Section
     lumoPromiseEnabled?: boolean;
     lumoPromiseTitle?: string;
     lumoPromiseDescription?: string;
@@ -194,7 +194,7 @@ export interface Settings {
 
 const defaultSettings: Settings = {
     currency: 'USD',
-    storeName: 'Lumo Store',
+    storeName: 'JulaZone Store',
     storeTagline: 'Your trusted e-commerce store',
     taxEnabled: false,
     taxRate: 0,
@@ -210,7 +210,7 @@ const defaultSettings: Settings = {
     lowStockThreshold: 10,
     enableLowStockAlerts: true,
     theme: 'minimal-light',
-    heroHeading: 'Step into Lumo',
+    heroHeading: 'Step into JulaZone',
     heroTagline: 'Discover exceptional products crafted with care. Your journey to quality starts here.',
     heroBackgroundImage: '',
     heroImageObjectPosition: 'center',
@@ -241,14 +241,14 @@ const defaultSettings: Settings = {
     announcementLink: '',
     // Footer defaults
     footerDescription: "We're building a trusted shopping experience for Africa. Quality products, secure payments, and reliable delivery across the continent.",
-    footerCopyright: 'Lumo – Africa\'s Trusted Marketplace',
+    footerCopyright: 'JulaZone – Africa\'s Trusted Marketplace',
     footerTagline: 'Building trust, one order at a time 🌍',
-    footerEmail: 'support@lumo-app.org',
+    footerEmail: 'support@julazone.com',
     footerPhone: '+220 700 1234',
     footerWhatsApp: '+2207001234',
-    socialFacebook: 'https://facebook.com/lumogambia',
-    socialInstagram: 'https://instagram.com/lumo_gambia',
-    socialX: 'https://x.com/lumogambia',
+    socialFacebook: 'https://facebook.com/julazone_gm',
+    socialInstagram: 'https://instagram.com/julazone_gm',
+    socialX: 'https://x.com/julazone_gm',
     socialTiktok: '',
     socialYoutube: '',
     trustBadge1Title: 'Secure Payments',

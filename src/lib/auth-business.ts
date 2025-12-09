@@ -76,11 +76,11 @@ export async function requireBusiness(
     }
 
     if (!businessAccount) {
-      // For admins without a business account, auto-create "Lumo Official" account
+      // For admins without a business account, auto-create "JulaZone Official" account
       if (isAdmin) {
-        console.log('Auto-creating Lumo Official business account for admin:', userId);
+        console.log('Auto-creating JulaZone Official business account for admin:', userId);
         businessAccount = await createBusinessAccount({
-          businessName: 'Lumo Official',
+          businessName: 'JulaZone Official',
           ownerUserId: userId,
           contactPersonName: userData.name || 'Platform Admin',
           contactEmail: email,

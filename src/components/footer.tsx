@@ -54,17 +54,17 @@ interface FooterSettings {
 }
 
 const defaultSettings: FooterSettings = {
-  storeName: 'Lumo',
+  storeName: 'JulaZone',
   storeTagline: "Africa's Trusted Marketplace",
   footerDescription: "We're building a trusted shopping experience for Africa. Quality products, secure payments, and reliable delivery across the continent.",
-  footerCopyright: "Lumo – Africa's Trusted Marketplace",
+  footerCopyright: "JulaZone – Africa's Trusted Marketplace",
   footerTagline: 'Building trust, one order at a time 🌍',
-  footerEmail: 'support@lumo-app.org',
+  footerEmail: 'support@julazone.com',
   footerPhone: '+220 700 1234',
   footerWhatsApp: '+2207001234',
-  socialFacebook: 'https://facebook.com/lumogambia',
-  socialInstagram: 'https://instagram.com/lumo_gambia',
-  socialX: 'https://x.com/lumogambia',
+  socialFacebook: 'https://facebook.com/julazone_gm',
+  socialInstagram: 'https://instagram.com/julazone_gm',
+  socialX: 'https://x.com/julazone_gm',
   socialTiktok: '',
   socialYoutube: '',
   trustBadge1Title: 'Secure Payments',

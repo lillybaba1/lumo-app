@@ -43,10 +43,10 @@ const defaultHeaderSettings: HeaderSettings = {
   homeButtonGradientFrom: '#8b5cf6',
   homeButtonGradientTo: '#ec4899',
   logoUrl: '',
-  logoAlt: 'Lumo',
+  logoAlt: 'JulaZone',
   logoWidth: 200,
   logoHeight: 60,
-  storeName: 'Lumo',
+  storeName: 'JulaZone',
 };
 
 export default function Header({ children }: { children: React.ReactNode }) {
@@ -164,7 +164,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
                     <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
                   </div>
                   <span className="font-bold font-headline text-xl leading-tight tracking-tight">
-                    {settings.storeName || 'Lumo'}
+                    {settings.storeName || 'JulaZone'}
                   </span>
                 </>
               )}

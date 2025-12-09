@@ -278,8 +278,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 If you have any questions about your order, please contact our customer service.
               </p>
               <p className="text-sm">
-                Email: <a href={`mailto:support@lumo-app.com?subject=Order ${order.id}`} className="text-primary hover:underline">
-                  support@lumo-app.com
+                Email: <a href={`mailto:support@julazone.com?subject=Order ${order.id}`} className="text-primary hover:underline">
+                  support@julazone.com
                 </a>
               </p>
             </div>

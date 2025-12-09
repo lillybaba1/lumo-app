@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Store, Star, Package, ShoppingBag, CheckCircle, Shield, Sparkles, ArrowRight, Search } from 'lucide-react';
 
 export const metadata = {
-  title: 'Discover Boutiques | Lumo',
-  description: 'Explore unique boutiques and shops from verified sellers on Lumo',
+  title: 'Discover Boutiques | JulaZone',
+  description: 'Explore unique boutiques and shops from verified sellers on JulaZone',
 };
 
 export default async function BoutiquesPage() {

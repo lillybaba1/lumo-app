@@ -86,9 +86,9 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
     footerPaymentMethods: settings.footerPaymentMethods || 'Wave,Afrimoney,QMoney,Bank Transfer,Cash on Delivery',
     footerDeliveryCountries: settings.footerDeliveryCountries || '🇬🇲 Gambia,🇸🇳 Senegal,🇳🇬 Nigeria,🇬🇭 Ghana,🇰🇪 Kenya',
 
-    // Lumo Promise Section
+    // JulaZone Promise Section
     lumoPromiseEnabled: settings.lumoPromiseEnabled ?? true,
-    lumoPromiseTitle: settings.lumoPromiseTitle || 'The Lumo Promise',
+    lumoPromiseTitle: settings.lumoPromiseTitle || 'The JulaZone Promise',
     lumoPromiseDescription: settings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.',
     lumoPromiseBgColor: settings.lumoPromiseBgColor || '#ffffff',
     lumoPromiseTextColor: settings.lumoPromiseTextColor || '#000000',
@@ -177,7 +177,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               <Label htmlFor="storeName">Store Name</Label>
               <Input
                 id="storeName"
-                placeholder="Lumo Store"
+                placeholder="JulaZone Store"
                 value={formState.storeName}
                 onChange={(e) => updateField('storeName', e.target.value)}
               />
@@ -214,7 +214,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               <Input
                 id="storeEmail"
                 type="email"
-                placeholder="contact@lumostore.com"
+                placeholder="contact@julazone.com"
                 value={formState.storeEmail}
                 onChange={(e) => updateField('storeEmail', e.target.value)}
               />
@@ -520,7 +520,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               <Label htmlFor="footerCopyright">Copyright Text</Label>
               <Input
                 id="footerCopyright"
-                placeholder="Lumo – Africa's Trusted Marketplace"
+                placeholder="JulaZone – Africa's Trusted Marketplace"
                 value={formState.footerCopyright}
                 onChange={(e) => updateField('footerCopyright', e.target.value)}
               />
@@ -715,15 +715,15 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
         </CardContent>
       </Card>
 
-      {/* Lumo Promise Section */}
+      {/* JulaZone Promise Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Heart className="h-5 w-5" />
-            <CardTitle>Lumo Promise Section</CardTitle>
+            <CardTitle>JulaZone Promise Section</CardTitle>
           </div>
           <CardDescription>
-            Customize the &quot;Lumo Promise&quot; section on the homepage
+            Customize the &quot;JulaZone Promise&quot; section on the homepage
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -733,7 +733,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               checked={formState.lumoPromiseEnabled}
               onCheckedChange={(checked) => updateField('lumoPromiseEnabled', checked)}
             />
-            <Label htmlFor="lumoPromiseEnabled">Show Lumo Promise Section</Label>
+            <Label htmlFor="lumoPromiseEnabled">Show JulaZone Promise Section</Label>
           </div>
 
           <Separator />
@@ -743,7 +743,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
               <Label htmlFor="lumoPromiseTitle">Section Title</Label>
               <Input
                 id="lumoPromiseTitle"
-                placeholder="The Lumo Promise"
+                placeholder="The JulaZone Promise"
                 value={formState.lumoPromiseTitle}
                 onChange={(e) => updateField('lumoPromiseTitle', e.target.value)}
               />

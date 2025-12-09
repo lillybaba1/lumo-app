@@ -70,7 +70,7 @@ export async function saveSettings(
         footerPaymentMethods: formData.get('footerPaymentMethods') as string || undefined,
         footerDeliveryCountries: formData.get('footerDeliveryCountries') as string || undefined,
 
-        // Lumo Promise Section
+        // JulaZone Promise Section
         lumoPromiseEnabled: formData.get('lumoPromiseEnabled') === 'true',
         lumoPromiseTitle: formData.get('lumoPromiseTitle') as string || undefined,
         lumoPromiseDescription: formData.get('lumoPromiseDescription') as string || undefined,

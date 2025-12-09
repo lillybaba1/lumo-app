@@ -57,7 +57,7 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground font-bold">
               <Store className="h-6 w-6" />
             </div>
-            <span className="text-xl font-bold">Lumo</span>
+            <span className="text-xl font-bold">JulaZone</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">

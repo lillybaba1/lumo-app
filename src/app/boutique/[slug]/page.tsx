@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props) {
   }
 
   return {
-    title: `${boutique.displayName} | Lumo`,
+    title: `${boutique.displayName} | JulaZone`,
     description: boutique.tagline || boutique.description || `Shop at ${boutique.displayName}`,
     openGraph: {
       title: boutique.displayName,

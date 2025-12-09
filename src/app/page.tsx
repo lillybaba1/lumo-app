@@ -696,7 +696,7 @@ function Home(props: {
 
           {/* Trust & Story Sections */}
           <section className="mt-12 md:mt-16 space-y-6 md:space-y-12">
-            {/* The Lumo Promise */}
+            {/* The JulaZone Promise */}
             {lumoPromiseSettings.lumoPromiseEnabled !== false && (
               <Card 
                 className="overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm"
@@ -708,7 +708,7 @@ function Home(props: {
                       className={`font-headline text-${lumoPromiseSettings.lumoPromiseTitleSize || 'xl'} md:text-4xl font-${lumoPromiseSettings.lumoPromiseTitleWeight || 'bold'}`}
                       style={{ fontWeight: lumoPromiseSettings.lumoPromiseTitleWeight === 'extrabold' ? 800 : lumoPromiseSettings.lumoPromiseTitleWeight === 'bold' ? 700 : lumoPromiseSettings.lumoPromiseTitleWeight === 'semibold' ? 600 : lumoPromiseSettings.lumoPromiseTitleWeight === 'medium' ? 500 : 400 }}
                     >
-                      {lumoPromiseSettings.lumoPromiseTitle || 'The Lumo Promise'}
+                      {lumoPromiseSettings.lumoPromiseTitle || 'The JulaZone Promise'}
                     </h2>
                     <p className="text-sm md:text-lg leading-relaxed opacity-80">
                       {lumoPromiseSettings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.'}

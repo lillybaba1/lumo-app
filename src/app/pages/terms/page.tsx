@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Agreement to Terms</h2>
               <p>
-                By accessing or using Lumo ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.
+                By accessing or using JulaZone ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.
               </p>
             </section>
 
@@ -143,7 +143,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Intellectual Property</h2>
               <p>
-                All content on this Service, including text, images, logos, and software, is the property of Lumo or its licensors and is protected by copyright and other intellectual property laws.
+                All content on this Service, including text, images, logos, and software, is the property of JulaZone or its licensors and is protected by copyright and other intellectual property laws.
               </p>
               <p>You may not:</p>
               <ul className="list-disc pl-6 mb-4">
@@ -177,7 +177,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Indemnification</h2>
               <p>
-                You agree to indemnify and hold harmless Lumo, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses arising from your use of the Service or violation of these Terms.
+                You agree to indemnify and hold harmless JulaZone, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses arising from your use of the Service or violation of these Terms.
               </p>
             </section>
 
@@ -228,7 +228,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Entire Agreement</h2>
               <p>
-                These Terms, together with our Privacy Policy, constitute the entire agreement between you and Lumo regarding the use of the Service.
+                These Terms, together with our Privacy Policy, constitute the entire agreement between you and JulaZone regarding the use of the Service.
               </p>
             </section>
 

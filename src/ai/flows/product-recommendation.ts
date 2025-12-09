@@ -41,7 +41,7 @@ const productRecommendationPrompt = ai.definePrompt({
   name: 'productRecommendationPrompt',
   input: {schema: ProductRecommendationInputSchema},
   output: {schema: ProductRecommendationOutputSchema},
-  prompt: `You are Luna, a friendly AI shopping assistant for Lumo. A customer is asking for product recommendations.
+  prompt: `You are Luna, a friendly AI shopping assistant for JulaZone. A customer is asking for product recommendations.
 
 User ID: {{{userId}}}
 What they've been looking at: {{#each browsingHistory}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}

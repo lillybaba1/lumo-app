@@ -134,7 +134,7 @@ export function CookieConsent() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">We Value Your Privacy</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Lumo uses cookies and similar technologies to enhance your shopping experience, 
+                    JulaZone uses cookies and similar technologies to enhance your shopping experience, 
                     analyze site traffic, and personalize content. In accordance with The Gambia&apos;s 
                     consumer protection guidelines, we respect your right to privacy.
                     <Link 
