@@ -1,7 +1,11 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const ANNOUNCEMENT_DISMISSED_KEY = 'hero-announcement-dismissed';
 
 export interface HeroAnnouncementSettings {
   heroAnnouncementEnabled?: boolean;
@@ -28,13 +32,31 @@ interface HeroAnnouncementProps {
 }
 
 export default function HeroAnnouncement({ settings }: HeroAnnouncementProps) {
-  // Debug: Log settings to help troubleshoot
-  console.log('HeroAnnouncement settings:', {
-    enabled: settings.heroAnnouncementEnabled,
-    text: settings.heroAnnouncementText,
-  });
+  const [isDismissed, setIsDismissed] = useState(true); // Start hidden to prevent flash
+  const [isVisible, setIsVisible] = useState(false);
 
-  if (!settings.heroAnnouncementEnabled || !settings.heroAnnouncementText) {
+  // Check sessionStorage on mount
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem(ANNOUNCEMENT_DISMISSED_KEY);
+    if (!dismissed) {
+      setIsDismissed(false);
+      // Small delay for smooth entrance
+      setTimeout(() => setIsVisible(true), 100);
+    }
+  }, []);
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVisible(false);
+    // Wait for fade out animation before hiding
+    setTimeout(() => {
+      setIsDismissed(true);
+      sessionStorage.setItem(ANNOUNCEMENT_DISMISSED_KEY, 'true');
+    }, 300);
+  };
+
+  if (!settings.heroAnnouncementEnabled || !settings.heroAnnouncementText || isDismissed) {
     return null;
   }
 
@@ -94,7 +116,7 @@ export default function HeroAnnouncement({ settings }: HeroAnnouncementProps) {
   const mobileFontSize = fontSizePixelMap[heroAnnouncementMobileFontSize] || '14px';
   const fontWeightClass = fontWeightMap[heroAnnouncementFontWeight] || 'font-semibold';
   const paddingClass = paddingMap[heroAnnouncementPadding] || 'px-4 py-2';
-  const animationClass = animationMap[heroAnnouncementAnimation] || '';
+  const animationClass = isVisible ? (animationMap[heroAnnouncementAnimation] || '') : '';
 
   // Calculate transform based on position for centering
   const getTransform = () => {
@@ -125,7 +147,8 @@ export default function HeroAnnouncement({ settings }: HeroAnnouncementProps) {
         paddingClass,
         fontWeightClass,
         animationClass,
-        heroAnnouncementLink && "cursor-pointer hover:scale-105 hover:shadow-lg"
+        heroAnnouncementLink && "cursor-pointer hover:scale-105 hover:shadow-lg",
+        isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
       )}
       style={{
         ...baseStyles,
@@ -134,8 +157,18 @@ export default function HeroAnnouncement({ settings }: HeroAnnouncementProps) {
         maxWidth: `${heroAnnouncementWidth}px`,
       }}
     >
+      {/* Close button */}
+      <button
+        onClick={handleDismiss}
+        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
+        style={{ color: heroAnnouncementTextColor }}
+        aria-label="Dismiss announcement"
+      >
+        <X className="w-4 h-4" />
+      </button>
+      
       {/* Responsive font sizes */}
-      <span className="block md:hidden" style={{ fontSize: mobileFontSize }}>
+      <span className="block md:hidden pr-4" style={{ fontSize: mobileFontSize }}>
         {heroAnnouncementText}
       </span>
       <span className="hidden md:block" style={{ fontSize: desktopFontSize }}>
