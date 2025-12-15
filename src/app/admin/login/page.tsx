@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldCheck } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebaseClient';
+import { createClient } from '@/lib/supabase/client';
 import { getUserRoleClient } from '@/services/authService';
 
 export default function AdminLoginPage() {
@@ -19,6 +18,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const supabase = createClient();
 
   const redirectPath = searchParams?.get('redirect') || '/admin/dashboard';
 
@@ -27,12 +27,20 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const user = data.user;
 
       // Check if user has admin role
-      const role = await getUserRoleClient(user.uid);
+      const role = await getUserRoleClient(user.id);
 
       if (role !== 'admin') {
         toast({
@@ -40,20 +48,10 @@ export default function AdminLoginPage() {
           description: "You do not have admin privileges.",
           variant: "destructive",
         });
-        await auth.signOut();
+        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
-
-      // Create session cookie
-      const sessionData = {
-        userId: user.uid,
-        email: user.email,
-        role: role,
-      };
-
-      // Store session in cookie
-      document.cookie = `session=${JSON.stringify(sessionData)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=strict`;
 
       toast({
         title: "Welcome Back!",
@@ -68,12 +66,12 @@ export default function AdminLoginPage() {
 
       let errorMessage = 'Failed to login. Please try again.';
 
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+      if (error.message?.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password.';
-      } else if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email.';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many failed attempts. Please try again later.';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Please verify your email before logging in.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
       toast({

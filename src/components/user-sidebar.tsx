@@ -30,7 +30,7 @@ import {
   SidebarHeader,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { getCurrentUser } from '@/hooks/use-auth';
+import { getCurrentUser } from '@/lib/auth-admin';
 import { Badge } from '@/components/ui/badge';
 import { SignOutButton } from '@/components/sign-out-button';
 

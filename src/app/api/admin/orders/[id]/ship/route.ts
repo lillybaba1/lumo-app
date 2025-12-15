@@ -2,8 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { dbAdmin } from '@/lib/firebaseAdmin';
 import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 /**
  * Protected endpoint to mark an order as shipped.
@@ -19,22 +19,31 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ ok: false, error: 'Missing order ID' }, { status: 400 });
     }
 
-    const db = dbAdmin();
-    const ref = db.collection('orders').doc(orderId);
-
     // Check if order exists
-    const orderSnap = await ref.get();
-    if (!orderSnap.exists) {
+    const { data: order, error: fetchError } = await supabaseAdmin
+      .from('orders')
+      .select('id')
+      .eq('id', orderId)
+      .single();
+
+    if (fetchError || !order) {
       return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 });
     }
 
     // Update order status with audit trail
-    await ref.update({
-      status: 'Shipped',
-      shippedAt: new Date().toISOString(),
-      shippedBy: adminUser.userId,
-      updatedAt: new Date().toISOString()
-    });
+    const { error: updateError } = await supabaseAdmin
+      .from('orders')
+      .update({
+        status: 'Shipped',
+        shipped_at: new Date().toISOString(),
+        shipped_by: adminUser.userId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId);
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {

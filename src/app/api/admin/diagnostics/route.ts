@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-admin';
-import { isFirebaseAdminInitialized, bucket } from '@/lib/firebaseAdmin';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
 /**
  * GET /api/admin/diagnostics
- * Diagnostic endpoint to check admin authentication and Firebase configuration
+ * Diagnostic endpoint to check admin authentication and Supabase configuration
  * Use this to troubleshoot upload issues
  */
 export async function GET() {
@@ -15,7 +15,7 @@ export async function GET() {
     checks: {
       authentication: { status: 'unknown', details: '' },
       adminRole: { status: 'unknown', details: '' },
-      firebaseAdmin: { status: 'unknown', details: '' },
+      supabaseConnection: { status: 'unknown', details: '' },
       storageBucket: { status: 'unknown', details: '' },
     },
     summary: '',
@@ -70,45 +70,52 @@ export async function GET() {
     };
   }
 
-  // Check 3: Firebase Admin SDK
+  // Check 3: Supabase Connection
   try {
-    const adminInitialized = isFirebaseAdminInitialized();
-    if (adminInitialized) {
-      diagnostics.checks.firebaseAdmin = {
-        status: 'success',
-        details: 'Firebase Admin SDK is initialized',
-      };
-    } else {
-      diagnostics.checks.firebaseAdmin = {
-        status: 'error',
-        details: 'Firebase Admin SDK is not initialized',
-      };
-      diagnostics.recommendations.push(
-        'Firebase Admin SDK is not initialized. Set SERVICE_ACCOUNT_JSON or SERVICE_ACCOUNT_BASE64 environment variable with your service account credentials.'
-      );
+    const { data, error } = await supabaseAdmin
+      .from('site_settings')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      throw error;
     }
-  } catch (error) {
-    diagnostics.checks.firebaseAdmin = {
-      status: 'error',
-      details: error instanceof Error ? error.message : 'Firebase Admin check failed',
+    
+    diagnostics.checks.supabaseConnection = {
+      status: 'success',
+      details: 'Supabase database connection is working',
     };
+  } catch (error) {
+    diagnostics.checks.supabaseConnection = {
+      status: 'error',
+      details: error instanceof Error ? error.message : 'Supabase connection failed',
+    };
+    diagnostics.recommendations.push(
+      'Supabase connection failed. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.'
+    );
   }
 
   // Check 4: Storage Bucket
   try {
-    const bucketInstance = bucket();
-    if (bucketInstance && bucketInstance.name) {
+    const { data: buckets, error } = await supabaseAdmin.storage.listBuckets();
+    
+    if (error) {
+      throw error;
+    }
+    
+    if (buckets && buckets.length > 0) {
+      const bucketNames = buckets.map(b => b.name).join(', ');
       diagnostics.checks.storageBucket = {
         status: 'success',
-        details: `Storage bucket configured: ${bucketInstance.name}`,
+        details: `Storage buckets available: ${bucketNames}`,
       };
     } else {
       diagnostics.checks.storageBucket = {
         status: 'error',
-        details: 'Storage bucket is not configured',
+        details: 'No storage buckets configured',
       };
       diagnostics.recommendations.push(
-        'Firebase Storage bucket is not configured. Set STORAGE_BUCKET environment variable.'
+        'No Supabase storage buckets found. Create buckets in your Supabase dashboard.'
       );
     }
   } catch (error) {
@@ -116,11 +123,9 @@ export async function GET() {
       status: 'error',
       details: error instanceof Error ? error.message : 'Storage bucket check failed',
     };
-    if (error instanceof Error && error.message.includes('credentials')) {
-      diagnostics.recommendations.push(
-        'Firebase Admin credentials are missing or invalid. Check SERVICE_ACCOUNT_JSON environment variable.'
-      );
-    }
+    diagnostics.recommendations.push(
+      'Could not check storage buckets. Verify Supabase service role key has storage permissions.'
+    );
   }
 
   // Generate summary
@@ -136,7 +141,7 @@ export async function GET() {
     diagnostics.summary = `⚠️ ${errorCount} check(s) failed. Image upload may not work.`;
   }
 
-  // Add general recommendations if there are errors
+  // Add general recommendations
   if (errorCount > 0) {
     diagnostics.recommendations.push(
       'See UPLOAD_TROUBLESHOOTING.md for detailed setup instructions.',

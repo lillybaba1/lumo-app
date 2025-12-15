@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getProducts, getCategories } from '@/services/productService';
-import { seedInitialData } from '@/lib/seed';
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { Product, Category } from '@/lib/types';
@@ -22,7 +21,6 @@ export default function ProductsPageContainer() {
 
   useEffect(() => {
     async function fetchData() {
-      await seedInitialData();
       const [productsData, categoriesData] = await Promise.all([
         getProducts(),
         getCategories(),
