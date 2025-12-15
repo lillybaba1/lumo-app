@@ -88,6 +88,46 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 }
 
 /**
+ * Get orders by customer email
+ */
+export async function getOrdersByEmail(email: string): Promise<Order[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('customer_email', email)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching orders by email:', error);
+      throw error;
+    }
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      customerName: row.customer_name,
+      customerEmail: row.customer_email,
+      customerPhone: row.customer_phone,
+      shippingAddress: row.shipping_address,
+      items: row.items || [],
+      subtotal: parseFloat(row.subtotal),
+      discount: parseFloat(row.discount || 0),
+      total: parseFloat(row.total),
+      status: row.status,
+      paymentMethod: row.payment_method,
+      paymentStatus: row.payment_status,
+      couponCode: row.coupon_code,
+      notes: row.notes,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch orders by email:', error);
+    return [];
+  }
+}
+
+/**
  * Create a new order
  */
 export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> {

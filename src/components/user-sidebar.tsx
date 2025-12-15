@@ -122,7 +122,7 @@ export default async function UserSidebar() {
                      </SidebarMenuItem>
                      <SidebarMenuItem>
                         <SidebarMenuButton asChild tooltip="Orders">
-                            <Link href="/account/orders">
+                            <Link href="/orders">
                                 <Package />
                                 <span>My Orders</span>
                             </Link>
