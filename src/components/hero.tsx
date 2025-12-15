@@ -265,25 +265,25 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         {settings && <HeroAnnouncement settings={settings} />}
 
         {/* Mobile Layout - Flexbox based for better visibility */}
-        <div className="md:hidden flex flex-col justify-center px-6 pt-16 pb-8 min-h-[520px]">
+        <div className="md:hidden flex flex-col justify-start px-6 pt-20 pb-8 min-h-[520px] relative z-10">
           <h1
-            className="text-3xl sm:text-4xl font-bold max-w-lg mb-4"
+            className="text-3xl sm:text-4xl font-bold max-w-lg mb-3 drop-shadow-lg"
             style={{
               color: heroHeadingColor,
               fontFamily: 'var(--font-heading)',
               fontWeight: 'var(--font-weight-bold)',
-              lineHeight: 'var(--line-height-tight)',
+              lineHeight: '1.2',
             }}
           >
             {heroHeading}
           </h1>
 
           <p
-            className="text-base sm:text-lg max-w-md mb-6"
+            className="text-sm sm:text-base max-w-xs mb-5 drop-shadow-md"
             style={{
               color: heroTaglineColor,
               opacity: 0.95,
-              lineHeight: 'var(--line-height-relaxed)',
+              lineHeight: '1.5',
             }}
           >
             {heroTagline}
