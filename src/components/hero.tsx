@@ -260,13 +260,94 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       )}
 
       {/* Content - Positioned elements */}
-      <div className="relative w-full h-full min-h-[400px] md:min-h-[500px]">
+      <div className="relative w-full min-h-[520px] md:min-h-[500px]">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
+        {/* Mobile Layout - Flexbox based for better visibility */}
+        <div className="md:hidden flex flex-col justify-center px-6 pt-16 pb-8 min-h-[520px]">
+          <h1
+            className="text-3xl sm:text-4xl font-bold max-w-lg mb-4"
+            style={{
+              color: heroHeadingColor,
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-bold)',
+              lineHeight: 'var(--line-height-tight)',
+            }}
+          >
+            {heroHeading}
+          </h1>
+
+          <p
+            className="text-base sm:text-lg max-w-md mb-6"
+            style={{
+              color: heroTaglineColor,
+              opacity: 0.95,
+              lineHeight: 'var(--line-height-relaxed)',
+            }}
+          >
+            {heroTagline}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/products?filter=new">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto text-sm font-semibold h-11"
+                style={{
+                  backgroundColor: heroButton1BgColor,
+                  color: heroButton1TextColor,
+                  borderRadius: 'var(--radius-button)',
+                  padding: '0 var(--spacing-xl)',
+                }}
+              >
+                Shop New Arrivals
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+
+            <Link href="/products">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-sm font-semibold h-11"
+                style={{
+                  backgroundColor: heroButton2BgColor,
+                  color: heroButton2TextColor,
+                  borderColor: heroButton2BorderColor,
+                  borderRadius: 'var(--radius-button)',
+                  padding: '0 var(--spacing-xl)',
+                }}
+              >
+                Browse Collections
+              </Button>
+            </Link>
+
+            {heroData?.heroLabelText && (
+              <Link href="/products?filter=featured">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto text-sm font-semibold h-11 gap-2 rounded-full shadow-lg"
+                  style={{
+                    backgroundColor: heroButton3BgColor,
+                    color: heroButton3TextColor,
+                    borderRadius: 'var(--radius-button)',
+                    padding: '0 var(--spacing-xl)',
+                  }}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  {heroData.heroLabelText}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Layout - Absolutely positioned */}
         {/* Heading - Absolutely positioned */}
         <h1
-          className="absolute text-4xl md:text-6xl lg:text-7xl font-bold max-w-2xl px-4"
+          className="hidden md:block absolute text-6xl lg:text-7xl font-bold max-w-2xl px-4"
           style={{
             left: `${heroHeadingPosition.x}%`,
             top: `${heroHeadingPosition.y}%`,
@@ -282,7 +363,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Tagline - Absolutely positioned */}
         <p
-          className="absolute text-base md:text-xl max-w-xl px-4"
+          className="hidden md:block absolute text-xl max-w-xl px-4"
           style={{
             left: `${heroTaglinePosition.x}%`,
             top: `${heroTaglinePosition.y}%`,
@@ -297,7 +378,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* CTAs - Absolutely positioned */}
         <div 
-          className="absolute flex flex-col sm:flex-row gap-3 md:gap-4 px-4"
+          className="hidden md:flex absolute flex-row gap-4 px-4"
           style={{
             left: `${heroCtaPosition.x}%`,
             top: `${heroCtaPosition.y}%`,
