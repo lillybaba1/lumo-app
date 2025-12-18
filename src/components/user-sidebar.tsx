@@ -266,7 +266,7 @@ export default async function UserSidebar() {
                   <User className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <span className="text-sm font-medium truncate">{user.displayName || 'User'}</span>
+                  <span className="text-sm font-medium truncate">{user.email?.split('@')[0] || 'User'}</span>
                   <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                 </div>
               </div>

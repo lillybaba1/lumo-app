@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(req);
-    const rateLimit = checkRateLimit(clientId, RATE_LIMITS.AI_ASSISTANT);
+    const rateLimit = await checkRateLimit(clientId, RATE_LIMITS.AI_ASSISTANT);
 
     if (rateLimit.limited) {
       logger.warn('Rate limit exceeded', { clientId, resetTime: rateLimit.resetTime });

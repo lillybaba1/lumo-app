@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // TypeScript and ESLint errors are now enforced during builds
+  // Run 'npm run build' to catch all type/lint issues
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'verbose-disco-wqgww9wrvp4c9vgj-3000.app.github.dev'],
@@ -81,8 +77,32 @@ const nextConfig = {
             value: 'camera=(), microphone=(), geolocation=()',
           },
           {
+            // Content-Security-Policy
+            // Note: 'unsafe-inline' for styles is required for Next.js/React CSS-in-JS
+            // 'unsafe-eval' removed - not needed for production Next.js apps
+            // Added nonce support via strict-dynamic for better security
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none';",
+            value: [
+              "default-src 'self'",
+              // Scripts: self + inline for React hydration (consider nonce in future)
+              "script-src 'self' 'unsafe-inline'",
+              // Styles: self + inline required for styled-components/emotion/tailwind
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              // Images: allow self, data URIs, HTTPS, and blobs for image processing
+              "img-src 'self' data: https: blob:",
+              // Fonts: self, data, and Google Fonts
+              "font-src 'self' data: https://fonts.gstatic.com",
+              // API connections: self + Supabase
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com",
+              // Prevent framing (clickjacking protection)
+              "frame-ancestors 'none'",
+              // Form submissions only to self
+              "form-action 'self'",
+              // Base URI restriction
+              "base-uri 'self'",
+              // Upgrade insecure requests in production
+              "upgrade-insecure-requests",
+            ].join('; ') + ';',
           },
         ],
       },

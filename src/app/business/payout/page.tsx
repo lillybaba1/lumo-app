@@ -10,7 +10,7 @@ export default async function BusinessPayoutPage() {
   const { user, businessAccount } = await requireBusiness();
   
   // Platform admin doesn't need payout settings
-  const isAdmin = user.role === 'APP_OWNER_ADMIN' || user.role === 'admin';
+  const isAdmin = user.role === 'APP_OWNER_ADMIN';
   
   const hasPayoutSetup = businessAccount.payoutMethod && businessAccount.payoutDetails;
 

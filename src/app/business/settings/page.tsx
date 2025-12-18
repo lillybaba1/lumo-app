@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function BusinessSettingsPage() {
   const { user, businessAccount } = await requireBusiness();
   
-  const isAdmin = user.role === 'APP_OWNER_ADMIN' || user.role === 'admin';
+  const isAdmin = user.role === 'APP_OWNER_ADMIN';
 
   return (
     <div>

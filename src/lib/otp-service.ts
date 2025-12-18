@@ -56,8 +56,8 @@ export async function sendOTP(
 ): Promise<OTPResult> {
   try {
     // Rate limit check by IP
-    if (rateLimiter.isRateLimited(`otp-send:${ip}`, OTP_CONFIG.RATE_LIMIT.limit, OTP_CONFIG.RATE_LIMIT.window)) {
-      const retryAfter = rateLimiter.getResetTime(`otp-send:${ip}`);
+    if (await rateLimiter.isRateLimited(`otp-send:${ip}`, OTP_CONFIG.RATE_LIMIT.limit, OTP_CONFIG.RATE_LIMIT.window)) {
+      const retryAfter = await rateLimiter.getResetTime(`otp-send:${ip}`);
       return {
         success: false,
         error: `Too many OTP requests. Please try again in ${retryAfter} seconds.`,
@@ -66,8 +66,8 @@ export async function sendOTP(
     }
 
     // Rate limit check by phone number
-    if (rateLimiter.isRateLimited(`otp-send:${phoneNumber}`, OTP_CONFIG.RATE_LIMIT.limit, OTP_CONFIG.RATE_LIMIT.window)) {
-      const retryAfter = rateLimiter.getResetTime(`otp-send:${phoneNumber}`);
+    if (await rateLimiter.isRateLimited(`otp-send:${phoneNumber}`, OTP_CONFIG.RATE_LIMIT.limit, OTP_CONFIG.RATE_LIMIT.window)) {
+      const retryAfter = await rateLimiter.getResetTime(`otp-send:${phoneNumber}`);
       return {
         success: false,
         error: `Too many OTP requests for this phone number. Please try again in ${retryAfter} seconds.`,
@@ -143,13 +143,13 @@ export async function verifyOTP(
   try {
     // Rate limit verification attempts
     if (
-      rateLimiter.isRateLimited(
+      await rateLimiter.isRateLimited(
         `otp-verify:${phoneNumber}`,
         OTP_CONFIG.VERIFICATION_RATE_LIMIT.limit,
         OTP_CONFIG.VERIFICATION_RATE_LIMIT.window
       )
     ) {
-      const retryAfter = rateLimiter.getResetTime(`otp-verify:${phoneNumber}`);
+      const retryAfter = await rateLimiter.getResetTime(`otp-verify:${phoneNumber}`);
       return {
         success: false,
         error: `Too many verification attempts. Please try again in ${retryAfter} seconds.`,

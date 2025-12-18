@@ -5,8 +5,26 @@ import ShippingSettingsForm from "./shipping-form";
 
 export const dynamic = 'force-dynamic';
 
+// Parse shipping policies from JSON string
+interface ShippingPolicies {
+  zones?: Array<unknown>;
+  methods?: Array<unknown>;
+  freeShippingThreshold?: number;
+  processingTime?: string;
+}
+
+function parseShippingPolicies(policies: string | undefined): ShippingPolicies {
+  if (!policies) return {};
+  try {
+    return JSON.parse(policies);
+  } catch {
+    return {};
+  }
+}
+
 export default async function BusinessShippingPage() {
   const { user, businessAccount } = await requireBusiness();
+  const shippingPolicies = parseShippingPolicies(businessAccount.shippingPolicies);
 
   return (
     <div>
@@ -30,7 +48,7 @@ export default async function BusinessShippingPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Shipping Zones</p>
-                <p className="text-xl font-bold">{businessAccount.shippingPolicies?.zones?.length || 0}</p>
+                <p className="text-xl font-bold">{shippingPolicies?.zones?.length || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -43,7 +61,7 @@ export default async function BusinessShippingPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Methods</p>
-                <p className="text-xl font-bold">{businessAccount.shippingPolicies?.methods?.length || 0}</p>
+                <p className="text-xl font-bold">{shippingPolicies?.methods?.length || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -57,8 +75,8 @@ export default async function BusinessShippingPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Free Shipping</p>
                 <p className="text-xl font-bold">
-                  {businessAccount.shippingPolicies?.freeShippingThreshold 
-                    ? `$${businessAccount.shippingPolicies.freeShippingThreshold}+` 
+                  {shippingPolicies?.freeShippingThreshold 
+                    ? `$${shippingPolicies.freeShippingThreshold}+` 
                     : 'Not Set'}
                 </p>
               </div>
@@ -74,7 +92,7 @@ export default async function BusinessShippingPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Processing</p>
                 <p className="text-xl font-bold">
-                  {businessAccount.shippingPolicies?.processingTime || '1-2'} days
+                  {shippingPolicies?.processingTime || '1-2'} days
                 </p>
               </div>
             </div>
@@ -85,7 +103,7 @@ export default async function BusinessShippingPage() {
       {/* Shipping Form */}
       <ShippingSettingsForm 
         businessAccountId={businessAccount.id}
-        currentSettings={businessAccount.shippingPolicies || {}}
+        currentSettings={shippingPolicies as any}
       />
     </div>
   );

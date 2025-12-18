@@ -164,7 +164,7 @@ export async function getProductById(id: string): Promise<Product | null> {
       sellerId: data.seller_id,
       sellerName: data.business_accounts?.business_name,
       sellerVerified: data.business_accounts?.verification_status === 'verified',
-      boutiqueSlug,
+      boutiqueSlug: boutiqueSlug ?? undefined,
     };
   } catch (error) {
     console.error(`Failed to fetch product ${id}:`, error);

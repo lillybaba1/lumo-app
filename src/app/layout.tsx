@@ -51,11 +51,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// Force dynamic rendering for the entire app to avoid static pre-render
-// errors for routes that rely on runtime features (cookies(), server
-// APIs, etc.). This tells Next to render these pages at request-time
-// instead of attempting static prerender during build.
-export const dynamic = 'force-dynamic';
+// Note: force-dynamic has been moved to individual routes that need it
+// (e.g., routes using cookies(), headers(), or server actions)
+// This allows Next.js to statically optimize pages where possible
 
 export default async function RootLayout({
   children,

@@ -59,7 +59,6 @@ export async function GET(req: Request) {
         const result = await shoppingAssistant({
           query: 'test',
           history: [],
-          userRole: 'customer',
         });
         const testDuration = Date.now() - testStart;
 

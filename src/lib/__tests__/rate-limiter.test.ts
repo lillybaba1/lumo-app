@@ -2,104 +2,119 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { rateLimiter, checkRateLimit, getClientIdentifier, RATE_LIMITS } from '../rate-limiter';
 
 describe('Rate Limiter', () => {
-  beforeEach(() => {
-    rateLimiter.reset();
+  beforeEach(async () => {
+    await rateLimiter.reset();
   });
 
-  describe('isRateLimited', () => {
-    it('should allow first request', () => {
-      const limited = rateLimiter.isRateLimited('user-1', 10, 60000);
+  describe('isRateLimited (async)', () => {
+    it('should allow first request', async () => {
+      const limited = await rateLimiter.isRateLimited('user-1', 10, 60000);
       expect(limited).toBe(false);
     });
 
-    it('should allow requests within limit', () => {
+    it('should allow requests within limit', async () => {
       for (let i = 0; i < 5; i++) {
-        const limited = rateLimiter.isRateLimited('user-1', 10, 60000);
+        const limited = await rateLimiter.isRateLimited('user-1', 10, 60000);
         expect(limited).toBe(false);
       }
     });
 
-    it('should block requests exceeding limit', () => {
+    it('should block requests exceeding limit', async () => {
       // Make 10 requests (limit)
       for (let i = 0; i < 10; i++) {
-        rateLimiter.isRateLimited('user-1', 10, 60000);
+        await rateLimiter.isRateLimited('user-1', 10, 60000);
       }
 
       // 11th request should be blocked
-      const limited = rateLimiter.isRateLimited('user-1', 10, 60000);
+      const limited = await rateLimiter.isRateLimited('user-1', 10, 60000);
       expect(limited).toBe(true);
     });
 
-    it('should track different identifiers separately', () => {
+    it('should track different identifiers separately', async () => {
       for (let i = 0; i < 10; i++) {
-        rateLimiter.isRateLimited('user-1', 10, 60000);
+        await rateLimiter.isRateLimited('user-1', 10, 60000);
       }
 
       // user-2 should not be rate limited
-      const limited = rateLimiter.isRateLimited('user-2', 10, 60000);
+      const limited = await rateLimiter.isRateLimited('user-2', 10, 60000);
       expect(limited).toBe(false);
     });
 
-    it('should reset after time window', () => {
+    it('should reset after time window', async () => {
       vi.useFakeTimers();
 
       // Make 10 requests
       for (let i = 0; i < 10; i++) {
-        rateLimiter.isRateLimited('user-1', 10, 1000);
+        await rateLimiter.isRateLimited('user-1', 10, 1000);
       }
 
       // Should be blocked
-      expect(rateLimiter.isRateLimited('user-1', 10, 1000)).toBe(true);
+      expect(await rateLimiter.isRateLimited('user-1', 10, 1000)).toBe(true);
 
       // Advance time beyond window
       vi.advanceTimersByTime(1001);
 
       // Should be allowed again
-      const limited = rateLimiter.isRateLimited('user-1', 10, 1000);
+      const limited = await rateLimiter.isRateLimited('user-1', 10, 1000);
       expect(limited).toBe(false);
 
       vi.useRealTimers();
     });
   });
 
+  describe('isRateLimitedSync (legacy)', () => {
+    it('should allow first request synchronously', () => {
+      const limited = rateLimiter.isRateLimitedSync('sync-user-1', 10, 60000);
+      expect(limited).toBe(false);
+    });
+
+    it('should block requests exceeding limit synchronously', () => {
+      for (let i = 0; i < 10; i++) {
+        rateLimiter.isRateLimitedSync('sync-user-1', 10, 60000);
+      }
+      const limited = rateLimiter.isRateLimitedSync('sync-user-1', 10, 60000);
+      expect(limited).toBe(true);
+    });
+  });
+
   describe('getRemaining', () => {
-    it('should return limit for new identifier', () => {
-      const remaining = rateLimiter.getRemaining('user-1', 10);
+    it('should return limit for new identifier', async () => {
+      const remaining = await rateLimiter.getRemaining('user-1', 10);
       expect(remaining).toBe(10);
     });
 
-    it('should decrease with each request', () => {
-      rateLimiter.isRateLimited('user-1', 10, 60000);
-      const remaining = rateLimiter.getRemaining('user-1', 10);
+    it('should decrease with each request', async () => {
+      await rateLimiter.isRateLimited('user-1', 10, 60000);
+      const remaining = await rateLimiter.getRemaining('user-1', 10);
       expect(remaining).toBe(9);
     });
 
-    it('should return 0 when limit exceeded', () => {
+    it('should return 0 when limit exceeded', async () => {
       for (let i = 0; i < 15; i++) {
-        rateLimiter.isRateLimited('user-1', 10, 60000);
+        await rateLimiter.isRateLimited('user-1', 10, 60000);
       }
-      const remaining = rateLimiter.getRemaining('user-1', 10);
+      const remaining = await rateLimiter.getRemaining('user-1', 10);
       expect(remaining).toBe(0);
     });
   });
 
   describe('getResetTime', () => {
-    it('should return 0 for new identifier', () => {
-      const resetTime = rateLimiter.getResetTime('user-1');
+    it('should return 0 for new identifier', async () => {
+      const resetTime = await rateLimiter.getResetTime('user-1');
       expect(resetTime).toBe(0);
     });
 
-    it('should return positive time for active limit', () => {
-      rateLimiter.isRateLimited('user-1', 10, 60000);
-      const resetTime = rateLimiter.getResetTime('user-1');
+    it('should return positive time for active limit', async () => {
+      await rateLimiter.isRateLimited('user-1', 10, 60000);
+      const resetTime = await rateLimiter.getResetTime('user-1');
       expect(resetTime).toBeGreaterThan(0);
       expect(resetTime).toBeLessThanOrEqual(60);
     });
   });
 
   describe('checkRateLimit', () => {
-    it('should return complete rate limit info', () => {
-      const result = checkRateLimit('user-1', { limit: 10, window: 60000 });
+    it('should return complete rate limit info', async () => {
+      const result = await checkRateLimit('user-1', { limit: 10, window: 60000 });
 
       expect(result).toHaveProperty('limited');
       expect(result).toHaveProperty('remaining');
@@ -108,8 +123,8 @@ describe('Rate Limiter', () => {
       expect(result.limited).toBe(false);
     });
 
-    it('should include proper headers', () => {
-      const result = checkRateLimit('user-1', { limit: 10, window: 60000 });
+    it('should include proper headers', async () => {
+      const result = await checkRateLimit('user-1', { limit: 10, window: 60000 });
 
       expect(result.headers).toHaveProperty('X-RateLimit-Limit', '10');
       expect(result.headers).toHaveProperty('X-RateLimit-Remaining');

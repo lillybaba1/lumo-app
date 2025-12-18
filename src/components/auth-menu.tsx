@@ -8,15 +8,15 @@ import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import LogoutButton from './logout-button';
 import { useEffect, useState } from 'react';
 
-interface User {
+interface AuthUser {
     uid: string;
     email: string;
     name?: string;
-    role?: 'admin' | 'customer';
+    role?: 'APP_OWNER_ADMIN' | 'BUSINESS_ACCOUNT' | 'PERSONAL_ACCOUNT' | 'admin' | 'customer';
 }
 
 export default function AuthMenu() {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export default function AuthMenu() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {user.role === 'admin' && (
+                {(user.role === 'APP_OWNER_ADMIN' || user.role === 'admin') && (
                     <DropdownMenuItem asChild>
                         <Link href="/admin/dashboard">
                             <LayoutDashboard className="mr-2 h-4 w-4" />

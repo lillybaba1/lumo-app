@@ -97,27 +97,17 @@ export async function GET() {
 
   // Check 4: Storage Bucket
   try {
-    const { data: buckets, error } = await supabaseAdmin.storage.listBuckets();
+    // Try to access a known bucket to verify storage is working
+    const { data, error } = await supabaseAdmin.storage.from('products').list('', { limit: 1 });
     
     if (error) {
       throw error;
     }
     
-    if (buckets && buckets.length > 0) {
-      const bucketNames = buckets.map(b => b.name).join(', ');
-      diagnostics.checks.storageBucket = {
-        status: 'success',
-        details: `Storage buckets available: ${bucketNames}`,
-      };
-    } else {
-      diagnostics.checks.storageBucket = {
-        status: 'error',
-        details: 'No storage buckets configured',
-      };
-      diagnostics.recommendations.push(
-        'No Supabase storage buckets found. Create buckets in your Supabase dashboard.'
-      );
-    }
+    diagnostics.checks.storageBucket = {
+      status: 'success',
+      details: 'Storage bucket "products" is accessible',
+    };
   } catch (error) {
     diagnostics.checks.storageBucket = {
       status: 'error',

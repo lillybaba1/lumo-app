@@ -79,9 +79,8 @@ export async function requireBusiness(
       // For admins without a business account, auto-create "JulaZone Official" account
       if (isAdmin) {
         console.log('Auto-creating JulaZone Official business account for admin:', userId);
-        businessAccount = await createBusinessAccount({
+        businessAccount = await createBusinessAccount(userId, {
           businessName: 'JulaZone Official',
-          ownerUserId: userId,
           contactPersonName: userData.name || 'Platform Admin',
           contactEmail: email,
           businessAddress: 'Platform Headquarters',
@@ -89,7 +88,7 @@ export async function requireBusiness(
           subscriptionTier: 'enterprise',
           subscriptionStatus: 'active',
           verificationStatus: 'verified',
-          sellerType: 'platform',
+          sellerType: 'company',
         });
         
         if (!businessAccount) {

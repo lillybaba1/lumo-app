@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const clientId = getClientIdentifier(request);
 
     // Rate limiting for signup attempts
-    const rateLimit = checkRateLimit(clientId, {
+    const rateLimit = await checkRateLimit(clientId, {
       limit: 5,
       window: 15 * 60 * 1000, // 15 minutes
     });
