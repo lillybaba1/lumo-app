@@ -39,10 +39,9 @@ function SearchResultsContent() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const nocache = Date.now();
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch(`/api/products?nocache=${nocache}`).then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
-        fetch(`/api/categories?nocache=${nocache}`).then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
+        fetch('/api/products').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
+        fetch('/api/categories').then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
       ]);
       
       setProducts(Array.isArray(productsRes) ? productsRes : (productsRes.products || []));

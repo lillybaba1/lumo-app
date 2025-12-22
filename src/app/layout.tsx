@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
+import { SettingsProvider } from '@/context/settings-context';
 import { AIAssistantWidget } from '@/components/ai-assistant-widget';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -78,8 +79,9 @@ export default async function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider initialTheme={initialTheme}>
-          <CartProvider>
-            <LocationProvider>
+          <SettingsProvider initialSettings={{ currency: settings?.currency, storeName: settings?.storeName }}>
+            <CartProvider>
+              <LocationProvider>
               <div className="flex min-h-screen flex-col">
                 <Header>
                   {null}
@@ -96,8 +98,9 @@ export default async function RootLayout({
               <AIAssistantWidget />
               <CookieConsent />
               <VisitorTracker />
-            </LocationProvider>
-          </CartProvider>
+              </LocationProvider>
+            </CartProvider>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

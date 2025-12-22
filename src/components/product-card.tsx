@@ -8,8 +8,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { ShoppingCart, Star, Eye } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { getSettings } from '@/app/admin/settings/actions';
+import { useState } from 'react';
+import { useSettings } from '@/context/settings-context';
 import Link from 'next/link';
 import { WishlistButton } from '@/components/wishlist-button';
 import { getCurrencySymbol } from '@/lib/currency';
@@ -18,7 +18,6 @@ interface ProductCardProps {
   product: Product;
   showQuickView?: boolean;
 }
-type Settings = { currency?: string };
 
 // Star rating display component
 function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number; reviews?: number; size?: 'sm' | 'md' }) {
@@ -58,8 +57,7 @@ function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number;
 export default function ProductCard({ product, showQuickView = true }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
-  const [settings, setSettings] = useState<Settings>({});
-  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const { settings, auth } = useSettings();
   const [isHovered, setIsHovered] = useState(false);
   
   // Get base image URL
@@ -77,20 +75,6 @@ export default function ProductCard({ product, showQuickView = true }: ProductCa
   // Calculate a mock rating based on product id for demo (replace with real data later)
   const mockRating = ((parseInt(product.id.slice(-2), 16) || 0) % 20 + 35) / 10; // 3.5 - 5.0 range
   const mockReviews = ((parseInt(product.id.slice(-4), 16) || 0) % 100) + 5; // 5 - 104 range
-
-  useEffect(() => {
-    getSettings().then(s => setSettings(s || {}));
-
-    // Fetch current user
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated && data.user) {
-          setCurrentUserId(data.user.uid);
-        }
-      })
-      .catch(err => console.error('Error fetching user:', err));
-  }, []);
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
@@ -146,7 +130,7 @@ export default function ProductCard({ product, showQuickView = true }: ProductCa
               <WishlistButton
                 productId={product.id}
                 productName={product.name}
-                currentUserId={currentUserId}
+                currentUserId={auth.userId}
                 isInWishlist={false}
               />
             </div>

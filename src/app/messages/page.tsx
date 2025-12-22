@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +47,7 @@ interface Message {
   created_at: string;
 }
 
-export default function CustomerMessagesPage() {
+function CustomerMessagesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -394,5 +394,24 @@ export default function CustomerMessagesPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function MessagesLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+        <p className="text-muted-foreground">Loading messages...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<MessagesLoadingFallback />}>
+      <CustomerMessagesPage />
+    </Suspense>
   );
 }

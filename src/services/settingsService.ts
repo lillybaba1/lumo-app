@@ -1,6 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { cache } from 'react';
 
 export interface Settings {
     // General Store Info
@@ -342,7 +343,8 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
     }
 }
 
-// Alias for getSettings to match different naming conventions
-export async function getSiteSettings(): Promise<Settings> {
+// Cached version of getSettings to deduplicate requests within a single render
+// React's cache() deduplicates calls within the same request lifecycle
+export const getSiteSettings = cache(async (): Promise<Settings> => {
     return getSettings();
-}
+});

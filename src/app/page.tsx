@@ -87,13 +87,13 @@ export default function HomePageDataContainer() {
 
   useEffect(() => {
     async function fetchData() {
-      const nocache = Date.now();
+      // Use proper caching - let browser and server cache responses
       const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes] = await Promise.all([
-        fetch(`/api/products?nocache=${nocache}`).then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
-        fetch(`/api/categories?nocache=${nocache}`).then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
+        fetch('/api/products').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
+        fetch('/api/categories').then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
-        fetch(`/api/settings?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
-        fetch(`/api/hero?nocache=${nocache}`).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
+        fetch('/api/settings').then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
+        fetch('/api/hero').then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
         fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
       ]);
       

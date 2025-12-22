@@ -62,53 +62,66 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const heroButton3TextColor = settings?.heroButton3TextColor || '#ffffff';
 
   useEffect(() => {
-    // Fetch data with cache-busting but don't fail all if one request fails
+    // If initialSettings were provided and we already have settings, 
+    // only fetch the hero data and products (not settings again)
     const load = async () => {
-      const timestamp = Date.now();
-      const headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      } as const;
+      const requests: Promise<any>[] = [];
+      const requestTypes: string[] = [];
 
-      const requests = {
-        settings: fetch(`/api/settings?nocache=${timestamp}`, { cache: 'no-store', headers }).then(async (res) => {
-          if (!res.ok) throw new Error(`Settings request failed: ${res.status}`);
-          return res.json();
-        }),
-        hero: fetch(`/api/hero?nocache=${timestamp}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (res) => {
+      // Only fetch settings if not provided initially
+      if (!initialSettings) {
+        requestTypes.push('settings');
+        requests.push(
+          fetch('/api/settings', { 
+            next: { revalidate: 60 } // Cache for 60 seconds
+          }).then(async (res) => {
+            if (!res.ok) throw new Error(`Settings request failed: ${res.status}`);
+            return res.json();
+          })
+        );
+      }
+
+      // Always fetch hero data and products
+      requestTypes.push('hero');
+      requests.push(
+        fetch('/api/hero', { 
+          next: { revalidate: 60 } 
+        }).then(async (res) => {
           if (!res.ok) throw new Error(`Hero request failed: ${res.status}`);
           return res.json();
-        }),
-        products: fetch(`/api/products?nocache=${timestamp}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).then(async (res) => {
+        })
+      );
+
+      requestTypes.push('products');
+      requests.push(
+        fetch('/api/products?limit=10', { 
+          next: { revalidate: 60 } 
+        }).then(async (res) => {
           if (!res.ok) throw new Error(`Products request failed: ${res.status}`);
           return res.json();
-        }),
-      };
+        })
+      );
 
-      const [settingsResult, heroResult, productsResult] = await Promise.allSettled([
-        requests.settings,
-        requests.hero,
-        requests.products,
-      ]);
+      const results = await Promise.allSettled(requests);
 
-      if (settingsResult.status === 'fulfilled') {
-        setSettings(settingsResult.value);
-      } else {
-        console.error('Failed to load settings:', settingsResult.reason);
-      }
-
-      if (heroResult.status === 'fulfilled') {
-        setHeroData(heroResult.value);
-      } else {
-        console.error('Failed to load hero data:', heroResult.reason);
-      }
-
-      if (productsResult.status === 'fulfilled') {
-        setProducts(Array.isArray(productsResult.value) ? productsResult.value : []);
-      } else {
-        console.error('Failed to load products:', productsResult.reason);
-      }
+      results.forEach((result, index) => {
+        const type = requestTypes[index];
+        if (result.status === 'fulfilled') {
+          switch (type) {
+            case 'settings':
+              setSettings(result.value);
+              break;
+            case 'hero':
+              setHeroData(result.value);
+              break;
+            case 'products':
+              setProducts(Array.isArray(result.value) ? result.value : []);
+              break;
+          }
+        } else {
+          console.error(`Failed to load ${type}:`, result.reason);
+        }
+      });
 
       setLoading(false);
     };
@@ -117,7 +130,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       console.error('Failed to load hero section:', err);
       setLoading(false);
     });
-  }, []);
+  }, [initialSettings]);
 
   const getProductById = (id: string) => products.find(p => p.id === id);
   const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);

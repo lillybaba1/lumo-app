@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +14,18 @@ import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { Product, Category } from '@/lib/types';
 
-export default function ProductsPageContainer() {
+function ProductsLoadingSkeleton() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+        <p className="mt-2 text-muted-foreground">Loading products...</p>
+      </div>
+    </div>
+  );
+}
+
+function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,15 +44,18 @@ export default function ProductsPageContainer() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-        <p className="mt-2 text-muted-foreground">Loading products...</p>
-      </div>
-    </div>;
+    return <ProductsLoadingSkeleton />;
   }
 
   return <ProductsPage products={products} categories={categories} />;
+}
+
+export default function ProductsPageContainer() {
+  return (
+    <Suspense fallback={<ProductsLoadingSkeleton />}>
+      <ProductsPageContent />
+    </Suspense>
+  );
 }
 
 function ProductsPage({ products, categories }: { products: Product[], categories: Category[] }) {
