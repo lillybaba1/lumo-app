@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
@@ -87,7 +88,9 @@ export default async function RootLayout({
                   {null}
                 </Header>
                 <div className="flex flex-1 pt-16">
-                  <PublicSidebar />
+                  <Suspense fallback={<div className="w-64 hidden lg:block" />}>
+                    <PublicSidebar />
+                  </Suspense>
                   <main className="flex-1 overflow-x-hidden pt-12 lg:pt-0">
                     {children}
                   </main>

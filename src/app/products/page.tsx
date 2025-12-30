@@ -47,7 +47,11 @@ function ProductsPageContent() {
     return <ProductsLoadingSkeleton />;
   }
 
-  return <ProductsPage products={products} categories={categories} />;
+  return (
+    <Suspense fallback={<ProductsLoadingSkeleton />}>
+      <ProductsPage products={products} categories={categories} />
+    </Suspense>
+  );
 }
 
 export default function ProductsPageContainer() {
