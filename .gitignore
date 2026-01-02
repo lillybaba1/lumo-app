@@ -48,3 +48,4 @@ service-account-key.json
 **/service-account*.json
 service-account-base64.txt
 deploy.log
+.env*.local

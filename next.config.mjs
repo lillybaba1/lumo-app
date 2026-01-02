@@ -33,6 +33,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'edsuvnlbviosnyxbjptx.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config, { nextRuntime }) => {

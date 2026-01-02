@@ -1,11 +1,202 @@
 "use server";
 
 import { Product, Category } from '@/lib/types';
-import { categories as mockCategories } from '@/lib/mock-data';
+import { categories as mockCategories, products as mockProducts } from '@/lib/mock-data';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+
+export interface GetProductsOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  categoryId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'name_asc' | 'name_desc';
+}
+
+export interface PaginatedProducts {
+  data: Product[];
+  count: number;
+}
+
+/**
+ * Get paginated products from Supabase with filtering
+ */
+export async function getProductsPaginated(options: GetProductsOptions = {}): Promise<PaginatedProducts> {
+  const {
+    page = 1,
+    limit = 20,
+    search,
+    category,
+    categoryId,
+    minPrice,
+    maxPrice,
+    sortBy = 'name_asc'
+  } = options;
+
+  try {
+    let query = supabaseAdmin
+      .from('products')
+      .select(`
+        *,
+        categories:category_id (
+          id,
+          name
+        )
+      `, { count: 'exact' })
+      .eq('is_active', true);
+
+    // Apply filters
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
+    } else if (category && category !== 'all') {
+       // Note: This assumes category name matches exactly. 
+       // Ideally we should filter by ID, but for now we rely on the join or client passing ID.
+       // Since we can't easily filter by joined column without !inner, and !inner changes behavior,
+       // we'll try to find the category ID first if possible, or use !inner.
+       // For safety/performance, let's use !inner if category name is provided.
+       // But wait, the select above uses left join for categories.
+       // If we want to filter by category name, we must use !inner on the relationship in the filter?
+       // Supabase syntax: .eq('categories.name', category) works if we change the select to use !inner
+       // But we can't change the select dynamically easily.
+       // Let's just fetch all for that category if we can't filter easily? No, that defeats the purpose.
+       // Let's try to use the text search on the category name if possible? No.
+       // Best approach: The caller should resolve category name to ID.
+       // But for backward compatibility, let's try to fetch the category ID for the name first.
+       const { data: catData } = await supabaseAdmin
+         .from('categories')
+         .select('id')
+         .ilike('name', category)
+         .single();
+       
+       if (catData) {
+         query = query.eq('category_id', catData.id);
+       }
+    }
+
+    if (minPrice !== undefined) {
+      query = query.gte('price', minPrice);
+    }
+    if (maxPrice !== undefined) {
+      query = query.lte('price', maxPrice);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'price_asc':
+        query = query.order('price', { ascending: true });
+        break;
+      case 'price_desc':
+        query = query.order('price', { ascending: false });
+        break;
+      case 'newest':
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'name_desc':
+        query = query.order('name', { ascending: false });
+        break;
+      case 'name_asc':
+      default:
+        query = query.order('name', { ascending: true });
+        break;
+    }
+
+    // Apply pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Failed to fetch products:', error);
+      return { data: [], count: 0 };
+    }
+
+    // DEBUG: Log raw data
+    console.log('[ProductService] Raw products count:', data?.length);
+    console.log('[ProductService] First product images:', data?.[0]?.product_images);
+
+    // Map Supabase data to Product type
+    const products = (data || []).map(product => {
+      // product_images is an array of URLs directly on the products table
+      const productImageUrls = Array.isArray(product.product_images) ? product.product_images : [];
+
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: parseFloat(product.price),
+        imageUrls: product.image_urls || [],
+        productImages: productImageUrls,
+        foregroundImages: product.foreground_images || [],
+        backgroundImages: product.background_images || [],
+        category: product.categories?.name || '',
+        categoryId: product.category_id || '',
+        stock: product.stock || 0,
+        sku: product.sku,
+        barcode: product.barcode,
+        trackInventory: product.track_inventory,
+        reorderPoint: product.reorder_point,
+        reorderQuantity: product.reorder_quantity,
+        stockByLocation: product.stock_by_location,
+        weight: product.weight ? parseFloat(product.weight) : undefined,
+        dimensions: product.dimensions,
+        sellerId: product.seller_id,
+      };
+    });
+
+    return { data: products, count: count || 0 };
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    
+    // Fallback to mock data if database connection fails (e.g. missing env vars)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Using mock data for products due to error');
+      let filtered = [...mockProducts];
+      
+      if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(p => 
+          p.name.toLowerCase().includes(q) || 
+          p.description.toLowerCase().includes(q)
+        );
+      }
+      
+      if (categoryId) {
+        filtered = filtered.filter(p => p.categoryId === categoryId);
+      } else if (category && category !== 'all') {
+        filtered = filtered.filter(p => p.category.toLowerCase() === category.toLowerCase());
+      }
+      
+      if (minPrice !== undefined) filtered = filtered.filter(p => p.price >= minPrice);
+      if (maxPrice !== undefined) filtered = filtered.filter(p => p.price <= maxPrice);
+      
+      // Sort
+      if (sortBy === 'price_asc') filtered.sort((a, b) => a.price - b.price);
+      else if (sortBy === 'price_desc') filtered.sort((a, b) => b.price - a.price);
+      else if (sortBy === 'name_desc') filtered.sort((a, b) => b.name.localeCompare(a.name));
+      else filtered.sort((a, b) => a.name.localeCompare(b.name));
+      
+      const total = filtered.length;
+      const start = (page - 1) * limit;
+      const paged = filtered.slice(start, start + limit);
+      
+      return { data: paged, count: total };
+    }
+
+    return { data: [], count: 0 };
+  }
+}
 
 /**
  * Get all products from Supabase
+ * @deprecated Use getProductsPaginated instead for better performance
  */
 export async function getProducts(): Promise<Product[]> {
   try {
@@ -67,6 +258,9 @@ export async function getProducts(): Promise<Product[]> {
     });
   } catch (error) {
     console.error('Failed to fetch products:', error);
+    if (process.env.NODE_ENV === 'development') {
+      return mockProducts;
+    }
     return [];
   }
 }
@@ -168,6 +362,10 @@ export async function getProductById(id: string): Promise<Product | null> {
     };
   } catch (error) {
     console.error(`Failed to fetch product ${id}:`, error);
+    if (process.env.NODE_ENV === 'development') {
+      const product = mockProducts.find(p => p.id === id);
+      return product || null;
+    }
     return null;
   }
 }
@@ -236,6 +434,9 @@ export async function getProductsBySeller(sellerId: string): Promise<Product[]> 
     });
   } catch (error) {
     console.error('Failed to fetch seller products:', error);
+    if (process.env.NODE_ENV === 'development') {
+      return mockProducts.filter(p => p.sellerId === sellerId || p.sellerId === 'mock-seller-id');
+    }
     return [];
   }
 }
@@ -272,6 +473,9 @@ export async function getCategories(): Promise<Category[]> {
     }));
   } catch (error) {
     console.error('Failed to fetch categories:', error);
+    if (process.env.NODE_ENV === 'development') {
+      return mockCategories;
+    }
     return mockCategories;
   }
 }

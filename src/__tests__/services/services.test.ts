@@ -219,6 +219,73 @@ describe('Product Service', () => {
     });
   });
 
+  describe('getProductsPaginated', () => {
+    it('should fetch paginated products', async () => {
+      const mockProducts = [
+        {
+          id: 'prod-1',
+          name: 'Test Product',
+          price: '99.99',
+          stock: 50,
+          categories: { name: 'Electronics' },
+          product_images: [],
+        },
+      ];
+
+      mockFrom.mockReturnValueOnce({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValueOnce({
+          data: mockProducts,
+          count: 100,
+          error: null,
+        }),
+      });
+
+      const { getProductsPaginated } = await import('@/services/productService');
+      const { data, count } = await getProductsPaginated({ page: 1, limit: 10 });
+
+      expect(data).toHaveLength(1);
+      expect(count).toBe(100);
+      expect(data[0].name).toBe('Test Product');
+    });
+
+    it('should apply filters correctly', async () => {
+      const mockEq = vi.fn().mockReturnThis();
+      const mockOr = vi.fn().mockReturnThis();
+      const mockGte = vi.fn().mockReturnThis();
+      const mockLte = vi.fn().mockReturnThis();
+      
+      mockFrom.mockReturnValueOnce({
+        select: vi.fn().mockReturnThis(),
+        eq: mockEq,
+        or: mockOr,
+        gte: mockGte,
+        lte: mockLte,
+        order: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValueOnce({
+          data: [],
+          count: 0,
+          error: null,
+        }),
+      });
+
+      const { getProductsPaginated } = await import('@/services/productService');
+      await getProductsPaginated({ 
+        search: 'test', 
+        minPrice: 10, 
+        maxPrice: 100,
+        categoryId: 'cat-1'
+      });
+
+      expect(mockOr).toHaveBeenCalledWith(expect.stringContaining('test'));
+      expect(mockGte).toHaveBeenCalledWith('price', 10);
+      expect(mockLte).toHaveBeenCalledWith('price', 100);
+      expect(mockEq).toHaveBeenCalledWith('category_id', 'cat-1');
+    });
+  });
+
   describe('getProductById', () => {
     it('should fetch a single product with full details', async () => {
       const mockProduct = {
@@ -349,6 +416,7 @@ describe('Error Handling', () => {
   it('should handle database errors gracefully', async () => {
     mockFrom.mockReturnValueOnce({
       select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockRejectedValueOnce(new Error('Connection failed')),
     });
 
@@ -362,6 +430,7 @@ describe('Error Handling', () => {
   it('should handle null data gracefully', async () => {
     mockFrom.mockReturnValueOnce({
       select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValueOnce({
         data: null,
         error: null,

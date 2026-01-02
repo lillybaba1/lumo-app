@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProducts } from '@/services/productService';
+import { getProductsPaginated } from '@/services/productService';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -7,45 +7,26 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search')?.toLowerCase().trim();
-    const limit = searchParams.get('limit');
-    const category = searchParams.get('category');
+    const search = searchParams.get('search')?.trim() || undefined;
+    const limitParam = searchParams.get('limit');
+    const pageParam = searchParams.get('page');
+    const category = searchParams.get('category') || undefined;
     
-    let products = await getProducts();
+    // Parse parameters
+    const limit = limitParam ? parseInt(limitParam, 10) : 20;
+    const page = pageParam ? parseInt(pageParam, 10) : 1;
     
-    // Filter by search query
-    if (search && search.length > 0) {
-      products = products.filter((product: { name?: string; description?: string; category?: string; tags?: string[] }) => {
-        const name = (product.name || '').toLowerCase();
-        const description = (product.description || '').toLowerCase();
-        const productCategory = (product.category || '').toLowerCase();
-        const tags = (product.tags || []).map((t: string) => t.toLowerCase());
-        
-        return (
-          name.includes(search) ||
-          description.includes(search) ||
-          productCategory.includes(search) ||
-          tags.some((tag: string) => tag.includes(search))
-        );
-      });
-    }
+    // Fetch paginated data
+    const { data } = await getProductsPaginated({
+      page,
+      limit,
+      search,
+      category
+    });
     
-    // Filter by category
-    if (category) {
-      products = products.filter((product: { category?: string }) => 
-        (product.category || '').toLowerCase() === category.toLowerCase()
-      );
-    }
-    
-    // Limit results
-    if (limit) {
-      const limitNum = parseInt(limit, 10);
-      if (!isNaN(limitNum) && limitNum > 0) {
-        products = products.slice(0, limitNum);
-      }
-    }
-    
-    return NextResponse.json(products, {
+    // Return just the array for backward compatibility with existing components
+    // that expect Product[] response
+    return NextResponse.json(data, {
       headers: {
         // Allow browser caching for 60 seconds, revalidate in background for up to 5 minutes
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',

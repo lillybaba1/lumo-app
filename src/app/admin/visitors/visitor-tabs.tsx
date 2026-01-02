@@ -100,7 +100,7 @@ export default function VisitorTabs({
   const [activeCount, setActiveCount] = useState(initialActiveCount);
   const [inactiveCount, setInactiveCount] = useState(initialInactiveCount);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [clearHours, setClearHours] = useState('24');
+  const [clearHours, setClearHours] = useState('0.083');
   const [isPending, startTransition] = useTransition();
   const [isClearing, setIsClearing] = useState(false);
   const { toast } = useToast();
@@ -129,7 +129,7 @@ export default function VisitorTabs({
       const res = await fetch('/api/admin/visitors/clear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hoursInactive: parseInt(clearHours) }),
+        body: JSON.stringify({ hoursInactive: parseFloat(clearHours) }),
       });
       const data = await res.json();
       
@@ -269,6 +269,8 @@ export default function VisitorTabs({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="0.083">5 minutes (all inactive)</SelectItem>
+                          <SelectItem value="0.5">30 minutes</SelectItem>
                           <SelectItem value="1">1 hour</SelectItem>
                           <SelectItem value="6">6 hours</SelectItem>
                           <SelectItem value="24">24 hours</SelectItem>
