@@ -11,6 +11,9 @@ export const metadata = {
   description: 'Explore unique boutiques and shops from verified sellers on JulaZone',
 };
 
+// ISR: Revalidate boutiques page every 5 minutes for fresh data without SSR overhead
+export const revalidate = 300;
+
 export default async function BoutiquesPage() {
   const featuredBoutiques = await getPublishedBoutiques({ featured: true, limit: 4 });
   const allBoutiques = await getPublishedBoutiques({ limit: 20 });

@@ -1,18 +1,40 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
 import { SettingsProvider } from '@/context/settings-context';
-import { AIAssistantWidget } from '@/components/ai-assistant-widget';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getSiteSettings } from '@/services/settingsService';
 import PublicSidebar from '@/components/public-sidebar';
-import { CookieConsent } from '@/components/cookie-consent';
 import { LocationProvider } from '@/components/location-consent';
-import { VisitorTracker } from '@/components/visitor-tracker';
+
+// Dynamic imports for heavy components - only loads when needed
+const AIAssistantWidget = dynamic(
+  () => import('@/components/ai-assistant-widget').then((mod) => mod.AIAssistantWidget),
+  { ssr: false } // Client-only, no server render needed
+);
+
+const CookieConsent = dynamic(
+  () => import('@/components/cookie-consent').then((mod) => mod.CookieConsent),
+  { ssr: false }
+);
+
+const VisitorTracker = dynamic(
+  () => import('@/components/visitor-tracker').then((mod) => mod.VisitorTracker),
+  { ssr: false }
+);
+
+// Optimized font loading with next/font - prevents FOUT (Flash of Unstyled Text)
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 // Generate dynamic metadata including favicon from admin settings
 export async function generateMetadata(): Promise<Metadata> {
@@ -68,17 +90,14 @@ export default async function RootLayout({
   const heroBackgroundImage = settings?.heroBackgroundImage || '';
 
   return (
-    <html lang="en" className="light">
+    <html lang="en" className={`light ${inter.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        {/* Preload hero image for faster rendering */}
+        {/* Preload hero image for faster LCP */}
         {heroBackgroundImage && (
           <link rel="preload" as="image" href={heroBackgroundImage} fetchPriority="high" />
         )}
       </head>
-      <body className="font-body antialiased">
+      <body className={`${inter.className} antialiased`}>
         <ThemeProvider initialTheme={initialTheme}>
           <SettingsProvider initialSettings={{ currency: settings?.currency, storeName: settings?.storeName }}>
             <CartProvider>
