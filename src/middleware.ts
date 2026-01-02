@@ -1,6 +1,9 @@
 import { updateSession } from '@/lib/supabase/middleware'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
+
+const middlewareLogger = logger.child('Middleware');
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -16,7 +19,7 @@ export async function middleware(request: NextRequest) {
     // Always call updateSession - it has fallback credentials
     return await updateSession(request);
   } catch (error) {
-    console.error('Middleware error:', error);
+    middlewareLogger.error('Middleware error', error as Error);
     // SECURITY: Fail closed for protected routes on error
     if (isProtectedRoute) {
       return NextResponse.redirect(new URL('/login?error=middleware', request.url));

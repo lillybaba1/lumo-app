@@ -5,6 +5,10 @@
  * Falls back to in-memory storage for development or when Redis is unavailable
  */
 
+import { logger } from './logger';
+
+const rateLimitLogger = logger.child('RateLimiter');
+
 interface RateLimitEntry {
   count: number;
   resetAt: number;
@@ -138,7 +142,7 @@ class RedisBackend implements RateLimiterBackend {
       const data = await response.json();
       return data.result;
     } catch (error) {
-      console.error('Redis command failed:', error);
+      rateLimitLogger.error('Redis command failed', error as Error);
       throw error;
     }
   }
@@ -169,7 +173,7 @@ class RedisBackend implements RateLimiterBackend {
 
       return false;
     } catch (error) {
-      console.error('Redis rate limit check failed:', error);
+      rateLimitLogger.error('Redis rate limit check failed', error as Error);
       // Fail open on Redis errors - allow the request
       return false;
     }
@@ -199,7 +203,7 @@ class RedisBackend implements RateLimiterBackend {
 
   async reset(): Promise<void> {
     // Note: This would need SCAN + DEL in production
-    console.warn('Redis reset not fully implemented - use with caution');
+    rateLimitLogger.warn('Redis reset not fully implemented - use with caution');
   }
 }
 
@@ -219,15 +223,14 @@ class RateLimiter {
     const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL;
 
     if (redisUrl && process.env.NODE_ENV === 'production') {
-      console.info('Rate limiter: Using Redis backend');
+      rateLimitLogger.info('Using Redis backend');
       this.backend = new RedisBackend(redisUrl);
       this.isRedis = true;
     } else {
       if (process.env.NODE_ENV === 'production') {
-        console.warn(
-          'Rate limiter: Redis not configured. Using in-memory backend. ' +
-          'This will not work correctly with multiple server instances. ' +
-          'Set REDIS_URL or UPSTASH_REDIS_REST_URL for production.'
+        rateLimitLogger.warn(
+          'Redis not configured. Using in-memory backend. ' +
+          'This will not work correctly with multiple server instances.'
         );
       }
       this.backend = this.inMemoryFallback;

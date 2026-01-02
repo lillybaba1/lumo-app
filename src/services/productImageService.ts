@@ -1,5 +1,9 @@
 "use server";
 
+import { logger } from '@/lib/logger';
+
+const productimageLogger = logger.child('ProductImageService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { ProductImage, ProductAttribute, ProductVariant } from '@/lib/types';
 
@@ -15,7 +19,7 @@ export async function getProductImages(productId: string): Promise<ProductImage[
       .order('display_order');
 
     if (error) {
-      console.error(`Failed to fetch images for product ${productId}:`, error);
+      productimageLogger.error(`Failed to fetch images for product ${productId}:`, error);
       return [];
     }
 
@@ -35,7 +39,7 @@ export async function getProductImages(productId: string): Promise<ProductImage[
       updatedAt: img.updated_at,
     }));
   } catch (error) {
-    console.error(`Failed to fetch images for product ${productId}:`, error);
+    productimageLogger.error(`Failed to fetch images for product ${productId}:`, error);
     return [];
   }
 }
@@ -77,7 +81,7 @@ export async function saveProductImage(image: Omit<ProductImage, 'id' | 'created
     }
 
     if (result.error) {
-      console.error('Failed to save product image:', result.error);
+      productimageLogger.error('Failed to save product image:', result.error);
       return null;
     }
 
@@ -98,7 +102,7 @@ export async function saveProductImage(image: Omit<ProductImage, 'id' | 'created
       updatedAt: saved.updated_at,
     };
   } catch (error) {
-    console.error('Failed to save product image:', error);
+    productimageLogger.error('Failed to save product image:', error);
     return null;
   }
 }
@@ -114,13 +118,13 @@ export async function deleteProductImage(imageId: string): Promise<boolean> {
       .eq('id', imageId);
 
     if (error) {
-      console.error('Failed to delete product image:', error);
+      productimageLogger.error('Failed to delete product image:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Failed to delete product image:', error);
+    productimageLogger.error('Failed to delete product image:', error);
     return false;
   }
 }
@@ -137,7 +141,7 @@ export async function getProductAttributes(productId: string): Promise<ProductAt
       .order('display_order');
 
     if (error) {
-      console.error(`Failed to fetch attributes for product ${productId}:`, error);
+      productimageLogger.error(`Failed to fetch attributes for product ${productId}:`, error);
       return [];
     }
 
@@ -155,7 +159,7 @@ export async function getProductAttributes(productId: string): Promise<ProductAt
       updatedAt: attr.updated_at,
     }));
   } catch (error) {
-    console.error(`Failed to fetch attributes for product ${productId}:`, error);
+    productimageLogger.error(`Failed to fetch attributes for product ${productId}:`, error);
     return [];
   }
 }
@@ -193,7 +197,7 @@ export async function saveProductAttribute(attribute: Omit<ProductAttribute, 'id
     }
 
     if (result.error) {
-      console.error('Failed to save product attribute:', result.error);
+      productimageLogger.error('Failed to save product attribute:', result.error);
       return null;
     }
 
@@ -212,7 +216,7 @@ export async function saveProductAttribute(attribute: Omit<ProductAttribute, 'id
       updatedAt: saved.updated_at,
     };
   } catch (error) {
-    console.error('Failed to save product attribute:', error);
+    productimageLogger.error('Failed to save product attribute:', error);
     return null;
   }
 }
@@ -228,13 +232,13 @@ export async function deleteProductAttribute(attributeId: string): Promise<boole
       .eq('id', attributeId);
 
     if (error) {
-      console.error('Failed to delete product attribute:', error);
+      productimageLogger.error('Failed to delete product attribute:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Failed to delete product attribute:', error);
+    productimageLogger.error('Failed to delete product attribute:', error);
     return false;
   }
 }
@@ -250,7 +254,7 @@ export async function getProductVariants(productId: string): Promise<ProductVari
       .eq('product_id', productId);
 
     if (error) {
-      console.error(`Failed to fetch variants for product ${productId}:`, error);
+      productimageLogger.error(`Failed to fetch variants for product ${productId}:`, error);
       return [];
     }
 
@@ -268,7 +272,8 @@ export async function getProductVariants(productId: string): Promise<ProductVari
       updatedAt: variant.updated_at,
     }));
   } catch (error) {
-    console.error(`Failed to fetch variants for product ${productId}:`, error);
+    productimageLogger.error(`Failed to fetch variants for product ${productId}:`, error);
     return [];
   }
 }
+

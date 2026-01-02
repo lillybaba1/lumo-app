@@ -198,13 +198,19 @@ export default async function PaymentHistoryPage() {
                     </div>
                   </div>
 
-                  {payment.metadata?.note && (
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">Note:</span> {payment.metadata.note}
-                      </p>
-                    </div>
-                  )}
+                  {(() => {
+                    const note = payment.metadata?.note;
+                    if (typeof note === 'string' && note) {
+                      return (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Note:</span> {note}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </CardContent>
               </Card>
             ))}

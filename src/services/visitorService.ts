@@ -1,5 +1,9 @@
 'use server';
 
+import { logger } from '@/lib/logger';
+
+const visitorLogger = logger.child('VisitorService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export interface Visitor {
@@ -84,13 +88,13 @@ export async function getVisitors(
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) {
-      console.error('Error fetching visitors:', error);
+      visitorLogger.error('Error fetching visitors:', error);
       return { visitors: [], total: 0 };
     }
 
     return { visitors: data || [], total: count || 0 };
   } catch (error) {
-    console.error('Error fetching visitors:', error);
+    visitorLogger.error('Error fetching visitors:', error);
     return { visitors: [], total: 0 };
   }
 }
@@ -215,7 +219,7 @@ export async function getVisitorStats(): Promise<VisitorStats> {
       newVisitors: (totalVisitors || 0) - (returningCount || 0),
     };
   } catch (error) {
-    console.error('Error fetching visitor stats:', error);
+    visitorLogger.error('Error fetching visitor stats:', error);
     return {
       totalVisitors: 0,
       uniqueVisitors: 0,
@@ -274,7 +278,7 @@ export async function recordVisitor(visitorData: {
         .single();
 
       if (error) {
-        console.error('Error updating visitor:', error);
+        visitorLogger.error('Error updating visitor:', error);
         return null;
       }
       return data;
@@ -293,13 +297,13 @@ export async function recordVisitor(visitorData: {
         .single();
 
       if (error) {
-        console.error('Error creating visitor:', error);
+        visitorLogger.error('Error creating visitor:', error);
         return null;
       }
       return data;
     }
   } catch (error) {
-    console.error('Error recording visitor:', error);
+    visitorLogger.error('Error recording visitor:', error);
     return null;
   }
 }
@@ -322,7 +326,7 @@ export async function recordPageView(pageViewData: {
       .single();
 
     if (error) {
-      console.error('Error recording page view:', error);
+      visitorLogger.error('Error recording page view:', error);
       return null;
     }
 
@@ -337,7 +341,7 @@ export async function recordPageView(pageViewData: {
 
     return data;
   } catch (error) {
-    console.error('Error recording page view:', error);
+    visitorLogger.error('Error recording page view:', error);
     return null;
   }
 }
@@ -356,7 +360,7 @@ export async function updateSessionDuration(
       })
       .eq('visitor_id', visitor_id);
   } catch (error) {
-    console.error('Error updating session duration:', error);
+    visitorLogger.error('Error updating session duration:', error);
   }
 }
 
@@ -376,12 +380,12 @@ export async function deleteVisitorData(visitor_id: string): Promise<boolean> {
       .eq('visitor_id', visitor_id);
 
     if (error) {
-      console.error('Error deleting visitor:', error);
+      visitorLogger.error('Error deleting visitor:', error);
       return false;
     }
     return true;
   } catch (error) {
-    console.error('Error deleting visitor data:', error);
+    visitorLogger.error('Error deleting visitor data:', error);
     return false;
   }
 }
@@ -398,7 +402,7 @@ export async function getLiveVisitors(): Promise<number> {
 
     return count || 0;
   } catch (error) {
-    console.error('Error getting live visitors:', error);
+    visitorLogger.error('Error getting live visitors:', error);
     return 0;
   }
 }
@@ -425,7 +429,7 @@ export async function getVisitorsByStatus(
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) {
-      console.error('Error fetching visitors by status:', error);
+      visitorLogger.error('Error fetching visitors by status:', error);
       return { visitors: [], total: 0, activeCount: 0, inactiveCount: 0 };
     }
 
@@ -447,7 +451,7 @@ export async function getVisitorsByStatus(
       inactiveCount: inactiveCount || 0
     };
   } catch (error) {
-    console.error('Error fetching visitors by status:', error);
+    visitorLogger.error('Error fetching visitors by status:', error);
     return { visitors: [], total: 0, activeCount: 0, inactiveCount: 0 };
   }
 }
@@ -463,13 +467,13 @@ export async function getVisitorActivity(visitor_id: string): Promise<PageView[]
       .limit(50);
 
     if (error) {
-      console.error('Error fetching visitor activity:', error);
+      visitorLogger.error('Error fetching visitor activity:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error fetching visitor activity:', error);
+    visitorLogger.error('Error fetching visitor activity:', error);
     return [];
   }
 }
@@ -484,7 +488,7 @@ export async function getRecentActivities(limit: number = 100): Promise<(PageVie
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching recent activities:', error);
+      visitorLogger.error('Error fetching recent activities:', error);
       return [];
     }
 
@@ -504,7 +508,7 @@ export async function getRecentActivities(limit: number = 100): Promise<(PageVie
       visitor: visitorMap.get(pv.visitor_id)
     }));
   } catch (error) {
-    console.error('Error fetching recent activities:', error);
+    visitorLogger.error('Error fetching recent activities:', error);
     return [];
   }
 }
@@ -539,13 +543,13 @@ export async function clearInactiveVisitors(hoursInactive: number = 24): Promise
       .lt('last_activity', cutoffTime);
 
     if (error) {
-      console.error('Error clearing inactive visitors:', error);
+      visitorLogger.error('Error clearing inactive visitors:', error);
       return { deleted: 0, error: error.message };
     }
 
     return { deleted: visitorsToDelete.length };
   } catch (error) {
-    console.error('Error clearing inactive visitors:', error);
+    visitorLogger.error('Error clearing inactive visitors:', error);
     return { deleted: 0, error: 'Failed to clear inactive visitors' };
   }
 }
@@ -575,14 +579,15 @@ export async function deleteVisitor(id: string): Promise<boolean> {
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting visitor:', error);
+      visitorLogger.error('Error deleting visitor:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error deleting visitor:', error);
+    visitorLogger.error('Error deleting visitor:', error);
     return false;
   }
 }
+
 

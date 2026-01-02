@@ -1,5 +1,9 @@
 'use server';
 
+import { logger } from '@/lib/logger';
+
+const settingsLogger = logger.child('SettingsService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { cache } from 'react';
 
@@ -302,7 +306,7 @@ export async function getSettings(): Promise<Settings> {
 
         return { ...defaultSettings, ...(data?.value as Settings) } as Settings;
     } catch (error) {
-        console.error('Failed to get settings:', error);
+        settingsLogger.error('Failed to get settings:', error);
         return defaultSettings;
     }
 }
@@ -338,7 +342,7 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
             throw error;
         }
     } catch (error) {
-        console.error('Failed to save settings:', error);
+        settingsLogger.error('Failed to save settings:', error);
         throw new Error('Failed to save settings. Ensure database is set up correctly.');
     }
 }
@@ -348,3 +352,4 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
 export const getSiteSettings = cache(async (): Promise<Settings> => {
     return getSettings();
 });
+

@@ -3,30 +3,35 @@ import 'server-only';
 import {genkit} from 'genkit';
 import openAI, { gpt4o, gpt35Turbo } from 'genkitx-openai';
 import { googleAI, gemini15Flash, gemini15Pro, gemini20Flash } from '@genkit-ai/googleai';
+import { logger } from '@/lib/logger';
+
+const aiLogger = logger.child('GenkitAI');
 
 // Check which AI API keys are configured
 const hasOpenAI = !!process.env.OPENAI_API_KEY;
 const hasGemini = !!process.env.GEMINI_API_KEY || !!process.env.GOOGLE_API_KEY;
 const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-console.log('[Genkit Init] Environment:', process.env.NODE_ENV);
-console.log('[Genkit Init] OPENAI_API_KEY present:', hasOpenAI);
-console.log('[Genkit Init] GEMINI_API_KEY present:', hasGemini);
-console.log('[Genkit Init] Deployment version:', process.env.VERCEL_GIT_COMMIT_SHA || 'local');
+aiLogger.info('Genkit initialization', {
+  environment: process.env.NODE_ENV,
+  openaiConfigured: hasOpenAI,
+  geminiConfigured: hasGemini,
+  deploymentVersion: process.env.VERCEL_GIT_COMMIT_SHA || 'local'
+});
 
 // Determine which AI provider to use (prefer Gemini over OpenAI)
 const plugins = [];
 let defaultModel;
 
 if (hasGemini) {
-  console.log('[Genkit Init] Using Google Gemini (Gemini 2.0 Flash)');
+  aiLogger.info('Using Google Gemini (Gemini 2.0 Flash)');
   plugins.push(googleAI({
     apiKey: geminiKey,
   }));
   // Use Gemini 2.0 Flash - more widely available than 1.5
   defaultModel = gemini20Flash;
 } else if (hasOpenAI) {
-  console.log('[Genkit Init] Using OpenAI (GPT-4o)');
+  aiLogger.info('Using OpenAI (GPT-4o)');
   plugins.push(openAI({
     apiKey: process.env.OPENAI_API_KEY,
   }));
@@ -34,13 +39,7 @@ if (hasGemini) {
 } else {
   // During build time, API keys may not be set yet (they're set at runtime in production)
   // Use a placeholder model to allow build to succeed
-  console.warn(
-    '⚠️  WARNING: No AI API key configured at build time!\n' +
-    '   This is expected during Next.js build process.\n' +
-    '   Ensure OPENAI_API_KEY or GEMINI_API_KEY is set in production environment.\n' +
-    '   Option 1 (OpenAI): Get key from https://platform.openai.com/api-keys\n' +
-    '   Option 2 (Gemini): Get key from https://makersuite.google.com/app/apikey'
-  );
+  aiLogger.warn('No AI API key configured at build time - this is expected during Next.js build process');
   // Use Gemini as placeholder (will fail at runtime if keys not set)
   plugins.push(googleAI({
     apiKey: 'placeholder-key-will-fail-at-runtime',

@@ -3,6 +3,17 @@
 import { Product, Category } from '@/lib/types';
 import { categories as mockCategories, products as mockProducts } from '@/lib/mock-data';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const productLogger = logger.child('ProductService');
+
+/**
+ * Type for product image from DB
+ */
+interface DbProductImage {
+  image_url: string;
+  display_order: number | null;
+}
 
 export interface GetProductsOptions {
   page?: number;
@@ -114,13 +125,12 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
     const { data, error, count } = await query;
 
     if (error) {
-      console.error('Failed to fetch products:', error);
+      productLogger.error('Failed to fetch products', error);
       return { data: [], count: 0 };
     }
 
     // DEBUG: Log raw data
-    console.log('[ProductService] Raw products count:', data?.length);
-    console.log('[ProductService] First product images:', data?.[0]?.product_images);
+    productLogger.debug('Raw products fetched', { count: data?.length, firstProductImages: data?.[0]?.product_images });
 
     // Map Supabase data to Product type
     const products = (data || []).map(product => {
@@ -153,11 +163,11 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
 
     return { data: products, count: count || 0 };
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    productLogger.error('Failed to fetch products', error as Error);
     
     // Fallback to mock data if database connection fails (e.g. missing env vars)
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Using mock data for products due to error');
+      productLogger.warn('Using mock data for products due to error');
       let filtered = [...mockProducts];
       
       if (search) {
@@ -228,10 +238,10 @@ export async function getProducts(): Promise<Product[]> {
 
     // Map Supabase data to Product type
     return data.map(product => {
-      const images = Array.isArray(product.product_images) ? product.product_images : [];
+      const images = (Array.isArray(product.product_images) ? product.product_images : []) as DbProductImage[];
       const orderedImageUrls = images
-        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
-        .map((img: any) => img.image_url);
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img) => img.image_url);
 
       return {
         id: product.id,
@@ -308,13 +318,13 @@ export async function getProductById(id: string): Promise<Product | null> {
     }
 
     // Map Supabase data to Product type
-    const images = Array.isArray(data.product_images)
+    const images = (Array.isArray(data.product_images)
       ? data.product_images
-      : [];
+      : []) as DbProductImage[];
 
     const orderedImageUrls = images
-      .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
-      .map((img: any) => img.image_url);
+      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      .map((img) => img.image_url);
 
     // Get boutique slug separately if seller exists
     let boutiqueSlug: string | null = null;
@@ -404,10 +414,10 @@ export async function getProductsBySeller(sellerId: string): Promise<Product[]> 
 
     // Map Supabase data to Product type
     return data.map(product => {
-      const images = Array.isArray(product.product_images) ? product.product_images : [];
+      const images = (Array.isArray(product.product_images) ? product.product_images : []) as DbProductImage[];
       const orderedImageUrls = images
-        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
-        .map((img: any) => img.image_url);
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img) => img.image_url);
 
       return {
         id: product.id,

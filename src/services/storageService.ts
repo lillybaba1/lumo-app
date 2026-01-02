@@ -2,6 +2,9 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+
+const storageLogger = logger.child('StorageService');
 
 // File upload constraints
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -52,7 +55,7 @@ function validateFile(file: File): { valid: boolean; error?: string } {
  * @returns The public URL of the uploaded image.
  */
 export async function uploadImageAndGetUrl(file: File, path: string): Promise<string> {
-    console.log('[Storage] Uploading file to Supabase:', {
+    storageLogger.debug('Uploading file to Supabase', {
         name: file.name,
         size: file.size,
         type: file.type,
@@ -62,7 +65,7 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
     // Validate file
     const validation = validateFile(file);
     if (!validation.valid) {
-        console.error('[Storage] File validation failed:', validation.error);
+        storageLogger.error('File validation failed', undefined, { error: validation.error });
         throw new Error(validation.error);
     }
 
@@ -76,7 +79,7 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
         const fileName = `${timestamp}_${safeName}`;
         const filePath = `${path}/${fileName}`;
 
-        console.log('[Storage] Uploading to Supabase Storage:', filePath);
+        storageLogger.debug('Uploading to Supabase Storage', { filePath });
 
         // Upload to Supabase Storage
         const { data, error } = await supabase.storage
@@ -88,7 +91,7 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
             });
 
         if (error) {
-            console.error('[Storage] Supabase upload error:', error);
+            storageLogger.error('Supabase upload error', error);
             throw new Error(`Upload failed: ${error.message}`);
         }
 
@@ -101,12 +104,12 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
             .from('product-images')
             .getPublicUrl(data.path);
 
-        console.log('[Storage] Upload successful, public URL:', publicUrl);
+        storageLogger.info('Upload successful', { publicUrl });
 
         return publicUrl;
 
     } catch (error) {
-        console.error('[Storage] Upload error:', error);
+        storageLogger.error('Upload error', error as Error);
         if (error instanceof Error) {
             throw error;
         }

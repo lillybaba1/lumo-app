@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminPromoteUser');
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-interface PromoteUserRequest {
-  userId?: string;
-  email?: string;
-  role: 'admin' | 'customer';
-}
+const promoteUserSchema = z.object({
+  userId: z.string().uuid().optional(),
+  email: z.string().email().optional(),
+  role: z.enum(['admin', 'customer']),
+}).refine(data => data.userId || data.email, {
+  message: 'Either userId or email is required',
+});
 
 /**
  * POST /api/admin/promote-user
@@ -17,58 +23,19 @@ interface PromoteUserRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check if requester is authenticated and is an admin
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { userId: adminUserId } = await requireAdmin({ redirect: false });
 
-    if (authError || !user) {
+    const body = await request.json();
+    const parsed = promoteUserSchema.safeParse(body);
+    
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Unauthorized. Please log in.' },
-        { status: 401 }
-      );
-    }
-
-    // Get requester's profile to check admin status
-    // Try user_profiles first (new Supabase system)
-    let requesterProfile = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    // Fallback to users table if not found in user_profiles
-    if (requesterProfile.error) {
-      requesterProfile = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-    }
-
-    if (!requesterProfile.data || requesterProfile.data.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden. Only admins can promote users.' },
-        { status: 403 }
-      );
-    }
-
-    const body: PromoteUserRequest = await request.json();
-    const { userId, email, role } = body;
-
-    // Validate inputs
-    if (!userId && !email) {
-      return NextResponse.json(
-        { error: 'Either userId or email is required.' },
+        { error: 'Validation failed', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    if (!role || !['admin', 'customer'].includes(role)) {
-      return NextResponse.json(
-        { error: 'Role must be either "admin" or "customer".' },
-        { status: 400 }
-      );
-    }
+    const { userId, email, role } = parsed.data;
 
     // Find the user to promote
     let targetUser;
@@ -130,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prevent self-demotion from admin
-    if (targetUser.id === user.id && role === 'customer' && requesterProfile.data.role === 'admin') {
+    if (targetUser.id === adminUserId && role === 'customer') {
       return NextResponse.json(
         { error: 'You cannot demote yourself from admin.' },
         { status: 403 }
@@ -153,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (updateResult.error) {
-      console.error('Failed to update user role:', updateResult.error);
+      apiLogger.error('Failed to update user role', updateResult.error);
       return NextResponse.json(
         { error: 'Failed to update user role.' },
         { status: 500 }
@@ -171,8 +138,11 @@ export async function POST(request: NextRequest) {
         newRole: role,
       },
     });
-  } catch (error: any) {
-    console.error('Error promoting user:', error);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error promoting user', error as Error);
     return NextResponse.json(
       { error: 'An unexpected error occurred.' },
       { status: 500 }

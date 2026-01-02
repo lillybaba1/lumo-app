@@ -1,44 +1,95 @@
 'use server';
 
+import { logger } from '@/lib/logger';
+
+const boutiqueLogger = logger.child('BoutiqueService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Boutique, BusinessAccount, SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/types';
 
+/**
+ * Database row type for boutiques table
+ */
+interface DbBoutiqueRow {
+  id: string;
+  business_account_id: string;
+  slug: string;
+  display_name: string;
+  tagline: string | null;
+  description: string | null;
+  logo: string | null;
+  banner_image: string | null;
+  theme_color: string | null;
+  accent_color: string | null;
+  social_links: Record<string, string> | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  whatsapp: string | null;
+  store_address: string | null;
+  store_city: string | null;
+  store_country: string | null;
+  store_location: string | null;
+  business_hours: string | null;
+  established_year: number | null;
+  trust_badges: string[] | null;
+  specializations: string[] | null;
+  accepted_payments: string[] | null;
+  shipping_info: string | null;
+  return_policy: string | null;
+  total_products: number;
+  total_sales: number;
+  average_rating: string | number | null;
+  total_reviews: number;
+  is_published: boolean;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+/**
+ * Type for product image from DB
+ */
+interface DbProductImage {
+  image_url: string;
+  display_order: number | null;
+}
+
 // Map database row to Boutique type
-function mapDbToBoutique(data: any): Boutique {
+function mapDbToBoutique(data: DbBoutiqueRow): Boutique {
   return {
     id: data.id,
     businessAccountId: data.business_account_id,
     slug: data.slug,
     displayName: data.display_name,
-    tagline: data.tagline,
-    description: data.description,
-    logo: data.logo,
-    bannerImage: data.banner_image,
-    themeColor: data.theme_color,
-    accentColor: data.accent_color,
+    tagline: data.tagline ?? undefined,
+    description: data.description ?? undefined,
+    logo: data.logo ?? undefined,
+    bannerImage: data.banner_image ?? undefined,
+    themeColor: data.theme_color ?? undefined,
+    accentColor: data.accent_color ?? undefined,
     socialLinks: data.social_links || {},
-    contactEmail: data.contact_email,
-    contactPhone: data.contact_phone,
-    whatsapp: data.whatsapp,
-    storeAddress: data.store_address,
-    storeCity: data.store_city,
-    storeCountry: data.store_country,
-    storeLocation: data.store_location,
-    businessHours: data.business_hours,
-    establishedYear: data.established_year,
+    contactEmail: data.contact_email ?? undefined,
+    contactPhone: data.contact_phone ?? undefined,
+    whatsapp: data.whatsapp ?? undefined,
+    storeAddress: data.store_address ?? undefined,
+    storeCity: data.store_city ?? undefined,
+    storeCountry: data.store_country ?? undefined,
+    storeLocation: data.store_location ?? undefined,
+    businessHours: data.business_hours ?? undefined,
+    establishedYear: data.established_year ? String(data.established_year) : undefined,
     trustBadges: data.trust_badges || [],
     specializations: data.specializations || [],
     acceptedPayments: data.accepted_payments || [],
-    shippingInfo: data.shipping_info,
-    returnPolicy: data.return_policy,
+    shippingInfo: data.shipping_info ?? undefined,
+    returnPolicy: data.return_policy ?? undefined,
     totalProducts: data.total_products || 0,
     totalSales: data.total_sales || 0,
-    averageRating: parseFloat(data.average_rating) || 0,
+    averageRating: parseFloat(String(data.average_rating)) || 0,
     totalReviews: data.total_reviews || 0,
     isPublished: data.is_published,
     isFeatured: data.is_featured,
     createdAt: data.created_at,
-    updatedAt: data.updated_at,
+    updatedAt: data.updated_at ?? undefined,
   };
 }
 
@@ -54,13 +105,13 @@ export async function getBoutiqueById(boutiqueId: string): Promise<Boutique | nu
       .single();
 
     if (error) {
-      console.error('Error fetching boutique:', error);
+      boutiqueLogger.error('Error fetching boutique:', error);
       return null;
     }
 
     return data ? mapDbToBoutique(data) : null;
   } catch (error) {
-    console.error('Error in getBoutiqueById:', error);
+    boutiqueLogger.error('Error in getBoutiqueById:', error);
     return null;
   }
 }
@@ -78,13 +129,13 @@ export async function getBoutiqueBySlug(slug: string): Promise<Boutique | null> 
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      console.error('Error fetching boutique by slug:', error);
+      boutiqueLogger.error('Error fetching boutique by slug:', error);
       return null;
     }
 
     return data ? mapDbToBoutique(data) : null;
   } catch (error) {
-    console.error('Error in getBoutiqueBySlug:', error);
+    boutiqueLogger.error('Error in getBoutiqueBySlug:', error);
     return null;
   }
 }
@@ -102,13 +153,13 @@ export async function getBoutiqueByBusinessAccount(businessAccountId: string): P
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      console.error('Error fetching boutique:', error);
+      boutiqueLogger.error('Error fetching boutique:', error);
       return null;
     }
 
     return data ? mapDbToBoutique(data) : null;
   } catch (error) {
-    console.error('Error in getBoutiqueByBusinessAccount:', error);
+    boutiqueLogger.error('Error in getBoutiqueByBusinessAccount:', error);
     return null;
   }
 }
@@ -152,7 +203,7 @@ export async function createBoutique(
       .single();
 
     if (error) {
-      console.error('Error creating boutique:', error);
+      boutiqueLogger.error('Error creating boutique:', error);
       return null;
     }
 
@@ -168,7 +219,7 @@ export async function createBoutique(
 
     return data ? mapDbToBoutique(data) : null;
   } catch (error) {
-    console.error('Error in createBoutique:', error);
+    boutiqueLogger.error('Error in createBoutique:', error);
     return null;
   }
 }
@@ -181,7 +232,7 @@ export async function updateBoutique(
   updates: Partial<Boutique>
 ): Promise<Boutique | null> {
   try {
-    const updateData: any = {};
+    const updateData: Partial<Record<string, unknown>> = {};
     
     if (updates.displayName !== undefined) updateData.display_name = updates.displayName;
     if (updates.tagline !== undefined) updateData.tagline = updates.tagline;
@@ -215,13 +266,13 @@ export async function updateBoutique(
       .single();
 
     if (error) {
-      console.error('Error updating boutique:', error);
+      boutiqueLogger.error('Error updating boutique:', error);
       return null;
     }
 
     return data ? mapDbToBoutique(data) : null;
   } catch (error) {
-    console.error('Error in updateBoutique:', error);
+    boutiqueLogger.error('Error in updateBoutique:', error);
     return null;
   }
 }
@@ -237,13 +288,13 @@ export async function deleteBoutique(boutiqueId: string): Promise<boolean> {
       .eq('id', boutiqueId);
 
     if (error) {
-      console.error('Error deleting boutique:', error);
+      boutiqueLogger.error('Error deleting boutique:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in deleteBoutique:', error);
+    boutiqueLogger.error('Error in deleteBoutique:', error);
     return false;
   }
 }
@@ -264,7 +315,7 @@ export async function banBoutique(boutiqueId: string): Promise<boolean> {
       .eq('id', boutiqueId);
 
     if (boutiqueError) {
-      console.error('Error banning boutique:', boutiqueError);
+      boutiqueLogger.error('Error banning boutique:', boutiqueError);
       return false;
     }
 
@@ -275,13 +326,13 @@ export async function banBoutique(boutiqueId: string): Promise<boolean> {
       .eq('id', boutique.businessAccountId);
 
     if (businessError) {
-      console.error('Error suspending business account:', businessError);
+      boutiqueLogger.error('Error suspending business account:', businessError);
       // Boutique is already unpublished, so partial success
     }
 
     return true;
   } catch (error) {
-    console.error('Error in banBoutique:', error);
+    boutiqueLogger.error('Error in banBoutique:', error);
     return false;
   }
 }
@@ -316,13 +367,13 @@ export async function getPublishedBoutiques(options?: {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching boutiques:', error);
+      boutiqueLogger.error('Error fetching boutiques:', error);
       return [];
     }
 
     return data ? data.map(mapDbToBoutique) : [];
   } catch (error) {
-    console.error('Error in getPublishedBoutiques:', error);
+    boutiqueLogger.error('Error in getPublishedBoutiques:', error);
     return [];
   }
 }
@@ -378,22 +429,35 @@ export async function getBoutiqueProducts(boutiqueId: string, options?: {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching boutique products:', error);
+      boutiqueLogger.error('Error fetching boutique products:', error);
       return [];
     }
 
-    // Map to Product type
-    return (data || []).map((product: any) => {
-      const images = Array.isArray(product.product_images) ? product.product_images : [];
+    // Map to Product type - define inline interface for DB product row
+    interface DbBoutiqueProductRow {
+      id: string;
+      name: string;
+      description: string | null;
+      price: string | number;
+      image_urls: string[] | null;
+      product_images: DbProductImage[] | null;
+      categories: { name: string } | null;
+      category_id: string | null;
+      stock: number | null;
+      seller_id: string | null;
+    }
+
+    return (data || []).map((product: DbBoutiqueProductRow) => {
+      const images = (Array.isArray(product.product_images) ? product.product_images : []) as DbProductImage[];
       const orderedImageUrls = images
-        .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
-        .map((img: any) => img.image_url);
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        .map((img) => img.image_url);
 
       return {
         id: product.id,
         name: product.name,
         description: product.description || '',
-        price: parseFloat(product.price),
+        price: parseFloat(String(product.price)),
         imageUrls: product.image_urls || [],
         productImages: orderedImageUrls,
         category: product.categories?.name || '',
@@ -403,7 +467,7 @@ export async function getBoutiqueProducts(boutiqueId: string, options?: {
       };
     });
   } catch (error) {
-    console.error('Error in getBoutiqueProducts:', error);
+    boutiqueLogger.error('Error in getBoutiqueProducts:', error);
     return [];
   }
 }
@@ -462,7 +526,7 @@ export async function updateBoutiqueStats(businessAccountId: string): Promise<vo
       })
       .eq('business_account_id', businessAccountId);
   } catch (error) {
-    console.error('Error updating boutique stats:', error);
+    boutiqueLogger.error('Error updating boutique stats:', error);
   }
 }
 
@@ -489,7 +553,7 @@ export async function calculateCommission(
 
     return { commissionRate, commissionAmount, netAmount };
   } catch (error) {
-    console.error('Error calculating commission:', error);
+    boutiqueLogger.error('Error calculating commission:', error);
     // Default to highest commission if error
     return {
       commissionRate: 15,
@@ -532,7 +596,7 @@ export async function recordSellerTransaction(
       });
 
     if (error) {
-      console.error('Error recording transaction:', error);
+      boutiqueLogger.error('Error recording transaction:', error);
       return false;
     }
 
@@ -547,7 +611,8 @@ export async function recordSellerTransaction(
 
     return true;
   } catch (error) {
-    console.error('Error in recordSellerTransaction:', error);
+    boutiqueLogger.error('Error in recordSellerTransaction:', error);
     return false;
   }
 }
+

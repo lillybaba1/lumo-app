@@ -1,44 +1,27 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { z } from 'zod';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { clearInactiveVisitors } from '@/services/visitorService';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminVisitors');
+
+const clearVisitorsSchema = z.object({
+  hoursInactive: z.number().int().min(1).max(168).default(24),
+});
 
 export async function POST(request: Request) {
   try {
-    // Check admin auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin (from users table)
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const role = userData?.role || 'customer';
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    await requireAdmin({ redirect: false });
 
     const body = await request.json();
-    const hoursInactive = body.hoursInactive || 24;
+    const parsed = clearVisitorsSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.errors }, { status: 400 });
+    }
 
+    const { hoursInactive } = parsed.data;
     const result = await clearInactiveVisitors(hoursInactive);
 
     if (result.error) {
@@ -47,7 +30,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, deleted: result.deleted });
   } catch (error) {
-    console.error('Error clearing inactive visitors:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error clearing inactive visitors', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

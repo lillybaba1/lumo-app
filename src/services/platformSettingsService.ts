@@ -4,6 +4,9 @@ import {
   DEFAULT_BOUTIQUE_SETTINGS,
   PlatformSettings 
 } from '@/lib/types';
+import { logger } from '@/lib/logger';
+
+const platformSettingsLogger = logger.child('PlatformSettingsService');
 
 // ============================================
 // Platform Settings Service
@@ -26,13 +29,13 @@ export async function getPlatformSetting(key: string): Promise<any | null> {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      console.error('Error fetching platform setting:', error);
+      platformSettingsLogger.error('Error fetching platform setting:', error);
       return null;
     }
 
     return data?.value || null;
   } catch (error) {
-    console.error('Error in getPlatformSetting:', error);
+    platformSettingsLogger.error('Error in getPlatformSetting:', error);
     return null;
   }
 }
@@ -62,13 +65,13 @@ export async function setPlatformSetting(
       });
 
     if (error) {
-      console.error('Error setting platform setting:', error);
+      platformSettingsLogger.error('Error setting platform setting:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in setPlatformSetting:', error);
+    platformSettingsLogger.error('Error in setPlatformSetting:', error);
     return false;
   }
 }
@@ -84,7 +87,7 @@ export async function getAllPlatformSettings(): Promise<PlatformSettings[]> {
       .order('category', { ascending: true });
 
     if (error) {
-      console.error('Error fetching all platform settings:', error);
+      platformSettingsLogger.error('Error fetching all platform settings:', error);
       return [];
     }
 
@@ -98,7 +101,7 @@ export async function getAllPlatformSettings(): Promise<PlatformSettings[]> {
       updatedBy: row.updated_by,
     }));
   } catch (error) {
-    console.error('Error in getAllPlatformSettings:', error);
+    platformSettingsLogger.error('Error in getAllPlatformSettings:', error);
     return [];
   }
 }
@@ -114,7 +117,7 @@ export async function getSettingsByCategory(category: PlatformSettings['category
       .eq('category', category);
 
     if (error) {
-      console.error('Error fetching settings by category:', error);
+      platformSettingsLogger.error('Error fetching settings by category:', error);
       return [];
     }
 
@@ -128,7 +131,7 @@ export async function getSettingsByCategory(category: PlatformSettings['category
       updatedBy: row.updated_by,
     }));
   } catch (error) {
-    console.error('Error in getSettingsByCategory:', error);
+    platformSettingsLogger.error('Error in getSettingsByCategory:', error);
     return [];
   }
 }
@@ -171,7 +174,7 @@ export async function getBoutiqueSettings(): Promise<BoutiqueSystemSettings> {
       },
     };
   } catch (error) {
-    console.error('Error getting boutique settings:', error);
+    platformSettingsLogger.error('Error getting boutique settings:', error);
     return DEFAULT_BOUTIQUE_SETTINGS;
   }
 }
@@ -215,7 +218,7 @@ export async function updateBoutiqueSettings(
       updatedBy
     );
   } catch (error) {
-    console.error('Error updating boutique settings:', error);
+    platformSettingsLogger.error('Error updating boutique settings:', error);
     return false;
   }
 }
@@ -250,7 +253,7 @@ export async function updateTierSettings(
       updatedBy
     );
   } catch (error) {
-    console.error('Error updating tier settings:', error);
+    platformSettingsLogger.error('Error updating tier settings:', error);
     return false;
   }
 }
@@ -292,3 +295,4 @@ export async function areNewSellersAllowed(): Promise<boolean> {
   const settings = await getBoutiqueSettings();
   return settings.enabled && settings.allowNewSellers;
 }
+

@@ -1,5 +1,9 @@
 'use server';
 
+import { logger } from '@/lib/logger';
+
+const orderLogger = logger.child('OrderService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Order } from '@/lib/types';
 
@@ -14,7 +18,7 @@ export async function getOrders(): Promise<Order[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching orders:', error);
+      orderLogger.error('Error fetching orders:', error);
       throw error;
     }
 
@@ -40,7 +44,7 @@ export async function getOrders(): Promise<Order[]> {
 
     return orders;
   } catch (error) {
-    console.error('Failed to fetch orders:', error);
+    orderLogger.error('Failed to fetch orders:', error);
     return [];
   }
 }
@@ -57,7 +61,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
       .single();
 
     if (error) {
-      console.error('Error fetching order:', error);
+      orderLogger.error('Error fetching order:', error);
       return null;
     }
 
@@ -82,7 +86,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
       updatedAt: data.updated_at,
     };
   } catch (error) {
-    console.error('Failed to fetch order:', error);
+    orderLogger.error('Failed to fetch order:', error);
     return null;
   }
 }
@@ -99,7 +103,7 @@ export async function getOrdersByEmail(email: string): Promise<Order[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching orders by email:', error);
+      orderLogger.error('Error fetching orders by email:', error);
       throw error;
     }
 
@@ -122,7 +126,7 @@ export async function getOrdersByEmail(email: string): Promise<Order[]> {
       updatedAt: row.updated_at,
     }));
   } catch (error) {
-    console.error('Failed to fetch orders by email:', error);
+    orderLogger.error('Failed to fetch orders by email:', error);
     return [];
   }
 }
@@ -153,7 +157,7 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
       .single();
 
     if (error) {
-      console.error('Error creating order:', error);
+      orderLogger.error('Error creating order:', error);
       throw error;
     }
 
@@ -176,7 +180,7 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
       updatedAt: data.updated_at,
     };
   } catch (error) {
-    console.error('Failed to create order:', error);
+    orderLogger.error('Failed to create order:', error);
     throw error;
   }
 }
@@ -186,7 +190,7 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
  */
 export async function updateOrder(orderId: string, orderData: Partial<Order>): Promise<Order | null> {
   try {
-    const updateData: any = {
+    const updateData: Partial<Record<string, unknown>> = {
       updated_at: new Date().toISOString(),
     };
 
@@ -212,7 +216,7 @@ export async function updateOrder(orderId: string, orderData: Partial<Order>): P
       .single();
 
     if (error) {
-      console.error('Error updating order:', error);
+      orderLogger.error('Error updating order:', error);
       throw error;
     }
 
@@ -235,7 +239,7 @@ export async function updateOrder(orderId: string, orderData: Partial<Order>): P
       updatedAt: data.updated_at,
     };
   } catch (error) {
-    console.error('Failed to update order:', error);
+    orderLogger.error('Failed to update order:', error);
     return null;
   }
 }
@@ -257,11 +261,12 @@ export async function updateOrderStatus(
       .eq('id', orderId);
 
     if (error) {
-      console.error('Error updating order status:', error);
+      orderLogger.error('Error updating order status:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Failed to update order status:', error);
+    orderLogger.error('Failed to update order status:', error);
     throw error;
   }
 }
+

@@ -2,6 +2,9 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const themeLogger = logger.child('ThemeService');
 
 export interface CropData {
     x: number;
@@ -42,21 +45,21 @@ export async function getTheme(): Promise<Theme | null> {
 
         return data?.value as Theme || null;
     } catch (error) {
-        console.error('Failed to get theme:', error);
+        themeLogger.error('Failed to get theme:', error);
         return null;
     }
 }
 
 export async function saveTheme(theme: Partial<Theme>): Promise<void> {
     try {
-        console.log('saveTheme called with:', theme);
+        themeLogger.debug('saveTheme called with:', theme);
 
         const themeWithTimestamp = {
             ...theme,
             updatedAt: new Date().toISOString()
         };
 
-        console.log('Attempting to upsert theme to site_settings...');
+        themeLogger.debug('Attempting to upsert theme to site_settings...');
 
         const { data, error } = await supabaseAdmin
             .from('site_settings')
@@ -70,7 +73,7 @@ export async function saveTheme(theme: Partial<Theme>): Promise<void> {
             .select();
 
         if (error) {
-            console.error('Supabase error details:', {
+            themeLogger.error('Supabase error details:', {
                 code: error.code,
                 message: error.message,
                 details: error.details,
@@ -79,12 +82,13 @@ export async function saveTheme(theme: Partial<Theme>): Promise<void> {
             throw error;
         }
 
-        console.log('Theme saved successfully:', data);
+        themeLogger.debug('Theme saved successfully:', data);
     } catch (error) {
-        console.error('Failed to save theme - full error:', error);
+        themeLogger.error('Failed to save theme - full error:', error);
         if (error instanceof Error) {
             throw new Error(`Failed to save theme: ${error.message}`);
         }
         throw new Error('Failed to save theme. Ensure database is set up correctly.');
     }
 }
+

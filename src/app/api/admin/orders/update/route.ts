@@ -1,37 +1,33 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { updateOrder } from '@/services/orderService';
-import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminOrders');
+
+const updateOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  status: z.enum(['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']).optional(),
+  paymentStatus: z.enum(['Pending', 'Paid', 'Failed']).optional(),
+  notes: z.string().max(1000).optional(),
+});
 
 export async function POST(req: Request) {
   try {
-    // SECURITY: Require admin authentication to update orders
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { ok: false, message: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { ok: false, message: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    await requireAdmin({ redirect: false });
 
     const body = await req.json();
-    const { orderId, status, paymentStatus, notes } = body;
-    if (!orderId) return NextResponse.json({ ok: false, message: 'Missing orderId' }, { status: 400 });
+    const parsed = updateOrderSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, message: 'Validation failed', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { orderId, status, paymentStatus, notes } = parsed.data;
 
     await updateOrder(orderId, {
       status,
@@ -41,8 +37,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    console.error('API update order error', err);
-    return NextResponse.json({ ok: false, message: err.message || 'Unknown error' }, { status: 500 });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('API update order error', error as Error);
+    return NextResponse.json({ ok: false, message: 'Failed to update order' }, { status: 500 });
   }
 }

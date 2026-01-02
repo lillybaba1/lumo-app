@@ -2,6 +2,9 @@
 
 import { Wishlist } from '@/lib/types';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+
+const wishlistLogger = logger.child('WishlistService');
 
 export async function getWishlistByUser(userId: string): Promise<Wishlist | null> {
   try {
@@ -25,7 +28,7 @@ export async function getWishlistByUser(userId: string): Promise<Wishlist | null
       updatedAt: data.updated_at,
     } as Wishlist;
   } catch (error) {
-    console.error(`Failed to fetch wishlist for user ${userId}:`, error);
+    wishlistLogger.error(`Failed to fetch wishlist for user ${userId}`, error as Error);
     return null;
   }
 }
@@ -56,7 +59,7 @@ export async function createWishlist(userId: string): Promise<Wishlist> {
       updatedAt: data.updated_at,
     } as Wishlist;
   } catch (error) {
-    console.error('Failed to create wishlist:', error);
+    wishlistLogger.error('Failed to create wishlist', error as Error);
     throw new Error('Could not create wishlist.');
   }
 }
@@ -89,7 +92,7 @@ export async function addToWishlist(userId: string, productId: string): Promise<
       throw error;
     }
   } catch (error) {
-    console.error(`Failed to add product ${productId} to wishlist:`, error);
+    wishlistLogger.error(`Failed to add product ${productId} to wishlist`, error as Error);
     throw new Error('Could not add product to wishlist.');
   }
 }
@@ -117,7 +120,7 @@ export async function removeFromWishlist(userId: string, productId: string): Pro
       throw error;
     }
   } catch (error) {
-    console.error(`Failed to remove product ${productId} from wishlist:`, error);
+    wishlistLogger.error(`Failed to remove product ${productId} from wishlist`, error as Error);
     throw new Error('Could not remove product from wishlist.');
   }
 }
@@ -128,7 +131,7 @@ export async function isInWishlist(userId: string, productId: string): Promise<b
     if (!wishlist) return false;
     return wishlist.productIds.includes(productId);
   } catch (error) {
-    console.error(`Failed to check if product ${productId} is in wishlist:`, error);
+    wishlistLogger.error(`Failed to check if product ${productId} is in wishlist`, error as Error);
     return false;
   }
 }
@@ -152,7 +155,7 @@ export async function clearWishlist(userId: string): Promise<void> {
       throw error;
     }
   } catch (error) {
-    console.error(`Failed to clear wishlist for user ${userId}:`, error);
+    wishlistLogger.error(`Failed to clear wishlist for user ${userId}`, error as Error);
     throw new Error('Could not clear wishlist.');
   }
 }

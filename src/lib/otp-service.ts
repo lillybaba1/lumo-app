@@ -6,6 +6,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimiter, RATE_LIMITS } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
+
+const otpLogger = logger.child('OTPService');
 
 export interface OTPResult {
   success: boolean;
@@ -117,14 +120,14 @@ export async function sendOTP(
       });
     } catch (dbError: any) {
       // Table might not exist yet - that's ok, OTP was still sent via Supabase Auth
-      console.warn('OTP tracking failed (table may not exist):', dbError.message);
+      otpLogger.warn('OTP tracking failed (table may not exist)', { error: dbError.message });
     }
 
     return {
       success: true,
     };
   } catch (error: any) {
-    console.error('OTP send error:', error);
+    otpLogger.error('OTP send error', error);
     return {
       success: false,
       error: 'An error occurred while sending the verification code. Please try again.',
@@ -205,7 +208,7 @@ export async function verifyOTP(
         }
       } catch (dbError: any) {
         // Table might not exist yet - just return the auth error
-        console.warn('OTP tracking query failed (table may not exist):', dbError.message);
+        otpLogger.warn('OTP tracking query failed (table may not exist)', { error: dbError.message });
       }
 
       return {
@@ -222,7 +225,7 @@ export async function verifyOTP(
         .eq('phone_number', phoneNumber)
         .eq('verified', false);
     } catch (dbError: any) {
-      console.warn('OTP verification tracking failed (table may not exist):', dbError.message);
+      otpLogger.warn('OTP verification tracking failed (table may not exist)', { error: dbError.message });
     }
 
     // Update user's phone_verified status
@@ -233,7 +236,7 @@ export async function verifyOTP(
           .update({ phone_verified: true })
           .eq('id', data.user.id);
       } catch (dbError: any) {
-        console.warn('Failed to update phone_verified status:', dbError.message);
+        otpLogger.warn('Failed to update phone_verified status', { error: dbError.message });
       }
     }
 
@@ -241,7 +244,7 @@ export async function verifyOTP(
       success: true,
     };
   } catch (error: any) {
-    console.error('OTP verification error:', error);
+    otpLogger.error('OTP verification error', error);
     return {
       success: false,
       error: 'An error occurred during verification. Please try again.',

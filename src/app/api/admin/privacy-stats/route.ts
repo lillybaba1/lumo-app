@@ -1,33 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminPrivacyStats');
 
 export async function GET() {
   try {
-    // SECURITY: Require admin authentication
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    await requireAdmin({ redirect: false });
 
     // Get privacy consent stats from database
     // For now, return placeholder data since we're storing consent client-side
@@ -91,12 +71,15 @@ export async function GET() {
       }
     } catch (e) {
       // Table doesn't exist yet, use placeholder stats
-      console.log('Consent logs table not found, using placeholder stats');
+      apiLogger.debug('Consent logs table not found, using placeholder stats');
     }
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('Failed to fetch privacy stats:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Failed to fetch privacy stats', error as Error);
     return NextResponse.json(
       { error: 'Failed to fetch privacy stats' },
       { status: 500 }

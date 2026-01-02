@@ -1,6 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+import { logger } from '@/lib/logger'
+
+const middlewareLogger = logger.child('BusinessMiddleware');
 
 // Business routes that require full approval (boutique_approved = true)
 const PROTECTED_BUSINESS_ROUTES = [
@@ -30,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase environment variables are not set')
+    middlewareLogger.error('Supabase environment variables are not set');
     // SECURITY: Fail closed for protected routes on error
     const pathname = request.nextUrl.pathname
     if (pathname.startsWith('/admin') || pathname.startsWith('/business')) {
@@ -116,7 +119,7 @@ async function enforceBusinessWorkflow(
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!supabaseUrl || !serviceRoleKey) {
-    console.error('[Middleware] Missing Supabase service role credentials')
+    middlewareLogger.error('Missing Supabase service role credentials');
     return '/login?error=config' // Fail closed - redirect to login
   }
   
@@ -133,19 +136,19 @@ async function enforceBusinessWorkflow(
 
   // No business account - shouldn't be on business routes
   if (error || !businessAccount) {
-    console.log('[Middleware] No business account found for user:', userId)
+    middlewareLogger.debug('No business account found for user', { userId });
     return '/signup?type=business'
   }
 
   const { account_approved, boutique_submitted, boutique_approved, status } = businessAccount
 
-  console.log('[Middleware] Business workflow check:', {
+  middlewareLogger.debug('Business workflow check', {
     currentPath,
     account_approved,
     boutique_submitted,
     boutique_approved,
     status
-  })
+  });
 
   // STATE D: Fully approved (account + boutique both approved)
   // LEGACY CHECK FIRST: If status is ACTIVE, allow access regardless of approval flags

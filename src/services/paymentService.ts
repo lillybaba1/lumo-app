@@ -1,5 +1,9 @@
 "use server";
 
+import { logger } from '@/lib/logger';
+
+const paymentLogger = logger.child('PaymentService');
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { updateOrderStatus } from './orderService';
 
@@ -13,12 +17,30 @@ export interface Payment {
   transactionId?: string;
   customerEmail: string;
   customerName: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt?: string;
 }
 
-function mapDbToPayment(data: any): Payment {
+/**
+ * Database row type for payments table
+ */
+interface DbPaymentRow {
+  id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  payment_method: 'Wave Money' | 'Cash on Delivery';
+  status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
+  transaction_id: string | null;
+  customer_email: string;
+  customer_name: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+function mapDbToPayment(data: DbPaymentRow): Payment {
   return {
     id: data.id,
     orderId: data.order_id,
@@ -26,16 +48,29 @@ function mapDbToPayment(data: any): Payment {
     currency: data.currency,
     paymentMethod: data.payment_method,
     status: data.status,
-    transactionId: data.transaction_id,
+    transactionId: data.transaction_id ?? undefined,
     customerEmail: data.customer_email,
     customerName: data.customer_name,
-    metadata: data.metadata,
+    metadata: data.metadata ?? undefined,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at ?? undefined
   };
 }
 
-function mapPaymentToDb(payment: Omit<Payment, 'id' | 'createdAt'>): any {
+interface DbPaymentInsert {
+  order_id: string;
+  amount: number;
+  currency: string;
+  payment_method: 'Wave Money' | 'Cash on Delivery';
+  status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
+  transaction_id?: string;
+  customer_email: string;
+  customer_name: string;
+  metadata?: Record<string, unknown>;
+  updated_at?: string;
+}
+
+function mapPaymentToDb(payment: Omit<Payment, 'id' | 'createdAt'>): DbPaymentInsert {
   return {
     order_id: payment.orderId,
     amount: payment.amount,
@@ -62,7 +97,7 @@ export async function createPayment(payment: Omit<Payment, 'id' | 'createdAt'>):
 
     return mapDbToPayment(data);
   } catch (error) {
-    console.error('Failed to create payment:', error);
+    paymentLogger.error('Failed to create payment', error as Error);
     throw new Error('Could not create payment record.');
   }
 }
@@ -82,7 +117,7 @@ export async function getPaymentById(id: string): Promise<Payment | null> {
 
     return mapDbToPayment(data);
   } catch (error) {
-    console.error(`Failed to fetch payment ${id}:`, error);
+    paymentLogger.error('Failed to fetch payment', { paymentId: id, error: String(error) });
     return null;
   }
 }
@@ -102,7 +137,7 @@ export async function getPaymentByOrder(orderId: string): Promise<Payment | null
 
     return mapDbToPayment(data);
   } catch (error) {
-    console.error(`Failed to fetch payment for order ${orderId}:`, error);
+    paymentLogger.error('Failed to fetch payment for order', { orderId, error: String(error) });
     return null;
   }
 }
@@ -119,7 +154,7 @@ export async function getPaymentsByCustomer(customerEmail: string): Promise<Paym
 
     return (data || []).map(mapDbToPayment);
   } catch (error) {
-    console.error(`Failed to fetch payments for customer ${customerEmail}:`, error);
+    paymentLogger.error('Failed to fetch payments for customer', { customerEmail, error: String(error) });
     return [];
   }
 }
@@ -135,7 +170,7 @@ export async function getAllPayments(): Promise<Payment[]> {
 
     return (data || []).map(mapDbToPayment);
   } catch (error) {
-    console.error('Failed to fetch payments:', error);
+    paymentLogger.error('Failed to fetch payments', error as Error);
     return [];
   }
 }
@@ -173,7 +208,7 @@ export async function updatePaymentStatus(
       await updateOrderStatus(payment.orderId, 'Cancelled');
     }
   } catch (error) {
-    console.error(`Failed to update payment status for ${id}:`, error);
+    paymentLogger.error('Failed to update payment status', { paymentId: id, error: String(error) });
     throw new Error('Could not update payment status.');
   }
 }
@@ -194,11 +229,11 @@ export async function initiateWaveMoneyPayment(payment: Omit<Payment, 'id' | 'cr
 
     // Simulate API call delay
     // In production, you would integrate with Wave Money API here
-    console.log('Wave Money payment initiated:', newPayment.id);
+    paymentLogger.debug('Wave Money payment initiated', { paymentId: newPayment.id });
 
     return newPayment;
   } catch (error) {
-    console.error('Failed to initiate Wave Money payment:', error);
+    paymentLogger.error('Failed to initiate Wave Money payment', error as Error);
     throw new Error('Could not initiate Wave Money payment.');
   }
 }
@@ -216,11 +251,11 @@ export async function processCashOnDelivery(payment: Omit<Payment, 'id' | 'creat
       },
     });
 
-    console.log('Cash on Delivery payment created:', newPayment.id);
+    paymentLogger.debug('Cash on Delivery payment created', { paymentId: newPayment.id });
 
     return newPayment;
   } catch (error) {
-    console.error('Failed to create COD payment:', error);
+    paymentLogger.error('Failed to create COD payment', error as Error);
     throw new Error('Could not create Cash on Delivery payment.');
   }
 }
@@ -252,7 +287,7 @@ export async function refundPayment(id: string, reason?: string): Promise<void> 
     // Update order status
     await updateOrderStatus(payment.orderId, 'Cancelled');
   } catch (error) {
-    console.error(`Failed to refund payment ${id}:`, error);
+    paymentLogger.error('Failed to refund payment', { paymentId: id, error: String(error) });
     throw new Error('Could not process refund.');
   }
 }
@@ -288,7 +323,7 @@ export async function getPaymentStats(): Promise<{
 
     return stats;
   } catch (error) {
-    console.error('Failed to calculate payment stats:', error);
+    paymentLogger.error('Failed to calculate payment stats', error as Error);
     return {
       totalRevenue: 0,
       totalPayments: 0,
@@ -298,3 +333,4 @@ export async function getPaymentStats(): Promise<{
     };
   }
 }
+

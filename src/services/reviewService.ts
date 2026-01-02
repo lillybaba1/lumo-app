@@ -2,6 +2,9 @@
 
 import { Review, ProductStats } from '@/lib/types';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+
+const reviewLogger = logger.child('ReviewService');
 
 export async function getAllReviews(): Promise<Review[]> {
   try {
@@ -12,7 +15,7 @@ export async function getAllReviews(): Promise<Review[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch all reviews:', error);
+      reviewLogger.error('Failed to fetch all reviews', error);
       return [];
     }
 
@@ -27,7 +30,7 @@ export async function getAllReviews(): Promise<Review[]> {
       createdAt: review.created_at,
     }));
   } catch (error) {
-    console.error('Failed to fetch all reviews:', error);
+    reviewLogger.error('Failed to fetch all reviews', error as Error);
     return [];
   }
 }
@@ -42,7 +45,7 @@ export async function getReviewsByProduct(productId: string): Promise<Review[]> 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error(`Failed to fetch reviews for product ${productId}:`, error);
+      reviewLogger.error(`Failed to fetch reviews for product ${productId}`, error);
       return [];
     }
 
@@ -57,7 +60,7 @@ export async function getReviewsByProduct(productId: string): Promise<Review[]> 
       createdAt: review.created_at,
     }));
   } catch (error) {
-    console.error(`Failed to fetch reviews for product ${productId}:`, error);
+    reviewLogger.error(`Failed to fetch reviews for product ${productId}`, error as Error);
     return [];
   }
 }
@@ -83,7 +86,7 @@ export async function getProductStats(productId: string): Promise<ProductStats> 
       totalSales: 0, // This will be calculated from orders
     };
   } catch (error) {
-    console.error(`Failed to get product stats for ${productId}:`, error);
+    reviewLogger.error(`Failed to get product stats for ${productId}`, error as Error);
     return {
       averageRating: 0,
       totalReviews: 0,
@@ -109,7 +112,7 @@ export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'he
       .single();
 
     if (error) {
-      console.error('Failed to create review:', error);
+      reviewLogger.error('Failed to create review', error);
       throw new Error('Could not create review.');
     }
 
@@ -124,7 +127,7 @@ export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'he
       createdAt: data.created_at,
     };
   } catch (error) {
-    console.error('Failed to create review:', error);
+    reviewLogger.error('Failed to create review', error as Error);
     throw new Error('Could not create review.');
   }
 }
@@ -144,11 +147,11 @@ export async function updateReview(id: string, updates: Partial<Review>): Promis
       .eq('id', id);
 
     if (error) {
-      console.error(`Failed to update review ${id}:`, error);
+      reviewLogger.error(`Failed to update review ${id}`, error);
       throw new Error('Could not update review.');
     }
   } catch (error) {
-    console.error(`Failed to update review ${id}:`, error);
+    reviewLogger.error(`Failed to update review ${id}`, error as Error);
     throw new Error('Could not update review.');
   }
 }
@@ -162,11 +165,11 @@ export async function deleteReview(id: string): Promise<void> {
       .eq('id', id);
 
     if (error) {
-      console.error(`Failed to delete review ${id}:`, error);
+      reviewLogger.error(`Failed to delete review ${id}`, error);
       throw new Error('Could not delete review.');
     }
   } catch (error) {
-    console.error(`Failed to delete review ${id}:`, error);
+    reviewLogger.error(`Failed to delete review ${id}`, error as Error);
     throw new Error('Could not delete review.');
   }
 }
@@ -183,7 +186,7 @@ export async function markReviewHelpful(id: string): Promise<void> {
       .single();
 
     if (fetchError) {
-      console.error(`Failed to fetch review ${id}:`, fetchError);
+      reviewLogger.error(`Failed to fetch review ${id}`, fetchError);
       throw new Error('Could not fetch review.');
     }
 
@@ -194,11 +197,11 @@ export async function markReviewHelpful(id: string): Promise<void> {
       .eq('id', id);
 
     if (updateError) {
-      console.error(`Failed to mark review ${id} as helpful:`, updateError);
+      reviewLogger.error(`Failed to mark review ${id} as helpful`, updateError);
       throw new Error('Could not update review.');
     }
   } catch (error) {
-    console.error(`Failed to mark review ${id} as helpful:`, error);
+    reviewLogger.error(`Failed to mark review ${id} as helpful`, error as Error);
     throw new Error('Could not update review.');
   }
 }
@@ -218,7 +221,7 @@ export async function getUserReviewForProduct(userId: string, productId: string)
         // No rows returned
         return null;
       }
-      console.error('Failed to get user review:', error);
+      reviewLogger.error('Failed to get user review', error);
       return null;
     }
 
@@ -233,7 +236,7 @@ export async function getUserReviewForProduct(userId: string, productId: string)
       createdAt: data.created_at,
     };
   } catch (error) {
-    console.error('Failed to get user review:', error);
+    reviewLogger.error('Failed to get user review', error as Error);
     return null;
   }
 }

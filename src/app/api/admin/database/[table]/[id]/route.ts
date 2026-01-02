@@ -1,46 +1,18 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { deleteTableRow, updateTableRow } from '@/services/databaseService';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminDatabase');
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ table: string; id: string }> }
 ) {
   try {
-    const { table, id } = await params;
+    await requireAdmin({ redirect: false });
     
-    // Check admin auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin (from users table)
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const role = userData?.role || 'customer';
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+    const { table, id } = await params;
     const success = await deleteTableRow(table, id);
 
     if (!success) {
@@ -49,7 +21,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting row:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error deleting row', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -59,39 +34,9 @@ export async function PUT(
   { params }: { params: Promise<{ table: string; id: string }> }
 ) {
   try {
-    const { table, id } = await params;
+    await requireAdmin({ redirect: false });
     
-    // Check admin auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin (from users table)
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const role = userData?.role || 'customer';
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+    const { table, id } = await params;
     const body = await request.json();
     const success = await updateTableRow(table, id, body);
 
@@ -101,7 +46,10 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating row:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error updating row', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

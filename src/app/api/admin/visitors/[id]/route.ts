@@ -1,46 +1,18 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { deleteVisitor } from '@/services/visitorService';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminVisitors');
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    await requireAdmin({ redirect: false });
     
-    // Check admin auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin (from users table)
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const role = userData?.role || 'customer';
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+    const { id } = await params;
     const success = await deleteVisitor(id);
 
     if (!success) {
@@ -49,7 +21,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting visitor:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error deleting visitor', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

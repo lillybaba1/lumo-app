@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getEnv } from './env';
 
 let supabaseAdminInstance: SupabaseClient | null = null;
 
@@ -8,8 +9,9 @@ function getSupabaseAdmin(): SupabaseClient {
     return supabaseAdminInstance;
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const env = getEnv();
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
   // SECURITY: Never use hardcoded keys - always require environment variables
   if (!supabaseUrl || !serviceRoleKey) {

@@ -1,42 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { getVisitorsByStatus } from '@/services/visitorService';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminVisitors');
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // Check admin auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin (from users table)
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const role = userData?.role || 'customer';
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    await requireAdmin({ redirect: false });
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as 'all' | 'active' | 'inactive' || 'all';
@@ -47,7 +20,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching visitors:', error);
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error fetching visitors', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

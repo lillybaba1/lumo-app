@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminNotifications');
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!userData || userData.role !== 'APP_OWNER_ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    await requireAdmin({ redirect: false });
 
     // Get unread notifications
     const { data: notifications, error } = await supabaseAdmin
@@ -39,25 +26,23 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       // Table might not exist yet
-      console.log('Notifications fetch error:', error.message);
+      apiLogger.debug('Notifications fetch error', { error: error.message });
       return NextResponse.json({ notifications: [] });
     }
 
     return NextResponse.json({ notifications: notifications || [] });
-  } catch (error: any) {
-    console.error('Notifications error:', error);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Notifications error', error as Error);
     return NextResponse.json({ notifications: [] });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireAdmin({ redirect: false });
 
     const { notificationId, markAllRead } = await request.json();
 
@@ -74,8 +59,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Mark read error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Mark read error', error as Error);
+    return NextResponse.json({ error: 'Failed to mark notification as read' }, { status: 500 });
   }
 }

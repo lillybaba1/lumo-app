@@ -1,5 +1,9 @@
 'use server';
 
+import { logger } from '@/lib/logger';
+
+const businessaccountLogger = logger.child('BusinessAccountService');
+
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { BusinessAccount } from '@/lib/types';
@@ -16,13 +20,13 @@ export async function getBusinessAccount(businessId: string): Promise<BusinessAc
       .single();
 
     if (error) {
-      console.error('Error fetching business account:', error);
+      businessaccountLogger.error('Error fetching business account:', error);
       return null;
     }
 
     return data ? mapDbToBusinessAccount(data) : null;
   } catch (error) {
-    console.error('Error in getBusinessAccount:', error);
+    businessaccountLogger.error('Error in getBusinessAccount:', error);
     return null;
   }
 }
@@ -43,13 +47,13 @@ export async function getBusinessAccountByOwner(userId: string): Promise<Busines
         // No business account found
         return null;
       }
-      console.error('Error fetching business account by owner:', error);
+      businessaccountLogger.error('Error fetching business account by owner:', error);
       return null;
     }
 
     return data ? mapDbToBusinessAccount(data) : null;
   } catch (error) {
-    console.error('Error in getBusinessAccountByOwner:', error);
+    businessaccountLogger.error('Error in getBusinessAccountByOwner:', error);
     return null;
   }
 }
@@ -65,13 +69,13 @@ export async function getAllBusinessAccounts(): Promise<BusinessAccount[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching all business accounts:', error);
+      businessaccountLogger.error('Error fetching all business accounts:', error);
       return [];
     }
 
     return data ? data.map(mapDbToBusinessAccount) : [];
   } catch (error) {
-    console.error('Error in getAllBusinessAccounts:', error);
+    businessaccountLogger.error('Error in getAllBusinessAccounts:', error);
     return [];
   }
 }
@@ -108,7 +112,7 @@ export async function createBusinessAccount(
     if (businessData.subscriptionTier) dbData.subscription_tier = businessData.subscriptionTier;
     if (businessData.verificationStatus) dbData.verification_status = businessData.verificationStatus;
 
-    console.log('[BusinessAccount] Attempting to create business account:', {
+    businessaccountLogger.debug('[BusinessAccount] Attempting to create business account:', {
       ownerUserId,
       businessName: dbData.business_name,
     });
@@ -120,7 +124,7 @@ export async function createBusinessAccount(
       .single();
 
     if (error) {
-      console.error('[BusinessAccount] Error creating business account:', {
+      businessaccountLogger.error('[BusinessAccount] Error creating business account:', {
         error: JSON.stringify(error),
         code: error.code,
         message: error.message,
@@ -130,10 +134,10 @@ export async function createBusinessAccount(
       return null;
     }
 
-    console.log('[BusinessAccount] Successfully created business account:', data?.id);
+    businessaccountLogger.debug('[BusinessAccount] Successfully created business account:', data?.id);
     return data ? mapDbToBusinessAccount(data) : null;
   } catch (error) {
-    console.error('[BusinessAccount] Exception in createBusinessAccount:', error);
+    businessaccountLogger.error('[BusinessAccount] Exception in createBusinessAccount:', error);
     return null;
   }
 }
@@ -146,7 +150,7 @@ export async function updateBusinessAccount(
   updates: Partial<BusinessAccount>
 ): Promise<BusinessAccount | null> {
   try {
-    const dbUpdates: any = {
+    const dbUpdates: Partial<Record<string, unknown>> = {
       updated_at: new Date().toISOString(),
     };
 
@@ -199,13 +203,13 @@ export async function updateBusinessAccount(
       .single();
 
     if (error) {
-      console.error('Error updating business account:', error);
+      businessaccountLogger.error('Error updating business account:', error);
       return null;
     }
 
     return data ? mapDbToBusinessAccount(data) : null;
   } catch (error) {
-    console.error('Error in updateBusinessAccount:', error);
+    businessaccountLogger.error('Error in updateBusinessAccount:', error);
     return null;
   }
 }
@@ -225,13 +229,13 @@ export async function deleteBusinessAccount(businessId: string): Promise<boolean
       .eq('id', businessId);
 
     if (error) {
-      console.error('Error deleting business account:', error);
+      businessaccountLogger.error('Error deleting business account:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in deleteBusinessAccount:', error);
+    businessaccountLogger.error('Error in deleteBusinessAccount:', error);
     return false;
   }
 }
@@ -239,7 +243,58 @@ export async function deleteBusinessAccount(businessId: string): Promise<boolean
 /**
  * Map database record to BusinessAccount type
  */
-function mapDbToBusinessAccount(dbRecord: any): BusinessAccount {
+interface DbBusinessAccountRow {
+  id: string;
+  owner_user_id: string;
+  business_name: string;
+  contact_person_name: string;
+  contact_email: string;
+  business_address: string;
+  business_phone: string | null;
+  tax_id: string | null;
+  website: string | null;
+  description: string | null;
+  logo: string | null;
+  status: string;
+  account_approved: boolean | null;
+  account_approved_at: string | null;
+  account_approved_by: string | null;
+  boutique_submitted: boolean | null;
+  boutique_submitted_at: string | null;
+  boutique_approved: boolean | null;
+  boutique_approved_at: string | null;
+  boutique_approved_by: string | null;
+  boutique_rejection_reason: string | null;
+  seller_type: string | null;
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  subscription_start_date: string | null;
+  subscription_end_date: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  verification_status: string | null;
+  verification_documents: {
+    idDocument?: string;
+    businessLicense?: string;
+    proofOfAddress?: string;
+    submittedAt?: string;
+    reviewedAt?: string;
+    rejectionReason?: string;
+  } | null;
+  boutique_id: string | null;
+  boutique_slug: string | null;
+  total_earnings: string | number | null;
+  total_commission_paid: string | number | null;
+  pending_payout: string | number | null;
+  payout_method: string | null;
+  payout_details: Record<string, unknown> | null;
+  shipping_policies: string | null;
+  return_policy: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+function mapDbToBusinessAccount(dbRecord: DbBusinessAccountRow): BusinessAccount {
   return {
     id: dbRecord.id,
     ownerUserId: dbRecord.owner_user_id,
@@ -247,43 +302,44 @@ function mapDbToBusinessAccount(dbRecord: any): BusinessAccount {
     contactPersonName: dbRecord.contact_person_name,
     contactEmail: dbRecord.contact_email,
     businessAddress: dbRecord.business_address,
-    businessPhone: dbRecord.business_phone,
-    taxId: dbRecord.tax_id,
-    website: dbRecord.website,
-    description: dbRecord.description,
-    logo: dbRecord.logo,
-    status: dbRecord.status,
+    businessPhone: dbRecord.business_phone ?? undefined,
+    taxId: dbRecord.tax_id ?? undefined,
+    website: dbRecord.website ?? undefined,
+    description: dbRecord.description ?? undefined,
+    logo: dbRecord.logo ?? undefined,
+    status: dbRecord.status as 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'PENDING_APPROVAL',
     // Multi-phase approval tracking
     accountApproved: dbRecord.account_approved ?? false,
-    accountApprovedAt: dbRecord.account_approved_at,
-    accountApprovedBy: dbRecord.account_approved_by,
+    accountApprovedAt: dbRecord.account_approved_at ?? undefined,
+    accountApprovedBy: dbRecord.account_approved_by ?? undefined,
     boutiqueSubmitted: dbRecord.boutique_submitted ?? false,
-    boutiqueSubmittedAt: dbRecord.boutique_submitted_at,
+    boutiqueSubmittedAt: dbRecord.boutique_submitted_at ?? undefined,
     boutiqueApproved: dbRecord.boutique_approved ?? false,
-    boutiqueApprovedAt: dbRecord.boutique_approved_at,
-    boutiqueApprovedBy: dbRecord.boutique_approved_by,
-    boutiqueRejectionReason: dbRecord.boutique_rejection_reason,
+    boutiqueApprovedAt: dbRecord.boutique_approved_at ?? undefined,
+    boutiqueApprovedBy: dbRecord.boutique_approved_by ?? undefined,
+    boutiqueRejectionReason: dbRecord.boutique_rejection_reason ?? undefined,
     // New boutique fields
-    sellerType: dbRecord.seller_type || 'individual',
-    subscriptionTier: dbRecord.subscription_tier || 'free',
-    subscriptionStatus: dbRecord.subscription_status || 'active',
-    subscriptionStartDate: dbRecord.subscription_start_date,
-    subscriptionEndDate: dbRecord.subscription_end_date,
-    stripeCustomerId: dbRecord.stripe_customer_id,
-    stripeSubscriptionId: dbRecord.stripe_subscription_id,
-    verificationStatus: dbRecord.verification_status || 'unverified',
-    verificationDocuments: dbRecord.verification_documents,
-    boutiqueId: dbRecord.boutique_id,
-    boutiqueSlug: dbRecord.boutique_slug,
-    totalEarnings: parseFloat(dbRecord.total_earnings) || 0,
-    totalCommissionPaid: parseFloat(dbRecord.total_commission_paid) || 0,
-    pendingPayout: parseFloat(dbRecord.pending_payout) || 0,
+    sellerType: (dbRecord.seller_type || 'individual') as 'individual' | 'company',
+    subscriptionTier: (dbRecord.subscription_tier || 'free') as 'free' | 'pro' | 'enterprise',
+    subscriptionStatus: (dbRecord.subscription_status || 'active') as 'active' | 'cancelled' | 'past_due' | 'trialing',
+    subscriptionStartDate: dbRecord.subscription_start_date ?? undefined,
+    subscriptionEndDate: dbRecord.subscription_end_date ?? undefined,
+    stripeCustomerId: dbRecord.stripe_customer_id ?? undefined,
+    stripeSubscriptionId: dbRecord.stripe_subscription_id ?? undefined,
+    verificationStatus: (dbRecord.verification_status || 'unverified') as 'unverified' | 'pending' | 'verified' | 'rejected',
+    verificationDocuments: dbRecord.verification_documents ?? undefined,
+    boutiqueId: dbRecord.boutique_id ?? undefined,
+    boutiqueSlug: dbRecord.boutique_slug ?? undefined,
+    totalEarnings: parseFloat(String(dbRecord.total_earnings)) || 0,
+    totalCommissionPaid: parseFloat(String(dbRecord.total_commission_paid)) || 0,
+    pendingPayout: parseFloat(String(dbRecord.pending_payout)) || 0,
     // Original fields
-    payoutMethod: dbRecord.payout_method,
-    payoutDetails: dbRecord.payout_details,
-    shippingPolicies: dbRecord.shipping_policies,
-    returnPolicy: dbRecord.return_policy,
+    payoutMethod: dbRecord.payout_method as 'bank_transfer' | 'paypal' | 'stripe' | undefined,
+    payoutDetails: dbRecord.payout_details ?? undefined,
+    shippingPolicies: dbRecord.shipping_policies ?? undefined,
+    returnPolicy: dbRecord.return_policy ?? undefined,
     createdAt: dbRecord.created_at,
-    updatedAt: dbRecord.updated_at,
+    updatedAt: dbRecord.updated_at ?? undefined,
   };
 }
+
