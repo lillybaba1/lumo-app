@@ -6,7 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimiter, RATE_LIMITS } from '@/lib/rate-limiter';
-import { logger } from '@/lib/logger';
+import { logger, getErrorMessage } from '@/lib/logger';
 
 const otpLogger = logger.child('OTPService');
 
@@ -118,15 +118,15 @@ export async function sendOTP(
         purpose,
         expires_at: expiresAt.toISOString(),
       });
-    } catch (dbError: any) {
+    } catch (dbError) {
       // Table might not exist yet - that's ok, OTP was still sent via Supabase Auth
-      otpLogger.warn('OTP tracking failed (table may not exist)', { error: dbError.message });
+      otpLogger.warn('OTP tracking failed (table may not exist)', { error: getErrorMessage(dbError) });
     }
 
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error) {
     otpLogger.error('OTP send error', error);
     return {
       success: false,
@@ -206,9 +206,9 @@ export async function verifyOTP(
             remainingAttempts: remaining,
           };
         }
-      } catch (dbError: any) {
+      } catch (dbError) {
         // Table might not exist yet - just return the auth error
-        otpLogger.warn('OTP tracking query failed (table may not exist)', { error: dbError.message });
+        otpLogger.warn('OTP tracking query failed (table may not exist)', { error: getErrorMessage(dbError) });
       }
 
       return {
@@ -224,8 +224,8 @@ export async function verifyOTP(
         .update({ verified: true })
         .eq('phone_number', phoneNumber)
         .eq('verified', false);
-    } catch (dbError: any) {
-      otpLogger.warn('OTP verification tracking failed (table may not exist)', { error: dbError.message });
+    } catch (dbError) {
+      otpLogger.warn('OTP verification tracking failed (table may not exist)', { error: getErrorMessage(dbError) });
     }
 
     // Update user's phone_verified status
@@ -235,15 +235,15 @@ export async function verifyOTP(
           .from('users')
           .update({ phone_verified: true })
           .eq('id', data.user.id);
-      } catch (dbError: any) {
-        otpLogger.warn('Failed to update phone_verified status', { error: dbError.message });
+      } catch (dbError) {
+        otpLogger.warn('Failed to update phone_verified status', { error: getErrorMessage(dbError) });
       }
     }
 
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error) {
     otpLogger.error('OTP verification error', error);
     return {
       success: false,

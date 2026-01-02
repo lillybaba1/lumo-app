@@ -1,6 +1,9 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logger } from '@/lib/logger';
+
+const dbLogger = logger.child('DatabaseService');
 
 export interface TableInfo {
   name: string;
@@ -9,7 +12,7 @@ export interface TableInfo {
 
 export interface TableData {
   columns: string[];
-  rows: Record<string, any>[];
+  rows: Record<string, unknown>[];
   total: number;
 }
 
@@ -54,7 +57,7 @@ export async function getTableList(): Promise<TableInfo[]> {
 
     return tables.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
-    console.error('Error getting table list:', error);
+    dbLogger.error('Error getting table list:', error);
     return [];
   }
 }
@@ -70,7 +73,7 @@ export async function getTableData(
   try {
     // Security: Only allow approved tables
     if (!ALLOWED_TABLES.includes(tableName)) {
-      console.error('Table not allowed:', tableName);
+      dbLogger.warn('Table not allowed:', { tableName });
       return null;
     }
 
@@ -89,7 +92,7 @@ export async function getTableData(
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) {
-      console.error('Error fetching table data:', error);
+      dbLogger.error('Error fetching table data:', error);
       // Try without ordering if created_at doesn't exist
       const { data: retryData, error: retryError, count: retryCount } = await supabaseAdmin
         .from(tableName)
@@ -107,7 +110,7 @@ export async function getTableData(
     const columns = data && data.length > 0 ? Object.keys(data[0]) : [];
     return { columns, rows: data || [], total: count || 0 };
   } catch (error) {
-    console.error('Error fetching table data:', error);
+    dbLogger.error('Error fetching table data:', error);
     return null;
   }
 }
@@ -125,13 +128,13 @@ export async function deleteTableRow(tableName: string, id: string): Promise<boo
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting row:', error);
+      dbLogger.error('Error deleting row:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error deleting row:', error);
+    dbLogger.error('Error deleting row:', error);
     return false;
   }
 }
@@ -140,15 +143,35 @@ export async function deleteTableRow(tableName: string, id: string): Promise<boo
 export async function updateTableRow(
   tableName: string, 
   id: string, 
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<boolean> {
   try {
     if (!ALLOWED_TABLES.includes(tableName)) {
       return false;
     }
 
-    // Remove id from update data
-    const { id: _, ...updateData } = data;
+    // SECURITY: Field whitelist per table - prevent updating sensitive columns
+    const BLOCKED_FIELDS: Record<string, string[]> = {
+      users: ['id', 'password_hash', 'role', 'email', 'created_at'],
+      profiles: ['id', 'email', 'role', 'created_at'],
+      orders: ['id', 'user_id', 'created_at'],
+      payments: ['id', 'order_id', 'user_id', 'created_at', 'transaction_id'],
+      // Default blocked fields for all tables
+      _default: ['id', 'created_at', 'password', 'password_hash', 'secret', 'token'],
+    };
+
+    const blockedForTable = BLOCKED_FIELDS[tableName] || BLOCKED_FIELDS._default;
+
+    // Remove id and blocked fields from update data
+    const { id: _, ...rawUpdateData } = data;
+    const updateData = Object.fromEntries(
+      Object.entries(rawUpdateData).filter(([key]) => !blockedForTable.includes(key))
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      dbLogger.warn('No valid fields to update after filtering', { tableName, id });
+      return false;
+    }
 
     const { error } = await supabaseAdmin
       .from(tableName)
@@ -156,13 +179,13 @@ export async function updateTableRow(
       .eq('id', id);
 
     if (error) {
-      console.error('Error updating row:', error);
+      dbLogger.error('Error updating row:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error updating row:', error);
+    dbLogger.error('Error updating row:', error);
     return false;
   }
 }
@@ -201,12 +224,18 @@ export async function executeQuery(
           case 'lte':
             query = query.lte(filter.column, filter.value);
             break;
-          case 'like':
-            query = query.like(filter.column, `%${filter.value}%`);
+          case 'like': {
+            // Sanitize pattern characters to prevent SQL injection
+            const sanitizedLike = filter.value.replace(/[%_\\]/g, '\\$&');
+            query = query.like(filter.column, `%${sanitizedLike}%`);
             break;
-          case 'ilike':
-            query = query.ilike(filter.column, `%${filter.value}%`);
+          }
+          case 'ilike': {
+            // Sanitize pattern characters to prevent SQL injection
+            const sanitizedIlike = filter.value.replace(/[%_\\]/g, '\\$&');
+            query = query.ilike(filter.column, `%${sanitizedIlike}%`);
             break;
+          }
         }
       }
     }
@@ -214,14 +243,14 @@ export async function executeQuery(
     const { data, error, count } = await query.limit(100);
 
     if (error) {
-      console.error('Error executing query:', error);
+      dbLogger.error('Error executing query:', error);
       return null;
     }
 
     const columns = data && data.length > 0 ? Object.keys(data[0]) : [];
     return { columns, rows: data || [], total: count || 0 };
   } catch (error) {
-    console.error('Error executing query:', error);
+    dbLogger.error('Error executing query:', error);
     return null;
   }
 }

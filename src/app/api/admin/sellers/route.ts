@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth-admin';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { getAllBusinessAccounts, updateBusinessAccount } from '@/services/businessAccountService';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
+import { logger, getErrorMessage } from '@/lib/logger';
+
+const apiLogger = logger.child('API:AdminSellers');
 
 // GET - Fetch all sellers with optional filters
 export async function GET(request: NextRequest) {
@@ -32,18 +36,27 @@ export async function GET(request: NextRequest) {
       data: sellers,
       count: sellers.length
     });
-  } catch (error: any) {
-    console.error('Error fetching sellers:', error);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error fetching sellers', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch sellers' },
-      { status: error.statusCode || 500 }
+      { success: false, error: getErrorMessage(error) },
+      { status: 500 }
     );
   }
 }
 
-// PUT - Bulk update sellers
+// PUT - Bulk update sellers (with rate limiting for sensitive operation)
 export async function PUT(request: NextRequest) {
   try {
+    // Rate limit bulk operations
+    const rateLimit = await withRateLimit(request, RATE_LIMITS.API_SENSITIVE, 'admin-sellers-bulk');
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     await requireAdmin({ redirect: false });
     
     const body = await request.json();
@@ -93,11 +106,14 @@ export async function PUT(request: NextRequest) {
       failedCount: failedIds.length,
       failedIds: failedIds.length > 0 ? failedIds : undefined
     });
-  } catch (error: any) {
-    console.error('Error bulk updating sellers:', error);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    apiLogger.error('Error bulk updating sellers', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update sellers' },
-      { status: error.statusCode || 500 }
+      { success: false, error: getErrorMessage(error) },
+      { status: 500 }
     );
   }
 }

@@ -2,7 +2,7 @@
 
 import { User, UserRole } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { logger } from '@/lib/logger';
+import { logger, getErrorMessage } from '@/lib/logger';
 
 const userLogger = logger.child('UserService');
 
@@ -42,9 +42,9 @@ export async function createUserDocument(
     }
 
     return { success: true, role };
-  } catch (error: any) {
+  } catch (error) {
     userLogger.error('Failed to create user document', error);
-    return { success: false, message: error.message || 'Failed to create user profile.' };
+    return { success: false, message: getErrorMessage(error) };
   }
 }
 

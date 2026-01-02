@@ -31,13 +31,28 @@ beforeEach(() => {
 
   vi.doMock('@/lib/supabaseAdmin', () => ({
     supabaseAdmin: {
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn(),
-      })),
+      from: vi.fn((table: string) => {
+        if (table === 'platform_settings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { value: true }, error: null }),
+              }),
+            }),
+            upsert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+        // Default for 'users' table and others
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ count: 5, data: [], error: null }),
+          }),
+          insert: vi.fn().mockReturnThis(),
+          update: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        };
+      }),
       auth: {
         admin: {
           deleteUser: vi.fn(),
@@ -60,17 +75,15 @@ describe('Auth Service', () => {
         email: 'test@example.com',
       };
 
-      // Mock the count check first (first call to from())
-      mockSupabaseClient.from.mockReturnValueOnce({
-        select: vi.fn().mockResolvedValueOnce({ count: 5 }),
-      });
-
+      // The createUser function uses supabase (not supabaseAdmin) for signUp and profile insert
+      // supabaseAdmin is only used for the race condition check (platform_settings and users count)
+      
       mockSupabaseClient.auth.signUp.mockResolvedValueOnce({
         data: { user: mockUser },
         error: null,
       });
 
-      // Mock the insert for profile creation (second call to from())
+      // Mock the insert for profile creation using supabase client
       mockSupabaseClient.from.mockReturnValueOnce({
         insert: vi.fn().mockResolvedValueOnce({ error: null }),
       });

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { logger } from '@/lib/logger';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 
 const apiLogger = logger.child('API:AdminPromoteUser');
 
@@ -23,6 +24,12 @@ const promoteUserSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit sensitive admin operations
+    const rateLimit = await withRateLimit(request, RATE_LIMITS.API_SENSITIVE, 'admin-promote');
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     const { userId: adminUserId } = await requireAdmin({ redirect: false });
 
     const body = await request.json();

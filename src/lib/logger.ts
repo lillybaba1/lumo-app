@@ -102,3 +102,20 @@ export const logger = new Logger();
 
 // Export factory for creating child loggers
 export const createLogger = (prefix: string) => logger.child(prefix);
+
+/**
+ * Safely extract error message from unknown error type
+ * Use this instead of (error as any).message or error: any
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'An unknown error occurred';
+}

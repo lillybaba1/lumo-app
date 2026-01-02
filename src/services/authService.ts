@@ -3,19 +3,63 @@
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { revalidatePath } from 'next/cache';
-import type { User } from '@/lib/types';
+import type { User, UserRole } from '@/lib/types';
+import { logger } from '@/lib/logger';
 
+const authLogger = logger.child('AuthService');
+
+// Interface for database user row
+interface DbUserRow {
+  id: string;
+  email: string | null;
+  name: string | null;
+  created_at: string;
+  role: string | null;
+  phone: string | null;
+  phone_number?: string | null;
+}
+
+// Map database role string to UserRole type
+function mapToUserRole(dbRole: string | null): UserRole {
+  if (dbRole === 'admin' || dbRole === 'APP_OWNER_ADMIN') return 'APP_OWNER_ADMIN';
+  if (dbRole === 'BUSINESS_ACCOUNT') return 'BUSINESS_ACCOUNT';
+  return 'PERSONAL_ACCOUNT';
+}
 
 export async function createUser(email: string, password: string, name: string): Promise<{ success: boolean; message?: string; data?: { uid: string; email: string | undefined; } }> {
   try {
     const supabase = await createClient();
     
-    // Check if this is the first user
-    const { count } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
+    // SECURITY: Use platform_settings to check if first admin already set
+    // This prevents race conditions where multiple users could become admin
+    const { data: adminSetting } = await supabaseAdmin
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'first_admin_set')
+      .single();
     
-    const role = count === 0 ? 'admin' : 'customer';
+    let role = 'customer';
+    
+    if (!adminSetting?.value) {
+      // Check if any admin users exist
+      const { count } = await supabaseAdmin
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'admin');
+      
+      if (count === 0) {
+        role = 'admin';
+        // Set flag to prevent race condition
+        await supabaseAdmin
+          .from('platform_settings')
+          .upsert({
+            key: 'first_admin_set',
+            value: true,
+            category: 'security',
+            description: 'Flag indicating first admin has been created',
+          }, { onConflict: 'key' });
+      }
+    }
 
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -53,7 +97,7 @@ export async function createUser(email: string, password: string, name: string):
       });
 
     if (profileError && !profileError.message.includes('duplicate')) {
-      console.error('Error creating user profile:', profileError);
+      authLogger.error('Error creating user profile', profileError);
       // Don't fail the signup if profile creation fails (might be handled by trigger)
     }
 
@@ -64,9 +108,10 @@ export async function createUser(email: string, password: string, name: string):
         email: authData.user.email 
       } 
     };
-  } catch (error: any) {
-    console.error('Error in createUser:', error);
-    return { success: false, message: error.message || 'An unknown error occurred during signup.' };
+  } catch (error) {
+    authLogger.error('Error in createUser', error as Error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred during signup.';
+    return { success: false, message };
   }
 }
 
@@ -82,13 +127,13 @@ export async function getUsers(): Promise<User[]> {
       .order('created_at', { ascending: false });
 
     if (!profileError && profiles && profiles.length > 0) {
-      return profiles.map((profile: any) => ({
+      return profiles.map((profile: DbUserRow) => ({
         uid: profile.id,
         email: profile.email || '',
         name: profile.name || 'N/A',
         createdAt: profile.created_at,
-        role: profile.role || 'user',
-        phoneNumber: profile.phone || null,
+        role: mapToUserRole(profile.role),
+        phoneNumber: profile.phone || '',
       }));
     }
 
@@ -99,20 +144,20 @@ export async function getUsers(): Promise<User[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch users:', error);
+      authLogger.error('Failed to fetch users', error);
       return [];
     }
 
-    return users.map((user: any) => ({
+    return users.map((user: DbUserRow) => ({
       uid: user.id,
       email: user.email || '',
       name: user.name || 'N/A',
       createdAt: user.created_at,
-      role: user.role || 'customer',
-      phoneNumber: user.phone || null,
+      role: mapToUserRole(user.role),
+      phoneNumber: user.phone || user.phone_number || '',
     }));
   } catch (error) {
-    console.error('Failed to fetch users:', error);
+    authLogger.error('Failed to fetch users', error as Error);
     return [];
   }
 }
@@ -153,7 +198,7 @@ export async function deleteUser(uid: string) {
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(uid);
     
     if (authError) {
-      console.error("Error deleting user from auth:", authError);
+      authLogger.error('Error deleting user from auth', authError);
       return { success: false, message: authError.message };
     }
 
@@ -161,9 +206,10 @@ export async function deleteUser(uid: string) {
     revalidatePath('/admin/sellers');
     
     return { success: true, message: "User deleted successfully." };
-  } catch (error: any) {
-    console.error("Error deleting user:", error);
-    return { success: false, message: error.message };
+  } catch (error) {
+    authLogger.error('Error deleting user', error as Error);
+    const message = error instanceof Error ? error.message : 'Failed to delete user';
+    return { success: false, message };
   }
 }
 
@@ -192,7 +238,7 @@ export async function getUserRole(userId: string): Promise<string | null> {
 
     return profile?.role || user?.role || 'customer';
   } catch (error) {
-    console.error("Error getting user role:", error);
+    authLogger.error('Error getting user role', error as Error);
     return null;
   }
 }
@@ -223,7 +269,7 @@ export async function getUserRoleClient(userId: string): Promise<string | null> 
 
     return profile?.role || user?.role || 'customer';
   } catch (error) {
-    console.error("Error fetching user role on client:", error);
+    authLogger.error('Error fetching user role on client', error as Error);
     return 'customer';
   }
 }

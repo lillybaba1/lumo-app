@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
+    // Sanitize pattern characters to prevent SQL injection
+    const sanitizedQuery = query.replace(/[%_\\]/g, '\\$&');
+
     // Search boutiques by display name
     const { data: boutiques, error } = await supabaseAdmin
       .from('boutiques')
@@ -24,7 +27,7 @@ export async function GET(request: NextRequest) {
         is_published
       `)
       .eq('is_published', true)
-      .ilike('display_name', `%${query}%`)
+      .ilike('display_name', `%${sanitizedQuery}%`)
       .limit(limit);
 
     if (error) {
