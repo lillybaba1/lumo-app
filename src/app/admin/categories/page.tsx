@@ -46,10 +46,10 @@ const CATEGORY_ICONS = [
   '🧴', '🍕', '☕', '🎁', '🔧', '💻', '📷', '🎧', '⌚', '👜'
 ];
 
-// Default colors
+// Default colors - Modern Premium v2.0
 const DEFAULT_BG_COLOR = '#f3f4f6';
-const DEFAULT_TEXT_COLOR = '#1f2937';
-const DEFAULT_ICON_BG = '#8b5cf6';
+const DEFAULT_TEXT_COLOR = '#1e293b';
+const DEFAULT_ICON_BG = '#4F46E5';
 
 interface FormData {
   name: string;
@@ -555,7 +555,7 @@ export default function CategoriesPage() {
                   <Input
                     value={formData.iconBgColor}
                     onChange={(e) => setFormData({ ...formData, iconBgColor: e.target.value })}
-                    placeholder="#8b5cf6"
+                    placeholder="#4F46E5"
                     className="flex-1"
                   />
                 </div>

@@ -27,11 +27,11 @@ const defaultSettings: ChatbotSettings = {
   chatbotImage: '',
   chatbotName: 'Luna',
   chatbotEnabled: true,
-  chatbotGlowColor: '#8b5cf6',
-  chatbotBubbleGradientFrom: '#8b5cf6',
-  chatbotBubbleGradientTo: '#ec4899',
+  chatbotGlowColor: '#4F46E5',
+  chatbotBubbleGradientFrom: '#4F46E5',
+  chatbotBubbleGradientTo: '#14B8A6',
   chatbotLabelBgColor: '#ffffff',
-  chatbotLabelTextColor: '#8b5cf6',
+  chatbotLabelTextColor: '#4F46E5',
   chatbotPulseEnabled: true,
 };
 
@@ -56,11 +56,11 @@ export default function ChatbotSettingsPage() {
         chatbotImage: data.chatbotImage || '',
         chatbotName: data.chatbotName || 'Luna',
         chatbotEnabled: data.chatbotEnabled !== false,
-        chatbotGlowColor: data.chatbotGlowColor || '#8b5cf6',
-        chatbotBubbleGradientFrom: data.chatbotBubbleGradientFrom || '#8b5cf6',
-        chatbotBubbleGradientTo: data.chatbotBubbleGradientTo || '#ec4899',
+        chatbotGlowColor: data.chatbotGlowColor || '#4F46E5',
+        chatbotBubbleGradientFrom: data.chatbotBubbleGradientFrom || '#4F46E5',
+        chatbotBubbleGradientTo: data.chatbotBubbleGradientTo || '#14B8A6',
         chatbotLabelBgColor: data.chatbotLabelBgColor || '#ffffff',
-        chatbotLabelTextColor: data.chatbotLabelTextColor || '#8b5cf6',
+        chatbotLabelTextColor: data.chatbotLabelTextColor || '#4F46E5',
         chatbotPulseEnabled: data.chatbotPulseEnabled !== false,
       });
     } catch (error) {
@@ -404,7 +404,7 @@ export default function ChatbotSettingsPage() {
                   value={settings.chatbotGlowColor}
                   onChange={(e) => setSettings(prev => ({ ...prev, chatbotGlowColor: e.target.value }))}
                   className="flex-1"
-                  placeholder="#8b5cf6"
+                  placeholder="#4F46E5"
                 />
               </div>
             </div>

@@ -52,7 +52,7 @@ export async function getTheme() {
 function getDefaultTheme() {
   return {
     primary_color: '#6366f1',
-    secondary_color: '#8b5cf6',
+    secondary_color: '#4F46E5',
     accent_color: '#f59e0b',
     background_color: '#ffffff',
     text_color: '#1f2937',

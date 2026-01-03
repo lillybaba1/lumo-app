@@ -32,9 +32,9 @@ export default function HeaderSettingsPage() {
                     headerBgColor: data.headerBgColor || '#ffffff',
                     headerTextColor: data.headerTextColor || '#000000',
                     headerButtonStyle: data.headerButtonStyle || 'outline',
-                    headerButtonColor: data.headerButtonColor || '#8b5cf6',
-                    homeButtonGradientFrom: data.homeButtonGradientFrom || '#8b5cf6',
-                    homeButtonGradientTo: data.homeButtonGradientTo || '#ec4899',
+                    headerButtonColor: data.headerButtonColor || '#4F46E5',
+                    homeButtonGradientFrom: data.homeButtonGradientFrom || '#4F46E5',
+                    homeButtonGradientTo: data.homeButtonGradientTo || '#14B8A6',
                 });
             } catch (error) {
                 console.error('Failed to load settings:', error);
@@ -114,7 +114,7 @@ export default function HeaderSettingsPage() {
                             }}
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-teal-500 rounded-xl flex items-center justify-center">
                                     <span className="text-white font-bold text-lg">✓</span>
                                 </div>
                                 <span className="text-xl font-bold" style={{ color: settings.headerTextColor }}>

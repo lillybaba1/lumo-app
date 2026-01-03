@@ -119,7 +119,7 @@ export default async function BoutiquePage({ params }: Props) {
             {/* Logo/Avatar with better styling */}
             <div 
               className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border-4 border-background bg-card shadow-xl flex items-center justify-center overflow-hidden ring-4 ring-background/50"
-              style={{ backgroundColor: boutique.themeColor || '#8b5cf6' }}
+              style={{ backgroundColor: boutique.themeColor || '#4F46E5' }}
             >
               {boutique.logo ? (
                 <Image
