@@ -457,9 +457,6 @@ function Home(props: {
             </div>
           </div>
         )}
-            </div>
-          </div>
-        )}
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Trending Products - Only shows top 15 best sellers or admin-selected trending */}
