@@ -6,8 +6,9 @@ import { logger } from '@/lib/logger';
 
 const apiLogger = logger.child('API:AdminVisitors');
 
+// Accept decimal hours (e.g., 0.083 for 5 minutes) and range up to 720 (30 days)
 const clearVisitorsSchema = z.object({
-  hoursInactive: z.number().int().min(1).max(168).default(24),
+  hoursInactive: z.number().min(0.01).max(720).default(24),
 });
 
 export async function POST(request: Request) {

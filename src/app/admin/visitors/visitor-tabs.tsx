@@ -138,18 +138,22 @@ export default function VisitorTabs({
           title: 'Inactive Visitors Cleared',
           description: `Deleted ${data.deleted} inactive visitor${data.deleted !== 1 ? 's' : ''}.`,
         });
+        // Refresh visitor list
+        setVisitors(prev => prev.filter(v => v.isActive));
+        setInactiveCount(0);
         router.refresh();
       } else {
         toast({
-          title: 'Error',
-          description: data.error || 'Failed to clear inactive visitors.',
+          title: 'Clear Failed',
+          description: data.error || 'Could not clear inactive visitors. Please try again.',
           variant: 'destructive',
         });
       }
     } catch (error) {
+      console.error('Clear inactive error:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to clear inactive visitors.',
+        title: 'Connection Error',
+        description: 'Could not connect to the server. Please check your connection.',
         variant: 'destructive',
       });
     } finally {
