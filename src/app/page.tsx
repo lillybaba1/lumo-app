@@ -240,7 +240,16 @@ function Home(props: {
   // read category from URL params when component mounts or params change
   useEffect(() => {
     const cat = searchParams?.get('category');
-    if (cat) setSelectedCategory(cat);
+    if (cat) {
+      setSelectedCategory(cat);
+      // Scroll to products section when category is selected
+      setTimeout(() => {
+        const productsSection = document.getElementById('products-section');
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
     
     const search = searchParams?.get('search');
     if (search) {
