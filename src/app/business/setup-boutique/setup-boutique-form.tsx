@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -423,7 +424,7 @@ export default function SetupBoutiqueForm({ businessAccount }: SetupBoutiqueForm
                         style={{ backgroundColor: formData.logo ? undefined : formData.themeColor + '20' }}
                       >
                         {formData.logo ? (
-                          <img src={formData.logo} alt="Logo" className="w-full h-full object-cover" />
+                          <Image src={formData.logo} alt="Logo" fill className="object-cover" sizes="96px" />
                         ) : (
                           <Store className="h-8 w-8" style={{ color: formData.themeColor }} />
                         )}

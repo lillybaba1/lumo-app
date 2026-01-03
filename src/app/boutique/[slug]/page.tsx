@@ -18,6 +18,10 @@ import ProductCard from '@/components/product-card';
 import { BoutiqueSocialButtons, FollowButton } from '@/components/boutique-social-buttons';
 import { BoutiqueComments } from '@/components/boutique-comments';
 
+// ISR: Revalidate individual boutique pages every 2 minutes
+// This keeps content fresh while avoiding SSR overhead on every request
+export const revalidate = 120;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }

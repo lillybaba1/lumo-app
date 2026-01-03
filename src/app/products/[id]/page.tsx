@@ -19,6 +19,10 @@ import { getCurrentUser } from '@/lib/auth-admin';
 import { isInWishlist } from '@/services/wishlistService';
 import { getUserById } from '@/services/userService';
 
+// ISR: Revalidate product pages every 60 seconds
+// Ensures fresh stock/price data while maintaining fast TTFB
+export const revalidate = 60;
+
 async function getCurrencySymbol(currencyCode: string | undefined) {
     if (!currencyCode) return '$';
     if (currencyCode === 'GMD') return 'D';
