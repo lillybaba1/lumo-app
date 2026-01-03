@@ -127,8 +127,8 @@
 ### Technical Stats
 | Metric | Value |
 |--------|-------|
-| **Lines of Code** | 18,700+ |
-| **Source Files** | 157+ |
+| **Lines of Code** | 67,800+ |
+| **Source Files** | 363+ |
 | **Test Cases** | 75+ |
 | **API Endpoints** | 30+ |
 | **Database Tables** | 20+ |
