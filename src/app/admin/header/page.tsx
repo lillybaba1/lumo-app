@@ -19,9 +19,9 @@ export default function HeaderSettingsPage() {
         headerBgColor: '#ffffff',
         headerTextColor: '#000000',
         headerButtonStyle: 'outline',
-        headerButtonColor: '#8b5cf6',
-        homeButtonGradientFrom: '#8b5cf6',
-        homeButtonGradientTo: '#ec4899',
+        headerButtonColor: '#4F46E5',
+        homeButtonGradientFrom: '#4F46E5',
+        homeButtonGradientTo: '#14B8A6',
     });
 
     useEffect(() => {

@@ -23,14 +23,14 @@ interface BoutiqueFormProps {
   canCustomize: boolean; // Based on subscription tier
 }
 
-// Preset color themes
+// Preset color themes - Modern Premium v2.0 palette
 const COLOR_PRESETS = [
-  { name: 'Indigo', color: '#6366f1' },
+  { name: 'Indigo', color: '#4F46E5' },
+  { name: 'Teal', color: '#14B8A6' },
   { name: 'Rose', color: '#f43f5e' },
   { name: 'Emerald', color: '#10b981' },
   { name: 'Amber', color: '#f59e0b' },
   { name: 'Sky', color: '#0ea5e9' },
-  { name: 'Violet', color: '#8b5cf6' },
   { name: 'Slate', color: '#475569' },
   { name: 'Coral', color: '#ff6b6b' },
 ];
@@ -46,8 +46,8 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
     description: boutique?.description || '',
     logo: boutique?.logo || '',
     bannerImage: boutique?.bannerImage || '',
-    themeColor: boutique?.themeColor || '#8b5cf6',
-    accentColor: boutique?.accentColor || '#ec4899',
+    themeColor: boutique?.themeColor || '#4F46E5',
+    accentColor: boutique?.accentColor || '#14B8A6',
     contactEmail: boutique?.contactEmail || '',
     contactPhone: boutique?.contactPhone || '',
     whatsapp: boutique?.whatsapp || '',
@@ -329,7 +329,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
                   <Input
                     value={formData.themeColor}
                     onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
-                    placeholder="#8b5cf6"
+                    placeholder="#4F46E5"
                     className="w-28 font-mono text-sm"
                     disabled={!canCustomize}
                   />
@@ -350,7 +350,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
                   <Input
                     value={formData.accentColor}
                     onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
-                    placeholder="#ec4899"
+                    placeholder="#14B8A6"
                     className="w-28 font-mono text-sm"
                     disabled={!canCustomize}
                   />

@@ -68,11 +68,11 @@ export function AIAssistantWidget() {
           chatbotImage: data.chatbotImage || '',
           chatbotName: data.chatbotName || 'Luna',
           chatbotEnabled: data.chatbotEnabled !== false,
-          chatbotGlowColor: data.chatbotGlowColor || '#8b5cf6',
-          chatbotBubbleGradientFrom: data.chatbotBubbleGradientFrom || '#8b5cf6',
-          chatbotBubbleGradientTo: data.chatbotBubbleGradientTo || '#ec4899',
+          chatbotGlowColor: data.chatbotGlowColor || '#4F46E5',
+          chatbotBubbleGradientFrom: data.chatbotBubbleGradientFrom || '#4F46E5',
+          chatbotBubbleGradientTo: data.chatbotBubbleGradientTo || '#14B8A6',
           chatbotLabelBgColor: data.chatbotLabelBgColor || '#ffffff',
-          chatbotLabelTextColor: data.chatbotLabelTextColor || '#8b5cf6',
+          chatbotLabelTextColor: data.chatbotLabelTextColor || '#4F46E5',
           chatbotPulseEnabled: data.chatbotPulseEnabled !== false,
         });
       })
@@ -242,9 +242,9 @@ export function AIAssistantWidget() {
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
           style={!isOpen && settings.chatbotImage ? {
-            border: `2px solid ${settings.chatbotGlowColor || '#8b5cf6'}`,
-            outline: `4px solid ${(settings.chatbotGlowColor || '#8b5cf6')}4D`,
-            boxShadow: `0 0 20px ${settings.chatbotGlowColor || '#8b5cf6'}66, 0 4px 12px rgba(0, 0, 0, 0.15)`
+            border: `2px solid ${settings.chatbotGlowColor || '#4F46E5'}`,
+            outline: `4px solid ${(settings.chatbotGlowColor || '#4F46E5')}4D`,
+            boxShadow: `0 0 20px ${settings.chatbotGlowColor || '#4F46E5'}66, 0 4px 12px rgba(0, 0, 0, 0.15)`
           } : undefined}
         >
           {isOpen ? (
@@ -263,7 +263,7 @@ export function AIAssistantWidget() {
               <div 
                 className={`absolute -top-1 -right-1 text-white rounded-full p-1.5 shadow-lg z-10 ${settings.chatbotPulseEnabled !== false ? 'animate-pulse' : ''}`}
                 style={{
-                  background: `linear-gradient(to bottom right, ${settings.chatbotBubbleGradientFrom || '#8b5cf6'}, ${settings.chatbotBubbleGradientTo || '#ec4899'})`
+                  background: `linear-gradient(to bottom right, ${settings.chatbotBubbleGradientFrom || '#4F46E5'}, ${settings.chatbotBubbleGradientTo || '#14B8A6'})`
                 }}
               >
                 <MessageCircle className="h-3.5 w-3.5" />
@@ -288,7 +288,7 @@ export function AIAssistantWidget() {
             className="text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm"
             style={{
               backgroundColor: settings.chatbotLabelBgColor || '#ffffff',
-              color: settings.chatbotLabelTextColor || '#8b5cf6',
+              color: settings.chatbotLabelTextColor || '#4F46E5',
             }}
           >
             Need help?

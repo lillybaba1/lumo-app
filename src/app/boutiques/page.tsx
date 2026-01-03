@@ -172,7 +172,7 @@ function BoutiqueCard({ boutique, featured = false }: { boutique: any; featured?
           {/* Logo/Avatar */}
           <div 
             className="absolute -bottom-7 left-4 w-14 h-14 rounded-xl border-3 border-background bg-card shadow-lg flex items-center justify-center overflow-hidden ring-2 ring-background"
-            style={{ backgroundColor: boutique.themeColor || '#8b5cf6' }}
+            style={{ backgroundColor: boutique.themeColor || '#4F46E5' }}
           >
             {boutique.logo ? (
               <Image

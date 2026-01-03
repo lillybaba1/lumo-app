@@ -28,7 +28,7 @@ export const themes: Theme[] = [
     name: 'Warm Boutique',
     description: 'Cozy & elegant',
     category: 'light',
-    accentColor: '#8B5CF6',
+    accentColor: '#4F46E5',
     backgroundColor: '#FBF8F3',
   },
   {

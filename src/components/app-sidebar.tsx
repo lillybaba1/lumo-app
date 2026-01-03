@@ -189,10 +189,10 @@ export function AppSidebar({
         />
       )}
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - with glass effect */}
       <aside
         className={cn(
-          "lg:hidden fixed left-0 z-[60] w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
+          "lg:hidden fixed left-0 z-[60] w-72 bg-card/95 backdrop-blur-md border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col overflow-hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ top: sidebarTopOffset, height: `calc(100vh - ${sidebarTopOffset})` }}
@@ -254,10 +254,10 @@ export function AppSidebar({
         </div>
       </aside>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - with subtle glass effect */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col flex-shrink-0 border-r bg-card text-card-foreground transition-all duration-300 ease-in-out z-40",
+          "hidden lg:flex flex-col flex-shrink-0 border-r bg-card/95 backdrop-blur-sm text-card-foreground transition-all duration-300 ease-in-out z-40",
           collapsed ? "w-[4.5rem]" : "w-72",
           "min-h-screen sticky top-0 h-screen",
           className

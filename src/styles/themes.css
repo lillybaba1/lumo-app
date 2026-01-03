@@ -131,20 +131,20 @@
   --color-text-secondary: #6B5D54;
   --color-text-tertiary: #9B8B7E;
 
-  --color-accent: #8B5CF6;
-  --color-accent-hover: #7C3AED;
-  --color-accent-soft: #EDE9FE;
+  --color-accent: #4F46E5;
+  --color-accent-hover: #4338CA;
+  --color-accent-soft: #EEF2FF;
 
   --color-border-subtle: #E8DED0;
   --color-border-medium: #D4C4B0;
 
   --color-hero-overlay: rgba(44, 24, 16, 0.6);
 
-  --button-primary-bg: #8B5CF6;
-  --button-primary-hover: #7C3AED;
-  --button-secondary-fg: #8B5CF6;
-  --button-secondary-border: #8B5CF6;
-  --button-secondary-hover-bg: #EDE9FE;
+  --button-primary-bg: #4F46E5;
+  --button-primary-hover: #4338CA;
+  --button-secondary-fg: #4F46E5;
+  --button-secondary-border: #4F46E5;
+  --button-secondary-hover-bg: #EEF2FF;
 }
 
 /* ============================================

@@ -90,7 +90,7 @@ export default function PublicSidebar() {
       sections={sections}
       mobileTitle="Browse JulaZone"
       mobileIcon={
-        <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30">
+        <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 text-white shadow-lg shadow-indigo-500/25">
           <ShoppingBag className="h-5 w-5" />
         </Link>
       }
@@ -104,7 +104,7 @@ export default function PublicSidebar() {
           }}
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 text-white shadow-lg shadow-indigo-500/25">
             <ShoppingBag className="h-6 w-6" />
           </div>
           {!collapsed && (

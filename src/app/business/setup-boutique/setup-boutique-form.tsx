@@ -31,14 +31,14 @@ interface SetupBoutiqueFormProps {
   businessAccount: BusinessAccount;
 }
 
-// Preset color themes
+// Preset color themes - Modern Premium v2.0 palette
 const COLOR_PRESETS = [
-  { name: 'Indigo', color: '#6366f1', gradient: 'from-indigo-500 to-purple-500' },
+  { name: 'Indigo', color: '#4F46E5', gradient: 'from-indigo-600 to-indigo-500' },
+  { name: 'Teal', color: '#14B8A6', gradient: 'from-teal-500 to-emerald-500' },
   { name: 'Rose', color: '#f43f5e', gradient: 'from-rose-500 to-pink-500' },
   { name: 'Emerald', color: '#10b981', gradient: 'from-emerald-500 to-teal-500' },
   { name: 'Amber', color: '#f59e0b', gradient: 'from-amber-500 to-orange-500' },
   { name: 'Sky', color: '#0ea5e9', gradient: 'from-sky-500 to-cyan-500' },
-  { name: 'Violet', color: '#8b5cf6', gradient: 'from-violet-500 to-purple-500' },
   { name: 'Slate', color: '#475569', gradient: 'from-slate-500 to-gray-500' },
   { name: 'Coral', color: '#ff6b6b', gradient: 'from-red-400 to-orange-400' },
 ];
@@ -54,7 +54,7 @@ export default function SetupBoutiqueForm({ businessAccount }: SetupBoutiqueForm
     slug: businessAccount.boutiqueSlug || generateSlug(businessAccount.businessName),
     tagline: '',
     description: businessAccount.description || '',
-    themeColor: '#6366f1',
+    themeColor: '#4F46E5',
     logo: businessAccount.logo || '',
     bannerImage: '',
   });

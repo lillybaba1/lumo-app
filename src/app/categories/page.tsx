@@ -41,10 +41,10 @@ const getCategoryEmoji = (name: string) => {
   return emojiMap[name] || '🛍️';
 };
 
-// Default colors
+// Default colors - Modern Premium v2.0 palette
 const DEFAULT_BG = '#ffffff';
-const DEFAULT_TEXT = '#1f2937';
-const DEFAULT_ICON_BG = 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)';
+const DEFAULT_TEXT = '#1e293b';
+const DEFAULT_ICON_BG = 'linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(20, 184, 166, 0.05) 100%)';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);

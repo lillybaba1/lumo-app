@@ -101,7 +101,7 @@ export default function HeroAdminPage() {
       setHeroAnnouncement({
         enabled: settingsData?.heroAnnouncementEnabled ?? false,
         text: settingsData?.heroAnnouncementText || '',
-        bgColor: settingsData?.heroAnnouncementBgColor || '#8b5cf6',
+        bgColor: settingsData?.heroAnnouncementBgColor || '#4F46E5',
         textColor: settingsData?.heroAnnouncementTextColor || '#ffffff',
         borderColor: settingsData?.heroAnnouncementBorderColor || '#ffffff',
         borderRadius: settingsData?.heroAnnouncementBorderRadius ?? 12,

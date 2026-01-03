@@ -62,7 +62,7 @@ export default function HeroAnnouncement({ settings }: HeroAnnouncementProps) {
 
   const {
     heroAnnouncementText,
-    heroAnnouncementBgColor = '#8b5cf6',
+    heroAnnouncementBgColor = '#4F46E5',
     heroAnnouncementTextColor = '#ffffff',
     heroAnnouncementBorderColor = '#ffffff',
     heroAnnouncementBorderRadius = 12,

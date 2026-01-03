@@ -116,7 +116,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
     // Hero Announcement Overlay
     heroAnnouncementEnabled: settings.heroAnnouncementEnabled ?? false,
     heroAnnouncementText: settings.heroAnnouncementText || '🔥 Free Shipping on Orders Over $50! 🔥',
-    heroAnnouncementBgColor: settings.heroAnnouncementBgColor || '#8b5cf6',
+    heroAnnouncementBgColor: settings.heroAnnouncementBgColor || '#4F46E5',
     heroAnnouncementTextColor: settings.heroAnnouncementTextColor || '#ffffff',
     heroAnnouncementBorderColor: settings.heroAnnouncementBorderColor || '#ffffff',
     heroAnnouncementBorderRadius: settings.heroAnnouncementBorderRadius ?? 12,
@@ -1157,7 +1157,7 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
                 <Input
                   value={formState.heroAnnouncementBgColor}
                   onChange={(e) => updateField('heroAnnouncementBgColor', e.target.value)}
-                  placeholder="#8b5cf6"
+                  placeholder="#4F46E5"
                   className="flex-1"
                 />
               </div>

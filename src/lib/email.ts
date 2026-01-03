@@ -64,7 +64,7 @@ export function getSellerApprovalEmail(sellerName: string, businessName: string,
               
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); padding: 40px 40px; text-align: center;">
+                <td style="background: linear-gradient(135deg, #4F46E5 0%, #14B8A6 100%); padding: 40px 40px; text-align: center;">
                   <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">
                     🎉 Welcome to JulaZone!
                   </h1>
@@ -99,7 +99,7 @@ export function getSellerApprovalEmail(sellerName: string, businessName: string,
                     <tr>
                       <td align="center" style="padding: 10px 0 30px 0;">
                         <a href="${boutiqueUrl}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                           style="display: inline-block; background: linear-gradient(135deg, #4F46E5 0%, #14B8A6 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
                           View Your Boutique →
                         </a>
                       </td>
