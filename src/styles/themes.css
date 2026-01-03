@@ -1,32 +1,37 @@
 /* ============================================
    LUMO DESIGN SYSTEM - THEME TOKENS
+   Modern Premium v2.0
    ============================================ */
 
-/* Base / Default Theme (Minimal Light) */
+/* Base / Default Theme (Modern Premium Light) */
 :root {
-  /* Colors - Background */
-  --color-bg-page: #F7F7FB;
+  /* Colors - Background (subtle warm gray) */
+  --color-bg-page: #FAFAFA;
   --color-bg-surface: #FFFFFF;
-  --color-bg-surface-secondary: #F0F0F5;
+  --color-bg-surface-secondary: #F5F5F7;
 
-  /* Colors - Text */
-  --color-text-primary: #1A1A1A;
-  --color-text-secondary: #6B6B6B;
-  --color-text-tertiary: #9B9B9B;
+  /* Colors - Text (rich, readable contrast) */
+  --color-text-primary: #1A1A2E;
+  --color-text-secondary: #64748B;
+  --color-text-tertiary: #94A3B8;
   --color-text-inverse: #FFFFFF;
 
-  /* Colors - Accent */
-  --color-accent: #6366F1;
-  --color-accent-hover: #4F46E5;
-  --color-accent-soft: #E0E7FF;
+  /* Colors - Accent (sophisticated indigo-teal duo) */
+  --color-accent: #4F46E5;
+  --color-accent-hover: #4338CA;
+  --color-accent-soft: #EEF2FF;
   --color-accent-foreground: #FFFFFF;
+  
+  /* Secondary accent (teal for CTAs) */
+  --color-accent-secondary: #14B8A6;
+  --color-accent-secondary-soft: #CCFBF1;
 
-  /* Colors - Borders & Dividers */
-  --color-border-subtle: #E5E5E5;
-  --color-border-medium: #D4D4D4;
-  --color-border-focus: #6366F1;
+  /* Colors - Borders & Dividers (subtle, not harsh) */
+  --color-border-subtle: #E2E8F0;
+  --color-border-medium: #CBD5E1;
+  --color-border-focus: #4F46E5;
 
-  /* Colors - Status */
+  /* Colors - Status (balanced, not neon) */
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
