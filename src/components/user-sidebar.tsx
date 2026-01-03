@@ -291,7 +291,7 @@ export default async function UserSidebar() {
             </div>
           )}
           <div className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            <p>© 2025 JulaZone. All rights reserved.</p>
+            <p>© 2026 JulaZone. All rights reserved.</p>
           </div>
         </SidebarFooter>
     </Sidebar>

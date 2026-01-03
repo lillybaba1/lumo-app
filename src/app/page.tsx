@@ -20,6 +20,7 @@ import type { Product, Category } from '@/lib/types';
 import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
 import ServiceHighlights, { PromoBanner } from '@/components/service-highlights';
 import SearchBar from '@/components/search-bar';
+import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
 
 type Collections = {
   bestSellers: string[];
@@ -533,25 +534,27 @@ function Home(props: {
             viewAllLink="/products?filter=deals"
           />
 
-          {/* Featured Products - Shows when collections are empty */}
-          {collections.bestSellers.length === 0 && collections.newArrivals.length === 0 && products.length > 0 && (
+          {/* Category-Based Product Sections - Show products organized by category */}
+          {categories.length > 0 && products.length > 0 && (
             <div className="mb-8 md:mb-12">
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                  <h2 className="text-xl md:text-2xl font-headline font-bold">Featured Products</h2>
-                </div>
+                <h2 className="text-lg md:text-xl font-headline font-bold">Shop by Category</h2>
                 <Link href="/products">
-                  <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
-                    View All <ChevronRight className="h-4 w-4" />
+                  <Button variant="ghost" className="gap-1 text-xs md:text-sm px-2 md:px-3">
+                    View All Products <ChevronRight className="h-3 w-3" />
                   </Button>
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-                {products.slice(0, 8).map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              
+              {/* Horizontal category product sections */}
+              {categories.slice(0, 6).map((category) => (
+                <CategoryProductSection 
+                  key={category.id}
+                  category={category}
+                  products={products}
+                  maxProducts={8}
+                />
+              ))}
             </div>
           )}
 

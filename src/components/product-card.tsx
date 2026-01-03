@@ -17,6 +17,7 @@ import { getCurrencySymbol } from '@/lib/currency';
 interface ProductCardProps {
   product: Product;
   showQuickView?: boolean;
+  compact?: boolean;
 }
 
 // Star rating display component
@@ -54,7 +55,7 @@ function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number;
   );
 }
 
-export default function ProductCard({ product, showQuickView = true }: ProductCardProps) {
+export default function ProductCard({ product, showQuickView = true, compact = false }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { settings, auth } = useSettings();

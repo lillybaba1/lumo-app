@@ -127,7 +127,7 @@ export default function PublicSidebar() {
                 <span>Sign Out</span>
               </button>
             )}
-            <p className="text-xs text-muted-foreground">© 2025 JulaZone. All rights reserved.</p>
+            <p className="text-xs text-muted-foreground">© 2026 JulaZone. All rights reserved.</p>
           </div>
         ) : null
       }
