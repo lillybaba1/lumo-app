@@ -171,22 +171,22 @@ function ProductsPage({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Search and Sort Bar */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4 mb-4 md:mb-8">
             <div className="relative flex-1">
               <Input
                 placeholder="Search for products..."
-                className="pl-10"
+                className="pl-9 h-9 md:h-10 text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 md:gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full md:w-[200px] h-9 md:h-10 text-xs md:text-sm">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,9 +199,9 @@ function ProductsPage({ categories }: { categories: Category[] }) {
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="md:hidden px-4 py-2 border rounded-md hover:bg-accent"
+                className="md:hidden px-3 py-1.5 border rounded-lg hover:bg-accent"
               >
-                <SlidersHorizontal className="h-5 w-5" />
+                <SlidersHorizontal className="h-4 w-4" />
               </button>
             </div>
           </div>
