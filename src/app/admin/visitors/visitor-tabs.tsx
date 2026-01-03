@@ -138,8 +138,7 @@ export default function VisitorTabs({
           title: 'Inactive Visitors Cleared',
           description: `Deleted ${data.deleted} inactive visitor${data.deleted !== 1 ? 's' : ''}.`,
         });
-        // Refresh visitor list
-        setVisitors(prev => prev.filter(v => v.isActive));
+        // Let router.refresh() reload the full page data
         setInactiveCount(0);
         router.refresh();
       } else {
