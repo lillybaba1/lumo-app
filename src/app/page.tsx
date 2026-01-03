@@ -93,8 +93,8 @@ export default function HomePageDataContainer() {
         fetch('/api/products').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch('/api/categories').then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
-        fetch('/api/settings').then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
-        fetch('/api/hero').then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
+        fetch('/api/settings', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
+        fetch('/api/hero', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
         fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
       ]);
       

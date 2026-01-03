@@ -7,8 +7,8 @@ export async function GET() {
     const settings = await getSettings();
     return NextResponse.json(settings, {
       headers: {
-        // Settings don't change often - cache for 2 minutes, revalidate for 10 minutes
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
+        // No caching for settings - always fetch fresh
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });
   } catch (error) {
