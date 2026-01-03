@@ -273,14 +273,14 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       )}
 
       {/* Content - Positioned elements */}
-      <div className="relative w-full min-h-[520px] md:min-h-[500px]">
+      <div className="relative w-full min-h-[320px] sm:min-h-[400px] md:min-h-[500px]">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
         {/* Mobile Layout - Flexbox based for better visibility */}
-        <div className="md:hidden flex flex-col justify-start px-6 pt-20 pb-8 min-h-[520px] relative z-10">
+        <div className="md:hidden flex flex-col justify-start px-4 pt-14 pb-4 min-h-[320px] sm:min-h-[400px] relative z-10">
           <h1
-            className="text-3xl sm:text-4xl font-bold max-w-lg mb-3 drop-shadow-lg"
+            className="text-2xl sm:text-3xl font-bold max-w-lg mb-2 drop-shadow-lg"
             style={{
               color: heroHeadingColor,
               fontFamily: 'var(--font-heading)',
@@ -292,21 +292,21 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           </h1>
 
           <p
-            className="text-sm sm:text-base max-w-xs mb-5 drop-shadow-md"
+            className="text-xs sm:text-sm max-w-xs mb-3 drop-shadow-md"
             style={{
               color: heroTaglineColor,
               opacity: 0.95,
-              lineHeight: '1.5',
+              lineHeight: '1.4',
             }}
           >
             {heroTagline}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Link href="/products?filter=new">
               <Button
-                size="lg"
-                className="w-full sm:w-auto text-sm font-semibold h-11"
+                size="default"
+                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-11"
                 style={{
                   backgroundColor: heroButton1BgColor,
                   color: heroButton1TextColor,

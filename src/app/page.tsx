@@ -556,11 +556,11 @@ function Home(props: {
           )}
 
           {/* Enhanced Search and Sort Bar */}
-          <div id="products-section" className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div id="products-section" className="mb-4 flex flex-col gap-2 rounded-xl border bg-white/60 backdrop-blur-sm p-2 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1">
               <Input
                 placeholder="Search for products..."
-                className="pl-10 border-0 bg-white/80 focus-visible:ring-1"
+                className="pl-9 h-9 text-sm border-0 bg-white/80 focus-visible:ring-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -569,16 +569,16 @@ function Home(props: {
                 }}
               />
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
                 style={{ color: 'var(--color-text-secondary)' }}
               />
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-1.5 items-center">
               <span className="text-sm text-muted-foreground hidden md:inline">Sort by:</span>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger
-                  className="w-full md:w-[200px] border-0 bg-white/80 flex-1"
+                  className="w-full md:w-[200px] border-0 bg-white/80 flex-1 h-9 text-xs md:text-sm"
                   style={{
                     borderRadius: 'var(--radius-button)',
                   }}
@@ -596,7 +596,7 @@ function Home(props: {
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="md:hidden px-4 py-2 border hover:bg-accent transition-colors rounded-xl"
+                className="md:hidden px-3 py-1.5 border hover:bg-accent transition-colors rounded-lg"
                 style={{
                   borderColor: 'var(--color-border-subtle)',
                 }}
@@ -723,42 +723,42 @@ function Home(props: {
           </div>
 
           {/* Trust & Story Sections */}
-          <section className="mt-12 md:mt-16 space-y-6 md:space-y-12">
+          <section className="mt-6 md:mt-16 space-y-4 md:space-y-12">
             {/* The JulaZone Promise */}
             {lumoPromiseSettings.lumoPromiseEnabled !== false && (
               <Card 
-                className="overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm"
+                className="overflow-hidden rounded-xl md:rounded-2xl border backdrop-blur-sm shadow-sm"
                 style={{ backgroundColor: lumoPromiseSettings.lumoPromiseBgColor || '#ffffff' }}
               >
-                <CardContent className="p-4 md:p-12">
-                  <div className="max-w-3xl mx-auto text-center space-y-3 md:space-y-4" style={{ color: lumoPromiseSettings.lumoPromiseTextColor || '#000000' }}>
+                <CardContent className="p-3 md:p-12">
+                  <div className="max-w-3xl mx-auto text-center space-y-1.5 md:space-y-4" style={{ color: lumoPromiseSettings.lumoPromiseTextColor || '#000000' }}>
                     <h2 
-                      className={`font-headline text-${lumoPromiseSettings.lumoPromiseTitleSize || 'xl'} md:text-4xl font-${lumoPromiseSettings.lumoPromiseTitleWeight || 'bold'}`}
+                      className={`font-headline text-base md:text-4xl font-${lumoPromiseSettings.lumoPromiseTitleWeight || 'bold'}`}
                       style={{ fontWeight: lumoPromiseSettings.lumoPromiseTitleWeight === 'extrabold' ? 800 : lumoPromiseSettings.lumoPromiseTitleWeight === 'bold' ? 700 : lumoPromiseSettings.lumoPromiseTitleWeight === 'semibold' ? 600 : lumoPromiseSettings.lumoPromiseTitleWeight === 'medium' ? 500 : 400 }}
                     >
                       {lumoPromiseSettings.lumoPromiseTitle || 'The JulaZone Promise'}
                     </h2>
-                    <p className="text-sm md:text-lg leading-relaxed opacity-80">
+                    <p className="text-xs md:text-lg leading-relaxed opacity-80">
                       {lumoPromiseSettings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.'}
                     </p>
-                    <div className="grid grid-cols-3 gap-2 md:gap-6 mt-4 md:mt-8">
-                      <div className="space-y-1 md:space-y-2">
-                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature1Icon || '🌱'}</div>
-                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature1Title || 'Sustainable'}</h3>
+                    <div className="grid grid-cols-3 gap-1.5 md:gap-6 mt-2 md:mt-8">
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature1Icon || '🌱'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature1Title || 'Sustainable'}</h3>
                         <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
                           {lumoPromiseSettings.lumoPromiseFeature1Subtitle || 'Eco-friendly materials and processes'}
                         </p>
                       </div>
-                      <div className="space-y-1 md:space-y-2">
-                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature2Icon || '✨'}</div>
-                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature2Title || 'Quality Crafted'}</h3>
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature2Icon || '✨'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature2Title || 'Quality Crafted'}</h3>
                         <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
                           {lumoPromiseSettings.lumoPromiseFeature2Subtitle || 'Handpicked for excellence'}
                         </p>
                       </div>
-                      <div className="space-y-1 md:space-y-2">
-                        <div className="text-xl md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature3Icon || '🤝'}</div>
-                        <h3 className="font-semibold text-xs md:text-base">{lumoPromiseSettings.lumoPromiseFeature3Title || 'Fair Trade'}</h3>
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature3Icon || '🤝'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature3Title || 'Fair Trade'}</h3>
                         <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
                           {lumoPromiseSettings.lumoPromiseFeature3Subtitle || 'Supporting artisan communities'}
                         </p>
@@ -772,18 +772,18 @@ function Home(props: {
             {/* Meet the Makers */}
             {meetMakersSettings.meetMakersEnabled !== false && (
               <Card 
-                className="overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm"
+                className="overflow-hidden rounded-xl md:rounded-2xl border backdrop-blur-sm shadow-sm"
                 style={{ backgroundColor: meetMakersSettings.meetMakersBgColor || '#ffffff' }}
               >
-                <CardContent className="p-4 md:p-12">
-                  <div className="max-w-3xl mx-auto space-y-2 md:space-y-4" style={{ color: meetMakersSettings.meetMakersTextColor || '#000000' }}>
+                <CardContent className="p-3 md:p-12">
+                  <div className="max-w-3xl mx-auto space-y-1 md:space-y-4" style={{ color: meetMakersSettings.meetMakersTextColor || '#000000' }}>
                     <h2 
-                      className={`font-headline text-${meetMakersSettings.meetMakersTitleSize || 'xl'} md:text-4xl text-center`}
+                      className={`font-headline text-base md:text-4xl text-center`}
                       style={{ fontWeight: meetMakersSettings.meetMakersTitleWeight === 'extrabold' ? 800 : meetMakersSettings.meetMakersTitleWeight === 'bold' ? 700 : meetMakersSettings.meetMakersTitleWeight === 'semibold' ? 600 : meetMakersSettings.meetMakersTitleWeight === 'medium' ? 500 : 400 }}
                     >
                       {meetMakersSettings.meetMakersTitle || 'Meet the Makers'}
                     </h2>
-                    <p className="text-sm md:text-lg leading-relaxed text-center opacity-80">
+                    <p className="text-xs md:text-lg leading-relaxed text-center opacity-80">
                       {meetMakersSettings.meetMakersDescription || 'Behind every product is a story of skilled artisans dedicated to their craft, using traditional techniques passed down through generations.'}
                     </p>
                   </div>
