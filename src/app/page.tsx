@@ -415,7 +415,7 @@ function Home(props: {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 gap-1.5 sm:gap-3 md:gap-4">
                 {categories.slice(0, 5).map((category) => {
                   const textClr = category.textColor || '#1f2937';
                   
@@ -423,28 +423,28 @@ function Home(props: {
                     <Link
                       key={category.id}
                       href={`/?category=${category.id}`}
-                      className="group relative flex flex-col rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300"
+                      className="group relative flex flex-col rounded-lg sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300"
                     >
-                      {/* Image Container - shorter aspect ratio on mobile */}
-                      <div className="aspect-[4/3] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+                      {/* Image Container - compact on mobile */}
+                      <div className="aspect-[3/2] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
                         {category.image ? (
                           <Image
                             src={category.image}
                             alt={category.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                            sizes="(max-width: 640px) 25vw, (max-width: 768px) 25vw, 20vw"
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-3xl sm:text-4xl md:text-5xl">{category.icon || '🛍️'}</span>
+                            <span className="text-2xl sm:text-4xl md:text-5xl">{category.icon || '🛍️'}</span>
                           </div>
                         )}
                       </div>
-                      {/* Label - more compact on mobile */}
-                      <div className="p-2 sm:p-3 md:p-4 text-center border-t">
+                      {/* Label - minimal on mobile */}
+                      <div className="p-1 sm:p-3 md:p-4 text-center border-t">
                         <span 
-                          className="text-xs sm:text-sm font-medium line-clamp-1"
+                          className="text-[10px] sm:text-sm font-medium line-clamp-1"
                           style={{ color: textClr }}
                         >
                           {category.name}
