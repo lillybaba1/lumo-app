@@ -265,14 +265,46 @@ export async function recordVisitor(visitorData: {
       .single();
 
     if (existing) {
-      // Update existing visitor
+      // Update existing visitor - also update geo data if it was missing
+      const updateData: Record<string, any> = {
+        page_views: existing.page_views + 1,
+        last_activity: new Date().toISOString(),
+        is_returning: true,
+      };
+      
+      // Update IP and geo data if previously missing or if we have better data
+      if (visitorData.ip_address && visitorData.ip_address !== 'unknown' && 
+          (!existing.ip_address || existing.ip_address === 'unknown')) {
+        updateData.ip_address = visitorData.ip_address;
+      }
+      if (visitorData.country && !existing.country) {
+        updateData.country = visitorData.country;
+      }
+      if (visitorData.country_code && !existing.country_code) {
+        updateData.country_code = visitorData.country_code;
+      }
+      if (visitorData.city && (!existing.city || existing.city === 'Unknown')) {
+        updateData.city = visitorData.city;
+      }
+      if (visitorData.region && !existing.region) {
+        updateData.region = visitorData.region;
+      }
+      if (visitorData.latitude && !existing.latitude) {
+        updateData.latitude = visitorData.latitude;
+      }
+      if (visitorData.longitude && !existing.longitude) {
+        updateData.longitude = visitorData.longitude;
+      }
+      if (visitorData.timezone && !existing.timezone) {
+        updateData.timezone = visitorData.timezone;
+      }
+      if (visitorData.isp && !existing.isp) {
+        updateData.isp = visitorData.isp;
+      }
+      
       const { data, error } = await supabaseAdmin
         .from('visitors')
-        .update({
-          page_views: existing.page_views + 1,
-          last_activity: new Date().toISOString(),
-          is_returning: true,
-        })
+        .update(updateData)
         .eq('visitor_id', visitorData.visitor_id)
         .select()
         .single();

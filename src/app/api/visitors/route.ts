@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       || cfConnectingIp 
       || forwardedFor?.split(',')[0]?.trim() 
       || realIp 
+      || geo_data?.ip  // Fallback to IP from geo lookup
       || 'unknown';
 
     const { browser, os, device } = parseUserAgent(userAgent);
