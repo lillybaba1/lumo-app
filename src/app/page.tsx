@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductCard from '@/components/product-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -203,6 +203,7 @@ function Home(props: {
 }) {
   const { products, categories, collections, categorySectionSettings, trendingProducts, lumoPromiseSettings, meetMakersSettings } = props;
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name-asc');
@@ -429,10 +430,19 @@ function Home(props: {
                   const textClr = category.textColor || '#1f2937';
                   
                   return (
-                    <Link
+                    <button
                       key={category.id}
-                      href={`/?category=${category.id}`}
-                      className="group relative flex flex-col rounded-lg sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300"
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        router.push(`/?category=${category.id}`, { scroll: false });
+                        setTimeout(() => {
+                          const productsSection = document.getElementById('products-section');
+                          if (productsSection) {
+                            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }}
+                      className="group relative flex flex-col rounded-lg sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 text-left"
                     >
                       {/* Image Container - compact on mobile */}
                       <div className="aspect-[3/2] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
@@ -459,7 +469,7 @@ function Home(props: {
                           {category.name}
                         </span>
                       </div>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
