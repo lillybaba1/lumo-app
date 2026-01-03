@@ -74,6 +74,7 @@ export default function CartPage() {
                             width={80}
                             height={80}
                             className="rounded-lg object-cover"
+                            unoptimized
                           />
                         </div>
                         
@@ -153,6 +154,7 @@ export default function CartPage() {
                               width={80}
                               height={80}
                               className="rounded-md"
+                              unoptimized
                               data-ai-hint={`${product.category} product`}
                             />
                           </TableCell>

@@ -656,7 +656,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                             {productImages.map(url => (
                                 <div key={url} className="relative space-y-2">
                                     <div className="relative w-full aspect-square rounded-md overflow-hidden border">
-                                        <Image src={url} alt="Product" fill className="object-cover" />
+                                        <Image src={url} alt="Product" fill className="object-cover" unoptimized />
                                         <Button
                                             variant="destructive"
                                             size="icon"

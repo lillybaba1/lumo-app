@@ -73,9 +73,10 @@ export default function ProductCard({ product, showQuickView = true, compact = f
     ? (baseImageUrl.includes('?') ? `${baseImageUrl}&v=${product.id}` : `${baseImageUrl}?v=${product.id}`)
     : baseImageUrl;
 
-  // Calculate a mock rating based on product id for demo (replace with real data later)
-  const mockRating = ((parseInt(product.id.slice(-2), 16) || 0) % 20 + 35) / 10; // 3.5 - 5.0 range
-  const mockReviews = ((parseInt(product.id.slice(-4), 16) || 0) % 100) + 5; // 5 - 104 range
+  // Use real review data if available, otherwise don't show reviews
+  // Products with no reviews should show no rating
+  const productRating = (product as { averageRating?: number }).averageRating || 0;
+  const productReviews = (product as { totalReviews?: number }).totalReviews || 0;
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
@@ -166,10 +167,12 @@ export default function ProductCard({ product, showQuickView = true, compact = f
               {product.name}
             </CardTitle>
             
-            {/* Star Rating */}
-            <div className="mb-1 md:mb-2 hidden md:block">
-              <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
-            </div>
+            {/* Star Rating - only show if product has reviews */}
+            {productReviews > 0 && (
+              <div className="mb-1 md:mb-2 hidden md:block">
+                <StarRating rating={productRating} reviews={productReviews} size="sm" />
+              </div>
+            )}
             
             <p
               className="text-xs md:text-sm flex-grow hidden md:line-clamp-2 text-muted-foreground"
@@ -194,10 +197,12 @@ export default function ProductCard({ product, showQuickView = true, compact = f
                   </span>
                 )}
               </div>
-              {/* Mobile star rating */}
-              <div className="md:hidden">
-                <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
-              </div>
+              {/* Mobile star rating - only show if product has reviews */}
+              {productReviews > 0 && (
+                <div className="md:hidden">
+                  <StarRating rating={productRating} reviews={productReviews} size="sm" />
+                </div>
+              )}
             </div>
             <Button
               onClick={handleAddToCart}

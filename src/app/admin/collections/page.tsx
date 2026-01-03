@@ -224,6 +224,7 @@ export default function CollectionsPage() {
                               alt={product.name}
                               fill
                               className="object-cover rounded"
+                              unoptimized
                             />
                           )}
                         </div>
@@ -287,6 +288,7 @@ export default function CollectionsPage() {
                                 alt={product.name}
                                 fill
                                 className="object-cover rounded"
+                                unoptimized
                               />
                             )}
                           </div>
@@ -321,6 +323,7 @@ export default function CollectionsPage() {
                               alt={product.name}
                               fill
                               className="object-cover rounded"
+                              unoptimized
                             />
                           )}
                         </div>

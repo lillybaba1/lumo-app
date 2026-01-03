@@ -8,6 +8,8 @@ const nextConfig = {
     },
   },
   images: {
+    // Disable image optimization in development to avoid localhost issues
+    unoptimized: process.env.NODE_ENV === 'development',
     remotePatterns: [
       {
         protocol: 'https',

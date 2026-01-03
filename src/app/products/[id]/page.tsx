@@ -85,6 +85,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                         priority={index === 0}
                         loading={index === 0 ? undefined : "lazy"}
+                        unoptimized
                       />
                     </div>
                   </CarouselItem>
