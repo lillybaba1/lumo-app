@@ -41,9 +41,17 @@ export async function POST(request: Request) {
 
     const headersList = await headers();
     const userAgent = headersList.get('user-agent') || '';
+    
+    // Vercel-specific headers for accurate IP detection
+    const vercelIp = headersList.get('x-vercel-forwarded-for');
+    const cfConnectingIp = headersList.get('cf-connecting-ip');
     const forwardedFor = headersList.get('x-forwarded-for');
     const realIp = headersList.get('x-real-ip');
-    const ip = forwardedFor?.split(',')[0] || realIp || 'unknown';
+    const ip = vercelIp?.split(',')[0]?.trim() 
+      || cfConnectingIp 
+      || forwardedFor?.split(',')[0]?.trim() 
+      || realIp 
+      || 'unknown';
 
     const { browser, os, device } = parseUserAgent(userAgent);
 
@@ -101,38 +109,84 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const headersList = await headers();
+    
+    // Vercel-specific headers for accurate IP detection
+    const vercelIp = headersList.get('x-vercel-forwarded-for');
     const forwardedFor = headersList.get('x-forwarded-for');
     const realIp = headersList.get('x-real-ip');
-    const ip = forwardedFor?.split(',')[0] || realIp || '';
+    const cfConnectingIp = headersList.get('cf-connecting-ip'); // Cloudflare
+    
+    // Priority: Vercel > CF > Forwarded-For > Real-IP
+    const ip = vercelIp?.split(',')[0]?.trim() 
+      || cfConnectingIp 
+      || forwardedFor?.split(',')[0]?.trim() 
+      || realIp 
+      || '';
 
-    if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip === '::1') {
-      return NextResponse.json({ ip: 'localhost', country: 'Local', city: 'Development' });
+    if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return NextResponse.json({ 
+        ip: 'localhost', 
+        country: 'Local Development', 
+        city: 'Development',
+        country_code: 'DEV'
+      });
     }
 
-    // Use ip-api.com for geolocation (free, no API key needed for non-commercial use)
+    // Use ipapi.co for geolocation (HTTPS, free tier: 30k/month)
     try {
-      const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city,lat,lon,timezone,isp`, {
+      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
+        headers: {
+          'User-Agent': 'JulaZone/1.0',
+        },
         next: { revalidate: 3600 }, // Cache for 1 hour
       });
 
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
-        if (geoData.status === 'success') {
+        if (!geoData.error) {
           return NextResponse.json({
             ip,
-            country: geoData.country,
-            country_code: geoData.countryCode,
-            city: geoData.city,
-            region: geoData.regionName,
-            latitude: geoData.lat,
-            longitude: geoData.lon,
-            timezone: geoData.timezone,
-            isp: geoData.isp,
+            country: geoData.country_name || 'Unknown',
+            country_code: geoData.country_code || null,
+            city: geoData.city || 'Unknown',
+            region: geoData.region || null,
+            latitude: geoData.latitude || null,
+            longitude: geoData.longitude || null,
+            timezone: geoData.timezone || null,
+            isp: geoData.org || null,
           });
         }
       }
     } catch (geoError) {
       console.error('Geo lookup failed:', geoError);
+    }
+
+    // Fallback: Try ipinfo.io (HTTPS, free tier: 50k/month)
+    try {
+      const fallbackResponse = await fetch(`https://ipinfo.io/${ip}/json`, {
+        headers: {
+          'User-Agent': 'JulaZone/1.0',
+        },
+        next: { revalidate: 3600 },
+      });
+
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        const [lat, lon] = (fallbackData.loc || ',').split(',').map(Number);
+        return NextResponse.json({
+          ip,
+          country: fallbackData.country || 'Unknown',
+          country_code: fallbackData.country || null,
+          city: fallbackData.city || 'Unknown',
+          region: fallbackData.region || null,
+          latitude: lat || null,
+          longitude: lon || null,
+          timezone: fallbackData.timezone || null,
+          isp: fallbackData.org || null,
+        });
+      }
+    } catch (fallbackError) {
+      console.error('Fallback geo lookup failed:', fallbackError);
     }
 
     return NextResponse.json({ ip, country: 'Unknown', city: 'Unknown' });

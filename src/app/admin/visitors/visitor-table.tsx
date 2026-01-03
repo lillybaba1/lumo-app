@@ -102,11 +102,12 @@ export default function VisitorTable({ visitors }: VisitorTableProps) {
                           </span>
                         )}
                       </div>
-                      {visitor.country && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {visitor.country}
-                        </div>
-                      )}
+                      <div className="text-xs text-muted-foreground truncate">
+                        {visitor.country || 'Unknown'}
+                        {visitor.ip_address && visitor.ip_address !== 'unknown' && (
+                          <span className="ml-1 font-mono opacity-70">• {visitor.ip_address}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </TableCell>

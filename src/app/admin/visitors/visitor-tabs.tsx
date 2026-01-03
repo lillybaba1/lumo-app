@@ -357,6 +357,11 @@ export default function VisitorTabs({
                                     </span>
                                   )}
                                 </div>
+                                {visitor.ip_address && visitor.ip_address !== 'unknown' && (
+                                  <div className="text-xs text-muted-foreground font-mono opacity-70">
+                                    {visitor.ip_address}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </TableCell>
