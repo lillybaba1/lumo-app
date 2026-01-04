@@ -94,12 +94,12 @@ export default function CategoryProductSection({
           </div>
         ))}
         
-        {/* "View More" Card */}
+        {/* "View More" Card - matches square product card aspect */}
         <Link 
           href={`/?category=${category.id}`}
           className="flex-shrink-0 w-[45%] sm:w-[30%] md:w-[23%] lg:w-[18%] snap-start"
         >
-          <div className="h-full min-h-[200px] rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+          <div className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <ChevronRight className="h-5 w-5 text-primary" />
             </div>

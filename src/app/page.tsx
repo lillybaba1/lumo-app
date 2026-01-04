@@ -446,18 +446,19 @@ function Home(props: {
                       className="group relative flex flex-col rounded-lg sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 text-left"
                     >
                       {/* Image Container - compact on mobile */}
-                      <div className="aspect-[3/2] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
-                        {category.image ? (
+                      <div className="aspect-[3/2] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
+                        {category.image && category.image.length > 0 ? (
                           <Image
                             src={category.image}
                             alt={category.name}
                             fill
+                            unoptimized
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 25vw, (max-width: 768px) 25vw, 20vw"
+                            sizes="(max-width: 640px) 25vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 20vw"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-2xl sm:text-4xl md:text-5xl">{category.icon || '🛍️'}</span>
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                            <span className="text-3xl sm:text-4xl md:text-5xl drop-shadow-sm">{category.icon || '🛍️'}</span>
                           </div>
                         )}
                       </div>
