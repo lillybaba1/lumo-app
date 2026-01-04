@@ -139,7 +139,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
           color: settings.headerTextColor,
         }}
       >
-        <div className="container flex h-16 items-center px-4 md:px-6">
+        <div className="w-full flex h-16 items-center px-2 sm:px-4 md:px-6">
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 md:gap-3 group">
               {/* Logo - Uses uploaded logo or fallback to icon */}

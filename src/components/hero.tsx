@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShoppingBag } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react';
 import { HeroData, HeroProduct, Product } from '@/lib/types';
 import Image from 'next/image';
 import HeroAnnouncement, { HeroAnnouncementSettings } from './hero-announcement';
@@ -33,10 +33,64 @@ interface HeroProps {
   initialSettings?: HeroSettings;
 }
 
+// Amazon-style mini product card widget
+function HeroProductWidget({ 
+  title, 
+  icon: Icon, 
+  products, 
+  link
+}: { 
+  title: string; 
+  icon: React.ElementType;
+  products: Product[]; 
+  link: string;
+}) {
+  if (products.length === 0) return null;
+  
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-3 min-w-[160px] max-w-[200px] flex-shrink-0">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className="h-4 w-4 text-primary" />
+        <h3 className="text-xs font-bold text-gray-900 truncate">{title}</h3>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5 mb-2">
+        {products.slice(0, 4).map((product) => {
+          const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
+          return (
+            <Link key={product.id} href={`/products/${product.id}`} className="group">
+              <div className="aspect-square relative rounded overflow-hidden bg-gray-100">
+                {imageUrl ? (
+                  <Image
+                    src={imageUrl}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    sizes="80px"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      <Link 
+        href={link} 
+        className="text-[10px] text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-0.5"
+      >
+        See more <ArrowRight className="h-3 w-3" />
+      </Link>
+    </div>
+  );
+}
+
 export default function Hero({ initialSettings }: HeroProps = {}) {
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[] }>({ bestSellers: [], newArrivals: [], deals: [] });
   const [loading, setLoading] = useState(true);
   const [mobileIndex, setMobileIndex] = useState(0);
 
@@ -48,9 +102,10 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const heroImageFit = settings?.heroImageFit || 'cover';
   const heroHeadingColor = settings?.heroHeadingColor || '#ffffff';
   const heroTaglineColor = settings?.heroTaglineColor || '#ffffff';
-  const heroHeadingPosition = settings?.heroHeadingPosition || { x: 5, y: 35 };
-  const heroTaglinePosition = settings?.heroTaglinePosition || { x: 5, y: 50 };
-  const heroCtaPosition = settings?.heroCtaPosition || { x: 5, y: 65 };
+  // Adjusted default positions to be higher (avoid overlap with product widgets at bottom)
+  const heroHeadingPosition = settings?.heroHeadingPosition || { x: 5, y: 8 };
+  const heroTaglinePosition = settings?.heroTaglinePosition || { x: 5, y: 22 };
+  const heroCtaPosition = settings?.heroCtaPosition || { x: 5, y: 38 };
   
   // Button colors
   const heroButton1BgColor = settings?.heroButton1BgColor || '#3b82f6';
@@ -94,10 +149,21 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
       requestTypes.push('products');
       requests.push(
-        fetch('/api/products?limit=10', { 
+        fetch('/api/products?limit=20', { 
           next: { revalidate: 60 } 
         }).then(async (res) => {
           if (!res.ok) throw new Error(`Products request failed: ${res.status}`);
+          return res.json();
+        })
+      );
+
+      // Fetch collections for the hero widgets
+      requestTypes.push('collections');
+      requests.push(
+        fetch('/api/collections', { 
+          next: { revalidate: 60 } 
+        }).then(async (res) => {
+          if (!res.ok) throw new Error(`Collections request failed: ${res.status}`);
           return res.json();
         })
       );
@@ -115,7 +181,10 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               setHeroData(result.value);
               break;
             case 'products':
-              setProducts(Array.isArray(result.value) ? result.value : []);
+              setProducts(Array.isArray(result.value) ? result.value : (result.value?.products || []));
+              break;
+            case 'collections':
+              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [] });
               break;
           }
         } else {
@@ -134,6 +203,24 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
   const getProductById = (id: string) => products.find(p => p.id === id);
   const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
+
+  // Get products for hero widgets - use collections if available, otherwise use first products
+  const newArrivalsProducts = collections.newArrivals.length > 0
+    ? collections.newArrivals.map(id => getProductById(id)).filter(Boolean) as Product[]
+    : products.slice(0, 4); // Fallback to first 4 products
+  
+  const bestSellersProducts = collections.bestSellers.length > 0
+    ? collections.bestSellers.map(id => getProductById(id)).filter(Boolean) as Product[]
+    : products.slice(4, 8); // Fallback to next 4 products
+  
+  const dealsProducts = collections.deals.length > 0
+    ? collections.deals.map(id => getProductById(id)).filter(Boolean) as Product[]
+    : products.slice(8, 12); // Fallback to next 4 products
+
+  // Featured products from hero data or fallback
+  const featuredProducts = heroProducts.length > 0
+    ? heroProducts.map(hp => getProductById(hp.productId)).filter(Boolean) as Product[]
+    : products.slice(12, 16); // Fallback to next 4 products
 
   const mobileProducts = heroProducts
     .map((hp) => {
@@ -273,12 +360,12 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       )}
 
       {/* Content - Positioned elements */}
-      <div className="relative w-full min-h-[320px] sm:min-h-[400px] md:min-h-[500px]">
+      <div className="relative w-full min-h-[480px] sm:min-h-[520px] md:min-h-[600px]">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
         {/* Mobile Layout - Flexbox based for better visibility */}
-        <div className="md:hidden flex flex-col justify-start px-4 pt-14 pb-4 min-h-[320px] sm:min-h-[400px] relative z-10">
+        <div className="md:hidden flex flex-col justify-start px-4 pt-14 pb-4 min-h-[480px] sm:min-h-[520px] relative z-10">
           <h1
             className="text-2xl sm:text-3xl font-bold max-w-lg mb-2 drop-shadow-lg"
             style={{
@@ -302,59 +389,43 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             {heroTagline}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Link href="/products?filter=new">
-              <Button
-                size="default"
-                className="w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-11"
-                style={{
-                  backgroundColor: heroButton1BgColor,
-                  color: heroButton1TextColor,
-                  borderRadius: 'var(--radius-button)',
-                  padding: '0 var(--spacing-xl)',
-                }}
-              >
-                Shop New Arrivals
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-
-            <Link href="/products">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto text-sm font-semibold h-11"
-                style={{
-                  backgroundColor: heroButton2BgColor,
-                  color: heroButton2TextColor,
-                  borderColor: heroButton2BorderColor,
-                  borderRadius: 'var(--radius-button)',
-                  padding: '0 var(--spacing-xl)',
-                }}
-              >
-                Browse Collections
-              </Button>
-            </Link>
-
-            {heroData?.heroLabelText && (
-              <Link href="/products?filter=featured">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto text-sm font-semibold h-11 gap-2 rounded-full shadow-lg"
-                  style={{
-                    backgroundColor: heroButton3BgColor,
-                    color: heroButton3TextColor,
-                    borderRadius: 'var(--radius-button)',
-                    padding: '0 var(--spacing-xl)',
-                  }}
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  {heroData.heroLabelText}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-          </div>
+          {/* Amazon-style Product Widgets - Mobile (horizontal scroll) */}
+          {products.length > 0 && (
+            <div className="flex gap-3 mt-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {newArrivalsProducts.length > 0 && (
+                <HeroProductWidget
+                  title="New Arrivals"
+                  icon={Sparkles}
+                  products={newArrivalsProducts}
+                  link="/products?filter=new"
+                />
+              )}
+              {bestSellersProducts.length > 0 && (
+                <HeroProductWidget
+                  title="Best Sellers"
+                  icon={TrendingUp}
+                  products={bestSellersProducts}
+                  link="/products?filter=bestsellers"
+                />
+              )}
+              {featuredProducts.length > 0 && (
+                <HeroProductWidget
+                  title={heroData?.heroLabelText || 'Featured'}
+                  icon={ShoppingBag}
+                  products={featuredProducts}
+                  link="/products?filter=featured"
+                />
+              )}
+              {dealsProducts.length > 0 && (
+                <HeroProductWidget
+                  title="Deals"
+                  icon={Tag}
+                  products={dealsProducts}
+                  link="/products?filter=deals"
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Desktop Layout - Absolutely positioned */}
@@ -389,67 +460,43 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           {heroTagline}
         </p>
 
-        {/* CTAs - Absolutely positioned */}
-        <div 
-          className="hidden md:flex absolute flex-row gap-4 px-4"
-          style={{
-            left: `${heroCtaPosition.x}%`,
-            top: `${heroCtaPosition.y}%`,
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <Link href="/products?filter=new">
-            <Button
-              size="lg"
-              className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
-              style={{
-                backgroundColor: heroButton1BgColor,
-                color: heroButton1TextColor,
-                borderRadius: 'var(--radius-button)',
-                padding: '0 var(--spacing-xl)',
-              }}
-            >
-              Shop New Arrivals
-              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-            </Button>
-          </Link>
-
-          <Link href="/products">
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11"
-              style={{
-                backgroundColor: heroButton2BgColor,
-                color: heroButton2TextColor,
-                borderColor: heroButton2BorderColor,
-                borderRadius: 'var(--radius-button)',
-                padding: '0 var(--spacing-xl)',
-              }}
-            >
-              Browse Collections
-            </Button>
-          </Link>
-
-          {heroData?.heroLabelText && (
-            <Link href="/products?filter=featured">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto text-sm md:text-base font-semibold h-10 md:h-11 gap-2 rounded-full shadow-lg"
-                style={{
-                  backgroundColor: heroButton3BgColor,
-                  color: heroButton3TextColor,
-                  borderRadius: 'var(--radius-button)',
-                  padding: '0 var(--spacing-xl)',
-                }}
-              >
-                <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
-                {heroData.heroLabelText}
-                <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-            </Link>
-          )}
-        </div>
+        {/* Amazon-style Product Widgets - Desktop (positioned at bottom) */}
+        {products.length > 0 && (
+          <div className="hidden md:flex absolute gap-4 px-4 bottom-6 left-4">
+            {newArrivalsProducts.length > 0 && (
+              <HeroProductWidget
+                title="New Arrivals"
+                icon={Sparkles}
+                products={newArrivalsProducts}
+                link="/products?filter=new"
+              />
+            )}
+            {bestSellersProducts.length > 0 && (
+              <HeroProductWidget
+                title="Best Sellers"
+                icon={TrendingUp}
+                products={bestSellersProducts}
+                link="/products?filter=bestsellers"
+              />
+            )}
+            {featuredProducts.length > 0 && (
+              <HeroProductWidget
+                title={heroData?.heroLabelText || 'Featured'}
+                icon={ShoppingBag}
+                products={featuredProducts}
+                link="/products?filter=featured"
+              />
+            )}
+            {dealsProducts.length > 0 && (
+              <HeroProductWidget
+                title="Deals & Offers"
+                icon={Tag}
+                products={dealsProducts}
+                link="/products?filter=deals"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile carousel for hero products */}
