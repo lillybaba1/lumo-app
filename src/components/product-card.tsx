@@ -73,9 +73,10 @@ export default function ProductCard({ product, showQuickView = true, compact = f
     ? (baseImageUrl.includes('?') ? `${baseImageUrl}&v=${product.id}` : `${baseImageUrl}?v=${product.id}`)
     : baseImageUrl;
 
-  // Calculate a mock rating based on product id for demo (replace with real data later)
-  const mockRating = ((parseInt(product.id.slice(-2), 16) || 0) % 20 + 35) / 10; // 3.5 - 5.0 range
-  const mockReviews = ((parseInt(product.id.slice(-4), 16) || 0) % 100) + 5; // 5 - 104 range
+  // Use real review data if available, otherwise don't show reviews
+  // Products with no reviews should show no rating
+  const productRating = (product as { averageRating?: number }).averageRating || 0;
+  const productReviews = (product as { totalReviews?: number }).totalReviews || 0;
 
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
@@ -97,8 +98,8 @@ export default function ProductCard({ product, showQuickView = true, compact = f
           onMouseLeave={() => setIsHovered(false)}
         >
         <CardHeader className="p-0 relative overflow-hidden">
-            {/* Square for compact mode, 4:5 for full cards */}
-            <div className="relative" style={{ aspectRatio: compact ? '1/1' : '4/5' }}>
+            {/* Fixed 4:5 aspect ratio as per requirements */}
+            <div className="relative" style={{ aspectRatio: '4/5' }}>
             <Image
                 src={imageUrl}
                 alt={product.name}
@@ -137,8 +138,8 @@ export default function ProductCard({ product, showQuickView = true, compact = f
               />
             </div>
 
-            {/* Quick view button on hover - hidden in compact mode */}
-            {showQuickView && !compact && (
+            {/* Quick view button on hover */}
+            {showQuickView && (
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
                 <Button
                   variant="secondary"
@@ -155,9 +156,9 @@ export default function ProductCard({ product, showQuickView = true, compact = f
               </div>
             )}
         </CardHeader>
-        <CardContent className={`flex-grow flex flex-col min-w-0 ${compact ? 'p-1.5 md:p-2' : 'p-2 md:p-4'}`}>
+        <CardContent className="flex-grow p-2 md:p-4 flex flex-col min-w-0">
             <CardTitle
-              className={`leading-tight line-clamp-2 font-semibold ${compact ? 'text-[10px] md:text-xs mb-0.5' : 'text-xs md:text-base mb-1 md:mb-1.5 min-h-[2rem] md:min-h-[2.5rem]'}`}
+              className="text-xs md:text-base mb-1 md:mb-1.5 min-h-[2rem] md:min-h-[2.5rem] leading-tight line-clamp-2 font-semibold"
               style={{
                 fontFamily: 'var(--font-heading)',
                 color: 'var(--color-text-primary)',
@@ -166,69 +167,53 @@ export default function ProductCard({ product, showQuickView = true, compact = f
               {product.name}
             </CardTitle>
             
-            {/* Star Rating - hidden in compact mode */}
-            {!compact && (
+            {/* Star Rating - only show if product has reviews */}
+            {productReviews > 0 && (
               <div className="mb-1 md:mb-2 hidden md:block">
-                <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
+                <StarRating rating={productRating} reviews={productReviews} size="sm" />
               </div>
             )}
             
-            {!compact && (
-              <p
-                className="text-xs md:text-sm flex-grow hidden md:line-clamp-2 text-muted-foreground"
-              >
-                {product.description}
-              </p>
-            )}
+            <p
+              className="text-xs md:text-sm flex-grow hidden md:line-clamp-2 text-muted-foreground"
+            >
+              {product.description}
+            </p>
         </CardContent>
-        <CardFooter className={`flex flex-col mt-auto pt-0 ${compact ? 'p-1.5 md:p-2 gap-1' : 'p-2 md:p-4 gap-1.5 md:gap-2'}`}>
-            <div className="flex flex-col w-full gap-0.5">
+        <CardFooter className="p-2 md:p-4 flex flex-col gap-1.5 md:gap-2 mt-auto pt-0">
+            <div className="flex flex-col w-full gap-1">
               <div className="flex justify-between items-center">
                 <p
-                  className={`font-bold whitespace-nowrap ${compact ? 'text-xs md:text-sm' : 'text-sm md:text-xl'}`}
+                  className="text-sm md:text-xl font-bold whitespace-nowrap"
                   style={{
                     color: 'var(--color-text-primary)',
                   }}
                 >
                   {currencySymbol}{product.price.toFixed(2)}
                 </p>
-                {!compact && product.stock > 0 && product.stock <= 5 && (
+                {product.stock > 0 && product.stock <= 5 && (
                   <span className="text-[8px] md:text-xs text-orange-600 font-medium whitespace-nowrap ml-2">
                     Only {product.stock} left
                   </span>
                 )}
               </div>
-              {/* Mobile star rating - hidden in compact */}
-              {!compact && (
+              {/* Mobile star rating - only show if product has reviews */}
+              {productReviews > 0 && (
                 <div className="md:hidden">
-                  <StarRating rating={mockRating} reviews={mockReviews} size="sm" />
+                  <StarRating rating={productRating} reviews={productReviews} size="sm" />
                 </div>
               )}
             </div>
-            {/* Add to cart button - simpler in compact mode */}
-            {compact ? (
-              <Button
-                onClick={handleAddToCart}
-                size="sm"
-                disabled={product.stock === 0}
-                aria-label={`Add ${product.name} to cart`}
-                className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-6 md:h-7 text-[9px] md:text-[10px] font-medium"
-              >
-                <ShoppingCart className="mr-1 h-3 w-3" />
-                <span>Add</span>
-              </Button>
-            ) : (
-              <Button
-                onClick={handleAddToCart}
-                size="sm"
-                disabled={product.stock === 0}
-                aria-label={`Add ${product.name} to cart`}
-                className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-primary/90 text-white rounded-xl h-8 md:h-9 text-[10px] md:text-sm font-medium shadow-sm"
-              >
-                <ShoppingCart className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
-                <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
-              </Button>
-            )}
+            <Button
+              onClick={handleAddToCart}
+              size="sm"
+              disabled={product.stock === 0}
+              aria-label={`Add ${product.name} to cart`}
+              className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-primary/90 text-white rounded-xl h-8 md:h-9 text-[10px] md:text-sm font-medium shadow-sm"
+            >
+              <ShoppingCart className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            </Button>
         </CardFooter>
         </Card>
     </Link>

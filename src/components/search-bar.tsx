@@ -249,6 +249,7 @@ export default function SearchBar({
                             fill
                             sizes="48px"
                             className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <Store className="h-6 w-6 text-primary" />
@@ -286,6 +287,7 @@ export default function SearchBar({
                           fill
                           sizes="48px"
                           className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <div className="flex-1 min-w-0">

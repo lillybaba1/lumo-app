@@ -99,6 +99,7 @@ export default async function BoutiquePage({ params }: Props) {
             fill
             className="object-cover"
             priority
+            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -128,6 +129,7 @@ export default async function BoutiquePage({ params }: Props) {
                   width={144}
                   height={144}
                   className="object-cover w-full h-full"
+                  unoptimized
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center">

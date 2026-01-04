@@ -197,6 +197,7 @@ export default function ImageUploadBox({
           "object-cover transition-all",
           variant === 'circle' ? 'rounded-full' : 'rounded-xl'
         )}
+        unoptimized
       />
       {/* Overlay with actions */}
       <div className={cn(

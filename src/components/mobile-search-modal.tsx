@@ -222,6 +222,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
                             alt={boutique.displayName}
                             fill
                             className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <Store className="h-7 w-7 text-primary" />
@@ -260,6 +261,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
                           alt={product.name}
                           fill
                           className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <div className="flex-1 min-w-0">
