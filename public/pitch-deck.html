@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JulaZone – Precision Engineering for the West African Trade Route</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #e94560;
+            --accent-light: #ff6b6b;
+            --gold: #ffd700;
+            --gold-dark: #d4a000;
+            --text: #f5f5f5;
+            --text-muted: #a0a0a0;
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 120px 5% 80px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--bg-gradient);
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(233, 69, 96, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 50%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--gold);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 .highlight {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Founder Section */
+        .founder-section {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+
+        .founder-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .founder-image {
+            position: relative;
+        }
+
+        .founder-image-placeholder {
+            width: 100%;
+            aspect-ratio: 4/5;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            border-radius: 20px;
+            border: 2px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .founder-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .founder-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .founder-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+
+        .founder-name-badge {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .founder-role-badge {
+            font-size: 0.9rem;
+            color: var(--gold);
+            margin-top: 0.5rem;
+        }
+
+        .badge-strip {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .mini-badge {
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .founder-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+        }
+
+        .founder-content p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .founder-content p strong {
+            color: var(--text);
+        }
+
+        .mission-quote {
+            padding: 2rem;
+            background: var(--card-bg);
+            border-left: 4px solid var(--gold);
+            border-radius: 0 10px 10px 0;
+            margin-top: 2rem;
+        }
+
+        .mission-quote p {
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-bottom: 0;
+        }
+
+        /* Tech Section */
+        .tech-section {
+            background: var(--primary);
+            position: relative;
+        }
+
+        .tech-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .tech-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+        }
+
+        .tech-card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-card-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .tech-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .ai-highlight {
+            margin-top: 4rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .ai-highlight h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--gold);
+        }
+
+        .ai-highlight p {
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .stack-item {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Market Section */
+        .market-section {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .market-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .market-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .market-card.banjul::before {
+            background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+        }
+
+        .market-card.lagos::before {
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        }
+
+        .market-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .market-card .tagline {
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .market-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .market-features {
+            list-style: none;
+        }
+
+        .market-features li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: var(--text-muted);
+        }
+
+        .market-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .trust-gap {
+            margin-top: 4rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .trust-gap h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .trust-gap .highlight-text {
+            color: var(--gold);
+        }
+
+        /* Roadmap Section */
+        .roadmap-section {
+            background: var(--secondary);
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--gold), var(--accent));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 2rem;
+            width: 50%;
+        }
+
+        .timeline-item:nth-child(odd) {
+            margin-left: auto;
+            padding-left: 4rem;
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-right: 4rem;
+            text-align: right;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--gold);
+            border-radius: 50%;
+            top: 2.5rem;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            left: -10px;
+        }
+
+        .timeline-item:nth-child(even)::before {
+            right: -10px;
+        }
+
+        .timeline-item.completed::before {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        .timeline-item.current::before {
+            background: var(--gold);
+            box-shadow: 0 0 20px var(--gold);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-badge.complete {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent);
+        }
+
+        .timeline-item h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Investment Section */
+        .investment-section {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+
+        .investment-amount {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .investment-amount .amount {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .investment-amount .round {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .allocation-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .allocation-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .allocation-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .allocation-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--primary);
+        }
+
+        .allocation-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .allocation-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .partner-message {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+        }
+
+        .partner-message p {
+            font-size: 1.2rem;
+            color: var(--text);
+            font-style: italic;
+        }
+
+        .partner-message .signature {
+            margin-top: 1.5rem;
+            color: var(--gold);
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        /* Platform Features */
+        .features-section {
+            background: var(--primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+
+        .feature-card h4 {
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            text-align: center;
+            min-height: auto;
+            padding: 100px 5%;
+        }
+
+        .cta-section h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 3rem;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.3);
+        }
+
+        .contact-info {
+            margin-top: 3rem;
+            color: var(--text-muted);
+        }
+
+        .contact-info a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            padding: 3rem 5%;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .founder-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .founder-image {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .market-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                padding-left: 60px !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+            }
+
+            .timeline-item::before {
+                left: 10px !important;
+                right: auto !important;
+            }
+
+            .stats-row {
+                flex-wrap: wrap;
+                gap: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            section {
+                padding: 80px 5% 60px;
+            }
+
+            .hero-badge {
+                font-size: 0.75rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">JulaZone</div>
+        <ul class="nav-links">
+            <li><a href="#founder">Founder</a></li>
+            <li><a href="#technology">Technology</a></li>
+            <li><a href="#market">Market</a></li>
+            <li><a href="#roadmap">Roadmap</a></li>
+            <li><a href="#investment">Investment</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content fade-in">
+                <span class="hero-badge">📍 HAMBURG → WEST AFRICA</span>
+                <h1>Precision Engineering for the <span class="highlight">West African Trade Route</span></h1>
+                <p class="hero-subtitle">JulaZone bridges the trust and logistics gap between European quality and the African consumer through AI-native e-commerce infrastructure.</p>
+                
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-number">67,800+</div>
+                        <div class="stat-label">Lines of Code</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">363</div>
+                        <div class="stat-label">Source Files</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">€300K</div>
+                        <div class="stat-label">Pre-Seed Round</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section class="founder-section" id="founder">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">1</div>
+                <h2>The Founder & The Mission</h2>
+                <p class="section-subtitle">Built by an aircraft mechanic with zero-failure precision</p>
+            </div>
+            
+            <div class="founder-grid">
+                <div class="founder-image fade-in">
+                    <div class="founder-image-placeholder">
+                        <div class="founder-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div class="founder-name-badge">Alasan</div>
+                        <div class="founder-role-badge">Founder & Lead Architect</div>
+                        <div class="badge-strip">
+                            <span class="mini-badge">🛫 Lufthansa Technik</span>
+                            <span class="mini-badge">🌍 West African Roots</span>
+                            <span class="mini-badge">🗣️ Mandinka</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="founder-content fade-in">
+                    <h3>Not a Typical Startup Founder</h3>
+                    <p><strong>Current Role:</strong> Aircraft Maintenance Mechanic at Lufthansa Technik, ensuring the precision and safety of global aircraft engines since 6:00 AM each day.</p>
+                    <p>In the evenings, I apply that same <strong>"zero-failure" mindset</strong> to JulaZone. Raised in the markets of West Africa and fluent in Mandinka, I understand the culture of the Jula merchants intimately.</p>
+                    <p>JulaZone is the <strong>modern digital version</strong> of that historical trade route—built with aircraft-grade precision for the African consumer.</p>
+                    
+                    <div class="mission-quote">
+                        <p>"To bridge the trust and logistics gap between European quality and the African consumer."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="tech-section" id="technology">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">2</div>
+                <h2>The Technical Moat</h2>
+                <p class="section-subtitle">AI-Native Infrastructure built with precision engineering</p>
+            </div>
+            
+            <div class="tech-grid fade-in">
+                <div class="tech-card">
+                    <div class="tech-card-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                    </div>
+                    <h3>Custom Codebase</h3>
+                    <div class="value">67,800+</div>
+                    <p>Lines of production-grade code, architected from the ground up with scalability in mind.</p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-card-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z"/></svg>
+                    </div>
+                    <h3>Source Files</h3>
+                    <div class="value">363</div>
+                    <p>Organized architecture spanning frontend, backend, APIs, migrations, and mobile apps.</p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-card-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    </div>
+                    <h3>Database Migrations</h3>
+                    <div class="value">18</div>
+                    <p>Comprehensive schema covering users, products, orders, boutiques, messaging, and analytics.</p>
+                </div>
+                
+                <div class="tech-card">
+                    <div class="tech-card-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h3>API Endpoints</h3>
+                    <div class="value">30+</div>
+                    <p>RESTful APIs for admin, business, customer, and public operations with rate limiting.</p>
+                </div>
+            </div>
+            
+            <div class="ai-highlight fade-in">
+                <h3>🤖 AI-First Development Approach</h3>
+                <p>While many startups spend hundreds of thousands of Euros on development teams, I have leveraged an <strong>AI-first mindset</strong> to build a production-grade platform independently. AI agents serve as my high-velocity engineering team, enabling me to act as Lead Architect while achieving development scale that usually requires a full staff.</p>
+                
+                <div class="tech-stack">
+                    <span class="stack-item">Next.js 14</span>
+                    <span class="stack-item">React 18</span>
+                    <span class="stack-item">TypeScript</span>
+                    <span class="stack-item">Google Gemini 2.0</span>
+                    <span class="stack-item">Supabase</span>
+                    <span class="stack-item">Firebase</span>
+                    <span class="stack-item">Tailwind CSS</span>
+                    <span class="stack-item">Capacitor (Android)</span>
+                    <span class="stack-item">Wave Money</span>
+                    <span class="stack-item">Orange Money</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Section -->
+    <section class="market-section" id="market">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">3</div>
+                <h2>Market Strategy</h2>
+                <p class="section-subtitle">Two strategic entry points into the African market</p>
+            </div>
+            
+            <div class="market-grid fade-in">
+                <div class="market-card banjul">
+                    <h3>🇬🇲 Banjul</h3>
+                    <div class="tagline">The Gateway</div>
+                    <p>A stable, manageable market to refine our logistics and quality control operations before scaling.</p>
+                    <ul class="market-features">
+                        <li>Stable regulatory environment</li>
+                        <li>Strong diaspora connections to Europe</li>
+                        <li>Ideal for operations testing</li>
+                        <li>Lower customer acquisition costs</li>
+                        <li>Quality control refinement</li>
+                    </ul>
+                </div>
+                
+                <div class="market-card lagos">
+                    <h3>🇳🇬 Lagos</h3>
+                    <div class="tagline">The Giant</div>
+                    <p>The heart of African e-commerce and tech growth, providing the volume necessary for rapid scale.</p>
+                    <ul class="market-features">
+                        <li>200M+ population market</li>
+                        <li>Africa's largest e-commerce market</li>
+                        <li>Tech-savvy consumer base</li>
+                        <li>Established payment infrastructure</li>
+                        <li>High growth potential</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="trust-gap fade-in">
+                <h3>Solving the <span class="highlight-text">"Trust Gap"</span></h3>
+                <p>JulaZone ensures <strong>European standards of quality control</strong> from our Hamburg hub, delivered through a platform built specifically for the <strong>African mobile-first consumer</strong>. We bridge the gap that has historically prevented seamless trade between Europe and Africa.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">4</div>
+                <h2>Platform Capabilities</h2>
+                <p class="section-subtitle">Production-ready features for all stakeholders</p>
+            </div>
+            
+            <div class="features-grid fade-in">
+                <div class="feature-card">
+                    <h4>🤖 AI Shopping Assistant</h4>
+                    <p>Google Gemini 2.0-powered chatbot for natural language product discovery and recommendations.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏪 Multi-Vendor Marketplace</h4>
+                    <p>Boutique system with customizable storefronts, analytics, and multi-phase seller verification.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💳 African Payment Rails</h4>
+                    <p>Wave Money, Orange Money, MTN MoMo, and Cash on Delivery integrations.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile-First Design</h4>
+                    <p>Optimized for slow networks, data efficiency, and touch-first African mobile users.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔐 Enterprise Security</h4>
+                    <p>Row-Level Security, 2FA, rate limiting, and role-based access control.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Real-Time Analytics</h4>
+                    <p>Visitor tracking, sales metrics, and customer insights for data-driven decisions.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💬 Messaging System</h4>
+                    <p>Direct buyer-seller communication for trust building and customer service.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📦 Order Management</h4>
+                    <p>Complete order lifecycle from checkout to delivery with real-time tracking.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section class="roadmap-section" id="roadmap">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">5</div>
+                <h2>Execution Roadmap</h2>
+                <p class="section-subtitle">Clear milestones from prototype to market leader</p>
+            </div>
+            
+            <div class="timeline fade-in">
+                <div class="timeline-item completed">
+                    <span class="phase-badge complete">COMPLETE</span>
+                    <h3>Phase 1: Architecture</h3>
+                    <p>Platform architecture and payment integrations finalized. Core marketplace, AI assistant, seller onboarding, and Android app complete.</p>
+                </div>
+                
+                <div class="timeline-item current">
+                    <span class="phase-badge">CURRENT</span>
+                    <h3>Phase 2: Pre-Seed Funding</h3>
+                    <p>Securing €300K to transition from solo "Mechanic/Architect" to operational CEO with dedicated focus.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <span class="phase-badge">NEXT 6 MONTHS</span>
+                    <h3>Phase 3: Team & Vendors</h3>
+                    <p>Recruit two specialized engineers for 24/7 technical oversight. Onboard first 50 vetted German vendors.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <span class="phase-badge">LAUNCH</span>
+                    <h3>Phase 4: Go Live</h3>
+                    <p>Live operations in Banjul followed by phased rollout in Lagos. iOS app launch and additional payment providers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Investment Section -->
+    <section class="investment-section" id="investment">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-number">6</div>
+                <h2>The Investment Ask</h2>
+                <p class="section-subtitle">From high-precision prototype to market leader</p>
+            </div>
+            
+            <div class="investment-amount fade-in">
+                <div class="amount">€300,000</div>
+                <div class="round">Pre-Seed Round</div>
+            </div>
+            
+            <div class="allocation-grid fade-in">
+                <div class="allocation-card">
+                    <div class="allocation-icon">
+                        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </div>
+                    <h4>Team Building</h4>
+                    <p>Hiring 2 Full-Stack Engineers for 24/7 technical oversight and codebase management.</p>
+                </div>
+                
+                <div class="allocation-card">
+                    <div class="allocation-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <h4>Founder Transition</h4>
+                    <p>Enabling 100% focus transition from the aircraft hangar to JulaZone operations.</p>
+                </div>
+                
+                <div class="allocation-card">
+                    <div class="allocation-icon">
+                        <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                    </div>
+                    <h4>Growth & Marketing</h4>
+                    <p>Initial marketing and vendor acquisition in the Hamburg-West Africa corridor.</p>
+                </div>
+            </div>
+            
+            <div class="partner-message fade-in">
+                <p>"I am seeking a partner who values resilience, technical skin in the game, and the grit it takes to build a company while maintaining aircraft."</p>
+                <div class="signature">— Alasan, Founder</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container fade-in">
+            <h2>Let's Build the Future of African E-Commerce</h2>
+            <p>JulaZone is production-ready with €0 external funding. Imagine what we can achieve with the right partner.</p>
+            <a href="mailto:contact@julazone.com" class="cta-button">Schedule a Call</a>
+            
+            <div class="contact-info">
+                <p>🌐 <a href="https://julazone.com">julazone.com</a> | 📧 <a href="mailto:alasansilla@gmail.com">alasansilla@gmail.com</a> | 📞 +49 160 8703776</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 JulaZone. Africa's Trusted Marketplace. | Confidential Investment Materials</p>
+    </footer>
+
+    <script>
+        // Scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

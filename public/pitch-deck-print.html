@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JulaZone Investor Pitch Deck – Print Version</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --gold: #d4a000;
+            --text: #1a1a2e;
+            --text-muted: #555;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: white;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            page-break-after: always;
+            position: relative;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .page-number {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Section Headers */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .section-number {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary) 0%, #16213e 100%);
+            color: white;
+        }
+
+        .cover-page .logo {
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .cover-page h1 {
+            color: white;
+            font-size: 2.5rem;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+
+        .cover-page .tagline {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+            max-width: 450px;
+            margin-bottom: 60px;
+        }
+
+        .cover-stats {
+            display: flex;
+            gap: 50px;
+            margin-top: 40px;
+        }
+
+        .cover-stat {
+            text-align: center;
+        }
+
+        .cover-stat .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .cover-stat .label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cover-footer {
+            position: absolute;
+            bottom: 30mm;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Content Styling */
+        .content-block {
+            margin-bottom: 25px;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: var(--text-muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        /* Cards */
+        .card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+
+        .card.highlight {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(212, 160, 0, 0.05) 0%, rgba(233, 69, 96, 0.02) 100%);
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Lists */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: var(--text-muted);
+        }
+
+        ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Quote */
+        .quote {
+            padding: 20px 25px;
+            background: #f5f5f5;
+            border-left: 4px solid var(--gold);
+            margin: 20px 0;
+            font-style: italic;
+            font-size: 1.05rem;
+            color: var(--text);
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 5px 12px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tag.gold {
+            background: var(--gold);
+        }
+
+        .tag.accent {
+            background: var(--accent);
+        }
+
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stats-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .stats-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .stats-table .value {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--gold), var(--accent));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 25px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 5px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border: 3px solid var(--gold);
+            border-radius: 50%;
+        }
+
+        .timeline-item.completed::before {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .timeline-item.current::before {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .phase-label {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(212, 160, 0, 0.2);
+            color: var(--gold);
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .phase-label.complete {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent);
+        }
+
+        /* Investment Section */
+        .investment-amount {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, #16213e 100%);
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .investment-amount .amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .investment-amount .round {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Footer */
+        .page-footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Print Styles */
+        @media print {
+            .page {
+                margin: 0;
+                box-shadow: none;
+            }
+        }
+
+        /* Screen Preview */
+        @media screen {
+            body {
+                background: #e0e0e0;
+                padding: 20px;
+            }
+
+            .page {
+                box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+                margin-bottom: 30px;
+            }
+        }
+
+        /* Founder Box */
+        .founder-box {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .founder-icon-box {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .founder-icon-box svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        .founder-details h3 {
+            margin-bottom: 5px;
+        }
+
+        .founder-details .role {
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* Market Cards */
+        .market-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .market-card.banjul::before {
+            background: var(--gold);
+        }
+
+        .market-card.lagos::before {
+            background: var(--accent);
+        }
+
+        .market-card h3 {
+            font-size: 1.3rem;
+        }
+
+        .market-card .tagline {
+            color: var(--gold);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Cover -->
+    <div class="page cover-page">
+        <div class="logo">JulaZone</div>
+        <h1>Precision Engineering for the West African Trade Route</h1>
+        <p class="tagline">Bridging the trust and logistics gap between European quality and the African consumer through AI-native e-commerce infrastructure.</p>
+        
+        <div class="cover-stats">
+            <div class="cover-stat">
+                <div class="number">67,800+</div>
+                <div class="label">Lines of Code</div>
+            </div>
+            <div class="cover-stat">
+                <div class="number">363</div>
+                <div class="label">Source Files</div>
+            </div>
+            <div class="cover-stat">
+                <div class="number">€300K</div>
+                <div class="label">Pre-Seed Ask</div>
+            </div>
+        </div>
+        
+        <div class="cover-footer">
+            Confidential Investment Materials | January 2026
+        </div>
+    </div>
+
+    <!-- Page 2: Founder & Mission -->
+    <div class="page">
+        <div class="page-header">
+            <div class="logo">JulaZone</div>
+            <div class="page-number">Page 1 of 5</div>
+        </div>
+        
+        <div class="section-title">
+            <div class="section-number">1</div>
+            <div>
+                <h2>The Founder & The Mission</h2>
+                <p class="subtitle">Built by an aircraft mechanic with zero-failure precision</p>
+            </div>
+        </div>
+        
+        <div class="founder-box">
+            <div class="founder-icon-box">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="founder-details">
+                <h3>Alasan</h3>
+                <div class="role">Founder & Lead Architect</div>
+                <div>
+                    <span class="tag">🛫 Lufthansa Technik</span>
+                    <span class="tag gold">🌍 West African Roots</span>
+                    <span class="tag accent">🗣️ Mandinka Speaker</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-block" style="margin-top: 25px;">
+            <h3>Not a Typical Startup Founder</h3>
+            <p><strong>Current Role:</strong> Aircraft Maintenance Mechanic at Lufthansa Technik, where I ensure the precision and safety of global aircraft engines beginning at 6:00 AM each day.</p>
+            <p>In the evenings, I apply that same <strong>"zero-failure" mindset</strong> to JulaZone. Raised in the markets of West Africa and fluent in Mandinka, I understand the culture of the Jula merchants intimately.</p>
+            <p>JulaZone is the <strong>modern digital version</strong> of that historical trade route—built with aircraft-grade precision for the African consumer.</p>
+        </div>
+        
+        <div class="quote">
+            "To bridge the trust and logistics gap between European quality and the African consumer."
+        </div>
+        
+        <div class="card highlight">
+            <h3>Why This Matters</h3>
+            <p style="margin-bottom: 0;">The Jula people have been merchants along the trans-Saharan trade routes for centuries. Their name means "trader" in Mandinka. JulaZone honors this legacy while modernizing it for the digital age—connecting Hamburg's quality standards with West African consumers through technology built by someone who understands both worlds.</p>
+        </div>
+        
+        <div class="page-footer">
+            <span>JulaZone – Africa's Trusted Marketplace</span>
+            <span>Confidential</span>
+        </div>
+    </div>
+
+    <!-- Page 3: Technical Moat -->
+    <div class="page">
+        <div class="page-header">
+            <div class="logo">JulaZone</div>
+            <div class="page-number">Page 2 of 5</div>
+        </div>
+        
+        <div class="section-title">
+            <div class="section-number">2</div>
+            <div>
+                <h2>The Technical Moat</h2>
+                <p class="subtitle">AI-Native Infrastructure built with precision engineering</p>
+            </div>
+        </div>
+        
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Lines of Code</td>
+                    <td class="value">67,800+</td>
+                    <td>Production-grade, custom-architected</td>
+                </tr>
+                <tr>
+                    <td>Source Files</td>
+                    <td class="value">363</td>
+                    <td>Full-stack architecture</td>
+                </tr>
+                <tr>
+                    <td>Database Migrations</td>
+                    <td class="value">18</td>
+                    <td>Comprehensive data schema</td>
+                </tr>
+                <tr>
+                    <td>API Endpoints</td>
+                    <td class="value">30+</td>
+                    <td>Complete REST API coverage</td>
+                </tr>
+                <tr>
+                    <td>Test Cases</td>
+                    <td class="value">75+</td>
+                    <td>Quality assurance</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="card highlight">
+            <h3>🤖 AI-First Development Approach</h3>
+            <p>While many startups spend hundreds of thousands of Euros on development teams, I have leveraged an <strong>AI-first mindset</strong> to build a production-grade platform independently. AI agents serve as my high-velocity engineering team, enabling me to act as Lead Architect while achieving development scale that usually requires a full staff.</p>
+            <p style="margin-bottom: 0;"><strong>The codebase is developed with AI coders</strong> under my technical direction—a model that dramatically reduces costs while maintaining quality.</p>
+        </div>
+        
+        <h3 style="margin-top: 20px;">Technology Stack</h3>
+        <div style="margin-top: 10px;">
+            <span class="tag">Next.js 14</span>
+            <span class="tag">React 18</span>
+            <span class="tag">TypeScript</span>
+            <span class="tag gold">Google Gemini 2.0</span>
+            <span class="tag">Supabase</span>
+            <span class="tag">Firebase</span>
+            <span class="tag">Tailwind CSS</span>
+            <span class="tag">Capacitor (Android)</span>
+            <span class="tag accent">Wave Money</span>
+            <span class="tag accent">Orange Money</span>
+        </div>
+        
+        <div class="grid-2" style="margin-top: 20px;">
+            <div class="card">
+                <h3>For Customers</h3>
+                <ul>
+                    <li>AI Shopping Assistant (Gemini 2.0)</li>
+                    <li>Natural language search</li>
+                    <li>Personalized recommendations</li>
+                    <li>Mobile-first design</li>
+                    <li>African payment methods</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>For Sellers</h3>
+                <ul>
+                    <li>Complete boutique dashboard</li>
+                    <li>Product & inventory management</li>
+                    <li>Sales analytics</li>
+                    <li>Messaging system</li>
+                    <li>Payout management</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="page-footer">
+            <span>JulaZone – Africa's Trusted Marketplace</span>
+            <span>Confidential</span>
+        </div>
+    </div>
+
+    <!-- Page 4: Market Strategy -->
+    <div class="page">
+        <div class="page-header">
+            <div class="logo">JulaZone</div>
+            <div class="page-number">Page 3 of 5</div>
+        </div>
+        
+        <div class="section-title">
+            <div class="section-number">3</div>
+            <div>
+                <h2>Market Strategy – Banjul & Lagos</h2>
+                <p class="subtitle">Two strategic entry points into the African market</p>
+            </div>
+        </div>
+        
+        <div class="grid-2">
+            <div class="market-card banjul">
+                <h3>🇬🇲 Banjul</h3>
+                <div class="tagline">The Gateway</div>
+                <p>A stable, manageable market to refine our logistics and quality control operations.</p>
+                <ul>
+                    <li>Stable regulatory environment</li>
+                    <li>Strong diaspora connections</li>
+                    <li>Ideal for operations testing</li>
+                    <li>Lower acquisition costs</li>
+                </ul>
+            </div>
+            
+            <div class="market-card lagos">
+                <h3>🇳🇬 Lagos</h3>
+                <div class="tagline">The Giant</div>
+                <p>The heart of African e-commerce, providing volume for rapid scale.</p>
+                <ul>
+                    <li>200M+ population market</li>
+                    <li>Africa's largest e-commerce</li>
+                    <li>Tech-savvy consumers</li>
+                    <li>High growth potential</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card highlight" style="margin-top: 20px;">
+            <h3>Solving the "Trust Gap"</h3>
+            <p style="margin-bottom: 0;">JulaZone ensures <strong>European standards of quality control</strong> from our Hamburg hub, delivered through a platform built specifically for the <strong>African mobile-first consumer</strong>. We bridge the gap that has historically prevented seamless trade between Europe and Africa.</p>
+        </div>
+        
+        <h3 style="margin-top: 25px;">Market Opportunity</h3>
+        <div class="grid-2" style="margin-top: 10px;">
+            <div class="card">
+                <table class="stats-table" style="margin: 0;">
+                    <tr>
+                        <td>African E-commerce Market (2025)</td>
+                        <td class="value">$75B</td>
+                    </tr>
+                    <tr>
+                        <td>Internet Users in Africa</td>
+                        <td class="value">400M+</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile-First Access</td>
+                        <td class="value">80%</td>
+                    </tr>
+                    <tr>
+                        <td>Youth Population (under 25)</td>
+                        <td class="value">50%</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="card">
+                <h3>Competitive Advantages</h3>
+                <ul>
+                    <li><strong>AI-First:</strong> Built with AI from day one</li>
+                    <li><strong>Modern Tech:</strong> No legacy debt</li>
+                    <li><strong>Local Focus:</strong> African payments & delivery</li>
+                    <li><strong>Mobile-Native:</strong> Optimized for how Africans shop</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="page-footer">
+            <span>JulaZone – Africa's Trusted Marketplace</span>
+            <span>Confidential</span>
+        </div>
+    </div>
+
+    <!-- Page 5: Roadmap -->
+    <div class="page">
+        <div class="page-header">
+            <div class="logo">JulaZone</div>
+            <div class="page-number">Page 4 of 5</div>
+        </div>
+        
+        <div class="section-title">
+            <div class="section-number">4</div>
+            <div>
+                <h2>Execution Roadmap</h2>
+                <p class="subtitle">Clear milestones from prototype to market leader</p>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-item completed">
+                <span class="phase-label complete">COMPLETE</span>
+                <h3>Phase 1: Platform Architecture</h3>
+                <p>Platform architecture and payment integrations finalized. Core marketplace functionality, AI shopping assistant, seller onboarding system, and Android app complete. 67,800+ lines of production code.</p>
+            </div>
+            
+            <div class="timeline-item current">
+                <span class="phase-label">CURRENT</span>
+                <h3>Phase 2: Pre-Seed Funding</h3>
+                <p>Securing €300,000 Pre-Seed round to transition from solo "Mechanic/Architect" to operational CEO with dedicated focus on business growth.</p>
+            </div>
+            
+            <div class="timeline-item">
+                <span class="phase-label">NEXT 6 MONTHS</span>
+                <h3>Phase 3: Team & Vendors</h3>
+                <p>Recruit two specialized Full-Stack Engineers for 24/7 technical oversight and codebase management. Onboard first 50 vetted German vendors for quality products.</p>
+            </div>
+            
+            <div class="timeline-item">
+                <span class="phase-label">LAUNCH</span>
+                <h3>Phase 4: Go Live</h3>
+                <p>Live operations in Banjul followed by phased rollout in Lagos. iOS app launch, additional payment providers (Orange Money, MTN MoMo), and multi-language support.</p>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 30px;">Future Expansion (2027+)</h3>
+        <div class="grid-3" style="margin-top: 10px;">
+            <div class="card" style="text-align: center;">
+                <h3>📦</h3>
+                <p style="margin: 0; font-size: 0.85rem;">Logistics partnerships & fulfillment centers</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>🏢</h3>
+                <p style="margin: 0; font-size: 0.85rem;">B2B wholesale marketplace</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>🌍</h3>
+                <p style="margin: 0; font-size: 0.85rem;">Pan-African expansion</p>
+            </div>
+        </div>
+        
+        <div class="page-footer">
+            <span>JulaZone – Africa's Trusted Marketplace</span>
+            <span>Confidential</span>
+        </div>
+    </div>
+
+    <!-- Page 6: Investment -->
+    <div class="page">
+        <div class="page-header">
+            <div class="logo">JulaZone</div>
+            <div class="page-number">Page 5 of 5</div>
+        </div>
+        
+        <div class="section-title">
+            <div class="section-number">5</div>
+            <div>
+                <h2>The Investment Ask</h2>
+                <p class="subtitle">From high-precision prototype to market leader</p>
+            </div>
+        </div>
+        
+        <div class="investment-amount">
+            <div class="amount">€300,000</div>
+            <div class="round">Pre-Seed Round</div>
+        </div>
+        
+        <h3>Allocation of Funds</h3>
+        <div class="grid-3" style="margin-top: 15px;">
+            <div class="card" style="text-align: center;">
+                <h3>👥 Team</h3>
+                <p style="margin: 0;">Hiring 2 Full-Stack Engineers for 24/7 technical oversight</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>🎯 Focus</h3>
+                <p style="margin: 0;">Founder transitions 100% from hangar to JulaZone operations</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>📈 Growth</h3>
+                <p style="margin: 0;">Marketing & vendor acquisition in Hamburg-West Africa corridor</p>
+            </div>
+        </div>
+        
+        <div class="quote" style="margin-top: 30px;">
+            "I am seeking a partner who values resilience, technical skin in the game, and the grit it takes to build a company while maintaining aircraft."
+            <br><br>
+            <strong style="color: var(--gold);">— Alasan, Founder</strong>
+        </div>
+        
+        <div class="card highlight" style="margin-top: 20px;">
+            <h3>Why Invest Now?</h3>
+            <ul>
+                <li><strong>Production-Ready:</strong> Platform built with €0 external funding</li>
+                <li><strong>Technical Moat:</strong> 67,800+ lines of custom code</li>
+                <li><strong>Unique Founder:</strong> Cultural understanding + technical precision</li>
+                <li><strong>Proven Execution:</strong> Built while maintaining full-time job</li>
+                <li><strong>Market Timing:</strong> African e-commerce at inflection point</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: var(--primary); border-radius: 10px; color: white;">
+            <h3 style="color: var(--gold); margin-bottom: 10px;">Let's Talk</h3>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 5px;">🌐 julazone.com | 📧 alasansilla@gmail.com | 📞 +49 160 8703776</p>
+        </div>
+        
+        <div class="page-footer">
+            <span>JulaZone – Africa's Trusted Marketplace</span>
+            <span>Confidential | January 2026</span>
+        </div>
+    </div>
+</body>
+</html>
