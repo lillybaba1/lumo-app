@@ -317,7 +317,7 @@ export async function getAutoNewArrivals(): Promise<string[]> {
     const { data: products, error } = await supabaseAdmin
       .from('products')
       .select('id, created_at')
-      .eq('status', 'active')
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(8);
 
@@ -330,25 +330,22 @@ export async function getAutoNewArrivals(): Promise<string[]> {
   }
 }
 
-// Auto-detect deals based on products with discount/sale prices
+// Auto-detect deals based on products marked as featured or with high sales
+// Note: compare_at_price and discount_percentage columns don't exist yet
+// For now, return featured products as "deals"
 export async function getAutoDeals(): Promise<string[]> {
   try {
     const { data: products, error } = await supabaseAdmin
       .from('products')
-      .select('id, price, compare_at_price, discount_percentage')
-      .eq('status', 'active')
-      .or('compare_at_price.gt.0,discount_percentage.gt.0')
+      .select('id, is_featured, sales_count')
+      .eq('is_active', true)
+      .eq('is_featured', true)
+      .order('sales_count', { ascending: false, nullsFirst: false })
       .limit(8);
 
     if (error) throw error;
 
-    // Filter to only products that actually have a discount
-    const deals = (products || []).filter(p => 
-      (p.compare_at_price && p.compare_at_price > p.price) || 
-      (p.discount_percentage && p.discount_percentage > 0)
-    );
-
-    return deals.map(p => p.id);
+    return (products || []).map(p => p.id);
   } catch (error) {
     console.error('Failed to get auto deals:', error);
     return [];
@@ -358,13 +355,14 @@ export async function getAutoDeals(): Promise<string[]> {
 // Auto-detect featured based on highest rated/reviewed products
 export async function getAutoFeatured(): Promise<string[]> {
   try {
-    // Try to get products with best ratings first
+    // Get products with best ratings first (using average_rating column)
     const { data: products, error } = await supabaseAdmin
       .from('products')
-      .select('id, rating, review_count')
-      .eq('status', 'active')
-      .order('rating', { ascending: false, nullsFirst: false })
+      .select('id, average_rating, review_count, view_count')
+      .eq('is_active', true)
+      .order('average_rating', { ascending: false, nullsFirst: false })
       .order('review_count', { ascending: false, nullsFirst: false })
+      .order('view_count', { ascending: false, nullsFirst: false })
       .limit(8);
 
     if (error) throw error;
