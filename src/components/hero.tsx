@@ -66,7 +66,7 @@ function HeroProductWidget({
                     fill
                     className="object-cover group-hover:scale-105 transition-transform"
                     sizes="80px"
-                    unoptimized
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
@@ -255,7 +255,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               priority
               className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
               style={{ objectPosition: heroImageObjectPosition }}
-              unoptimized
+              sizes="100vw"
             />
             {heroImageFit === 'cover' && (
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
@@ -296,7 +296,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             priority
             className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
             style={{ objectPosition: heroImageObjectPosition }}
-            unoptimized
+            sizes="100vw"
           />
           {/* Enhanced Gradient Overlay for better text contrast - only for cover mode */}
           {heroImageFit === 'cover' && (
@@ -335,7 +335,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                         alt={product.name}
                         fill
                         className="object-cover"
-                        unoptimized
+                        sizes="200px"
+                        loading="lazy"
                       />
                     )}
                   </div>
@@ -547,7 +548,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                         alt={product.name}
                         fill
                         className="object-cover"
-                        unoptimized
+                        sizes="96px"
+                        loading="lazy"
                       />
                     )}
                   </div>
