@@ -24,6 +24,7 @@ export interface GetProductsOptions {
   minPrice?: number;
   maxPrice?: number;
   sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'name_asc' | 'name_desc';
+  productIds?: string[]; // Filter to only these product IDs (for collections)
 }
 
 export interface PaginatedProducts {
@@ -43,7 +44,8 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
     categoryId,
     minPrice,
     maxPrice,
-    sortBy = 'name_asc'
+    sortBy = 'name_asc',
+    productIds
   } = options;
 
   try {
@@ -95,6 +97,11 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
     }
     if (maxPrice !== undefined) {
       query = query.lte('price', maxPrice);
+    }
+
+    // Filter by specific product IDs (for collections like Featured, Best Sellers, etc.)
+    if (productIds && productIds.length > 0) {
+      query = query.in('id', productIds);
     }
 
     // Apply sorting

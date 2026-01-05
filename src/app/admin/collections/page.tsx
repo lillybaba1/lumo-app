@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search, Flame } from 'lucide-react';
+import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search, Flame, Star } from 'lucide-react';
 import { getCollections, saveCollections, getBestSellersAnalytics, getTrendingProducts, saveTrendingProducts } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ type Collections = {
   bestSellers: string[];
   newArrivals: string[];
   deals: string[];
+  featured: string[];
 };
 
 type Product = {
@@ -57,12 +58,12 @@ export default function CollectionsPage() {
         fetch('/api/products').then(r => r.json()),
         getTrendingProducts()
       ]);
-      setCollections(collectionsData || { bestSellers: [], newArrivals: [], deals: [] });
+      setCollections(collectionsData || { bestSellers: [], newArrivals: [], deals: [], featured: [] });
       setAllProducts(Array.isArray(productsData) ? productsData : []);
       setTrendingProducts(trendingData || []);
     } catch (error) {
       console.error('Failed to load data:', error);
-      setCollections({ bestSellers: [], newArrivals: [], deals: [] });
+      setCollections({ bestSellers: [], newArrivals: [], deals: [], featured: [] });
     } finally {
       setLoading(false);
     }
@@ -558,7 +559,7 @@ export default function CollectionsPage() {
         <div>
           <h1 className="text-3xl font-headline font-bold">Homepage Collections</h1>
           <p className="text-muted-foreground mt-1">
-            Manage which products appear in Best Sellers, New Arrivals, and Deals
+            Manage which products appear in Best Sellers, New Arrivals, Featured, and Deals
           </p>
         </div>
         <Button onClick={handleSave} disabled={isSaving}>
@@ -580,6 +581,10 @@ export default function CollectionsPage() {
           <TabsTrigger value="new-arrivals">
             <Sparkles className="mr-2 h-4 w-4" />
             New Arrivals
+          </TabsTrigger>
+          <TabsTrigger value="featured">
+            <Star className="mr-2 h-4 w-4" />
+            Featured
           </TabsTrigger>
           <TabsTrigger value="deals">
             <Tag className="mr-2 h-4 w-4" />
@@ -607,6 +612,15 @@ export default function CollectionsPage() {
             title="New Arrivals"
             icon={Sparkles}
             description="Showcase your newest products to customers"
+          />
+        </TabsContent>
+
+        <TabsContent value="featured" className="space-y-4">
+          <CollectionEditor
+            type="featured"
+            title="Featured Products"
+            icon={Star}
+            description="Hand-picked products to highlight on the homepage and in the Featured widget"
           />
         </TabsContent>
 

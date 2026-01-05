@@ -58,9 +58,18 @@ export default function ProductsPageContainer() {
   );
 }
 
+// Collections type for filtering
+type Collections = {
+  bestSellers: string[];
+  newArrivals: string[];
+  deals: string[];
+  featured: string[];
+};
+
 function ProductsPage({ categories }: { categories: Category[] }) {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
+  const [collections, setCollections] = useState<Collections | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -76,6 +85,20 @@ function ProductsPage({ categories }: { categories: Category[] }) {
 
   // Get filter parameter from URL
   const filterParam = searchParams?.get('filter');
+
+  // Fetch collections on mount
+  useEffect(() => {
+    async function fetchCollections() {
+      try {
+        const res = await fetch('/api/collections');
+        const data = await res.json();
+        setCollections(data);
+      } catch (error) {
+        console.error('Failed to fetch collections:', error);
+      }
+    }
+    fetchCollections();
+  }, []);
 
   // Initialize filters from URL
   useEffect(() => {
@@ -112,6 +135,25 @@ function ProductsPage({ categories }: { categories: Category[] }) {
     // Special filter params
     let maxPrice = priceRange[1];
     if (filterParam === 'deals') maxPrice = 50;
+    
+    // Get product IDs from collections based on filter param
+    let productIds: string[] | undefined;
+    if (collections && filterParam) {
+      switch (filterParam) {
+        case 'featured':
+          productIds = collections.featured.length > 0 ? collections.featured : undefined;
+          break;
+        case 'bestsellers':
+          productIds = collections.bestSellers.length > 0 ? collections.bestSellers : undefined;
+          break;
+        case 'new':
+          productIds = collections.newArrivals.length > 0 ? collections.newArrivals : undefined;
+          break;
+        case 'deals':
+          productIds = collections.deals.length > 0 ? collections.deals : undefined;
+          break;
+      }
+    }
 
     try {
       const { data, count } = await getProductsPaginated({
@@ -122,6 +164,7 @@ function ProductsPage({ categories }: { categories: Category[] }) {
         minPrice: priceRange[0],
         maxPrice,
         sortBy: sortOption,
+        productIds,
       });
 
       if (isLoadMore) {
@@ -138,12 +181,12 @@ function ProductsPage({ categories }: { categories: Category[] }) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [page, debouncedSearchQuery, selectedCategory, sortBy, priceRange, filterParam]);
+  }, [page, debouncedSearchQuery, selectedCategory, sortBy, priceRange, filterParam, collections]);
 
   // Initial fetch and refetch on filter change
   useEffect(() => {
     fetchProducts(false);
-  }, [debouncedSearchQuery, selectedCategory, sortBy, priceRange[0], priceRange[1], filterParam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedSearchQuery, selectedCategory, sortBy, priceRange[0], priceRange[1], filterParam, collections]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get page title based on filter
   const pageTitle = useMemo(() => {
@@ -151,6 +194,7 @@ function ProductsPage({ categories }: { categories: Category[] }) {
       case 'new': return 'New Arrivals';
       case 'bestsellers': return 'Best Sellers';
       case 'deals': return 'Deals & Offers';
+      case 'featured': return 'Featured Products';
       default: return 'All Products';
     }
   }, [filterParam]);
@@ -166,6 +210,7 @@ function ProductsPage({ categories }: { categories: Category[] }) {
               {filterParam === 'new' && 'Discover our latest products'}
               {filterParam === 'bestsellers' && 'Shop our most popular items'}
               {filterParam === 'deals' && 'Amazing deals you don\'t want to miss'}
+              {filterParam === 'featured' && 'Hand-picked favorites just for you'}
               {!filterParam && 'Browse our complete collection'}
             </p>
           </div>

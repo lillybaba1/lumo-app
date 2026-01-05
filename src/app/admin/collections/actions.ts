@@ -7,6 +7,7 @@ type Collections = {
   bestSellers: string[];
   newArrivals: string[];
   deals: string[];
+  featured: string[];
 };
 
 type AnalyticsSuggestion = {
@@ -26,15 +27,15 @@ export async function getCollections(): Promise<Collections | null> {
     if (error) {
       if (error.code === 'PGRST116') {
         // No data found, return default empty collections
-        return { bestSellers: [], newArrivals: [], deals: [] };
+        return { bestSellers: [], newArrivals: [], deals: [], featured: [] };
       }
       throw error;
     }
 
-    return data?.value as Collections || { bestSellers: [], newArrivals: [], deals: [] };
+    return data?.value as Collections || { bestSellers: [], newArrivals: [], deals: [], featured: [] };
   } catch (error) {
     console.error('Failed to get collections:', error);
-    return { bestSellers: [], newArrivals: [], deals: [] };
+    return { bestSellers: [], newArrivals: [], deals: [], featured: [] };
   }
 }
 
