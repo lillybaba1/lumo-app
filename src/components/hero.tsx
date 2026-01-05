@@ -204,25 +204,25 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const getProductById = (id: string) => products.find(p => p.id === id);
   const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
 
-  // Get products for hero widgets - use collections if available, otherwise use first products
+  // Get products for hero widgets - ONLY show products from collections, no fallbacks
   const newArrivalsProducts = collections.newArrivals.length > 0
     ? collections.newArrivals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(0, 4); // Fallback to first 4 products
+    : []; // No fallback - only show if explicitly added to collection
   
   const bestSellersProducts = collections.bestSellers.length > 0
     ? collections.bestSellers.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(4, 8); // Fallback to next 4 products
+    : []; // No fallback - only show if explicitly added to collection
   
   const dealsProducts = collections.deals.length > 0
     ? collections.deals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(8, 12); // Fallback to next 4 products
+    : []; // No fallback - only show if explicitly added to collection
 
-  // Featured products from collections or fallback
+  // Featured products from collections or fallback to hero products
   const featuredProducts = collections.featured.length > 0
     ? collections.featured.map(id => getProductById(id)).filter(Boolean) as Product[]
     : heroProducts.length > 0 
       ? heroProducts.map(hp => getProductById(hp.productId)).filter(Boolean) as Product[]
-      : products.slice(12, 16); // Fallback to next 4 products
+      : []; // No fallback - only show if explicitly added
 
   const mobileProducts = heroProducts
     .map((hp) => {
