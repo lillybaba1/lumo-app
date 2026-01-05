@@ -1,7 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { Order, Product } from '@/lib/types';
+import { Order, Product, HeroData, HeroProduct } from '@/lib/types';
 
 type Collections = {
   bestSellers: string[];
@@ -16,23 +16,56 @@ type AnalyticsSuggestion = {
   revenue: number;
 };
 
-export async function getCollections(): Promise<Collections | null> {
+// Helper to get hero data (for syncing featured products)
+async function getHeroDataInternal(): Promise<HeroData | null> {
   try {
     const { data, error } = await supabaseAdmin
       .from('site_settings')
       .select('value')
-      .eq('key', 'homepage_collections')
+      .eq('key', 'hero_data')
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No data found, return default empty collections
-        return { bestSellers: [], newArrivals: [], deals: [], featured: [] };
-      }
+      if (error.code === 'PGRST116') return null;
       throw error;
     }
+    return data?.value as HeroData || null;
+  } catch (error) {
+    console.error('Failed to get hero data:', error);
+    return null;
+  }
+}
 
-    return data?.value as Collections || { bestSellers: [], newArrivals: [], deals: [], featured: [] };
+export async function getCollections(): Promise<Collections | null> {
+  try {
+    // Fetch both collections and hero_data in parallel
+    const [collectionsResult, heroData] = await Promise.all([
+      supabaseAdmin
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'homepage_collections')
+        .single(),
+      getHeroDataInternal()
+    ]);
+
+    let collections: Collections = { bestSellers: [], newArrivals: [], deals: [], featured: [] };
+
+    if (!collectionsResult.error) {
+      collections = collectionsResult.data?.value as Collections || collections;
+    } else if (collectionsResult.error.code !== 'PGRST116') {
+      throw collectionsResult.error;
+    }
+
+    // Sync featured from hero_data if collections.featured is empty but hero has products
+    if (heroData?.products && heroData.products.length > 0) {
+      const heroProductIds = heroData.products.map((hp: HeroProduct) => hp.productId);
+      // Merge: include hero products in featured if not already present
+      const existingFeatured = new Set(collections.featured || []);
+      heroProductIds.forEach((id: string) => existingFeatured.add(id));
+      collections.featured = Array.from(existingFeatured);
+    }
+
+    return collections;
   } catch (error) {
     console.error('Failed to get collections:', error);
     return { bestSellers: [], newArrivals: [], deals: [], featured: [] };
@@ -41,6 +74,7 @@ export async function getCollections(): Promise<Collections | null> {
 
 export async function saveCollections(collections: Collections) {
   try {
+    // Save collections
     const { error } = await supabaseAdmin
       .from('site_settings')
       .upsert({
@@ -50,6 +84,51 @@ export async function saveCollections(collections: Collections) {
       });
 
     if (error) throw error;
+
+    // Also sync featured products to hero_data
+    if (collections.featured && collections.featured.length > 0) {
+      const heroData = await getHeroDataInternal();
+      
+      // Get existing hero products
+      const existingHeroProducts = heroData?.products || [];
+      const existingProductIds = new Set(existingHeroProducts.map((hp: HeroProduct) => hp.productId));
+      
+      // Add new featured products to hero_data (with default positions)
+      let nextOrder = existingHeroProducts.length;
+      const newHeroProducts: HeroProduct[] = [];
+      
+      collections.featured.forEach((productId, index) => {
+        if (!existingProductIds.has(productId)) {
+          // Add new product with grid-like default positions
+          const row = Math.floor(index / 4);
+          const col = index % 4;
+          newHeroProducts.push({
+            id: `hero-${productId}-${Date.now()}`,
+            productId,
+            position: { x: 10 + (col * 22), y: 55 + (row * 15) },
+            size: { width: 80, height: 80 },
+            displayOrder: nextOrder++,
+            createdAt: new Date().toISOString()
+          });
+        }
+      });
+      
+      if (newHeroProducts.length > 0) {
+        const updatedHeroData: HeroData = {
+          products: [...existingHeroProducts, ...newHeroProducts],
+          heroLabelText: heroData?.heroLabelText || 'Featured',
+          heroLabelPosition: heroData?.heroLabelPosition || { x: 10, y: 15 }
+        };
+        
+        await supabaseAdmin
+          .from('site_settings')
+          .upsert({
+            key: 'hero_data',
+            value: updatedHeroData,
+            updated_at: new Date().toISOString()
+          });
+      }
+    }
   } catch (error) {
     console.error('Failed to save collections:', error);
     throw new Error('Failed to save collections.');
