@@ -74,59 +74,73 @@ export async function getCollections(): Promise<Collections | null> {
 
 export async function saveCollections(collections: Collections) {
   try {
-    // Save collections
+    // Save collections - use onConflict to properly upsert on key
     const { error } = await supabaseAdmin
       .from('site_settings')
-      .upsert({
-        key: 'homepage_collections',
-        value: collections,
-        updated_at: new Date().toISOString()
-      });
+      .upsert(
+        {
+          key: 'homepage_collections',
+          value: collections,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'key' }
+      );
 
-    if (error) throw error;
+    if (error) {
+      console.error('Failed to save homepage_collections:', error);
+      throw error;
+    }
 
-    // Also sync featured products to hero_data
+    // Also sync featured products to hero_data (non-blocking, don't fail if this fails)
     if (collections.featured && collections.featured.length > 0) {
-      const heroData = await getHeroDataInternal();
-      
-      // Get existing hero products
-      const existingHeroProducts = heroData?.products || [];
-      const existingProductIds = new Set(existingHeroProducts.map((hp: HeroProduct) => hp.productId));
-      
-      // Add new featured products to hero_data (with default positions)
-      let nextOrder = existingHeroProducts.length;
-      const newHeroProducts: HeroProduct[] = [];
-      
-      collections.featured.forEach((productId, index) => {
-        if (!existingProductIds.has(productId)) {
-          // Add new product with grid-like default positions
-          const row = Math.floor(index / 4);
-          const col = index % 4;
-          newHeroProducts.push({
-            id: `hero-${productId}-${Date.now()}`,
-            productId,
-            position: { x: 10 + (col * 22), y: 55 + (row * 15) },
-            size: { width: 80, height: 80 },
-            displayOrder: nextOrder++,
-            createdAt: new Date().toISOString()
-          });
-        }
-      });
-      
-      if (newHeroProducts.length > 0) {
-        const updatedHeroData: HeroData = {
-          products: [...existingHeroProducts, ...newHeroProducts],
-          heroLabelText: heroData?.heroLabelText || 'Featured',
-          heroLabelPosition: heroData?.heroLabelPosition || { x: 10, y: 15 }
-        };
+      try {
+        const heroData = await getHeroDataInternal();
         
-        await supabaseAdmin
-          .from('site_settings')
-          .upsert({
-            key: 'hero_data',
-            value: updatedHeroData,
-            updated_at: new Date().toISOString()
-          });
+        // Get existing hero products
+        const existingHeroProducts = heroData?.products || [];
+        const existingProductIds = new Set(existingHeroProducts.map((hp: HeroProduct) => hp.productId));
+        
+        // Add new featured products to hero_data (with default positions)
+        let nextOrder = existingHeroProducts.length;
+        const newHeroProducts: HeroProduct[] = [];
+        
+        collections.featured.forEach((productId, index) => {
+          if (!existingProductIds.has(productId)) {
+            // Add new product with grid-like default positions
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            newHeroProducts.push({
+              id: `hero-${productId}-${Date.now()}-${index}`,
+              productId,
+              position: { x: 10 + (col * 22), y: 55 + (row * 15) },
+              size: { width: 80, height: 80 },
+              displayOrder: nextOrder++,
+              createdAt: new Date().toISOString()
+            });
+          }
+        });
+        
+        if (newHeroProducts.length > 0) {
+          const updatedHeroData: HeroData = {
+            products: [...existingHeroProducts, ...newHeroProducts],
+            heroLabelText: heroData?.heroLabelText || 'Featured',
+            heroLabelPosition: heroData?.heroLabelPosition || { x: 10, y: 15 }
+          };
+          
+          await supabaseAdmin
+            .from('site_settings')
+            .upsert(
+              {
+                key: 'hero_data',
+                value: updatedHeroData,
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: 'key' }
+            );
+        }
+      } catch (heroError) {
+        // Log but don't fail - hero sync is secondary
+        console.error('Failed to sync featured to hero_data:', heroError);
       }
     }
   } catch (error) {
