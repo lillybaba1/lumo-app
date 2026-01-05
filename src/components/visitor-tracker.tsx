@@ -100,14 +100,53 @@ export function VisitorTracker() {
     }
   }, []);
 
-  // Fetch geo data
+  // Fetch geo data - try server first, then client-side fallback
   const fetchGeoData = useCallback(async (): Promise<any> => {
     try {
+      // First, try to get geo data from our API (which uses server headers)
       const response = await fetch('/api/visitors');
       if (response.ok) {
         const data = await response.json();
-        geoDataRef.current = data;
-        return data;
+        // If we got a valid IP (not localhost or unknown), use it
+        if (data.ip && data.ip !== 'localhost' && data.ip !== 'unknown') {
+          geoDataRef.current = data;
+          return data;
+        }
+      }
+      
+      // Fallback: Get public IP directly from client-side service
+      // This works when server can't detect IP (e.g., behind certain proxies)
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        if (ipResponse.ok) {
+          const ipData = await ipResponse.json();
+          const publicIp = ipData.ip;
+          
+          if (publicIp) {
+            // Now get geo data for this IP
+            const geoResponse = await fetch(`https://ipapi.co/${publicIp}/json/`);
+            if (geoResponse.ok) {
+              const geoData = await geoResponse.json();
+              if (!geoData.error) {
+                const result = {
+                  ip: publicIp,
+                  country: geoData.country_name || 'Unknown',
+                  country_code: geoData.country_code || null,
+                  city: geoData.city || 'Unknown',
+                  region: geoData.region || null,
+                  latitude: geoData.latitude || null,
+                  longitude: geoData.longitude || null,
+                  timezone: geoData.timezone || null,
+                  isp: geoData.org || null,
+                };
+                geoDataRef.current = result;
+                return result;
+              }
+            }
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Client-side IP lookup failed:', fallbackError);
       }
     } catch (error) {
       console.error('Failed to fetch geo data:', error);

@@ -53,6 +53,13 @@ function AdminLoginContent() {
         return;
       }
 
+      // Record login for IP tracking (fire and forget)
+      fetch('/api/auth/record-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginType: 'password' }),
+      }).catch(console.error);
+
       toast({
         title: "Welcome Back!",
         description: "You have successfully logged in as admin.",

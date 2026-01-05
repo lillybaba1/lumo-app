@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { recordVisitor, recordPageView, updateSessionDuration } from '@/services/visitorService';
 import { headers } from 'next/headers';
+import { isIPBanned, quickVPNCheck, logSuspiciousActivity } from '@/services/ipService';
 
 // Helper to parse user agent
 function parseUserAgent(ua: string): { browser: string; os: string; device: 'desktop' | 'mobile' | 'tablet' | 'unknown' } {
@@ -42,17 +43,80 @@ export async function POST(request: Request) {
     const headersList = await headers();
     const userAgent = headersList.get('user-agent') || '';
     
-    // Vercel-specific headers for accurate IP detection
+    // Log all headers for debugging (can be removed in production)
+    const allHeaders: Record<string, string> = {};
+    headersList.forEach((value, key) => {
+      if (key.toLowerCase().includes('ip') || key.toLowerCase().includes('forward') || key.toLowerCase().includes('client') || key.toLowerCase().includes('real')) {
+        allHeaders[key] = value;
+      }
+    });
+    
+    // IP detection priority:
+    // 1. Vercel's forwarded IP (most reliable on Vercel)
+    // 2. Cloudflare connecting IP
+    // 3. True-Client-IP (Akamai, some CDNs)
+    // 4. X-Forwarded-For (standard proxy header)
+    // 5. X-Real-IP (nginx)
+    // 6. Client-provided geo_data.ip (fallback)
     const vercelIp = headersList.get('x-vercel-forwarded-for');
     const cfConnectingIp = headersList.get('cf-connecting-ip');
+    const trueClientIp = headersList.get('true-client-ip');
     const forwardedFor = headersList.get('x-forwarded-for');
     const realIp = headersList.get('x-real-ip');
-    const ip = vercelIp?.split(',')[0]?.trim() 
+    
+    let ip = vercelIp?.split(',')[0]?.trim() 
       || cfConnectingIp 
+      || trueClientIp
       || forwardedFor?.split(',')[0]?.trim() 
       || realIp 
       || geo_data?.ip  // Fallback to IP from geo lookup
       || 'unknown';
+    
+    // Clean up IPv6 localhost
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+      ip = '127.0.0.1';
+    }
+    
+    // Debug log with all detected headers
+    console.log('[Visitor POST IP]', { 
+      resolvedIp: ip, 
+      vercelIp, 
+      cfConnectingIp, 
+      trueClientIp,
+      forwardedFor, 
+      realIp,
+      geoDataIp: geo_data?.ip,
+      relevantHeaders: allHeaders 
+    });
+
+    // Check if IP is banned
+    const banStatus = await isIPBanned(ip);
+    if (banStatus.banned) {
+      console.log('[Visitor] Banned IP attempted access:', ip, banStatus.reason);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'access_denied',
+        message: 'Access denied' 
+      }, { status: 403 });
+    }
+
+    // Quick VPN check for non-localhost IPs
+    let vpnInfo = { is_vpn: false, is_proxy: false, threat_level: 'low' };
+    if (ip !== '127.0.0.1' && ip !== 'localhost' && ip !== 'unknown' && !ip.startsWith('192.168.') && !ip.startsWith('10.')) {
+      vpnInfo = await quickVPNCheck(ip);
+      
+      // Log if VPN/proxy detected
+      if (vpnInfo.is_vpn || vpnInfo.is_proxy) {
+        await logSuspiciousActivity(
+          ip,
+          visitor_id,
+          vpnInfo.is_vpn ? 'vpn_detected' : 'proxy_detected',
+          `${vpnInfo.is_vpn ? 'VPN' : 'Proxy'} connection detected`,
+          { threat_level: vpnInfo.threat_level, geo_data },
+          vpnInfo.threat_level as 'low' | 'medium' | 'high' | 'critical'
+        );
+      }
+    }
 
     const { browser, os, device } = parseUserAgent(userAgent);
 
@@ -76,9 +140,12 @@ export async function POST(request: Request) {
         referrer: referrer || null,
         landing_page: page_path || '/',
         consent_given: consent_given || false,
+        is_vpn: vpnInfo.is_vpn,
+        is_proxy: vpnInfo.is_proxy,
+        threat_level: vpnInfo.threat_level,
       });
 
-      return NextResponse.json({ success: true, visitor });
+      return NextResponse.json({ success: true, visitor, vpn_detected: vpnInfo.is_vpn || vpnInfo.is_proxy });
     }
 
     if (action === 'pageview') {
@@ -116,13 +183,34 @@ export async function GET(request: Request) {
     const forwardedFor = headersList.get('x-forwarded-for');
     const realIp = headersList.get('x-real-ip');
     const cfConnectingIp = headersList.get('cf-connecting-ip'); // Cloudflare
+    const trueClientIp = headersList.get('true-client-ip'); // Some CDNs
     
-    // Priority: Vercel > CF > Forwarded-For > Real-IP
+    // Vercel built-in geo headers (no API call needed)
+    const vercelCity = headersList.get('x-vercel-ip-city');
+    const vercelCountry = headersList.get('x-vercel-ip-country');
+    const vercelRegion = headersList.get('x-vercel-ip-country-region');
+    const vercelLatitude = headersList.get('x-vercel-ip-latitude');
+    const vercelLongitude = headersList.get('x-vercel-ip-longitude');
+    const vercelTimezone = headersList.get('x-vercel-ip-timezone');
+    
+    // Priority: Vercel > CF > True-Client-IP > Forwarded-For > Real-IP
     const ip = vercelIp?.split(',')[0]?.trim() 
       || cfConnectingIp 
+      || trueClientIp
       || forwardedFor?.split(',')[0]?.trim() 
       || realIp 
       || '';
+
+    // Debug log all headers for troubleshooting
+    console.log('[Visitor IP Detection]', {
+      vercelIp,
+      cfConnectingIp,
+      trueClientIp,
+      forwardedFor,
+      realIp,
+      resolvedIp: ip,
+      vercelGeo: { city: vercelCity, country: vercelCountry }
+    });
 
     if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
       return NextResponse.json({ 
@@ -130,6 +218,21 @@ export async function GET(request: Request) {
         country: 'Local Development', 
         city: 'Development',
         country_code: 'DEV'
+      });
+    }
+    
+    // If Vercel geo headers are available, use them directly (fastest)
+    if (vercelCountry) {
+      return NextResponse.json({
+        ip,
+        country: vercelCountry,
+        country_code: vercelCountry,
+        city: vercelCity ? decodeURIComponent(vercelCity) : 'Unknown',
+        region: vercelRegion || null,
+        latitude: vercelLatitude ? parseFloat(vercelLatitude) : null,
+        longitude: vercelLongitude ? parseFloat(vercelLongitude) : null,
+        timezone: vercelTimezone || null,
+        isp: null,
       });
     }
 

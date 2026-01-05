@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database, Image, Building2, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Brush, Users, BarChart, Settings, FileText, Ticket, Star, CreditCard, FolderTree, Warehouse, Store, TrendingUp, HelpCircle, Mail, ImageIcon, Bot, PanelTop, Shield, Globe, Database, Image, Building2, Sparkles, ShieldAlert } from 'lucide-react';
 
 type AdminUser = {
   userId: string;
@@ -47,6 +47,7 @@ const navGroups: SidebarSection[] = [
       { href: '/admin/boutique-settings', icon: Store, label: 'Boutique System' },
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
+      { href: '/admin/ip-management', icon: ShieldAlert, label: 'IP Security' },
       { href: '/admin/privacy', icon: Shield, label: 'Privacy & Consent' },
       { href: '/admin/database', icon: Database, label: 'Database' },
     ]

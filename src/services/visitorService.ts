@@ -255,6 +255,9 @@ export async function recordVisitor(visitorData: {
   referrer?: string;
   landing_page: string;
   consent_given?: boolean;
+  is_vpn?: boolean;
+  is_proxy?: boolean;
+  threat_level?: string;
 }): Promise<Visitor | null> {
   try {
     // Check if visitor exists

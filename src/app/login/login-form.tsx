@@ -116,6 +116,13 @@ export default function LoginForm() {
 
       console.log('Email verified, checking account type...');
       
+      // Record login for IP tracking (fire and forget)
+      fetch('/api/auth/record-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginType: 'password' }),
+      }).catch(console.error);
+      
       // Check if user has a business account
       const { data: businessAccount } = await supabase
         .from('business_accounts')
