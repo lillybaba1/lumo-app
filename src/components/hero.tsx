@@ -90,7 +90,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[] }>({ bestSellers: [], newArrivals: [], deals: [] });
+  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>({ bestSellers: [], newArrivals: [], deals: [], featured: [] });
   const [loading, setLoading] = useState(true);
   const [mobileIndex, setMobileIndex] = useState(0);
 
@@ -184,7 +184,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               setProducts(Array.isArray(result.value) ? result.value : (result.value?.products || []));
               break;
             case 'collections':
-              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [] });
+              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [], featured: [] });
               break;
           }
         } else {
@@ -217,10 +217,12 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
     ? collections.deals.map(id => getProductById(id)).filter(Boolean) as Product[]
     : products.slice(8, 12); // Fallback to next 4 products
 
-  // Featured products from hero data or fallback
-  const featuredProducts = heroProducts.length > 0
-    ? heroProducts.map(hp => getProductById(hp.productId)).filter(Boolean) as Product[]
-    : products.slice(12, 16); // Fallback to next 4 products
+  // Featured products from collections or fallback
+  const featuredProducts = collections.featured.length > 0
+    ? collections.featured.map(id => getProductById(id)).filter(Boolean) as Product[]
+    : heroProducts.length > 0 
+      ? heroProducts.map(hp => getProductById(hp.productId)).filter(Boolean) as Product[]
+      : products.slice(12, 16); // Fallback to next 4 products
 
   const mobileProducts = heroProducts
     .map((hp) => {
