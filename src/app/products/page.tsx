@@ -184,7 +184,12 @@ function ProductsPage({ categories }: { categories: Category[] }) {
   }, [page, debouncedSearchQuery, selectedCategory, sortBy, priceRange, filterParam, collections]);
 
   // Initial fetch and refetch on filter change
+  // Wait for collections to load if a filter param is present
   useEffect(() => {
+    // If we have a filter param but collections haven't loaded yet, wait
+    if (filterParam && !collections) {
+      return;
+    }
     fetchProducts(false);
   }, [debouncedSearchQuery, selectedCategory, sortBy, priceRange[0], priceRange[1], filterParam, collections]); // eslint-disable-line react-hooks/exhaustive-deps
 
