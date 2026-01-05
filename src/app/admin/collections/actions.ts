@@ -233,15 +233,145 @@ export async function saveTrendingProducts(productIds: string[]) {
   try {
     const { error } = await supabaseAdmin
       .from('site_settings')
-      .upsert({
-        key: 'trending_products',
-        value: { productIds },
-        updated_at: new Date().toISOString()
-      });
+      .upsert(
+        {
+          key: 'trending_products',
+          value: { productIds },
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'key' }
+      );
 
     if (error) throw error;
   } catch (error) {
     console.error('Failed to save trending products:', error);
     throw new Error('Failed to save trending products.');
+  }
+}
+
+// Auto-detect best sellers based on order analytics
+export async function getAutoBestSellers(): Promise<string[]> {
+  try {
+    const analytics = await getBestSellersAnalytics();
+    // Return top 8 product IDs
+    return analytics.slice(0, 8).map(a => a.product.id);
+  } catch (error) {
+    console.error('Failed to get auto best sellers:', error);
+    return [];
+  }
+}
+
+// Auto-detect trending products based on recent orders (last 7 days)
+export async function getAutoTrending(): Promise<string[]> {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: orders, error } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .neq('status', 'Cancelled');
+
+    if (error) throw error;
+
+    if (!orders || orders.length === 0) {
+      return [];
+    }
+
+    // Aggregate sales data by product for recent period
+    const productSales = new Map<string, { productId: string; unitsSold: number }>();
+
+    orders.forEach((order: any) => {
+      const orderData = order as Order;
+      if (orderData.items && Array.isArray(orderData.items)) {
+        orderData.items.forEach((item) => {
+          const productId = item.product.id;
+          const quantity = item.quantity;
+
+          if (productSales.has(productId)) {
+            productSales.get(productId)!.unitsSold += quantity;
+          } else {
+            productSales.set(productId, { productId, unitsSold: quantity });
+          }
+        });
+      }
+    });
+
+    // Sort by units sold and return top 8
+    const trending = Array.from(productSales.values())
+      .sort((a, b) => b.unitsSold - a.unitsSold)
+      .slice(0, 8)
+      .map(p => p.productId);
+
+    return trending;
+  } catch (error) {
+    console.error('Failed to get auto trending:', error);
+    return [];
+  }
+}
+
+// Auto-detect new arrivals based on product creation date
+export async function getAutoNewArrivals(): Promise<string[]> {
+  try {
+    const { data: products, error } = await supabaseAdmin
+      .from('products')
+      .select('id, created_at')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (error) throw error;
+
+    return (products || []).map(p => p.id);
+  } catch (error) {
+    console.error('Failed to get auto new arrivals:', error);
+    return [];
+  }
+}
+
+// Auto-detect deals based on products with discount/sale prices
+export async function getAutoDeals(): Promise<string[]> {
+  try {
+    const { data: products, error } = await supabaseAdmin
+      .from('products')
+      .select('id, price, compare_at_price, discount_percentage')
+      .eq('status', 'active')
+      .or('compare_at_price.gt.0,discount_percentage.gt.0')
+      .limit(8);
+
+    if (error) throw error;
+
+    // Filter to only products that actually have a discount
+    const deals = (products || []).filter(p => 
+      (p.compare_at_price && p.compare_at_price > p.price) || 
+      (p.discount_percentage && p.discount_percentage > 0)
+    );
+
+    return deals.map(p => p.id);
+  } catch (error) {
+    console.error('Failed to get auto deals:', error);
+    return [];
+  }
+}
+
+// Auto-detect featured based on highest rated/reviewed products
+export async function getAutoFeatured(): Promise<string[]> {
+  try {
+    // Try to get products with best ratings first
+    const { data: products, error } = await supabaseAdmin
+      .from('products')
+      .select('id, rating, review_count')
+      .eq('status', 'active')
+      .order('rating', { ascending: false, nullsFirst: false })
+      .order('review_count', { ascending: false, nullsFirst: false })
+      .limit(8);
+
+    if (error) throw error;
+
+    return (products || []).map(p => p.id);
+  } catch (error) {
+    console.error('Failed to get auto featured:', error);
+    return [];
   }
 }

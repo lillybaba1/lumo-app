@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search, Flame, Star } from 'lucide-react';
-import { getCollections, saveCollections, getBestSellersAnalytics, getTrendingProducts, saveTrendingProducts } from './actions';
+import { Save, Loader2, TrendingUp, Sparkles, Tag, Plus, X, Search, Flame, Star, Wand2 } from 'lucide-react';
+import { getCollections, saveCollections, getBestSellersAnalytics, getTrendingProducts, saveTrendingProducts, getAutoBestSellers, getAutoTrending, getAutoNewArrivals, getAutoDeals, getAutoFeatured } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ export default function CollectionsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingTrending, setIsSavingTrending] = useState(false);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [autoLoading, setAutoLoading] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -134,6 +135,77 @@ export default function CollectionsPage() {
     setTrendingProducts(trendingProducts.filter(id => id !== productId));
   };
 
+  // Auto-add handlers
+  const handleAutoAddTrending = async () => {
+    setAutoLoading('trending');
+    try {
+      const autoProducts = await getAutoTrending();
+      if (autoProducts.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No trending products found from recent orders. Try adding some manually.",
+        });
+      } else {
+        const merged = [...new Set([...trendingProducts, ...autoProducts])];
+        setTrendingProducts(merged);
+        toast({
+          title: "Auto-Added",
+          description: `Added ${autoProducts.length} trending products based on recent sales.`,
+        });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to auto-detect trending products.", variant: "destructive" });
+    } finally {
+      setAutoLoading(null);
+    }
+  };
+
+  const handleAutoAddCollection = async (type: keyof Collections) => {
+    if (!collections) return;
+    setAutoLoading(type);
+    try {
+      let autoProducts: string[] = [];
+      let description = '';
+      
+      switch (type) {
+        case 'bestSellers':
+          autoProducts = await getAutoBestSellers();
+          description = 'best-selling products based on order history';
+          break;
+        case 'newArrivals':
+          autoProducts = await getAutoNewArrivals();
+          description = 'newest products based on creation date';
+          break;
+        case 'deals':
+          autoProducts = await getAutoDeals();
+          description = 'products with active discounts';
+          break;
+        case 'featured':
+          autoProducts = await getAutoFeatured();
+          description = 'top-rated products';
+          break;
+      }
+      
+      if (autoProducts.length === 0) {
+        toast({
+          title: "No Data",
+          description: `No ${type} products found automatically. Try adding some manually.`,
+        });
+      } else {
+        const merged = [...new Set([...collections[type], ...autoProducts])];
+        setCollections({ ...collections, [type]: merged });
+        toast({
+          title: "Auto-Added",
+          description: `Added ${autoProducts.length} ${description}.`,
+        });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: `Failed to auto-detect ${type}.`, variant: "destructive" });
+    } finally {
+      setAutoLoading(null);
+    }
+  };
+
   const addToCollection = (type: keyof Collections, productId: string) => {
     if (!collections) return;
     if (!collections[type].includes(productId)) {
@@ -196,12 +268,25 @@ export default function CollectionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="mb-4">
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={handleAutoAddTrending}
+              disabled={autoLoading === 'trending'}
+              className="flex-1"
+            >
+              {autoLoading === 'trending' ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              Auto-Add from Recent Sales
+            </Button>
             <Button
               variant="outline"
               onClick={loadAnalytics}
               disabled={loadingAnalytics}
-              className="w-full"
+              className="flex-1"
             >
               {loadingAnalytics ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -387,6 +472,23 @@ export default function CollectionsPage() {
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Auto-Add Button */}
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              onClick={() => handleAutoAddCollection(type)}
+              disabled={autoLoading === type}
+              className="w-full"
+            >
+              {autoLoading === type ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              {autoLoading === type ? 'Analyzing...' : `Auto-Add ${title}`}
+            </Button>
+          </div>
+
           {showAnalytics && (
             <div className="mb-4">
               <Button
