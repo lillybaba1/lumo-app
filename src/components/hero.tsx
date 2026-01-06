@@ -88,11 +88,66 @@ function HeroProductWidget({
   );
 }
 
+// Cache keys for localStorage
+const CACHE_KEYS = {
+  products: 'julazone_hero_products',
+  collections: 'julazone_hero_collections',
+  timestamp: 'julazone_hero_cache_time',
+};
+
+// Cache duration: 5 minutes (products can be updated frequently)
+const CACHE_DURATION = 5 * 60 * 1000;
+
+// Get cached data from localStorage
+function getCachedData() {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const timestamp = localStorage.getItem(CACHE_KEYS.timestamp);
+    if (!timestamp) return null;
+    
+    // Check if cache is still valid
+    const cacheAge = Date.now() - parseInt(timestamp, 10);
+    if (cacheAge > CACHE_DURATION) return null;
+    
+    const products = localStorage.getItem(CACHE_KEYS.products);
+    const collections = localStorage.getItem(CACHE_KEYS.collections);
+    
+    if (products && collections) {
+      return {
+        products: JSON.parse(products),
+        collections: JSON.parse(collections),
+      };
+    }
+  } catch (e) {
+    console.error('Error reading cache:', e);
+  }
+  return null;
+}
+
+// Save data to localStorage cache
+function setCachedData(products: Product[], collections: any) {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(CACHE_KEYS.products, JSON.stringify(products));
+    localStorage.setItem(CACHE_KEYS.collections, JSON.stringify(collections));
+    localStorage.setItem(CACHE_KEYS.timestamp, Date.now().toString());
+  } catch (e) {
+    console.error('Error saving cache:', e);
+  }
+}
+
 export default function Hero({ initialSettings }: HeroProps = {}) {
+  // Initialize with cached data for instant display
+  const cachedData = typeof window !== 'undefined' ? getCachedData() : null;
+  
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>({ bestSellers: [], newArrivals: [], deals: [], featured: [] });
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(cachedData?.products || []);
+  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>(
+    cachedData?.collections || { bestSellers: [], newArrivals: [], deals: [], featured: [] }
+  );
+  const [loading, setLoading] = useState(!cachedData); // Not loading if we have cached data
 
   // LOCAL DEFAULTS for instant loading - no waiting for API
   // These values are hardcoded to match JulaZone branding
@@ -167,6 +222,9 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
       const results = await Promise.allSettled(requests);
 
+      let newProducts: Product[] = [];
+      let newCollections: any = { bestSellers: [], newArrivals: [], deals: [], featured: [] };
+
       results.forEach((result, index) => {
         const type = requestTypes[index];
         if (result.status === 'fulfilled') {
@@ -175,10 +233,12 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               setSettings(result.value);
               break;
             case 'products':
-              setProducts(Array.isArray(result.value) ? result.value : (result.value?.products || []));
+              newProducts = Array.isArray(result.value) ? result.value : (result.value?.products || []);
+              setProducts(newProducts);
               break;
             case 'collections':
-              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [], featured: [] });
+              newCollections = result.value || { bestSellers: [], newArrivals: [], deals: [], featured: [] };
+              setCollections(newCollections);
               break;
           }
         } else {
@@ -186,9 +246,15 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         }
       });
 
+      // Cache the fresh data for instant loading on next visit
+      if (newProducts.length > 0) {
+        setCachedData(newProducts, newCollections);
+      }
+
       setLoading(false);
     };
 
+    // Always fetch fresh data in background, even if we have cache
     load().catch(err => {
       console.error('Failed to load hero section:', err);
       setLoading(false);
