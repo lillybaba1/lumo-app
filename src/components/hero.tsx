@@ -95,9 +95,10 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [loading, setLoading] = useState(true);
 
   // Use initial settings for immediate render, then fetch fresh data
+  // Default to local hero image for instant loading (no external fetch delay)
   const heroHeading = settings?.heroHeading || 'Step into JulaZone';
   const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '';
+  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '/hero-background.jpg';
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
   const heroImageFit = settings?.heroImageFit || 'cover';
   const heroHeadingColor = settings?.heroHeadingColor || '#ffffff';
