@@ -1,14 +1,24 @@
 <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <!-- Gambian Flag -->
-  <rect width="48" height="48" fill="#ffffff"/>
-  <!-- Red stripe (top) -->
-  <rect y="0" width="48" height="13.7" fill="#CE1126"/>
-  <!-- White stripe -->
-  <rect y="13.7" width="48" height="3.4" fill="#FFFFFF"/>
-  <!-- Blue stripe (center) -->
-  <rect y="17.1" width="48" height="13.7" fill="#0C1C8C"/>
-  <!-- White stripe -->
-  <rect y="30.9" width="48" height="3.4" fill="#FFFFFF"/>
-  <!-- Green stripe (bottom) -->
-  <rect y="34.3" width="48" height="13.7" fill="#3A7728"/>
+  <defs>
+    <linearGradient id="bagGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="30%" style="stop-color:#0EA5E9"/>
+      <stop offset="70%" style="stop-color:#0C4A6E"/>
+      <stop offset="100%" style="stop-color:#B8860B"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Shopping Bag Body -->
+  <path d="M8 14 L8 42 Q8 44 10 44 L38 44 Q40 44 40 42 L40 14 Z" fill="url(#bagGradient)"/>
+  
+  <!-- Bag Handles -->
+  <path d="M16 14 Q16 6 24 6 Q32 6 32 14" fill="none" stroke="#0C4A6E" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Africa Silhouette (simplified) -->
+  <path d="M24 18 
+    L26 18 L27 19 L28 18 L29 19 L29 21 L30 22 L30 24 L31 25 L31 27 
+    L30 28 L30 30 L29 32 L28 33 L27 35 L26 36 L25 37 L24 38 
+    L23 38 L22 37 L21 35 L20 33 L19 31 L18 29 L18 27 L17 25 
+    L17 23 L18 21 L19 20 L20 19 L22 18 Z" 
+    fill="white"/>
 </svg>
