@@ -94,11 +94,17 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>({ bestSellers: [], newArrivals: [], deals: [], featured: [] });
   const [loading, setLoading] = useState(true);
 
-  // Use initial settings for immediate render, then fetch fresh data
-  // Default to local hero image for instant loading (no external fetch delay)
-  const heroHeading = settings?.heroHeading || 'Step into JulaZone';
-  const heroTagline = settings?.heroTagline || 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || '/hero-background.jpg';
+  // LOCAL DEFAULTS for instant loading - no waiting for API
+  // These values are hardcoded to match JulaZone branding
+  // Admin settings will override ONLY after successful fetch
+  const LOCAL_HERO_HEADING = 'Step into JulaZone';
+  const LOCAL_HERO_TAGLINE = 'Discover exceptional products crafted with care. Your journey to quality starts here.';
+  const LOCAL_HERO_IMAGE = '/hero-background.jpg';
+  
+  // Use local defaults immediately, admin settings override after fetch
+  const heroHeading = settings?.heroHeading || LOCAL_HERO_HEADING;
+  const heroTagline = settings?.heroTagline || LOCAL_HERO_TAGLINE;
+  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || LOCAL_HERO_IMAGE;
   const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
   const heroImageFit = settings?.heroImageFit || 'cover';
   const heroHeadingColor = settings?.heroHeadingColor || '#ffffff';

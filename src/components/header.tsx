@@ -35,17 +35,19 @@ interface HeaderSettings {
   storeName?: string;
 }
 
+// Local defaults for instant loading - matches JulaZone branding
+// These are used immediately, admin settings override after fetch
 const defaultHeaderSettings: HeaderSettings = {
-  headerBgColor: '#ffffff',
-  headerTextColor: '#1e293b',
+  headerBgColor: '#d946ef', // Magenta/fuchsia - JulaZone brand color
+  headerTextColor: '#ffffff',
   headerButtonStyle: 'outline',
-  headerButtonColor: '#4F46E5',
+  headerButtonColor: '#ffffff',
   homeButtonGradientFrom: '#4F46E5',
   homeButtonGradientTo: '#14B8A6',
   logoUrl: '',
   logoAlt: 'JulaZone',
-  logoWidth: 200,
-  logoHeight: 60,
+  logoWidth: 40,
+  logoHeight: 40,
   storeName: 'JulaZone',
 };
 
