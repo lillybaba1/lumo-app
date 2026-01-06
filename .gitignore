@@ -48,4 +48,11 @@ service-account-key.json
 **/service-account*.json
 service-account-base64.txt
 deploy.log
+
+# Android
+*.keystore
+*.jks
+android/keystore.properties
+android/app/build/
+android/.gradle/
 .env*.local

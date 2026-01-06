@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Lumo</string>
-    <string name="title_activity_main">Lumo</string>
-    <string name="package_name">com.lumo.app</string>
-    <string name="custom_url_scheme">com.lumo.app</string>
+    <string name="app_name">JulaZone</string>
+    <string name="title_activity_main">JulaZone</string>
+    <string name="package_name">com.julazone.app</string>
+    <string name="custom_url_scheme">com.julazone.app</string>
 </resources>

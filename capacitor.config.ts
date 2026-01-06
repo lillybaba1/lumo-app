@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.lumo.app',
-  appName: 'Lumo',
+  appId: 'com.julazone.app',
+  appName: 'JulaZone',
   webDir: 'out',
   server: {
     // Use your live Vercel URL for the app
@@ -11,12 +11,18 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
+    backgroundColor: '#d946ef',
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#000000',
-      showSpinner: false,
+      backgroundColor: '#d946ef',
+      showSpinner: true,
+      spinnerColor: '#ffffff',
+    },
+    StatusBar: {
+      backgroundColor: '#d946ef',
+      style: 'LIGHT',
     },
   },
 };
