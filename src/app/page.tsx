@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import type { Product, Category } from '@/lib/types';
+import type { Product, Category, PromoBannerSettings } from '@/lib/types';
 import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
 import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 import ServiceHighlights, { PromoBanner, DetailedTrustSection } from '@/components/service-highlights';
@@ -77,6 +77,19 @@ type MeetMakersSettings = {
 
 type SettingsResponse = HeroSettings & CategorySectionSettings & LumoPromiseSettings & MeetMakersSettings;
 
+const DEFAULT_PROMO_BANNER: PromoBannerSettings = {
+  enabled: true,
+  title: '🎉 Special Offers!',
+  subtitle: 'Get up to 30% off on selected items. Limited time only.',
+  ctaText: 'Shop Deals',
+  ctaLink: '/products?filter=deals',
+  bgGradientFrom: '#4f46e5',
+  bgGradientTo: '#06b6d4',
+  textColor: '#ffffff',
+  icon: 'percent',
+  productIds: [],
+};
+
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
@@ -86,24 +99,27 @@ export default function HomePageDataContainer() {
   const [categorySectionSettings, setCategorySectionSettings] = useState<CategorySectionSettings>({});
   const [lumoPromiseSettings, setLumoPromiseSettings] = useState<LumoPromiseSettings>({});
   const [meetMakersSettings, setMeetMakersSettings] = useState<MeetMakersSettings>({});
+  const [promoBannerSettings, setPromoBannerSettings] = useState<PromoBannerSettings>(DEFAULT_PROMO_BANNER);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       // Use proper caching - let browser and server cache responses
-      const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes] = await Promise.all([
+      const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes, promoRes] = await Promise.all([
         fetch('/api/products').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch('/api/categories').then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
         fetch('/api/collections').then(r => r.ok ? r.json() : { bestSellers: [], newArrivals: [], deals: [] }).catch(() => ({ bestSellers: [], newArrivals: [], deals: [] })),
         fetch('/api/settings', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<SettingsResponse>,
         fetch('/api/hero', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({})) as Promise<HeroSettings>,
         fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
+        fetch('/api/promo-banner').then(r => r.ok ? r.json() : DEFAULT_PROMO_BANNER).catch(() => DEFAULT_PROMO_BANNER) as Promise<PromoBannerSettings>,
       ]);
       
       setProducts(Array.isArray(productsRes) ? productsRes : (productsRes.products || []));
       setTrendingProducts(trendingRes.products || []);
       setCategories(categoriesRes.categories || (Array.isArray(categoriesRes) ? categoriesRes : []));
       setCollections(collectionsRes);
+      setPromoBannerSettings(promoRes);
       setHeroSettings({ ...settingsRes, ...heroRes });
       setCategorySectionSettings({
         categorySectionBgType: settingsRes.categorySectionBgType,
@@ -189,6 +205,7 @@ export default function HomePageDataContainer() {
         trendingProducts={trendingProducts}
         lumoPromiseSettings={lumoPromiseSettings}
         meetMakersSettings={meetMakersSettings}
+        promoBannerSettings={promoBannerSettings}
       />
     </Suspense>
   );
@@ -201,9 +218,10 @@ function Home(props: {
   categorySectionSettings: CategorySectionSettings,
   trendingProducts: Product[],
   lumoPromiseSettings: LumoPromiseSettings,
-  meetMakersSettings: MeetMakersSettings
+  meetMakersSettings: MeetMakersSettings,
+  promoBannerSettings: PromoBannerSettings
 }) {
-  const { products, categories, collections, categorySectionSettings, trendingProducts, lumoPromiseSettings, meetMakersSettings } = props;
+  const { products, categories, collections, categorySectionSettings, trendingProducts, lumoPromiseSettings, meetMakersSettings, promoBannerSettings } = props;
   const searchParams = useSearchParams();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -513,13 +531,17 @@ function Home(props: {
           />
           
           {/* Promotional Banner */}
-          {collections.bestSellers.length > 0 && (
+          {promoBannerSettings.enabled && (
             <div className="mb-8 md:mb-12">
               <PromoBanner 
-                title="🎉 Special Offers!" 
-                subtitle="Get up to 30% off on selected items. Limited time only."
-                ctaText="Shop Deals"
-                ctaLink="/products?filter=deals"
+                title={promoBannerSettings.title}
+                subtitle={promoBannerSettings.subtitle}
+                ctaText={promoBannerSettings.ctaText}
+                ctaLink={promoBannerSettings.ctaLink}
+                bgGradientFrom={promoBannerSettings.bgGradientFrom}
+                bgGradientTo={promoBannerSettings.bgGradientTo}
+                textColor={promoBannerSettings.textColor}
+                iconType={promoBannerSettings.icon}
               />
             </div>
           )}

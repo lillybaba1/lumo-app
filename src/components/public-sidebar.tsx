@@ -56,7 +56,7 @@ export default function PublicSidebar() {
       items: [
         { label: 'Home', icon: Home, href: '/' },
         { label: 'All Products', icon: Grid, href: '/products' },
-        { label: 'New Arrivals', icon: Clock, href: '/products?filter=new' },
+        { label: 'New Arrivals', icon: ShoppingBag, href: '/products?filter=new' },
         { label: 'Best Sellers', icon: Star, href: '/products?filter=bestsellers' },
         { label: 'Deals & Offers', icon: Tag, href: '/products?filter=deals' },
       ],

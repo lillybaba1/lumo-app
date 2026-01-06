@@ -320,7 +320,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               {newArrivalsProducts.length > 0 && (
                 <HeroProductWidget
                   title="New Arrivals"
-                  icon={Sparkles}
+                  icon={ShoppingBag}
                   products={newArrivalsProducts}
                   link="/products?filter=new"
                 />
@@ -391,7 +391,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             {newArrivalsProducts.length > 0 && (
               <HeroProductWidget
                 title="New Arrivals"
-                icon={Sparkles}
+                icon={ShoppingBag}
                 products={newArrivalsProducts}
                 link="/products?filter=new"
               />

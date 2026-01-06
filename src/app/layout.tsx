@@ -38,37 +38,36 @@ const inter = Inter({
 
 // Generate dynamic metadata including favicon from admin settings
 // Default favicon is inlined as data URL for instant loading (no network request)
-const DEFAULT_FAVICON_SVG = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="%23fff"/><rect y="0" width="48" height="13.7" fill="%23CE1126"/><rect y="13.7" width="48" height="3.4" fill="%23fff"/><rect y="17.1" width="48" height="13.7" fill="%230C1C8C"/><rect y="30.9" width="48" height="3.4" fill="%23fff"/><rect y="34.3" width="48" height="13.7" fill="%233A7728"/></svg>';
+// Purple shopping bag icon matching the JulaZone brand
+const DEFAULT_FAVICON_SVG = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="%239333ea"/><path d="M14 18h20l-2 16H16L14 18z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 18v-4a6 6 0 0 1 12 0v4" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="24" r="1.5" fill="white"/><circle cx="28" cy="24" r="1.5" fill="white"/></svg>';
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const settings = await getSiteSettings();
-    
-    // Use uploaded favicon if set, otherwise use inline data URL (instant load)
-    const faviconUrl = settings?.faviconUrl || DEFAULT_FAVICON_SVG;
     const siteName = settings?.storeName || 'JulaZone';
     
+    // Always use /icon.svg - no admin override for favicon
     return {
       title: siteName,
       description: 'Your modern e-commerce experience.',
       icons: {
         icon: [
-          { url: faviconUrl, type: settings?.faviconUrl ? undefined : 'image/svg+xml' },
+          { url: '/icon.svg', type: 'image/svg+xml' },
         ],
         apple: [
-          { url: settings?.faviconUrl || '/icon.svg' }, // Apple needs a file, not data URL
+          { url: '/icon.svg' },
         ],
-        shortcut: faviconUrl,
+        shortcut: '/icon.svg',
       },
     };
   } catch (error) {
-    // Fallback if settings fetch fails - use inline data URL
+    // Fallback if settings fetch fails
     return {
       title: 'JulaZone',
       description: 'Your modern e-commerce experience.',
       icons: {
         icon: [
-          { url: DEFAULT_FAVICON_SVG, type: 'image/svg+xml' },
+          { url: '/icon.svg', type: 'image/svg+xml' },
         ],
         apple: [
           { url: '/icon.svg', type: 'image/svg+xml' },

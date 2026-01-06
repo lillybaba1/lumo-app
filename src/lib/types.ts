@@ -681,6 +681,33 @@ export interface PlatformSettings {
   updatedBy?: string;
 }
 
+// Promotional Banner Settings
+export interface PromoBannerSettings {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaLink: string;
+  bgGradientFrom: string;
+  bgGradientTo: string;
+  textColor: string;
+  icon: 'percent' | 'tag' | 'gift' | 'star' | 'sparkles' | 'flame' | 'truck' | 'clock';
+  productIds: string[]; // Products to feature in deals
+}
+
+export const DEFAULT_PROMO_BANNER_SETTINGS: PromoBannerSettings = {
+  enabled: true,
+  title: '🎉 Special Offers!',
+  subtitle: 'Get up to 30% off on selected items. Limited time only.',
+  ctaText: 'Shop Deals',
+  ctaLink: '/products?filter=deals',
+  bgGradientFrom: '#4f46e5', // indigo
+  bgGradientTo: '#06b6d4', // cyan
+  textColor: '#ffffff',
+  icon: 'percent',
+  productIds: [],
+};
+
 // Default boutique system settings
 export const DEFAULT_BOUTIQUE_SETTINGS: BoutiqueSystemSettings = {
   enabled: true,

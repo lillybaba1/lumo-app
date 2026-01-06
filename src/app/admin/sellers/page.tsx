@@ -2,7 +2,7 @@ import { requireAdmin } from '@/lib/auth-admin';
 import { getAllBusinessAccounts } from '@/services/businessAccountService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Store, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Store, Clock, CheckCircle, XCircle, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -117,7 +117,7 @@ export default async function AdminSellersPage() {
                 >
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className="h-10 w-10 rounded-lg bg-orange-200 dark:bg-orange-800 flex items-center justify-center flex-shrink-0">
-                      <Store className="h-5 w-5 text-orange-700 dark:text-orange-300" />
+                      <Users className="h-5 w-5 text-orange-700 dark:text-orange-300" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold truncate">{account.businessName}</h3>
@@ -145,7 +145,7 @@ export default async function AdminSellersPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
+            <Users className="h-5 w-5" />
             All Seller Accounts ({businessAccounts.length})
           </CardTitle>
           <CardDescription>
@@ -155,7 +155,7 @@ export default async function AdminSellersPage() {
         <CardContent>
           {businessAccounts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <Store className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No seller accounts yet</p>
             </div>
           ) : (
@@ -167,7 +167,7 @@ export default async function AdminSellersPage() {
                 >
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <Store className="h-5 w-5" />
+                      <Users className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

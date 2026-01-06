@@ -10,7 +10,10 @@ import {
   MapPin,
   Gift,
   Percent,
-  Star
+  Star,
+  Tag,
+  Sparkles,
+  Flame
 } from 'lucide-react';
 
 interface ServiceHighlight {
@@ -121,6 +124,17 @@ export default function ServiceHighlights({
 }
 
 // Promotional banner component
+const BANNER_ICONS = {
+  percent: Percent,
+  tag: Tag,
+  gift: Gift,
+  star: Star,
+  sparkles: Sparkles,
+  flame: Flame,
+  truck: Truck,
+  clock: Clock,
+} as const;
+
 interface PromoBannerProps {
   title: string;
   subtitle?: string;
@@ -129,6 +143,10 @@ interface PromoBannerProps {
   bgColor?: string;
   textColor?: string;
   icon?: React.ElementType;
+  // New props for admin customization
+  bgGradientFrom?: string;
+  bgGradientTo?: string;
+  iconType?: keyof typeof BANNER_ICONS;
 }
 
 export function PromoBanner({ 
@@ -136,12 +154,26 @@ export function PromoBanner({
   subtitle, 
   ctaText = 'Shop Now', 
   ctaLink = '/products',
-  bgColor = 'bg-gradient-to-r from-primary to-accent',
-  textColor = 'text-white',
-  icon: Icon = Percent
+  bgColor,
+  textColor = '#ffffff',
+  icon,
+  bgGradientFrom = '#4f46e5',
+  bgGradientTo = '#06b6d4',
+  iconType = 'percent'
 }: PromoBannerProps) {
+  // Use passed icon or resolve from iconType
+  const Icon = icon || BANNER_ICONS[iconType] || Percent;
+  
+  // Use custom gradient if provided, otherwise use bgColor class
+  const bgStyle = bgColor 
+    ? {} 
+    : { background: `linear-gradient(to right, ${bgGradientFrom}, ${bgGradientTo})` };
+  
   return (
-    <div className={`relative overflow-hidden rounded-2xl ${bgColor} ${textColor} p-6 md:p-8`}>
+    <div 
+      className={`relative overflow-hidden rounded-2xl p-6 md:p-8 ${bgColor || ''}`}
+      style={{ ...bgStyle, color: textColor }}
+    >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20" />
