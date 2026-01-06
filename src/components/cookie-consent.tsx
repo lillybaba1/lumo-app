@@ -335,3 +335,91 @@ export function useUserConsent() {
 
   return { consent, updateConsent };
 }
+
+// Utility functions for checking consent (can be used outside React components)
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hasConsented = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (!hasConsented) return false;
+  const preferences = localStorage.getItem(COOKIE_PREFERENCES_KEY);
+  if (!preferences) return false;
+  try {
+    const parsed = JSON.parse(preferences);
+    return parsed.analytics === true;
+  } catch {
+    return false;
+  }
+}
+
+export function hasMarketingConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hasConsented = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (!hasConsented) return false;
+  const preferences = localStorage.getItem(COOKIE_PREFERENCES_KEY);
+  if (!preferences) return false;
+  try {
+    const parsed = JSON.parse(preferences);
+    return parsed.marketing === true;
+  } catch {
+    return false;
+  }
+}
+
+export function hasPreferenceConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hasConsented = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (!hasConsented) return false;
+  const preferences = localStorage.getItem(COOKIE_PREFERENCES_KEY);
+  if (!preferences) return false;
+  try {
+    const parsed = JSON.parse(preferences);
+    return parsed.preferences === true;
+  } catch {
+    return false;
+  }
+}
+
+// Store recently viewed products (only if preference cookies allowed)
+export function addRecentlyViewed(productId: string): void {
+  if (!hasPreferenceConsent()) return;
+  
+  const key = 'lumo-recently-viewed';
+  const maxItems = 10;
+  
+  try {
+    const stored = localStorage.getItem(key);
+    let items: string[] = stored ? JSON.parse(stored) : [];
+    
+    // Remove if already exists and add to front
+    items = items.filter(id => id !== productId);
+    items.unshift(productId);
+    
+    // Keep only max items
+    items = items.slice(0, maxItems);
+    
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // Ignore errors
+  }
+}
+
+export function getRecentlyViewed(): string[] {
+  if (!hasPreferenceConsent()) return [];
+  
+  try {
+    const stored = localStorage.getItem('lumo-recently-viewed');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Clear all consent and preferences (for testing or user request)
+export function clearAllConsent(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(COOKIE_CONSENT_KEY);
+  localStorage.removeItem(COOKIE_PREFERENCES_KEY);
+  localStorage.removeItem(USER_CONSENT_KEY);
+  localStorage.removeItem('lumo-recently-viewed');
+  window.location.reload();
+}

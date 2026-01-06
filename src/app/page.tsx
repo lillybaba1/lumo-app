@@ -22,6 +22,7 @@ import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 import ServiceHighlights, { PromoBanner, DetailedTrustSection } from '@/components/service-highlights';
 import SearchBar from '@/components/search-bar';
 import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
+import { RecentlyViewedProducts } from '@/components/recently-viewed-products';
 
 type Collections = {
   bestSellers: string[];
@@ -821,6 +822,9 @@ function Home(props: {
           </section>
         </div>
       </div>
+
+      {/* Recently Viewed Products - Only shows if preference cookies enabled */}
+      <RecentlyViewedProducts allProducts={products} maxItems={4} />
 
       {/* Detailed Trust Section - Near Footer */}
       <DetailedTrustSection className="mt-8" />

@@ -19,6 +19,7 @@ import { getCurrentUser } from '@/lib/auth-admin';
 import { isInWishlist } from '@/services/wishlistService';
 import { getUserById } from '@/services/userService';
 import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
+import { RecentlyViewedTracker } from '@/components/recently-viewed-tracker';
 
 // ISR: Revalidate product pages every 60 seconds
 // Ensures fresh stock/price data while maintaining fast TTFB
@@ -69,6 +70,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Track this product view (if preference cookies allowed) */}
+      <RecentlyViewedTracker productId={product.id} />
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         {/* Product Images */}
         <div>

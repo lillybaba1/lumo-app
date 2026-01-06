@@ -15,13 +15,20 @@ function generateVisitorId(): string {
   return id;
 }
 
-// Check if user has given consent
-function hasConsent(): boolean {
+// Check if user has given analytics consent
+function hasAnalyticsConsent(): boolean {
   if (typeof window === 'undefined') return false;
-  const consent = localStorage.getItem('lumo_cookie_consent');
-  if (!consent) return false;
+  
+  // Check if user has made any choice
+  const hasConsented = localStorage.getItem('lumo-cookie-consent');
+  if (!hasConsented) return false; // No choice made yet
+  
+  // Check specific analytics preference
+  const preferences = localStorage.getItem('lumo-cookie-preferences');
+  if (!preferences) return false;
+  
   try {
-    const parsed = JSON.parse(consent);
+    const parsed = JSON.parse(preferences);
     return parsed.analytics === true;
   } catch {
     return false;
@@ -36,9 +43,10 @@ export function VisitorTracker() {
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const geoDataRef = useRef<any>(null);
 
-  // Track visit
+  // Track visit - only if analytics consent given
   const trackVisit = useCallback(async (pagePath: string, geoData: any = null) => {
     if (!visitorIdRef.current) return;
+    if (!hasAnalyticsConsent()) return; // Don't track without consent
     
     try {
       await fetch('/api/visitors', {
@@ -49,7 +57,7 @@ export function VisitorTracker() {
           visitor_id: visitorIdRef.current,
           page_path: pagePath,
           referrer: document.referrer || null,
-          consent_given: hasConsent(),
+          consent_given: true,
           geo_data: geoData,
         }),
       });
@@ -58,9 +66,10 @@ export function VisitorTracker() {
     }
   }, []);
 
-  // Track page view
+  // Track page view - only if analytics consent given
   const trackPageView = useCallback(async (pagePath: string) => {
     if (!visitorIdRef.current) return;
+    if (!hasAnalyticsConsent()) return; // Don't track without consent
     
     try {
       await fetch('/api/visitors', {
@@ -79,9 +88,10 @@ export function VisitorTracker() {
     }
   }, []);
 
-  // Send heartbeat to update session duration
+  // Send heartbeat to update session duration - only if analytics consent given
   const sendHeartbeat = useCallback(async () => {
     if (!visitorIdRef.current) return;
+    if (!hasAnalyticsConsent()) return; // Don't track without consent
     
     const duration = Math.floor((Date.now() - sessionStartRef.current) / 1000);
     
