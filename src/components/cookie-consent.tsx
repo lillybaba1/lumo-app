@@ -140,10 +140,8 @@ export function CookieConsent() {
                     <Link 
                       href="/pages/privacy" 
                       className="text-primary hover:underline ml-1"
-                      onClick={() => {
-                        // Close the banner when navigating to privacy page
-                        setShowBanner(false);
-                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       View our Privacy Policy
                     </Link>
