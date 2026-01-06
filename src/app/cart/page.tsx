@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useEffect, useState } from 'react';
 import { getSettings } from '../admin/settings/actions';
 import { getCurrencySymbol } from '@/lib/currency';
+import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 type Settings = { currency?: string };
 
@@ -74,7 +75,9 @@ export default function CartPage() {
                             width={80}
                             height={80}
                             className="rounded-lg object-cover"
-                            unoptimized
+                            sizes={IMAGE_SIZES.cartItem}
+                            placeholder="blur"
+                            blurDataURL={PRODUCT_BLUR_DATA_URL}
                           />
                         </div>
                         
@@ -154,7 +157,9 @@ export default function CartPage() {
                               width={80}
                               height={80}
                               className="rounded-md"
-                              unoptimized
+                              sizes={IMAGE_SIZES.cartItem}
+                              placeholder="blur"
+                              blurDataURL={PRODUCT_BLUR_DATA_URL}
                               data-ai-hint={`${product.category} product`}
                             />
                           </TableCell>

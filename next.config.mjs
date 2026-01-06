@@ -10,6 +10,11 @@ const nextConfig = {
   images: {
     // Disable image optimization in development to avoid localhost issues
     unoptimized: process.env.NODE_ENV === 'development',
+    // Optimize image loading performance
+    minimumCacheTTL: 31536000, // 1 year cache for optimized images
+    formats: ['image/avif', 'image/webp'], // Modern formats for smaller sizes
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920], // Common device widths
+    imageSizes: [16, 32, 48, 64, 96, 128, 256], // Icon/thumbnail sizes
     remotePatterns: [
       {
         protocol: 'https',
@@ -151,13 +156,14 @@ const nextConfig = {
           },
         ],
       },
-      // Cache Next.js optimized images
+      // Cache Next.js optimized images - longer cache for better performance
       {
         source: '/_next/image/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
+            // 7 days cache, stale-while-revalidate for 30 days
+            value: 'public, max-age=604800, stale-while-revalidate=2592000',
           },
         ],
       },

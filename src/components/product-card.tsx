@@ -13,11 +13,14 @@ import { useSettings } from '@/context/settings-context';
 import Link from 'next/link';
 import { WishlistButton } from '@/components/wishlist-button';
 import { getCurrencySymbol } from '@/lib/currency';
+import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 interface ProductCardProps {
   product: Product;
   showQuickView?: boolean;
   compact?: boolean;
+  /** Position index for priority loading (first 4 load eagerly) */
+  index?: number;
 }
 
 // Star rating display component
@@ -55,11 +58,14 @@ function StarRating({ rating = 0, reviews = 0, size = 'sm' }: { rating?: number;
   );
 }
 
-export default function ProductCard({ product, showQuickView = true, compact = false }: ProductCardProps) {
+export default function ProductCard({ product, showQuickView = true, compact = false, index = 999 }: ProductCardProps) {
   const { dispatch } = useCart();
   const { toast } = useToast();
   const { settings, auth } = useSettings();
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Determine if this image should load with priority (above the fold)
+  const isPriority = index < 4;
   
   // Get base image URL
   const baseImageUrl = (product.productImages && product.productImages.length > 0)
@@ -105,8 +111,11 @@ export default function ProductCard({ product, showQuickView = true, compact = f
                 alt={product.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                loading="lazy"
+                sizes={IMAGE_SIZES.productGrid}
+                priority={isPriority}
+                loading={isPriority ? undefined : "lazy"}
+                placeholder="blur"
+                blurDataURL={PRODUCT_BLUR_DATA_URL}
                 data-ai-hint={`${product.category} ${product.name.split(' ').slice(0,1).join(' ')}`}
             />
             {/* Gradient overlay on hover */}

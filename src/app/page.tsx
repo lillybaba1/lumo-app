@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
 import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
+import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 import ServiceHighlights, { PromoBanner } from '@/components/service-highlights';
 import SearchBar from '@/components/search-bar';
 import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
@@ -347,8 +348,8 @@ function Home(props: {
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-          {collectionProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {collectionProducts.map((product, index) => (
+            <ProductCard key={product.id} product={product} index={index} />
           ))}
         </div>
       </div>
@@ -453,8 +454,9 @@ function Home(props: {
                             alt={category.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 25vw, (max-width: 768px) 25vw, 20vw"
-                            unoptimized
+                            sizes={IMAGE_SIZES.category}
+                            placeholder="blur"
+                            blurDataURL={CATEGORY_BLUR_DATA_URL}
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -495,8 +497,8 @@ function Home(props: {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-                {trendingProducts.slice(0, 4).map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {trendingProducts.slice(0, 4).map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} />
                 ))}
               </div>
             </div>
@@ -713,8 +715,8 @@ function Home(props: {
             <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
               {filteredAndSortedProducts.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
-                  {filteredAndSortedProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {filteredAndSortedProducts.map((product, index) => (
+                    <ProductCard key={product.id} product={product} index={index} />
                   ))}
                 </div>
               ) : (

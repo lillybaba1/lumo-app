@@ -18,6 +18,7 @@ import { WishlistButton } from '@/components/wishlist-button';
 import { getCurrentUser } from '@/lib/auth-admin';
 import { isInWishlist } from '@/services/wishlistService';
 import { getUserById } from '@/services/userService';
+import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 // ISR: Revalidate product pages every 60 seconds
 // Ensures fresh stock/price data while maintaining fast TTFB
@@ -82,10 +83,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         alt={`${product.name} - Image ${index + 1}`}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                        sizes={IMAGE_SIZES.productDetail}
                         priority={index === 0}
                         loading={index === 0 ? undefined : "lazy"}
-                        unoptimized
+                        placeholder="blur"
+                        blurDataURL={PRODUCT_BLUR_DATA_URL}
                       />
                     </div>
                   </CarouselItem>

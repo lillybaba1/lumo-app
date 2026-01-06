@@ -12,6 +12,7 @@ import { getSettings } from '@/app/admin/settings/actions';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getCurrencySymbol } from '@/lib/currency';
+import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,8 +142,9 @@ export default async function WishlistPage() {
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      unoptimized
+                      sizes={IMAGE_SIZES.productGrid}
+                      placeholder="blur"
+                      blurDataURL={PRODUCT_BLUR_DATA_URL}
                     />
                     {isOutOfStock && (
                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center">

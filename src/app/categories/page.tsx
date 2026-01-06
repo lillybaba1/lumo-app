@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 interface Category {
   id: string;
@@ -121,7 +122,9 @@ export default function CategoriesPage() {
                     width={96}
                     height={96}
                     className="w-full h-full object-cover"
-                    unoptimized
+                    sizes={IMAGE_SIZES.category}
+                    placeholder="blur"
+                    blurDataURL={CATEGORY_BLUR_DATA_URL}
                   />
                 ) : (
                   <span className="text-4xl md:text-5xl">

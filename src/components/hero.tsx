@@ -7,6 +7,7 @@ import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react
 import { HeroData, HeroProduct, Product } from '@/lib/types';
 import Image from 'next/image';
 import HeroAnnouncement, { HeroAnnouncementSettings } from './hero-announcement';
+import { HERO_BLUR_DATA_URL, PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 type HeroSettings = {
   heroHeading?: string;
@@ -65,8 +66,10 @@ function HeroProductWidget({
                     alt={product.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform"
-                    sizes="80px"
+                    sizes={IMAGE_SIZES.thumbnail}
                     loading="lazy"
+                    placeholder="blur"
+                    blurDataURL={PRODUCT_BLUR_DATA_URL}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
@@ -255,7 +258,9 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               priority
               className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
               style={{ objectPosition: heroImageObjectPosition }}
-              sizes="100vw"
+              sizes={IMAGE_SIZES.hero}
+              placeholder="blur"
+              blurDataURL={HERO_BLUR_DATA_URL}
             />
             {heroImageFit === 'cover' && (
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
@@ -296,7 +301,9 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             priority
             className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
             style={{ objectPosition: heroImageObjectPosition }}
-            sizes="100vw"
+            sizes={IMAGE_SIZES.hero}
+            placeholder="blur"
+            blurDataURL={HERO_BLUR_DATA_URL}
           />
           {/* Enhanced Gradient Overlay for better text contrast - only for cover mode */}
           {heroImageFit === 'cover' && (
@@ -337,6 +344,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                         className="object-cover"
                         sizes="200px"
                         loading="lazy"
+                        placeholder="blur"
+                        blurDataURL={PRODUCT_BLUR_DATA_URL}
                       />
                     )}
                   </div>

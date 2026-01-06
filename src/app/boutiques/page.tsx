@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Store, Star, Package, ShoppingBag, CheckCircle, Shield, Sparkles, ArrowRight, Search } from 'lucide-react';
+import { HERO_BLUR_DATA_URL, PRODUCT_BLUR_DATA_URL } from '@/lib/image-utils';
 
 export const metadata = {
   title: 'Discover Boutiques | JulaZone',
@@ -165,6 +166,8 @@ function BoutiqueCard({ boutique, featured = false }: { boutique: any; featured?
               alt=""
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
+              placeholder="blur"
+              blurDataURL={HERO_BLUR_DATA_URL}
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -181,6 +184,8 @@ function BoutiqueCard({ boutique, featured = false }: { boutique: any; featured?
                 width={56}
                 height={56}
                 className="object-cover w-full h-full"
+                placeholder="blur"
+                blurDataURL={PRODUCT_BLUR_DATA_URL}
               />
             ) : (
               <span className="text-lg font-bold text-white">{storeInitials}</span>
