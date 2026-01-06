@@ -284,61 +284,6 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
-      {/* Hero Products Overlay - desktop */}
-      {heroProducts.length > 0 && (
-        <div className="absolute inset-0 hidden md:block">
-          {heroProducts.map((heroProduct) => {
-            const product = getProductById(heroProduct.productId);
-            if (!product) return null;
-
-            return (
-              <Link
-                key={heroProduct.id}
-                href={`/products/${product.id}`}
-                className="absolute group transition-transform hover:scale-105 hover:z-10"
-                style={{
-                  left: `${heroProduct.position.x}%`,
-                  top: `${heroProduct.position.y}%`,
-                  width: `${heroProduct.size.width}px`,
-                  height: `${heroProduct.size.height}px`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                <div className="relative w-full h-full bg-white rounded-lg shadow-xl overflow-hidden border-2 border-white/20 hover:border-primary/50 transition-all">
-                  <div className="absolute inset-0">
-                    {(product.productImages?.[0] || product.imageUrls?.[0]) && (
-                      <Image
-                        src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="200px"
-                        loading="lazy"
-                        placeholder="blur"
-                        blurDataURL={PRODUCT_BLUR_DATA_URL}
-                      />
-                    )}
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-white text-sm font-semibold truncate mb-1">{product.name}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-white text-lg font-bold">${product.price.toFixed(2)}</p>
-                      <div className="flex items-center gap-1 text-xs text-white/90">
-                        <ShoppingBag className="h-3 w-3" />
-                        <span>View</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="absolute inset-0 ring-2 ring-primary/0 group-hover:ring-primary/50 rounded-lg transition-all pointer-events-none" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
       {/* Content - Positioned elements */}
       <div className="relative w-full min-h-[480px] sm:min-h-[520px] md:min-h-[600px]">
         {/* Hero Announcement Overlay */}
