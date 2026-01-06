@@ -142,32 +142,17 @@ export default function Header({ children }: { children: React.ReactNode }) {
         <div className="w-full flex h-16 items-center px-2 sm:px-4 md:px-6">
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 md:gap-3 group">
-              {/* Logo - Uses uploaded logo or fallback to icon */}
-              {settings.logoUrl ? (
-                <div className="relative h-10 flex items-center">
-                  <Image
-                    src={settings.logoUrl}
-                    alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                    width={settings.logoWidth || 200}
-                    height={settings.logoHeight || 40}
-                    className="object-contain max-h-10 w-auto"
-                    priority
-                    unoptimized
-                  />
-                </div>
-              ) : (
-                <>
-                  <div 
-                    className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white shadow-md group-hover:shadow-lg transition-shadow"
-                    style={{ backgroundColor: settings.headerButtonColor }}
-                  >
-                    <CheckSquare className="h-5 w-5" strokeWidth={2.5} />
-                  </div>
-                  <span className="font-bold font-headline text-xl leading-tight tracking-tight">
-                    {settings.storeName || 'JulaZone'}
-                  </span>
-                </>
-              )}
+              {/* Logo - Always use local /icon.svg for instant loading */}
+              <div className="relative h-10 flex items-center">
+                <Image
+                  src="/icon.svg"
+                  alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                  width={40}
+                  height={40}
+                  className="object-contain h-10 w-auto"
+                  priority
+                />
+              </div>
             </Link>
             {!isHomePage && (
               <Link 
