@@ -60,6 +60,8 @@ const defaultUserConsent: UserConsent = {
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
+  const [showSettingsButton, setShowSettingsButton] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>(defaultCookiePreferences);
 
   useEffect(() => {
@@ -70,6 +72,9 @@ export function CookieConsent() {
       const timer = setTimeout(() => setShowBanner(true), 1500);
       return () => clearTimeout(timer);
     } else {
+      // User has already consented - show settings button
+      setHasConsented(true);
+      setShowSettingsButton(true);
       // Load saved preferences
       const saved = localStorage.getItem(COOKIE_PREFERENCES_KEY);
       if (saved) {
@@ -89,9 +94,16 @@ export function CookieConsent() {
     setPreferences(updatedPrefs);
     setShowBanner(false);
     setShowSettings(false);
+    setHasConsented(true);
+    setShowSettingsButton(true);
 
     // Dispatch event for other components to listen
     window.dispatchEvent(new CustomEvent('cookieConsentUpdated', { detail: updatedPrefs }));
+  };
+
+  const openSettings = () => {
+    setShowBanner(true);
+    setShowSettings(true);
   };
 
   const acceptAll = () => {
@@ -117,6 +129,20 @@ export function CookieConsent() {
   const saveCustomPreferences = () => {
     savePreferences(preferences);
   };
+
+  // Show floating settings button if user has consented and banner is not showing
+  if (!showBanner && hasConsented && showSettingsButton) {
+    return (
+      <button
+        onClick={openSettings}
+        className="fixed bottom-4 left-4 z-50 p-3 bg-card border-2 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
+        aria-label="Cookie Settings"
+        title="Manage cookie preferences"
+      >
+        <Cookie className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+      </button>
+    );
+  }
 
   if (!showBanner) return null;
 
