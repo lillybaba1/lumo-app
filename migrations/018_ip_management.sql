@@ -66,17 +66,17 @@ ALTER TABLE public.suspicious_activities ENABLE ROW LEVEL SECURITY;
 -- Admin-only access
 CREATE POLICY "Admin full access to ip_bans" ON public.ip_bans
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 CREATE POLICY "Admin full access to ip_investigations" ON public.ip_investigations
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 CREATE POLICY "Admin full access to suspicious_activities" ON public.suspicious_activities
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 -- Function to check if IP is banned
@@ -184,12 +184,12 @@ ALTER TABLE public.user_security_flags ENABLE ROW LEVEL SECURITY;
 -- Admin-only access to user-IP tracking
 CREATE POLICY "Admin full access to user_ip_history" ON public.user_ip_history
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 CREATE POLICY "Admin full access to user_known_ips" ON public.user_known_ips
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 -- Users can see their own known IPs
@@ -198,7 +198,7 @@ CREATE POLICY "Users can view own known IPs" ON public.user_known_ips
 
 CREATE POLICY "Admin full access to user_security_flags" ON public.user_security_flags
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.user_profiles WHERE user_id = auth.uid() AND role IN ('admin', 'superadmin'))
+    EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('APP_OWNER_ADMIN'))
   );
 
 -- Function to record a user login with IP

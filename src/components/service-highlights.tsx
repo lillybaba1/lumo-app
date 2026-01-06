@@ -25,28 +25,28 @@ const defaultHighlights: ServiceHighlight[] = [
   {
     icon: Truck,
     title: 'Fast Delivery',
-    description: '2-7 business days',
+    description: '2-7 days nationwide',
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
   },
   {
     icon: Shield,
     title: 'Secure Payment',
-    description: '100% protected',
+    description: 'SSL encrypted checkout',
     color: 'text-green-600',
     bgColor: 'bg-green-50',
   },
   {
     icon: RefreshCw,
     title: 'Easy Returns',
-    description: '7-day return policy',
+    description: '7-day money back guarantee',
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
   },
   {
     icon: Headphones,
     title: 'Local Support',
-    description: 'We speak your language',
+    description: 'English, French & Mandinka',
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
   },
@@ -189,6 +189,95 @@ export function TrustIndicators() {
           <span className="text-xs md:text-sm text-muted-foreground">{item.label}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Detailed trust section for footer area
+export function DetailedTrustSection({ className = '' }: { className?: string }) {
+  const details = [
+    {
+      icon: Truck,
+      title: 'Shipping & Delivery',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      points: [
+        'Delivery within 2-7 business days nationwide',
+        'Free shipping on orders over €50',
+        'Real-time order tracking via SMS & email',
+        'Reliable courier partners in West Africa',
+      ],
+    },
+    {
+      icon: Shield,
+      title: 'Payment Security',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      points: [
+        'SSL encrypted checkout process',
+        'Wave Money & Orange Money accepted',
+        'Cash on delivery available',
+        'No hidden fees or charges',
+      ],
+    },
+    {
+      icon: RefreshCw,
+      title: 'Returns & Refunds',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      points: [
+        '7-day money back guarantee',
+        'Free returns on defective items',
+        'Easy online return request',
+        'Refund processed within 3-5 days',
+      ],
+    },
+    {
+      icon: Headphones,
+      title: 'Customer Support',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      points: [
+        'Support in English, French & Mandinka',
+        'WhatsApp & phone support available',
+        'Response within 24 hours',
+        'Dedicated seller support team',
+      ],
+    },
+  ];
+
+  return (
+    <div className={`bg-muted/30 py-12 ${className}`}>
+      <div className="container mx-auto px-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">
+          Why Shop with JulaZone?
+        </h2>
+        <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto">
+          We bring European quality standards to African e-commerce with trusted payment, fast delivery, and local support.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {details.map((item, index) => (
+            <div 
+              key={index} 
+              className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition-shadow"
+            >
+              <div className={`inline-flex p-3 rounded-xl ${item.bgColor} mb-4`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
+              </div>
+              <h3 className="font-semibold text-lg mb-3">{item.title}</h3>
+              <ul className="space-y-2">
+                {item.points.map((point, i) => (
+                  <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span className={`${item.color} mt-1`}>✓</span>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -358,7 +358,7 @@ export default function VisitorTabs({
                                   )}
                                 </div>
                                 {visitor.ip_address && visitor.ip_address !== 'unknown' && (
-                                  <div className="text-xs text-muted-foreground font-mono opacity-70">
+                                  <div className="text-xs text-muted-foreground font-mono">
                                     {visitor.ip_address}
                                   </div>
                                 )}

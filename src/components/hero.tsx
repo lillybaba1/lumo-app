@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react';
-import { HeroData, HeroProduct, Product } from '@/lib/types';
+import { Product } from '@/lib/types';
 import Image from 'next/image';
 import HeroAnnouncement, { HeroAnnouncementSettings } from './hero-announcement';
 import { HERO_BLUR_DATA_URL, PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
@@ -91,11 +90,9 @@ function HeroProductWidget({
 
 export default function Hero({ initialSettings }: HeroProps = {}) {
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
-  const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[] }>({ bestSellers: [], newArrivals: [], deals: [] });
+  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>({ bestSellers: [], newArrivals: [], deals: [], featured: [] });
   const [loading, setLoading] = useState(true);
-  const [mobileIndex, setMobileIndex] = useState(0);
 
   // Use initial settings for immediate render, then fetch fresh data
   const heroHeading = settings?.heroHeading || 'Step into JulaZone';
@@ -121,7 +118,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
   useEffect(() => {
     // If initialSettings were provided and we already have settings, 
-    // only fetch the hero data and products (not settings again)
+    // only fetch the products (not settings again)
     const load = async () => {
       const requests: Promise<any>[] = [];
       const requestTypes: string[] = [];
@@ -139,17 +136,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         );
       }
 
-      // Always fetch hero data and products
-      requestTypes.push('hero');
-      requests.push(
-        fetch('/api/hero', { 
-          next: { revalidate: 60 } 
-        }).then(async (res) => {
-          if (!res.ok) throw new Error(`Hero request failed: ${res.status}`);
-          return res.json();
-        })
-      );
-
+      // Fetch products for the widgets
       requestTypes.push('products');
       requests.push(
         fetch('/api/products?limit=20', { 
@@ -180,14 +167,11 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             case 'settings':
               setSettings(result.value);
               break;
-            case 'hero':
-              setHeroData(result.value);
-              break;
             case 'products':
               setProducts(Array.isArray(result.value) ? result.value : (result.value?.products || []));
               break;
             case 'collections':
-              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [] });
+              setCollections(result.value || { bestSellers: [], newArrivals: [], deals: [], featured: [] });
               break;
           }
         } else {
@@ -205,38 +189,24 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   }, [initialSettings]);
 
   const getProductById = (id: string) => products.find(p => p.id === id);
-  const heroProducts = (heroData?.products || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
 
-  // Get products for hero widgets - use collections if available, otherwise use first products
+  // Get products for hero widgets - ONLY show products from collections, no fallbacks
   const newArrivalsProducts = collections.newArrivals.length > 0
     ? collections.newArrivals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(0, 4); // Fallback to first 4 products
+    : []; // No fallback - only show if explicitly added to collection
   
   const bestSellersProducts = collections.bestSellers.length > 0
     ? collections.bestSellers.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(4, 8); // Fallback to next 4 products
+    : []; // No fallback - only show if explicitly added to collection
   
   const dealsProducts = collections.deals.length > 0
     ? collections.deals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : products.slice(8, 12); // Fallback to next 4 products
+    : []; // No fallback - only show if explicitly added to collection
 
-  // Featured products from hero data or fallback
-  const featuredProducts = heroProducts.length > 0
-    ? heroProducts.map(hp => getProductById(hp.productId)).filter(Boolean) as Product[]
-    : products.slice(12, 16); // Fallback to next 4 products
-
-  const mobileProducts = heroProducts
-    .map((hp) => {
-      const product = getProductById(hp.productId);
-      return product ? { product, hp } : null;
-    })
-    .filter(Boolean) as { product: Product; hp: HeroProduct }[];
-
-  useEffect(() => {
-    if (mobileIndex >= mobileProducts.length) {
-      setMobileIndex(0);
-    }
-  }, [mobileProducts.length, mobileIndex]);
+  // Featured products from collections only
+  const featuredProducts = collections.featured.length > 0
+    ? collections.featured.map(id => getProductById(id)).filter(Boolean) as Product[]
+    : []; // No fallback - only show if explicitly added
 
   if (loading) {
     return (
@@ -420,7 +390,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               )}
               {featuredProducts.length > 0 && (
                 <HeroProductWidget
-                  title={heroData?.heroLabelText || 'Featured'}
+                  title="Featured"
                   icon={ShoppingBag}
                   products={featuredProducts}
                   link="/products?filter=featured"
@@ -491,7 +461,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             )}
             {featuredProducts.length > 0 && (
               <HeroProductWidget
-                title={heroData?.heroLabelText || 'Featured'}
+                title="Featured"
                 icon={ShoppingBag}
                 products={featuredProducts}
                 link="/products?filter=featured"
@@ -508,86 +478,6 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           </div>
         )}
       </div>
-
-      {/* Mobile carousel for hero products */}
-      {mobileProducts.length > 0 && (
-        <div className="md:hidden mt-2 px-4 pb-6">
-          <div className="flex items-center justify-between mb-2">
-            <Link href="/products?filter=featured" className="flex items-center gap-1 text-xs font-semibold text-white/90 hover:text-white">
-              <ShoppingBag className="h-3 w-3" />
-              {heroData?.heroLabelText || 'Featured'}
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-            {mobileProducts.length > 1 && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-6 px-2 text-xs bg-white/20 border-white/30 text-white hover:bg-white/30"
-                  onClick={() => setMobileIndex((prev) => (prev - 1 + mobileProducts.length) % mobileProducts.length)}
-                >
-                  Prev
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-6 px-2 text-xs bg-white/20 border-white/30 text-white hover:bg-white/30"
-                  onClick={() => setMobileIndex((prev) => (prev + 1) % mobileProducts.length)}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="overflow-hidden rounded-xl border border-white/20 bg-white/90 backdrop-blur shadow-lg">
-            <div
-              className="flex transition-transform duration-300"
-              style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
-            >
-              {mobileProducts.map(({ product }) => (
-                <Link
-                  href={`/products/${product.id}`}
-                  key={product.id}
-                  className="min-w-full flex-shrink-0 flex h-24"
-                >
-                  <div className="relative w-24 h-24 flex-shrink-0">
-                    {(product.productImages?.[0] || product.imageUrls?.[0]) && (
-                      <Image
-                        src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                        loading="lazy"
-                      />
-                    )}
-                  </div>
-                  <div className="p-3 flex flex-col justify-center flex-grow min-w-0">
-                    <p className="text-sm font-semibold truncate mb-1">{product.name}</p>
-                    <p className="text-sm font-bold text-primary">${product.price.toFixed(2)}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                        <ShoppingBag className="h-3 w-3" />
-                        <span>View Details</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-          {mobileProducts.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-2">
-              {mobileProducts.map((_, idx) => (
-                <button
-                  key={idx}
-                  className={`h-1.5 w-1.5 rounded-full transition-colors ${idx === mobileIndex ? 'bg-white' : 'bg-white/40'}`}
-                  onClick={() => setMobileIndex(idx)}
-                  aria-label={`Go to hero product ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

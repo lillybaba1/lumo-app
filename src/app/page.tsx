@@ -19,7 +19,7 @@ import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
 import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
 import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
-import ServiceHighlights, { PromoBanner } from '@/components/service-highlights';
+import ServiceHighlights, { PromoBanner, DetailedTrustSection } from '@/components/service-highlights';
 import SearchBar from '@/components/search-bar';
 import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
 
@@ -799,6 +799,9 @@ function Home(props: {
           </section>
         </div>
       </div>
+
+      {/* Detailed Trust Section - Near Footer */}
+      <DetailedTrustSection className="mt-8" />
     </div>
   );
 }
