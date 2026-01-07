@@ -389,39 +389,57 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
           {/* Amazon-style Product Widgets - Mobile (horizontal scroll) */}
           {products.length > 0 && (
-            <div className="flex gap-3 mt-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {newArrivalsProducts.length > 0 && (
-                <HeroProductWidget
-                  title="New Arrivals"
-                  icon={ShoppingBag}
-                  products={newArrivalsProducts}
-                  link="/products?filter=new"
-                />
-              )}
-              {bestSellersProducts.length > 0 && (
-                <HeroProductWidget
-                  title="Best Sellers"
-                  icon={TrendingUp}
-                  products={bestSellersProducts}
-                  link="/products?filter=bestsellers"
-                />
-              )}
-              {featuredProducts.length > 0 && (
-                <HeroProductWidget
-                  title="Featured"
-                  icon={ShoppingBag}
-                  products={featuredProducts}
-                  link="/products?filter=featured"
-                />
-              )}
-              {dealsProducts.length > 0 && (
-                <HeroProductWidget
-                  title="Deals"
-                  icon={Tag}
-                  products={dealsProducts}
-                  link="/products?filter=deals"
-                />
-              )}
+            <div className="relative mt-4">
+              {/* Scroll container */}
+              <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {newArrivalsProducts.length > 0 && (
+                  <div className="snap-start">
+                    <HeroProductWidget
+                      title="New Arrivals"
+                      icon={ShoppingBag}
+                      products={newArrivalsProducts}
+                      link="/products?filter=new"
+                    />
+                  </div>
+                )}
+                {bestSellersProducts.length > 0 && (
+                  <div className="snap-start">
+                    <HeroProductWidget
+                      title="Best Sellers"
+                      icon={TrendingUp}
+                      products={bestSellersProducts}
+                      link="/products?filter=bestsellers"
+                    />
+                  </div>
+                )}
+                {featuredProducts.length > 0 && (
+                  <div className="snap-start">
+                    <HeroProductWidget
+                      title="Featured"
+                      icon={ShoppingBag}
+                      products={featuredProducts}
+                      link="/products?filter=featured"
+                    />
+                  </div>
+                )}
+                {dealsProducts.length > 0 && (
+                  <div className="snap-start">
+                    <HeroProductWidget
+                      title="Deals"
+                      icon={Tag}
+                      products={dealsProducts}
+                      link="/products?filter=deals"
+                    />
+                  </div>
+                )}
+              </div>
+              {/* Scroll indicator - shows there's more to scroll */}
+              <div className="flex justify-center gap-1.5 mt-2">
+                <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-full text-[10px] text-gray-600 font-medium">
+                  <span>Swipe for more</span>
+                  <ArrowRight className="h-3 w-3 animate-pulse" />
+                </div>
+              </div>
             </div>
           )}
         </div>

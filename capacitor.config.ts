@@ -5,8 +5,7 @@ const config: CapacitorConfig = {
   appName: 'JulaZone',
   webDir: 'out',
   server: {
-    // Use your live Vercel URL for the app
-    url: 'https://lumo-app.org',
+    url: 'https://julazone.com',
     cleartext: true,
   },
   android: {

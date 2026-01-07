@@ -109,6 +109,9 @@ export function AIAssistantWidget() {
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDragging) return;
     
+    // Prevent page scrolling while dragging
+    e.preventDefault();
+    
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
@@ -131,7 +134,8 @@ export function AIAssistantWidget() {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleMouseMove);
+      // Use passive: false to allow preventDefault() on touch events
+      window.addEventListener('touchmove', handleMouseMove, { passive: false });
       window.addEventListener('touchend', handleMouseUp);
     }
     

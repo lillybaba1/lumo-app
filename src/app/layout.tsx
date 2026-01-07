@@ -29,6 +29,12 @@ const VisitorTracker = dynamic(
   { ssr: false }
 );
 
+// Capacitor back button handler for Android app
+const CapacitorBackButton = dynamic(
+  () => import('@/components/capacitor-back-button'),
+  { ssr: false }
+);
+
 // Optimized font loading with next/font - prevents FOUT (Flash of Unstyled Text)
 const inter = Inter({
   subsets: ['latin'],
@@ -94,6 +100,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`light ${inter.variable}`}>
       <head>
+        {/* Viewport with safe area support for mobile apps */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         {/* Preload hero image for faster LCP */}
         {heroBackgroundImage && (
           <link rel="preload" as="image" href={heroBackgroundImage} fetchPriority="high" />
@@ -112,7 +120,7 @@ export default async function RootLayout({
                 <Header>
                   {null}
                 </Header>
-                <div className="flex flex-1 pt-16">
+                <div className="flex flex-1 pt-20 md:pt-16">
                   <Suspense fallback={<div className="w-64 hidden lg:block" />}>
                     <PublicSidebar />
                   </Suspense>
@@ -126,6 +134,7 @@ export default async function RootLayout({
               <AIAssistantWidget />
               <CookieConsent />
               <VisitorTracker />
+              <CapacitorBackButton />
               </LocationProvider>
             </CartProvider>
           </SettingsProvider>

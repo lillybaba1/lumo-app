@@ -130,20 +130,7 @@ export function CookieConsent() {
     savePreferences(preferences);
   };
 
-  // Show floating settings button if user has consented and banner is not showing
-  if (!showBanner && hasConsented && showSettingsButton) {
-    return (
-      <button
-        onClick={openSettings}
-        className="fixed bottom-4 left-4 z-50 p-3 bg-card border-2 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
-        aria-label="Cookie Settings"
-        title="Manage cookie preferences"
-      >
-        <Cookie className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-      </button>
-    );
-  }
-
+  // Don't show anything if user has already consented (no floating button)
   if (!showBanner) return null;
 
   return (
