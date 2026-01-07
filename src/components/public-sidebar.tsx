@@ -94,7 +94,7 @@ export default function PublicSidebar() {
           <ShoppingBag className="h-5 w-5" />
         </Link>
       }
-      mobileOffsetClassName="top-16"
+      mobileOffsetClassName="top-[88px]"
       header={({ collapsed, closeSidebar }) => (
         <Link 
           href="/" 

@@ -135,11 +135,11 @@ export default function Header({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header 
-        className="fixed top-0 left-0 right-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-opacity-60 pt-[env(safe-area-inset-top,0px)]"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
         style={{ 
           backgroundColor: settings.headerBgColor,
           color: settings.headerTextColor,
-          paddingTop: 'max(env(safe-area-inset-top, 0px), 24px)', // Safe area for notched devices + extra padding for status bar
+          paddingTop: 'max(env(safe-area-inset-top, 0px), 32px)', // Safe area for notched devices + padding for status bar
         }}
       >
         <div className="w-full flex h-14 items-center px-2 sm:px-4 md:px-6">

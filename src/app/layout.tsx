@@ -120,7 +120,7 @@ export default async function RootLayout({
                 <Header>
                   {null}
                 </Header>
-                <div className="flex flex-1 pt-20 md:pt-16">
+                <div className="flex flex-1 pt-24 md:pt-16">
                   <Suspense fallback={<div className="w-64 hidden lg:block" />}>
                     <PublicSidebar />
                   </Suspense>
