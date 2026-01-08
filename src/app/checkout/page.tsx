@@ -150,9 +150,10 @@ export default function CheckoutPage() {
       router.push(`/orders/${order.id}`);
     } catch (error) {
       console.error('Failed to create order:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Order Failed",
-        description: "Failed to place your order. Please try again.",
+        description: `Failed to place your order: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
