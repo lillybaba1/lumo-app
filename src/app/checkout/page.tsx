@@ -99,24 +99,32 @@ export default function CheckoutPage() {
       const paymentMethod = formData.get('payment-method') as 'Wave Money' | 'Cash on Delivery';
       const notes = formData.get('notes') as string;
 
+      // Simplify items to avoid serialization issues
+      const simplifiedItems = items.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        sellerId: item.sellerId || item.product.sellerId || 'unknown'
+      }));
+
       const orderData: Omit<Order, 'id' | 'createdAt'> = {
         customerName: `${firstName} ${lastName}`,
         customerEmail: email,
         customerPhone: phone,
         shippingAddress: `${address}, ${city}`,
-        items: items.map(item => ({
-          ...item,
-          sellerId: item.sellerId || item.product.sellerId || 'unknown'
-        })),
+        items: simplifiedItems as any,
         subtotal: subtotal,
         discount: discount,
         total: total,
         status: 'Pending',
-        paymentMethod: paymentMethod,
-        paymentStatus: paymentMethod === 'Wave Money' ? 'Pending' : 'Pending',
+        paymentMethod: paymentMethod || 'Cash on Delivery',
+        paymentStatus: 'Pending',
         couponCode: appliedCoupon?.code,
         notes: notes || undefined,
       };
+
+      console.log('Creating order with data:', JSON.stringify(orderData, null, 2));
 
       const order = await createOrder(orderData);
 
