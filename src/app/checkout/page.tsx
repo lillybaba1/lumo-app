@@ -224,7 +224,7 @@ export default function CheckoutPage() {
                   <CardTitle className="font-headline">Payment Method</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <RadioGroup defaultValue="cod" name="payment-method" className="space-y-3">
+                  <RadioGroup defaultValue="Cash on Delivery" name="payment-method" className="space-y-3">
                     <div className="flex items-center space-x-2 border rounded-lg p-3">
                       <RadioGroupItem value="Wave Money" id="wave" />
                       <Label htmlFor="wave" className="flex-1 cursor-pointer">

@@ -158,7 +158,8 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
 
     if (error) {
       orderLogger.error('Error creating order:', error);
-      throw error;
+      orderLogger.error('Error details:', JSON.stringify(error));
+      throw new Error(`Database error: ${error.message || error.code || 'Unknown error'}`);
     }
 
     return {
