@@ -37,7 +37,10 @@ export default function BottomNavigation() {
   return (
     <>
       {/* Fixed Bottom Navigation - Mobile Only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-pb">
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -87,7 +90,10 @@ export default function BottomNavigation() {
       </nav>
 
       {/* Add padding at bottom to prevent content from being hidden behind nav */}
-      <div className="md:hidden h-14" />
+      <div 
+        className="md:hidden" 
+        style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))' }} 
+      />
 
       {/* Search Modal */}
       <MobileSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
