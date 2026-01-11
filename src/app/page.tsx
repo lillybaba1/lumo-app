@@ -410,7 +410,7 @@ function Home(props: {
       {/* Category Chips - Mobile only, STICKY below header (scrolls until it hits header, then sticks) */}
       <div 
         className="md:hidden sticky z-40 bg-white px-3 py-2 border-b -mt-px"
-        style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+        style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px) - 1px)' }}
       >
         <CategoryChips 
           categories={categories} 

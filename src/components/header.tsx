@@ -143,32 +143,9 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* Mobile Header - Amazon style: Logo | Search Bar | Menu */}
+        {/* Mobile Header - Amazon style: Menu | Logo | Search Bar */}
         <div className="flex md:hidden w-full h-14 items-center px-2 gap-2">
-          {/* Left: Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <div className="relative h-8 w-8 flex items-center">
-              <Image
-                src="/icon.svg"
-                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                width={32}
-                height={32}
-                className="object-contain"
-                priority
-              />
-            </div>
-          </Link>
-
-          {/* Center: Search Bar (tappable, opens modal) */}
-          <button
-            onClick={() => setMobileSearchOpen(true)}
-            className="flex-1 h-9 px-3 flex items-center gap-2 bg-white rounded-lg border border-gray-300 text-gray-500"
-          >
-            <Search className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm truncate">Search products...</span>
-          </button>
-
-          {/* Right: Menu Button */}
+          {/* Left: Menu Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -185,7 +162,7 @@ export default function Header() {
                 </svg>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="start" className="w-52">
               {isAuthenticated && user ? (
                 <>
                   {/* Admin Dashboard - Show first for admins */}
@@ -268,6 +245,29 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Center: Logo */}
+          <Link href="/" className="flex-shrink-0">
+            <div className="relative h-8 w-8 flex items-center">
+              <Image
+                src="/icon.svg"
+                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                width={32}
+                height={32}
+                className="object-contain"
+                priority
+              />
+            </div>
+          </Link>
+
+          {/* Right: Search Bar (tappable, opens modal) */}
+          <button
+            onClick={() => setMobileSearchOpen(true)}
+            className="flex-1 h-9 px-3 flex items-center gap-2 bg-white rounded-lg border border-gray-300 text-gray-500"
+          >
+            <Search className="h-4 w-4 flex-shrink-0" />
+            <span className="text-sm truncate">Search...</span>
+          </button>
         </div>
 
         {/* Desktop Header */}

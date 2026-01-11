@@ -12,6 +12,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { getSiteSettings } from '@/services/settingsService';
 import PublicSidebar from '@/components/public-sidebar';
 import { LocationProvider } from '@/components/location-consent';
+import { Viewport } from 'next';
 
 // Dynamic imports for heavy components - only loads when needed
 const AIAssistantWidget = dynamic(
@@ -52,6 +53,14 @@ const inter = Inter({
 // Default favicon is inlined as data URL for instant loading (no network request)
 // Purple shopping bag icon matching the JulaZone brand
 const DEFAULT_FAVICON_SVG = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="%239333ea"/><path d="M14 18h20l-2 16H16L14 18z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 18v-4a6 6 0 0 1 12 0v4" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="24" r="1.5" fill="white"/><circle cx="28" cy="24" r="1.5" fill="white"/></svg>';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
