@@ -124,11 +124,11 @@ export default async function RootLayout({
               <LocationProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
-                <div className="flex flex-1 pt-16">
+                <div className="flex flex-1 pt-12 md:pt-14">
                   <Suspense fallback={<div className="w-64 hidden lg:block" />}>
                     <PublicSidebar />
                   </Suspense>
-                  <main className="flex-1 overflow-x-hidden pt-12 lg:pt-0">
+                  <main className="flex-1 overflow-x-hidden">
                     {children}
                   </main>
                 </div>

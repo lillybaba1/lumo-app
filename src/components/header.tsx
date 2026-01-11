@@ -138,49 +138,38 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="w-full flex h-14 items-center px-3 sm:px-4 md:px-6 gap-3">
+        <div className="w-full flex h-12 items-center px-3 sm:px-4 md:px-6 gap-3">
           {/* Logo & Store Name */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="relative h-9 w-9 flex items-center">
+            <div className="relative h-8 w-8 flex items-center">
               <Image
                 src="/icon.svg"
                 alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                width={36}
-                height={36}
+                width={32}
+                height={32}
                 className="object-contain"
                 priority
               />
             </div>
-            <span className="hidden sm:block text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
+            <span className="text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
               {settings.storeName}
             </span>
           </Link>
           
-          {/* Search Bar - Full Width Center (Desktop) */}
+          {/* Search Bar - Full Width Center (Desktop Only) */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-4">
             <SearchBar variant="header" placeholder="Search products, brands, and more..." className="w-full" />
           </div>
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* Mobile Search Button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden h-9 w-9 hover:bg-white/10" 
-              style={{ color: settings.headerTextColor }}
-              onClick={() => setMobileSearchOpen(true)}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            {/* User Account Dropdown */}
+            {/* User Account Dropdown - Desktop */}
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="hidden sm:flex items-center gap-1 px-2 h-9 hover:bg-white/10"
+                    className="hidden md:flex items-center gap-1 px-2 h-9 hover:bg-white/10"
                     style={{ color: settings.headerTextColor }}
                   >
                     <User className="h-4 w-4" />
@@ -242,7 +231,7 @@ export default function Header() {
               <Button 
                 variant="ghost" 
                 asChild 
-                className="hidden sm:flex h-9 px-3 hover:bg-white/10"
+                className="hidden md:flex h-9 px-3 hover:bg-white/10"
                 style={{ color: settings.headerTextColor }}
               >
                 <Link href="/login">
@@ -252,11 +241,11 @@ export default function Header() {
               </Button>
             )}
 
-            {/* Cart Button */}
+            {/* Cart Button - Desktop Only (Mobile uses bottom nav) */}
             <Button 
               variant="ghost" 
               size="icon" 
-              className="relative h-9 w-9 hover:bg-white/10" 
+              className="hidden md:flex relative h-9 w-9 hover:bg-white/10" 
               asChild 
               style={{ color: settings.headerTextColor }}
             >

@@ -413,7 +413,7 @@ function Home(props: {
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
       {/* MOBILE: Full-width search bar + Categories ABOVE hero */}
-      <div className="md:hidden bg-white border-b sticky top-14 z-40">
+      <div className="md:hidden bg-white border-b sticky top-12 z-40">
         {/* Search Bar - Full width, prominent */}
         <div className="px-3 py-2">
           <div className="relative">
