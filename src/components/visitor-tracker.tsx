@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 // Generate a unique visitor ID
@@ -15,23 +15,29 @@ function generateVisitorId(): string {
   return id;
 }
 
-// Check if user has given analytics consent
+// Check if user has given analytics consent OR if no consent system interaction yet
+// We track by default for basic analytics, but respect explicit opt-out
 function hasAnalyticsConsent(): boolean {
   if (typeof window === 'undefined') return false;
   
   // Check if user has made any choice
   const hasConsented = localStorage.getItem('lumo-cookie-consent');
-  if (!hasConsented) return false; // No choice made yet
   
-  // Check specific analytics preference
+  // If user hasn't interacted with cookie consent yet, allow basic tracking
+  // This tracks anonymous visits while respecting explicit opt-outs
+  if (!hasConsented) return true; // Track by default until user opts out
+  
+  // Check specific analytics preference if they've set one
   const preferences = localStorage.getItem('lumo-cookie-preferences');
-  if (!preferences) return false;
+  if (!preferences) return true; // No preferences set, allow tracking
   
   try {
     const parsed = JSON.parse(preferences);
-    return parsed.analytics === true;
+    // If user explicitly set analytics preference, respect it
+    // If analytics key doesn't exist, default to true
+    return parsed.analytics !== false;
   } catch {
-    return false;
+    return true; // On parse error, default to tracking
   }
 }
 
@@ -183,11 +189,24 @@ export function VisitorTracker() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
+    // Listen for cookie consent updates - if user enables analytics after page load
+    const handleConsentUpdate = (event: CustomEvent) => {
+      const prefs = event.detail;
+      if (prefs?.analytics === true) {
+        // User just enabled analytics, track their visit now
+        fetchGeoData().then((geoData) => {
+          trackVisit(pathname, geoData);
+        });
+      }
+    };
+    window.addEventListener('cookieConsentUpdated', handleConsentUpdate as EventListener);
+
     return () => {
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('cookieConsentUpdated', handleConsentUpdate as EventListener);
       sendHeartbeat(); // Final heartbeat on unmount
     };
   }, [fetchGeoData, pathname, sendHeartbeat, trackVisit]);

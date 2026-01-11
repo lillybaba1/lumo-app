@@ -366,13 +366,16 @@ export async function recordPageView(pageViewData: {
     }
 
     // Also update visitor's page_views count and last_activity
+    // Use raw SQL increment to avoid race conditions
     await supabaseAdmin
       .from('visitors')
       .update({
-        page_views: supabaseAdmin.rpc('increment_page_views', { vid: pageViewData.visitor_id }),
         last_activity: new Date().toISOString(),
       })
       .eq('visitor_id', pageViewData.visitor_id);
+    
+    // Call RPC to increment page views separately
+    await supabaseAdmin.rpc('increment_page_views', { vid: pageViewData.visitor_id });
 
     return data;
   } catch (error) {
