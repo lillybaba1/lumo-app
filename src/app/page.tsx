@@ -412,7 +412,7 @@ function Home(props: {
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
-      {/* MOBILE: Fixed search bar + Categories below header */}
+      {/* MOBILE: Fixed search bar below header */}
       <div className="md:hidden bg-white border-b fixed top-12 left-0 right-0 z-40 shadow-sm">
         {/* Search Bar - Full width, prominent */}
         <div className="px-3 py-2">
@@ -440,27 +440,27 @@ function Home(props: {
             </div>
           </div>
         </div>
-        
-        {/* Category Chips - Horizontal scroll */}
-        <div className="px-3 pb-2">
-          <CategoryChips 
-            categories={categories} 
-            selectedCategory={selectedCategory}
-            onCategorySelect={(catId) => {
-              setSelectedCategory(catId);
-              if (catId !== 'all') {
-                router.push(`/?category=${catId}`, { scroll: false });
-              } else {
-                router.push('/', { scroll: false });
-              }
-            }}
-            maxVisible={6}
-          />
-        </div>
       </div>
       
       {/* Spacer for fixed search bar on mobile */}
-      <div className="md:hidden h-24" />
+      <div className="md:hidden h-14" />
+      
+      {/* Category Chips - Scrolls with content */}
+      <div className="md:hidden bg-white px-3 py-2">
+        <CategoryChips 
+          categories={categories} 
+          selectedCategory={selectedCategory}
+          onCategorySelect={(catId) => {
+            setSelectedCategory(catId);
+            if (catId !== 'all') {
+              router.push(`/?category=${catId}`, { scroll: false });
+            } else {
+              router.push('/', { scroll: false });
+            }
+          }}
+          maxVisible={6}
+        />
+      </div>
 
       <div className="w-full" style={{ width: '100%' }}>
         <Hero />
