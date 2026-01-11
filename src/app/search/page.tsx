@@ -142,30 +142,30 @@ function SearchResultsContent() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-page)]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <button 
             onClick={() => router.push('/')}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            {searchQuery ? `Search results for "${searchQuery}"` : 'All Products'}
+          <h1 className="text-xl md:text-2xl font-bold">
+            {searchQuery ? `Results for "${searchQuery}"` : 'All Products'}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
+          <p className="text-muted-foreground text-sm mt-0.5">
+            {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'}
           </p>
         </div>
 
         {/* Search and Sort Bar */}
-        <div className="mb-6 flex flex-col gap-3 rounded-2xl border bg-white/60 backdrop-blur-sm p-3 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="mb-4 flex flex-col gap-2 rounded-xl border bg-white/60 backdrop-blur-sm p-2 md:p-3 shadow-sm md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1">
             <Input
-              placeholder="Search for products..."
-              className="pl-10 border-0 bg-white/80 focus-visible:ring-1"
+              placeholder="Search products..."
+              className="pl-9 h-9 text-sm border-0 bg-white/80 focus-visible:ring-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -174,7 +174,7 @@ function SearchResultsContent() {
               }}
             />
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
               style={{ color: 'var(--color-text-secondary)' }}
             />
           </div>

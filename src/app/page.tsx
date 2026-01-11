@@ -170,11 +170,6 @@ export default function HomePageDataContainer() {
     return (
       <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
         <Hero initialSettings={heroSettings || undefined} />
-        
-        {/* Service Highlights Skeleton */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <ServiceHighlights />
-        </div>
 
         {/* Categories Skeleton */}
         <div className="w-full py-6 md:py-10 bg-muted/30">
@@ -431,11 +426,6 @@ function Home(props: {
 
       <div className="w-full" style={{ width: '100%' }}>
         <Hero />
-      </div>
-
-      {/* Service Highlights - Right below hero */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <ServiceHighlights variant="horizontal" />
       </div>
 
       <div className="w-full">

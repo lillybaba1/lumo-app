@@ -114,6 +114,33 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
     };
   }, [isOpen]);
 
+  // Handle back button in Capacitor
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const setupBackButton = async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        
+        const listener = await App.addListener('backButton', () => {
+          // Close modal instead of going back
+          onClose();
+        });
+
+        return () => {
+          listener.remove();
+        };
+      } catch (error) {
+        // Not running in Capacitor
+      }
+    };
+
+    const cleanup = setupBackButton();
+    return () => {
+      cleanup.then(fn => fn?.());
+    };
+  }, [isOpen, onClose]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {

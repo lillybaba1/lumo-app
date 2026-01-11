@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, Menu, LogOut, Package, Settings } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, LogOut, Package, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -138,7 +138,7 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* Mobile Header - Logo + Search Bar */}
+        {/* Mobile Header - Logo + Search Bar + Menu */}
         <div className="flex md:hidden w-full h-14 items-center px-3 gap-2">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
@@ -162,6 +162,101 @@ export default function Header() {
               <span>Search products...</span>
             </button>
           </div>
+          
+          {/* Menu Button (3 lines) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="flex-shrink-0 h-9 w-9 hover:bg-white/10"
+                style={{ color: settings.headerTextColor }}
+                aria-label="Open menu"
+              >
+                {/* 3-line menu icon */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="6" width="16" height="2" rx="1" fill="currentColor" />
+                  <rect x="4" y="11" width="16" height="2" rx="1" fill="currentColor" />
+                  <rect x="4" y="16" width="16" height="2" rx="1" fill="currentColor" />
+                </svg>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {isAuthenticated && user ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/orders" className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/wishlist" className="flex items-center gap-2">
+                      <Heart className="h-4 w-4" />
+                      Wishlist
+                    </Link>
+                  </DropdownMenuItem>
+                  {user?.hasBusinessAccount && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'} className="flex items-center gap-2">
+                          <Store className="h-4 w-4" />
+                          Seller Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/dashboard" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/api/auth/logout" className="flex items-center gap-2 text-red-600">
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/login" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Sign In
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/signup" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Create Account
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/categories" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  All Categories
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Desktop Header */}
