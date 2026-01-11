@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X, Mic, Camera } from 'lucide-react';
+import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category, PromoBannerSettings } from '@/lib/types';
@@ -412,41 +412,8 @@ function Home(props: {
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
-      {/* MOBILE: Fixed search bar below header */}
-      <div className="md:hidden bg-white border-b fixed top-12 left-0 right-0 z-40 shadow-sm">
-        {/* Search Bar - Full width, prominent */}
-        <div className="px-3 py-2">
-          <div className="relative">
-            <Input
-              placeholder="Search products, brands, or categories"
-              className="w-full h-10 pl-10 pr-20 text-sm rounded-full border-2 border-gray-200 focus:border-primary bg-gray-50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && searchQuery) {
-                  router.push(`/?search=${encodeURIComponent(searchQuery)}`, { scroll: false });
-                }
-              }}
-            />
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            {/* Voice & Camera search placeholders */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors" title="Voice search (coming soon)">
-                <Mic className="h-4 w-4 text-gray-400" />
-              </button>
-              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors" title="Image search (coming soon)">
-                <Camera className="h-4 w-4 text-gray-400" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Spacer for fixed search bar on mobile */}
-      <div className="md:hidden h-14" />
-      
-      {/* Category Chips - Scrolls with content */}
-      <div className="md:hidden bg-white px-3 py-2">
+      {/* Category Chips - Mobile only, scrolls with content */}
+      <div className="md:hidden bg-white px-3 py-2 border-b">
         <CategoryChips 
           categories={categories} 
           selectedCategory={selectedCategory}

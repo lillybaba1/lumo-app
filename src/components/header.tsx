@@ -138,15 +138,42 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="w-full flex h-12 items-center px-3 sm:px-4 md:px-6 gap-3">
+        {/* Mobile Header - Logo + Search Bar */}
+        <div className="flex md:hidden w-full h-14 items-center px-3 gap-2">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0">
+            <Image
+              src="/icon.svg"
+              alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+              width={32}
+              height={32}
+              className="object-contain"
+              priority
+            />
+          </Link>
+          
+          {/* Search Bar - Takes remaining space */}
+          <div className="flex-1">
+            <button
+              onClick={() => setMobileSearchOpen(true)}
+              className="w-full h-9 px-4 flex items-center gap-2 bg-white/90 rounded-full text-gray-500 text-sm border border-gray-200"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search products...</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:flex w-full h-14 items-center px-4 md:px-6 gap-3">
           {/* Logo & Store Name */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="relative h-8 w-8 flex items-center">
+            <div className="relative h-9 w-9 flex items-center">
               <Image
                 src="/icon.svg"
                 alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                width={32}
-                height={32}
+                width={36}
+                height={36}
                 className="object-contain"
                 priority
               />
@@ -156,20 +183,20 @@ export default function Header() {
             </span>
           </Link>
           
-          {/* Search Bar - Full Width Center (Desktop Only) */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
+          {/* Search Bar - Full Width Center */}
+          <div className="flex flex-1 max-w-2xl mx-4">
             <SearchBar variant="header" placeholder="Search products, brands, and more..." className="w-full" />
           </div>
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* User Account Dropdown - Desktop */}
+            {/* User Account Dropdown */}
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="hidden md:flex items-center gap-1 px-2 h-9 hover:bg-white/10"
+                    className="flex items-center gap-1 px-2 h-9 hover:bg-white/10"
                     style={{ color: settings.headerTextColor }}
                   >
                     <User className="h-4 w-4" />

@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 /**
  * Handles Android hardware back button in Capacitor app.
- * Goes back in browser history instead of closing the app.
+ * Goes back in browser history or to home instead of closing the app.
  */
 export function CapacitorBackButton() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Only run in Capacitor environment
@@ -20,12 +21,18 @@ export function CapacitorBackButton() {
         
         // Listen for back button
         const listener = await App.addListener('backButton', ({ canGoBack }) => {
-          if (canGoBack) {
-            // Go back in history
+          // If we're on the homepage, minimize the app
+          if (pathname === '/') {
+            App.minimizeApp();
+            return;
+          }
+          
+          // If we can go back in history, do so
+          if (canGoBack && window.history.length > 1) {
             window.history.back();
           } else {
-            // If we're at the root, minimize the app (don't close)
-            App.minimizeApp();
+            // Otherwise, go to homepage
+            router.push('/');
           }
         });
 
@@ -39,7 +46,7 @@ export function CapacitorBackButton() {
     };
 
     setupBackButton();
-  }, [router]);
+  }, [router, pathname]);
 
   return null;
 }

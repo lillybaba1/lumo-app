@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ProductCard from '@/components/product-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -17,6 +17,7 @@ import { ProductGridSkeleton } from '@/components/skeletons';
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams?.get('q') || '';
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -144,10 +145,13 @@ function SearchResultsContent() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Header */}
         <div className="mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+          <button 
+            onClick={() => router.push('/')}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
-          </Link>
+          </button>
           <h1 className="text-2xl md:text-3xl font-bold">
             {searchQuery ? `Search results for "${searchQuery}"` : 'All Products'}
           </h1>
