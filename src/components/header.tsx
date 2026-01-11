@@ -223,11 +223,17 @@ export default function Header() {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/api/auth/logout" className="flex items-center gap-2 text-red-600">
+                  <DropdownMenuItem className="flex items-center gap-2 text-red-600 cursor-pointer" onClick={async () => {
+                     // Client-side logout logic
+                     try {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                        window.location.href = '/login'; // Force reload to clear state
+                     } catch (e) {
+                        console.error('Sign out error:', e);
+                     }
+                  }}>
                       <LogOut className="h-4 w-4" />
                       Sign Out
-                    </Link>
                   </DropdownMenuItem>
                 </>
               ) : (
@@ -339,11 +345,17 @@ export default function Header() {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/api/auth/logout" className="flex items-center gap-2 text-red-600">
+                  <DropdownMenuItem className="flex items-center gap-2 text-red-600 cursor-pointer" onClick={async () => {
+                     // Client-side logout logic
+                     try {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                        window.location.href = '/login'; // Force reload to clear state
+                     } catch (e) {
+                        console.error('Sign out error:', e);
+                     }
+                  }}>
                       <LogOut className="h-4 w-4" />
                       Sign Out
-                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

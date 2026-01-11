@@ -48,18 +48,18 @@ function HeroGridWidget({
   textColor?: string;
 }) {
   return (
-    <div className={`rounded-xl p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-2 min-h-[50px]`}>{title}</h3>
+    <div className={`rounded-lg p-4 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <div className="bg-white rounded-lg p-3 flex-1 grid grid-cols-2 gap-2 h-full">
+      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-3 overflow-hidden">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
           // Mock discount for "Deals" feel
           const discount = Math.floor(Math.random() * (40 - 15) + 15);
           
           return (
-            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full">
-              <div className="aspect-square relative mb-1.5 flex-1">
+            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full relative p-2">
+              <div className="aspect-square relative mb-1.5 flex-1 w-full">
                 {imageUrl ? (
                   <Image
                     src={imageUrl}
@@ -123,10 +123,10 @@ function HeroLargeCardWidget({
   const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
 
   return (
-    <div className={`rounded-xl p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-2 min-h-[50px]`}>{title}</h3>
+    <div className={`rounded-lg p-4 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-lg p-2 flex-1 relative overflow-hidden group">
+      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-md p-4 flex-1 relative overflow-hidden group items-center justify-center flex">
          <div className="relative w-full h-full">
             {imageUrl ? (
               <Image
@@ -414,7 +414,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           {products.length > 0 && (
             <div className="relative mt-2">
               <div 
-                 className="flex gap-3 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory" 
+                 className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory" 
                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {/* 1. Green Card: Continue Shopping / Deals */}

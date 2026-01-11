@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Search, SlidersHorizontal, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
 import { ProductGridSkeleton } from '@/components/skeletons';
@@ -28,7 +29,9 @@ function SearchResultsContent() {
   const [sortBy, setSortBy] = useState('name-asc');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showInStockOnly, setShowInStockOnly] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  
+  // Use a derived state for showing desktop filters, but mobile uses Sheet
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true);
 
   // Update search query when URL changes
   useEffect(() => {
@@ -50,20 +53,6 @@ function SearchResultsContent() {
       setLoading(false);
     }
     fetchData();
-  }, []);
-
-  // Open filters by default on desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setShowFilters(true);
-      } else {
-        setShowFilters(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Calculate max price from products
@@ -126,6 +115,84 @@ function SearchResultsContent() {
     return sorted;
   }, [products, categories, searchQuery, selectedCategory, priceRange, showInStockOnly, sortBy]);
 
+  const FilterUI = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="font-semibold text-lg mb-1">Filters</h3>
+        <p className="text-sm text-muted-foreground">Refine your search</p>
+      </div>
+
+      <Separator />
+
+      {/* Category Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold block">Category</Label>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-full border-0 bg-white/80">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      {/* Price Range Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold block">Price Range</Label>
+        <div className="text-sm font-medium text-center py-2 px-3 bg-white/80 rounded-lg">
+          ${priceRange[0]} - ${priceRange[1]}
+        </div>
+        <Slider
+          min={0}
+          max={maxPrice}
+          step={10}
+          value={priceRange}
+          onValueChange={setPriceRange}
+          className="my-2"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>$0</span>
+          <span>${maxPrice}</span>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Availability Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold block">Availability</Label>
+        <div className="flex items-center justify-between p-3 bg-white/80 rounded-lg">
+          <Label htmlFor="in-stock" className="text-sm cursor-pointer">
+            In Stock Only
+          </Label>
+          <Switch
+            id="in-stock"
+            checked={showInStockOnly}
+            onCheckedChange={setShowInStockOnly}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Filter Summary */}
+      <div className="pt-2 text-center">
+        <p className="text-sm font-medium">
+          {filteredAndSortedProducts.length} of {products.length}
+        </p>
+        <p className="text-xs text-muted-foreground">products found</p>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-page)]">
@@ -142,9 +209,9 @@ function SearchResultsContent() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-page)]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-8 py-3 md:py-6">
         {/* Header */}
-        <div className="mb-4">
+        <div className="mb-4 px-2">
           <button 
             onClick={() => router.push('/')}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2"
@@ -161,7 +228,7 @@ function SearchResultsContent() {
         </div>
 
         {/* Search and Sort Bar */}
-        <div className="mb-4 flex flex-col gap-2 rounded-xl border bg-white/60 backdrop-blur-sm p-2 md:p-3 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="mb-4 mx-2 flex flex-col gap-2 rounded-xl border bg-white/60 backdrop-blur-sm p-2 md:p-3 shadow-sm md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1">
             <Input
               placeholder="Search products..."
@@ -199,105 +266,38 @@ function SearchResultsContent() {
               </SelectContent>
             </Select>
 
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="md:hidden px-4 py-2 border hover:bg-accent transition-colors rounded-xl"
-              style={{
-                borderColor: 'var(--color-border-subtle)',
-              }}
-            >
-              <SlidersHorizontal className="h-5 w-5" />
-            </button>
+            {/* Mobile Sheet Trigger for Filters */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden shrink-0">
+                   <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+                <SheetHeader className="mb-4">
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <FilterUI />
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="grid md:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <aside className={`md:col-span-1 ${showFilters ? 'block' : 'hidden md:block'}`}>
+          {/* Desktop Filters Sidebar */}
+          <aside className={`md:col-span-1 hidden md:block`}>
             <div className="sticky top-24 space-y-6 rounded-2xl border bg-white/60 backdrop-blur-sm p-4 md:p-5 shadow-sm">
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Filters</h3>
-                <p className="text-sm text-muted-foreground">Refine your search</p>
-              </div>
-
-              <Separator />
-
-              {/* Category Filter */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold block">Category</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full border-0 bg-white/80">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              {/* Price Range Filter */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold block">Price Range</Label>
-                <div className="text-sm font-medium text-center py-2 px-3 bg-white/80 rounded-lg">
-                  ${priceRange[0]} - ${priceRange[1]}
-                </div>
-                <Slider
-                  min={0}
-                  max={maxPrice}
-                  step={10}
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  className="my-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>$0</span>
-                  <span>${maxPrice}</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Availability Filter */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold block">Availability</Label>
-                <div className="flex items-center justify-between p-3 bg-white/80 rounded-lg">
-                  <Label htmlFor="in-stock" className="text-sm cursor-pointer">
-                    In Stock Only
-                  </Label>
-                  <Switch
-                    id="in-stock"
-                    checked={showInStockOnly}
-                    onCheckedChange={setShowInStockOnly}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Filter Summary */}
-              <div className="pt-2 text-center">
-                <p className="text-sm font-medium">
-                  {filteredAndSortedProducts.length} of {products.length}
-                </p>
-                <p className="text-xs text-muted-foreground">products found</p>
-              </div>
+               <FilterUI />
             </div>
           </aside>
 
           {/* Products Grid */}
-          <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
+          <div className="md:col-span-3">
             {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
                 {filteredAndSortedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} compact={true} />
                 ))}
               </div>
             ) : (
