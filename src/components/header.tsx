@@ -404,8 +404,11 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Spacer to prevent content from being hidden behind fixed header */}
-      <div className="h-14 w-full flex-shrink-0" />
+      {/* Spacer to prevent content from being hidden behind fixed header - accounts for safe area on mobile */}
+      <div 
+        className="w-full flex-shrink-0" 
+        style={{ height: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+      />
 
       {/* Mobile Search Modal */}
       <MobileSearchModal 

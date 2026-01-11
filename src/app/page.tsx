@@ -409,8 +409,8 @@ function Home(props: {
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
       {/* Category Chips - Mobile only, STICKY below header (scrolls until it hits header, then sticks) */}
       <div 
-        className="md:hidden sticky z-40 bg-white px-3 py-2 border-b"
-        style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
+        className="md:hidden sticky z-40 bg-white px-3 py-2 border-b -mt-px"
+        style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
       >
         <CategoryChips 
           categories={categories} 
