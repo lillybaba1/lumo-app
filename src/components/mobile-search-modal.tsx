@@ -176,18 +176,24 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white flex flex-col">
+    <div 
+      className="fixed inset-0 z-[100] bg-white flex flex-col"
+      data-mobile-search-modal="true"
+    >
       {/* Header with search input */}
-      <div className="flex items-center gap-3 p-4 border-b bg-white sticky top-0">
+      <div 
+        className="flex items-center gap-3 px-4 py-2 border-b bg-white sticky top-0"
+        style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}
+      >
         <form onSubmit={handleSubmit} className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search products..."
-            className="pl-10 pr-10 h-12 text-base rounded-full border-2 focus:border-primary"
+            className="pl-9 pr-9 h-10 text-base rounded-lg border-input bg-muted/30 focus:bg-background"
             autoFocus
           />
           {query && (
@@ -196,7 +202,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
               onClick={() => setQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </form>
@@ -204,7 +210,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
           variant="ghost" 
           size="sm" 
           onClick={onClose}
-          className="text-muted-foreground font-medium"
+          className="text-muted-foreground hover:text-foreground px-2 h-10"
         >
           Cancel
         </Button>
@@ -327,41 +333,99 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
           </div>
         )}
 
-        {/* Recent searches */}
-        {!loading && query.length < 2 && recentSearches.length > 0 && (
-          <div className="p-4">
-            <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                Recent Searches
-              </span>
-              <button
-                onClick={clearRecentSearches}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Clear
-              </button>
-            </div>
-            <div className="space-y-1">
-              {recentSearches.map((search, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleRecentClick(search)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                >
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm">{search}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Initial View: Recent, Trending, Categories */}
+        {!loading && query.length < 2 && (
+          <div className="p-4 space-y-6 pb-20">
+            {/* Recent Searches */}
+            {recentSearches.length > 0 && (
+              <div className="space-y-2">
+                <div className="px-2 flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <span className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5" />
+                    Recent Searches
+                  </span>
+                  <button
+                    onClick={clearRecentSearches}
+                    className="text-primary hover:underline hover:text-primary/80"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="space-y-0.5">
+                  {recentSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentClick(search)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors text-left group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <Clock className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                        <span className="text-sm truncate">{search}</span>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground/30 -translate-x-1 group-hover:translate-x-0 group-hover:text-primary/50 transition-all opacity-0 group-hover:opacity-100" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Empty state */}
-        {!loading && query.length < 2 && recentSearches.length === 0 && (
-          <div className="p-6 text-center text-muted-foreground">
-            <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Start typing to search products</p>
+            {/* Trending / Popular Searches */}
+            <div className="space-y-3">
+              <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <TrendingUp className="h-3.5 w-3.5 text-orange-500" />
+                Popular Searches
+              </div>
+              <div className="flex flex-wrap gap-2 px-1">
+                {[
+                  "Nike Air Force", "Samsung Galaxy", "Home Decor", 
+                  "Summer Dresses", "Smart Watches", "Headphones",
+                  "Skin Care", "Running Shoes"
+                ].map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => {
+                      setQuery(term);
+                      saveRecentSearch(term);
+                      router.push(`/?search=${encodeURIComponent(term)}`);
+                      onClose();
+                    }}
+                    className="px-3 py-1.5 bg-muted/40 hover:bg-primary/10 hover:text-primary hover:border-primary/20 border border-transparent rounded-full text-sm transition-all"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Categories */}
+            <div className="space-y-3">
+              <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <Store className="h-3.5 w-3.5 text-blue-500" />
+                Browse Categories
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 px-1">
+                {[
+                  { id: 'fashion', name: 'Fashion', icon: '👗', color: 'bg-pink-50 text-pink-700' },
+                  { id: 'electronics', name: 'Electronics', icon: '📱', color: 'bg-blue-50 text-blue-700' },
+                  { id: 'home', name: 'Home & Living', icon: '🏠', color: 'bg-green-50 text-green-700' },
+                  { id: 'beauty', name: 'Beauty', icon: '💄', color: 'bg-purple-50 text-purple-700' },
+                  { id: 'sports', name: 'Sports', icon: '⚽', color: 'bg-orange-50 text-orange-700' },
+                  { id: 'toys', name: 'Toys & Games', icon: '🎮', color: 'bg-indigo-50 text-indigo-700' },
+                ].map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/categories/${cat.id}`}
+                    onClick={onClose}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-card hover:bg-muted/50 hover:border-primary/20 transition-all group"
+                  >
+                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-lg ${cat.color} bg-opacity-50`}>
+                      {cat.icon}
+                    </span>
+                    <span className="text-sm font-medium group-hover:text-primary transition-colors">{cat.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

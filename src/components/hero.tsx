@@ -33,57 +33,121 @@ interface HeroProps {
   initialSettings?: HeroSettings;
 }
 
-// Amazon-style mini product card widget
-function HeroProductWidget({ 
+// Amazon-style Grid Widget for Hero
+function HeroGridWidget({ 
   title, 
-  icon: Icon, 
   products, 
-  link
+  link,
+  bgColor,
+  textColor = 'text-gray-900'
 }: { 
   title: string; 
-  icon: React.ElementType;
   products: Product[]; 
   link: string;
+  bgColor: string;
+  textColor?: string;
 }) {
-  if (products.length === 0) return null;
-  
   return (
-    <div className="bg-white rounded-lg shadow-lg p-3 min-w-[160px] max-w-[200px] flex-shrink-0">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <h3 className="text-xs font-bold text-gray-900 truncate">{title}</h3>
-      </div>
-      <div className="grid grid-cols-2 gap-1.5 mb-2">
+    <div className={`rounded-xl p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-2 min-h-[50px]`}>{title}</h3>
+      
+      <div className="bg-white rounded-lg p-3 flex-1 grid grid-cols-2 gap-2 h-full">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
+          // Mock discount for "Deals" feel
+          const discount = Math.floor(Math.random() * (40 - 15) + 15);
+          
           return (
-            <Link key={product.id} href={`/products/${product.id}`} className="group">
-              <div className="aspect-square relative rounded overflow-hidden bg-gray-100">
+            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full">
+              <div className="aspect-square relative mb-1.5 flex-1">
                 {imageUrl ? (
                   <Image
                     src={imageUrl}
                     alt={product.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform"
-                    sizes={IMAGE_SIZES.thumbnail}
+                    className="object-contain p-1"
+                    sizes="120px"
                     loading="lazy"
                     placeholder="blur"
                     blurDataURL={PRODUCT_BLUR_DATA_URL}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
+                  <div className="w-full h-full flex items-center justify-center text-lg bg-gray-50 text-gray-300">Image</div>
                 )}
+              </div>
+              <div className="mt-auto">
+                 <span className="inline-block bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
+                   {discount}% off
+                 </span>
+                 <p className="text-[10px] text-gray-500 truncate mt-0.5 hidden">Deal</p>
               </div>
             </Link>
           );
         })}
+        {/* Fill empty spots if less than 4 */}
+        {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
+           <div key={`empty-${i}`} className="bg-gray-50 rounded flex items-center justify-center">
+             <span className="text-gray-200 text-xs">More soon</span>
+           </div>
+        ))}
       </div>
-      <Link 
-        href={link} 
-        className="text-[10px] text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-0.5"
-      >
-        See more <ArrowRight className="h-3 w-3" />
+      
+      <div className="mt-3">
+        <Link 
+          href={link} 
+          className={`text-sm font-medium hover:underline flex items-center gap-1 ${textColor}`}
+        >
+          See all deals <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// Single Large Card (Purple one in design)
+function HeroLargeCardWidget({
+  title,
+  products,
+  link,
+  bgColor,
+  textColor = 'text-gray-900'
+}: {
+  title: string;
+  products: Product[];
+  link: string;
+  bgColor: string;
+  textColor?: string;
+}) {
+  const mainProduct = products[0];
+  if (!mainProduct) return null;
+  const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
+
+  return (
+    <div className={`rounded-xl p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-2 min-h-[50px]`}>{title}</h3>
+      
+      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-lg p-2 flex-1 relative overflow-hidden group">
+         <div className="relative w-full h-full">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={mainProduct.name}
+                fill
+                className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                sizes="300px"
+              />
+            ) : null}
+         </div>
       </Link>
+      
+      <div className="mt-3">
+        <Link 
+          href={link} 
+          className={`text-sm font-medium hover:underline flex items-center gap-1 ${textColor}`}
+        >
+          See more <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
     </div>
   );
 }
@@ -154,7 +218,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   // Admin settings will override ONLY after successful fetch
   const LOCAL_HERO_HEADING = 'Step into JulaZone';
   const LOCAL_HERO_TAGLINE = 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  const LOCAL_HERO_IMAGE = '/hero-background.jpg';
+  const LOCAL_HERO_IMAGE = ''; // Default to gradient
   
   // Use local defaults immediately, admin settings override after fetch
   const heroHeading = settings?.heroHeading || LOCAL_HERO_HEADING;
@@ -210,6 +274,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       );
 
       // Fetch collections for the hero widgets
+      // These collections are "auto-analyzed" by the backend (based on sales/views) 
+      // but can be manually overridden by admins via the admin panel.
       requestTypes.push('collections');
       requests.push(
         fetch('/api/collections', { 
@@ -334,185 +400,186 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       className="relative w-full overflow-hidden z-0"
       style={{ width: '100%', maxWidth: '100%' }}
     >
-      {/* Background Image */}
-      {heroBackgroundImage ? (
-        <div className="absolute inset-0" style={{ backgroundColor: heroImageFit === 'contain' ? '#1a1a2e' : undefined }}>
-          <Image
-            src={heroBackgroundImage}
-            alt="Hero background"
-            fill
-            priority
-            className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
-            style={{ objectPosition: heroImageObjectPosition }}
-            sizes={IMAGE_SIZES.hero}
-            placeholder="blur"
-            blurDataURL={HERO_BLUR_DATA_URL}
-          />
-          {/* Enhanced Gradient Overlay for better text contrast - only for cover mode */}
-          {heroImageFit === 'cover' && (
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
-          )}
-        </div>
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
-      )}
+      {/* Background Image - REMOVED for app-like style, using improved gradient background */}
+      <div className="absolute inset-0 bg-gray-100/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#A7F3D0]/30 via-transparent to-transparent h-40 pointer-events-none" />
 
-      {/* Content - Positioned elements - REDUCED HEIGHT by 40% */}
-      <div className="relative w-full min-h-[288px] sm:min-h-[312px] md:min-h-[360px]">
+      {/* Content */}
+      <div className="relative w-full pb-6 pt-2">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
-        {/* Mobile Layout - Flexbox based for better visibility - COMPACT */}
-        <div className="md:hidden flex flex-col justify-start px-4 pt-8 pb-3 min-h-[288px] sm:min-h-[312px] relative z-10">
-          <h1
-            className="text-xl sm:text-2xl font-bold max-w-lg mb-1.5 drop-shadow-lg"
-            style={{
-              color: heroHeadingColor,
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--font-weight-bold)',
-              lineHeight: '1.2',
-            }}
-          >
-            {heroHeading}
-          </h1>
-
-          <p
-            className="text-[11px] sm:text-xs max-w-xs mb-2 drop-shadow-md"
-            style={{
-              color: heroTaglineColor,
-              opacity: 0.95,
-              lineHeight: '1.3',
-            }}
-          >
-            {heroTagline}
-          </p>
-
-          {/* Amazon-style Product Widgets - Mobile (horizontal scroll) - More compact */}
+        {/* Mobile Layout - Horizontal Scroll Cards */}
+        <div className="md:hidden">
           {products.length > 0 && (
             <div className="relative mt-2">
-              {/* Scroll container */}
-              <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {newArrivalsProducts.length > 0 && (
-                  <div className="snap-start">
-                    <HeroProductWidget
-                      title="New Arrivals"
-                      icon={ShoppingBag}
-                      products={newArrivalsProducts}
-                      link="/products?filter=new"
-                    />
-                  </div>
-                )}
-                {bestSellersProducts.length > 0 && (
-                  <div className="snap-start">
-                    <HeroProductWidget
-                      title="Best Sellers"
-                      icon={TrendingUp}
-                      products={bestSellersProducts}
-                      link="/products?filter=bestsellers"
-                    />
-                  </div>
-                )}
-                {featuredProducts.length > 0 && (
-                  <div className="snap-start">
-                    <HeroProductWidget
-                      title="Featured"
-                      icon={ShoppingBag}
-                      products={featuredProducts}
-                      link="/products?filter=featured"
-                    />
-                  </div>
-                )}
+              <div 
+                 className="flex gap-3 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory" 
+                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {/* 1. Green Card: Continue Shopping / Deals */}
                 {dealsProducts.length > 0 && (
-                  <div className="snap-start">
-                    <HeroProductWidget
-                      title="Deals"
-                      icon={Tag}
+                  <div className="snap-center">
+                    <HeroGridWidget
+                      title="Continue shopping deals"
                       products={dealsProducts}
                       link="/products?filter=deals"
+                      bgColor="bg-[#66E887]" // Bright green
+                      textColor="text-gray-900"
                     />
                   </div>
                 )}
-              </div>
-              {/* Scroll indicator - shows there's more to scroll */}
-              <div className="flex justify-center gap-1.5 mt-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-full text-[10px] text-gray-600 font-medium">
-                  <span>Swipe for more</span>
-                  <ArrowRight className="h-3 w-3 animate-pulse" />
-                </div>
+                
+                {/* 2. Purple Card: Best Sellers */}
+                {bestSellersProducts.length > 0 && (
+                  <div className="snap-center">
+                    <HeroLargeCardWidget
+                      title="Deals on your best sellers"
+                      products={bestSellersProducts}
+                      link="/products?filter=bestsellers"
+                      bgColor="bg-[#D8B4FE]" // Purple
+                      textColor="text-gray-900"
+                    />
+                  </div>
+                )}
+                
+                {/* 3. Blue/Teal Card: New Arrivals */}
+                {newArrivalsProducts.length > 0 && (
+                  <div className="snap-center">
+                    <HeroGridWidget
+                      title="Check out new arrivals"
+                      products={newArrivalsProducts}
+                      link="/products?filter=new"
+                      bgColor="bg-[#67E8F9]" // Cyan
+                      textColor="text-gray-900"
+                    />
+                  </div>
+                )}
+                
+                {/* 4. Yellow/Orange Card: Featured */}
+                {featuredProducts.length > 0 && (
+                  <div className="snap-center">
+                    <HeroLargeCardWidget
+                      title="Featured for you"
+                      products={featuredProducts}
+                      link="/products?filter=featured"
+                      bgColor="bg-[#FDE047]" // Yellow
+                      textColor="text-gray-900"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Desktop Layout - Absolutely positioned */}
-        {/* Heading - Absolutely positioned */}
-        <h1
-          className="hidden md:block absolute text-6xl lg:text-7xl font-bold max-w-2xl px-4"
-          style={{
-            left: `${heroHeadingPosition.x}%`,
-            top: `${heroHeadingPosition.y}%`,
-            transform: 'translateY(-50%)',
-            color: heroHeadingColor,
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 'var(--font-weight-bold)',
-            lineHeight: 'var(--line-height-tight)',
-          }}
-        >
-          {heroHeading}
-        </h1>
+        {/* Desktop Layout - Keep cleaner grid but styled similarly if needed, or keep original banner look? 
+            For now, let's keep the desktop version somewhat aligned but responsive. 
+            Actually, let's adapt the desktop to use these cards too but in a grid. 
+        */}
+        <div className="hidden md:flex flex-wrap justify-center gap-6 px-6 py-8 max-w-7xl mx-auto">
+             {dealsProducts.length > 0 && (
+                <HeroGridWidget
+                  title="Continue shopping deals"
+                  products={dealsProducts}
+                  link="/products?filter=deals"
+                  bgColor="bg-[#66E887]"
+                />
+             )}
+             {bestSellersProducts.length > 0 && (
+                <HeroLargeCardWidget
+                  title="Best Sellers"
+                  products={bestSellersProducts}
+                  link="/products?filter=bestsellers"
+                  bgColor="bg-[#D8B4FE]"
+                />
+             )}
+              {newArrivalsProducts.length > 0 && (
+                <HeroGridWidget
+                  title="New Arrivals"
+                  products={newArrivalsProducts}
+                  link="/products?filter=new"
+                  bgColor="bg-[#67E8F9]"
+                />
+             )}
+             {featuredProducts.length > 0 && (
+                <HeroLargeCardWidget
+                  title="Featured"
+                  products={featuredProducts}
+                  link="/products?filter=featured"
+                  bgColor="bg-[#FDE047]"
+                />
+             )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Tagline - Absolutely positioned */}
-        <p
-          className="hidden md:block absolute text-xl max-w-xl px-4"
-          style={{
-            left: `${heroTaglinePosition.x}%`,
-            top: `${heroTaglinePosition.y}%`,
-            transform: 'translateY(-50%)',
-            color: heroTaglineColor,
-            opacity: 0.95,
-            lineHeight: 'var(--line-height-relaxed)',
-          }}
-        >
-          {heroTagline}
-        </p>
+function HeroWhiteCard({
+  title,
+  products,
+  link,
+  icon: Icon
+}: {
+  title: string;
+  products: Product[];
+  link: string;
+  icon: React.ElementType;
+}) {
+  const isSingle = products.length === 1;
 
-        {/* Amazon-style Product Widgets - Desktop (positioned at bottom) */}
-        {products.length > 0 && (
-          <div className="hidden md:flex absolute gap-4 px-4 bottom-6 left-4">
-            {newArrivalsProducts.length > 0 && (
-              <HeroProductWidget
-                title="New Arrivals"
-                icon={ShoppingBag}
-                products={newArrivalsProducts}
-                link="/products?filter=new"
-              />
-            )}
-            {bestSellersProducts.length > 0 && (
-              <HeroProductWidget
-                title="Best Sellers"
-                icon={TrendingUp}
-                products={bestSellersProducts}
-                link="/products?filter=bestsellers"
-              />
-            )}
-            {featuredProducts.length > 0 && (
-              <HeroProductWidget
-                title="Featured"
-                icon={ShoppingBag}
-                products={featuredProducts}
-                link="/products?filter=featured"
-              />
-            )}
-            {dealsProducts.length > 0 && (
-              <HeroProductWidget
-                title="Deals & Offers"
-                icon={Tag}
-                products={dealsProducts}
-                link="/products?filter=deals"
-              />
-            )}
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px]">
+      <div className="flex items-center gap-2 mb-3">
+        {false && <Icon className="h-5 w-5 text-indigo-600" />} {/* Icon disabled to match ref exactly */}
+        <h3 className="text-xl font-bold text-gray-900 leading-tight">{title}</h3>
+      </div>
+
+      <div className="flex-1 relative mb-3">
+        {isSingle ? (
+          <Link href={`/products/${products[0].id}`} className="block w-full h-full relative">
+            <Image
+              src={products[0].productImages?.[0] || products[0].imageUrls?.[0] || ''}
+              alt={products[0].name}
+              fill
+              className="object-contain"
+              sizes="300px"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={PRODUCT_BLUR_DATA_URL}
+            />
+          </Link>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 h-full">
+            {products.slice(0, 4).map((product) => (
+               <Link key={product.id} href={`/products/${product.id}`} className="relative h-full">
+                  <Image
+                    src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
+                    alt={product.name}
+                    fill
+                    className="object-contain" // Contain to show full product like ref
+                    sizes="150px"
+                    loading="lazy"
+                  />
+                  {/* Subtle label overlay if needed */}
+               </Link>
+            ))}
+             {/* Fill empty spots */}
+            {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
+              <div key={`empty-${i}`} className="bg-gray-50/50 rounded" />
+            ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <Link 
+          href={link} 
+          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+        >
+          See more <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
     </div>
   );

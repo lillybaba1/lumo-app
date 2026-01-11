@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Truck, CreditCard, HeadphonesIcon, MapPin, Mail, Phone, Facebook, Instagram, MessageCircle } from 'lucide-react';
 
@@ -92,6 +93,12 @@ const trustBadgeIcons = [
 export default function Footer() {
   const [settings, setSettings] = useState<FooterSettings>(defaultSettings);
   const [isAdmin, setIsAdmin] = useState(false);
+  const pathname = usePathname();
+  
+  // Hide on admin/business dashboards
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/business')) {
+    return null;
+  }
 
   useEffect(() => {
     const fetchSettings = async () => {

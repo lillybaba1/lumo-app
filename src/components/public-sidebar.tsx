@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
 import { Home, Grid, Clock, Star, Tag, Heart, ShoppingCart, User, HelpCircle, Mail, ShoppingBag, LogOut, Package } from 'lucide-react';
@@ -19,6 +19,12 @@ export default function PublicSidebar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Hide on admin/business dashboards
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/business')) {
+    return null;
+  }
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -90,6 +96,7 @@ export default function PublicSidebar() {
     <AppSidebar
       sections={sections}
       mobileTitle="JulaZone"
+      className="top-14 h-[calc(100vh-3.5rem)]"
       mobileIcon={
         <Image 
           src="/icon.svg" 

@@ -1,6 +1,7 @@
 'use server';
 
 import { logger } from '@/lib/logger';
+import { createClient } from '@/lib/supabase/server';
 
 const orderLogger = logger.child('OrderService');
 
@@ -136,23 +137,41 @@ export async function getOrdersByEmail(email: string): Promise<Order[]> {
  */
 export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> {
   try {
+    // Attempt to link to authenticated user if available
+    let userId: string | null = null;
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
+      }
+    } catch (authError) {
+      // Ignore auth errors during order creation - allow guest checkout logic to proceed
+      orderLogger.debug('Could not retrieve auth user for order linkage', { error: authError });
+    }
+
+    const insertPayload = {
+      user_id: userId || (orderData.customerId && typeof orderData.customerId === 'string' && orderData.customerId.length > 0 ? orderData.customerId : null),
+      customer_name: orderData.customerName,
+      customer_email: orderData.customerEmail,
+      customer_phone: orderData.customerPhone,
+      shipping_address: orderData.shippingAddress,
+      items: orderData.items,
+      subtotal: orderData.subtotal,
+      discount: orderData.discount,
+      total: orderData.total,
+      status: orderData.status,
+      payment_method: orderData.paymentMethod,
+      payment_status: orderData.paymentStatus,
+      coupon_code: orderData.couponCode,
+      notes: orderData.notes,
+    };
+
+    orderLogger.info('Creating order with payload', { customerEmail: orderData.customerEmail, userId });
+
     const { data, error } = await supabaseAdmin
       .from('orders')
-      .insert({
-        customer_name: orderData.customerName,
-        customer_email: orderData.customerEmail,
-        customer_phone: orderData.customerPhone,
-        shipping_address: orderData.shippingAddress,
-        items: orderData.items,
-        subtotal: orderData.subtotal,
-        discount: orderData.discount,
-        total: orderData.total,
-        status: orderData.status,
-        payment_method: orderData.paymentMethod,
-        payment_status: orderData.paymentStatus,
-        coupon_code: orderData.couponCode,
-        notes: orderData.notes,
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

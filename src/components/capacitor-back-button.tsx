@@ -21,6 +21,11 @@ export function CapacitorBackButton() {
         
         // Listen for back button
         const listener = await App.addListener('backButton', ({ canGoBack }) => {
+          // If search modal is open, do nothing (modal's own listener handles it)
+          if (document.querySelector('[data-mobile-search-modal="true"]')) {
+            return;
+          }
+
           // If we're on the homepage, minimize the app
           if (pathname === '/') {
             App.minimizeApp();

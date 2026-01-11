@@ -124,7 +124,7 @@ export default async function RootLayout({
               <LocationProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
-                <div className="flex flex-1 pt-12 md:pt-14">
+                <div className="flex flex-1">
                   <Suspense fallback={<div className="w-64 hidden lg:block" />}>
                     <PublicSidebar />
                   </Suspense>
@@ -136,7 +136,7 @@ export default async function RootLayout({
               </div>
               <Toaster />
               <BottomNavigation />
-              <AIAssistantWidget />
+              {/* <AIAssistantWidget /> */}
               <CookieConsent />
               <VisitorTracker />
               <CapacitorBackButton />

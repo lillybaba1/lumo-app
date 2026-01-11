@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, LogOut, Package, Settings } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, LogOut, Package, Settings, Camera as CameraIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
@@ -44,10 +44,10 @@ interface HeaderSettings {
 // Local defaults for instant loading - matches JulaZone branding
 // These are used immediately, admin settings override after fetch
 const defaultHeaderSettings: HeaderSettings = {
-  headerBgColor: '#d946ef', // Magenta/fuchsia - JulaZone brand color
-  headerTextColor: '#ffffff',
+  headerBgColor: 'rgba(255, 255, 255, 0.9)', // White with slight transparency
+  headerTextColor: '#0f172a', // Dark slate (almost black)
   headerButtonStyle: 'outline',
-  headerButtonColor: '#ffffff',
+  headerButtonColor: '#0f172a',
   homeButtonGradientFrom: '#4F46E5',
   homeButtonGradientTo: '#14B8A6',
   logoUrl: '',
@@ -61,6 +61,11 @@ export default function Header() {
   const { state } = useCart();
   const pathname = usePathname();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  // Hide header on dashboard pages (they have their own layouts)
+  if (pathname?.startsWith('/business') || pathname?.startsWith('/admin')) {
+    return null;
+  }
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -140,26 +145,19 @@ export default function Header() {
       >
         {/* Mobile Header - Logo + Search Bar + Menu */}
         <div className="flex md:hidden w-full h-14 items-center px-3 gap-2">
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <Image
-              src="/icon.svg"
-              alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-              width={32}
-              height={32}
-              className="object-contain"
-              priority
-            />
-          </Link>
+          {/* Logo - Removed to make space for full search bar */}
           
-          {/* Search Bar - Takes remaining space */}
+          {/* Search Bar - Main Focus */}
           <div className="flex-1">
             <button
               onClick={() => setMobileSearchOpen(true)}
-              className="w-full h-9 px-4 flex items-center gap-2 bg-white/90 rounded-full text-gray-500 text-sm border border-gray-200"
+              className="w-full h-10 px-4 flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200/60"
             >
-              <Search className="h-4 w-4" />
-              <span>Search products...</span>
+              <div className="flex items-center gap-2 text-gray-500">
+                <Search className="h-4 w-4" />
+                <span className="text-sm font-medium">Search or ask a question</span>
+              </div>
+              <CameraIcon className="h-5 w-5 text-gray-400" />
             </button>
           </div>
           
@@ -386,6 +384,9 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      {/* Spacer to prevent content from being hidden behind fixed header */}
+      <div className="h-14 w-full flex-shrink-0" />
 
       {/* Mobile Search Modal */}
       <MobileSearchModal 

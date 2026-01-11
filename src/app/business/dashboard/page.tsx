@@ -1,7 +1,9 @@
 import { requireBusiness } from "@/lib/auth-business";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight, Plus } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,19 +43,33 @@ export default async function BusinessDashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+        {/* Revenue Card - Visual Hierarchy Leader */}
+        <Card className="border-primary/20 bg-primary/5 dark:bg-primary/10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-3 opacity-10">
+            <DollarSign className="h-24 w-24 text-primary" />
+          </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-primary-foreground/80 dark:text-primary">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              All time earnings
-            </p>
+          <CardContent className="relative z-10">
+            <div className={`text-3xl font-bold ${stats.totalRevenue > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+              ${stats.totalRevenue.toFixed(2)}
+            </div>
+            {stats.totalRevenue === 0 ? (
+              <div className="mt-2">
+                <Link href="/business/products/new" className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1 group">
+                  Start generating revenue 
+                  <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">All time earnings</p>
+            )}
           </CardContent>
         </Card>
 
+        {/* Orders Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
@@ -61,12 +77,15 @@ export default async function BusinessDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              Orders containing your products
-            </p>
+            {stats.totalOrders === 0 ? (
+              <p className="text-xs text-muted-foreground mt-1">Waiting for your first sale</p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">Orders with your products</p>
+            )}
           </CardContent>
         </Card>
 
+        {/* Active Products Card - With Action */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Products</CardTitle>
@@ -74,9 +93,17 @@ export default async function BusinessDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeProducts}</div>
-            <p className="text-xs text-muted-foreground">
-              Listed on marketplace
-            </p>
+            {stats.activeProducts === 0 ? (
+              <div className="mt-2">
+                <Button variant="outline" size="sm" className="h-7 text-xs w-full" asChild>
+                  <Link href="/business/products/new">
+                    <Plus className="h-3 w-3 mr-1" /> Add Product
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">Listed on marketplace</p>
+            )}
           </CardContent>
         </Card>
 
@@ -89,9 +116,7 @@ export default async function BusinessDashboardPage() {
             <div className="text-2xl font-bold">
               ${stats.totalOrders > 0 ? (stats.totalRevenue / stats.totalOrders).toFixed(2) : '0.00'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Per order average
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Per order average</p>
           </CardContent>
         </Card>
       </div>
@@ -167,9 +192,28 @@ export default async function BusinessDashboardPage() {
           </CardHeader>
           <CardContent>
             {stats.topProducts.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No sales data yet. Start selling to see your top products!
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-medium text-foreground">No top products yet</h3>
+                <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-[250px]">
+                  Once you start making sales, your best performers will appear here.
+                </p>
+                {stats.activeProducts === 0 ? (
+                  <Button size="sm" asChild>
+                    <Link href="/business/products/new">
+                      Add Your First Product
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/business/products">
+                      Manage Products
+                    </Link>
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="space-y-4">
                 {stats.topProducts.map((product: any, index: number) => (
