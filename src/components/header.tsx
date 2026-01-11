@@ -143,15 +143,38 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* Mobile Header - Logo + Search Icon + Menu (One Row) */}
-        <div className="flex md:hidden w-full h-14 items-center px-3 justify-between gap-2">
-           {/* Left: Menu Button */}
+        {/* Mobile Header - Amazon style: Logo | Search Bar | Menu */}
+        <div className="flex md:hidden w-full h-14 items-center px-2 gap-2">
+          {/* Left: Logo */}
+          <Link href="/" className="flex-shrink-0">
+            <div className="relative h-8 w-8 flex items-center">
+              <Image
+                src="/icon.svg"
+                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                width={32}
+                height={32}
+                className="object-contain"
+                priority
+              />
+            </div>
+          </Link>
+
+          {/* Center: Search Bar (tappable, opens modal) */}
+          <button
+            onClick={() => setMobileSearchOpen(true)}
+            className="flex-1 h-9 px-3 flex items-center gap-2 bg-white rounded-lg border border-gray-300 text-gray-500"
+          >
+            <Search className="h-4 w-4 flex-shrink-0" />
+            <span className="text-sm truncate">Search products...</span>
+          </button>
+
+          {/* Right: Menu Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="flex-shrink-0 h-9 w-9 -ml-2"
+                className="flex-shrink-0 h-9 w-9"
                 style={{ color: settings.headerTextColor }}
                 aria-label="Open menu"
               >
@@ -162,9 +185,33 @@ export default function Header() {
                 </svg>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52 ml-2">
+            <DropdownMenuContent align="end" className="w-52">
               {isAuthenticated && user ? (
                 <>
+                  {/* Admin Dashboard - Show first for admins */}
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/dashboard" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  {/* Seller Dashboard - Show second for business accounts */}
+                  {user?.hasBusinessAccount && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'} className="flex items-center gap-2">
+                          <Store className="h-4 w-4" />
+                          Seller Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/account/profile" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
@@ -183,34 +230,11 @@ export default function Header() {
                       Wishlist
                     </Link>
                   </DropdownMenuItem>
-                  {user?.hasBusinessAccount && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'} className="flex items-center gap-2">
-                          <Store className="h-4 w-4" />
-                          Seller Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {user?.role === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard" className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          Admin Panel
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 text-red-600 cursor-pointer" onClick={async () => {
-                     // Client-side logout logic
                      try {
                         await fetch('/api/auth/logout', { method: 'POST' });
-                        window.location.href = '/login'; // Force reload to clear state
+                        window.location.href = '/login';
                      } catch (e) {
                         console.error('Sign out error:', e);
                      }
@@ -244,35 +268,6 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Center: Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0 group mr-auto">
-            <div className="relative h-8 w-8 flex items-center">
-              <Image
-                src="/icon.svg"
-                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                width={32}
-                height={32}
-                className="object-contain"
-                priority
-              />
-            </div>
-            <span className="text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
-              {settings.storeName}
-            </span>
-          </Link>
-
-          {/* Right: Search Icon */}
-          <Button
-              onClick={() => setMobileSearchOpen(true)}
-              variant="ghost" 
-              size="icon"
-              className="flex-shrink-0 h-9 w-9"
-              style={{ color: settings.headerTextColor }}
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-          </Button>
         </div>
 
         {/* Desktop Header */}
