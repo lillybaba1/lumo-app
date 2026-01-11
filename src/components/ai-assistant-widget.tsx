@@ -216,10 +216,11 @@ export function AIAssistantWidget() {
   return (
     <div 
       ref={containerRef}
-      className="fixed z-50 select-none"
+      className="fixed z-40 select-none"
       style={{ 
         right: position.x || 16, 
-        bottom: position.y || 100,
+        // Position above bottom nav on mobile (56px nav + 16px padding)
+        bottom: position.y || (typeof window !== 'undefined' && window.innerWidth < 768 ? 80 : 24),
         transition: isDragging ? 'none' : 'right 0.1s, bottom 0.1s',
       }}
     >
@@ -234,12 +235,12 @@ export function AIAssistantWidget() {
         </div>
       )}
       
-      {/* Chat Button Container */}
+      {/* Chat Button Container - Smaller on mobile */}
       <div className="flex flex-col items-center gap-1">
         <Button
           ref={buttonRef}
           size="icon"
-          className={`rounded-full h-14 w-14 shadow-lg relative overflow-visible group ${
+          className={`rounded-full h-10 w-10 md:h-14 md:w-14 shadow-lg relative overflow-visible group ${
             isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-105'
           } transition-transform ${settings.chatbotImage && !isOpen ? 'bg-transparent p-0' : ''}`}
           onClick={handleClick}
@@ -247,12 +248,12 @@ export function AIAssistantWidget() {
           onTouchStart={handleMouseDown}
           style={!isOpen && settings.chatbotImage ? {
             border: `2px solid ${settings.chatbotGlowColor || '#4F46E5'}`,
-            outline: `4px solid ${(settings.chatbotGlowColor || '#4F46E5')}4D`,
-            boxShadow: `0 0 20px ${settings.chatbotGlowColor || '#4F46E5'}66, 0 4px 12px rgba(0, 0, 0, 0.15)`
+            outline: `3px solid ${(settings.chatbotGlowColor || '#4F46E5')}4D`,
+            boxShadow: `0 0 15px ${settings.chatbotGlowColor || '#4F46E5'}66, 0 4px 8px rgba(0, 0, 0, 0.15)`
           } : undefined}
         >
           {isOpen ? (
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 md:h-6 md:w-6" />
           ) : settings.chatbotImage ? (
             <>
               <Image
@@ -263,33 +264,33 @@ export function AIAssistantWidget() {
                 sizes="56px"
                 unoptimized
               />
-              {/* Chat bubble indicator - larger and more visible */}
+              {/* Chat bubble indicator - smaller on mobile */}
               <div 
-                className={`absolute -top-1 -right-1 text-white rounded-full p-1.5 shadow-lg z-10 ${settings.chatbotPulseEnabled !== false ? 'animate-pulse' : ''}`}
+                className={`absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 text-white rounded-full p-1 md:p-1.5 shadow-lg z-10 ${settings.chatbotPulseEnabled !== false ? 'animate-pulse' : ''}`}
                 style={{
                   background: `linear-gradient(to bottom right, ${settings.chatbotBubbleGradientFrom || '#4F46E5'}, ${settings.chatbotBubbleGradientTo || '#14B8A6'})`
                 }}
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
               </div>
             </>
           ) : (
-            <Bot className="h-6 w-6" />
+            <Bot className="h-5 w-5 md:h-6 md:w-6" />
           )}
           <span className="sr-only">{isOpen ? 'Close AI Assistant' : 'Open AI Assistant'}</span>
           
-          {/* Drag hint on hover */}
+          {/* Drag hint on hover - desktop only */}
           {!isOpen && !isDragging && (
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            <div className="hidden md:block absolute -top-8 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Drag to move
             </div>
           )}
         </Button>
         
-        {/* Chat label on mobile */}
+        {/* Chat label - hidden on mobile to reduce clutter */}
         {!isOpen && (
           <span 
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm"
+            className="hidden md:inline text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm"
             style={{
               backgroundColor: settings.chatbotLabelBgColor || '#ffffff',
               color: settings.chatbotLabelTextColor || '#4F46E5',

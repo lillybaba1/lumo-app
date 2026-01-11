@@ -29,6 +29,12 @@ const VisitorTracker = dynamic(
   { ssr: false }
 );
 
+// Bottom navigation for mobile - Amazon-style fixed nav
+const BottomNavigation = dynamic(
+  () => import('@/components/bottom-navigation'),
+  { ssr: false }
+);
+
 // Capacitor back button handler for Android app
 const CapacitorBackButton = dynamic(
   () => import('@/components/capacitor-back-button'),
@@ -131,6 +137,7 @@ export default async function RootLayout({
                 <Footer />
               </div>
               <Toaster />
+              <BottomNavigation />
               <AIAssistantWidget />
               <CookieConsent />
               <VisitorTracker />

@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Hero from '@/components/hero';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
+import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X, Mic, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category, PromoBannerSettings } from '@/lib/types';
@@ -23,6 +23,8 @@ import ServiceHighlights, { PromoBanner, DetailedTrustSection } from '@/componen
 import SearchBar from '@/components/search-bar';
 import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
 import { RecentlyViewedProducts } from '@/components/recently-viewed-products';
+import CategoryChips from '@/components/category-chips';
+import CompactProductCard from '@/components/compact-product-card';
 
 type Collections = {
   bestSellers: string[];
@@ -410,12 +412,59 @@ function Home(props: {
 
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
+      {/* MOBILE: Full-width search bar + Categories ABOVE hero */}
+      <div className="md:hidden bg-white border-b sticky top-14 z-40">
+        {/* Search Bar - Full width, prominent */}
+        <div className="px-3 py-2">
+          <div className="relative">
+            <Input
+              placeholder="Search products, brands, or categories"
+              className="w-full h-10 pl-10 pr-20 text-sm rounded-full border-2 border-gray-200 focus:border-primary bg-gray-50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery) {
+                  router.push(`/?search=${encodeURIComponent(searchQuery)}`, { scroll: false });
+                }
+              }}
+            />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            {/* Voice & Camera search placeholders */}
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors" title="Voice search (coming soon)">
+                <Mic className="h-4 w-4 text-gray-400" />
+              </button>
+              <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors" title="Image search (coming soon)">
+                <Camera className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Category Chips - Horizontal scroll */}
+        <div className="px-3 pb-2">
+          <CategoryChips 
+            categories={categories} 
+            selectedCategory={selectedCategory}
+            onCategorySelect={(catId) => {
+              setSelectedCategory(catId);
+              if (catId !== 'all') {
+                router.push(`/?category=${catId}`, { scroll: false });
+              } else {
+                router.push('/', { scroll: false });
+              }
+            }}
+            maxVisible={6}
+          />
+        </div>
+      </div>
+
       <div className="w-full" style={{ width: '100%' }}>
         <Hero />
       </div>
 
       {/* Service Highlights - Right below hero */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <ServiceHighlights variant="horizontal" />
       </div>
 
@@ -501,9 +550,30 @@ function Home(props: {
         )}
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-          {/* Trending Products - Only shows top 15 best sellers or admin-selected trending */}
+          {/* MOBILE: Dense Product Grid - Show 6+ products above fold */}
+          <div className="md:hidden mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h2 className="text-base font-bold">Trending Now</h2>
+              </div>
+              <Link href="/products">
+                <Button variant="ghost" size="sm" className="gap-1 text-xs px-2 h-7">
+                  See All <ChevronRight className="h-3 w-3" />
+                </Button>
+              </Link>
+            </div>
+            {/* Dense 2x3 grid for mobile - 6 products visible */}
+            <div className="grid grid-cols-2 gap-2">
+              {(trendingProducts.length > 0 ? trendingProducts : products).slice(0, 6).map((product, index) => (
+                <CompactProductCard key={product.id} product={product} index={index} />
+              ))}
+            </div>
+          </div>
+
+          {/* DESKTOP: Original Trending Products layout */}
           {trendingProducts && trendingProducts.length > 0 && (
-            <div className="mb-8 md:mb-12">
+            <div className="hidden md:block mb-8 md:mb-12">
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3">
                   <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
@@ -734,14 +804,23 @@ function Home(props: {
                 </div>
               </aside>
 
-            {/* Products Grid */}
+            {/* Products Grid - Dense on mobile, standard on desktop */}
             <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
               {filteredAndSortedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
-                  {filteredAndSortedProducts.map((product, index) => (
-                    <ProductCard key={product.id} product={product} index={index} />
-                  ))}
-                </div>
+                <>
+                  {/* Mobile: Dense 2-column grid with compact cards */}
+                  <div className="md:hidden grid grid-cols-2 gap-2">
+                    {filteredAndSortedProducts.map((product, index) => (
+                      <CompactProductCard key={product.id} product={product} index={index} />
+                    ))}
+                  </div>
+                  {/* Desktop: Standard grid */}
+                  <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredAndSortedProducts.map((product, index) => (
+                      <ProductCard key={product.id} product={product} index={index} />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-12">
                   <p className="text-lg text-muted-foreground mb-2">No products found</p>

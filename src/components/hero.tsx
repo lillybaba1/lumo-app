@@ -357,15 +357,15 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
       )}
 
-      {/* Content - Positioned elements */}
-      <div className="relative w-full min-h-[480px] sm:min-h-[520px] md:min-h-[600px]">
+      {/* Content - Positioned elements - REDUCED HEIGHT by 40% */}
+      <div className="relative w-full min-h-[288px] sm:min-h-[312px] md:min-h-[360px]">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
-        {/* Mobile Layout - Flexbox based for better visibility */}
-        <div className="md:hidden flex flex-col justify-start px-4 pt-14 pb-4 min-h-[480px] sm:min-h-[520px] relative z-10">
+        {/* Mobile Layout - Flexbox based for better visibility - COMPACT */}
+        <div className="md:hidden flex flex-col justify-start px-4 pt-8 pb-3 min-h-[288px] sm:min-h-[312px] relative z-10">
           <h1
-            className="text-2xl sm:text-3xl font-bold max-w-lg mb-2 drop-shadow-lg"
+            className="text-xl sm:text-2xl font-bold max-w-lg mb-1.5 drop-shadow-lg"
             style={{
               color: heroHeadingColor,
               fontFamily: 'var(--font-heading)',
@@ -377,21 +377,21 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           </h1>
 
           <p
-            className="text-xs sm:text-sm max-w-xs mb-3 drop-shadow-md"
+            className="text-[11px] sm:text-xs max-w-xs mb-2 drop-shadow-md"
             style={{
               color: heroTaglineColor,
               opacity: 0.95,
-              lineHeight: '1.4',
+              lineHeight: '1.3',
             }}
           >
             {heroTagline}
           </p>
 
-          {/* Amazon-style Product Widgets - Mobile (horizontal scroll) */}
+          {/* Amazon-style Product Widgets - Mobile (horizontal scroll) - More compact */}
           {products.length > 0 && (
-            <div className="relative mt-4">
+            <div className="relative mt-2">
               {/* Scroll container */}
-              <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {newArrivalsProducts.length > 0 && (
                   <div className="snap-start">
                     <HeroProductWidget
