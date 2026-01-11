@@ -143,35 +143,18 @@ export default function Header() {
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* Mobile Header - Logo + Search Bar + Menu */}
-        <div className="flex md:hidden w-full h-14 items-center px-3 gap-2">
-          {/* Logo - Removed to make space for full search bar */}
-          
-          {/* Search Bar - Main Focus */}
-          <div className="flex-1">
-            <button
-              onClick={() => setMobileSearchOpen(true)}
-              className="w-full h-10 px-4 flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200/60"
-            >
-              <div className="flex items-center gap-2 text-gray-500">
-                <Search className="h-4 w-4" />
-                <span className="text-sm font-medium">Search or ask a question</span>
-              </div>
-              <CameraIcon className="h-5 w-5 text-gray-400" />
-            </button>
-          </div>
-          
-          {/* Menu Button (3 lines) */}
+        {/* Mobile Header - Logo + Search Icon + Menu (One Row) */}
+        <div className="flex md:hidden w-full h-14 items-center px-3 justify-between gap-2">
+           {/* Left: Menu Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="flex-shrink-0 h-9 w-9 hover:bg-white/10"
+                className="flex-shrink-0 h-9 w-9 -ml-2"
                 style={{ color: settings.headerTextColor }}
                 aria-label="Open menu"
               >
-                {/* 3-line menu icon */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="4" y="6" width="16" height="2" rx="1" fill="currentColor" />
                   <rect x="4" y="11" width="16" height="2" rx="1" fill="currentColor" />
@@ -179,7 +162,7 @@ export default function Header() {
                 </svg>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="start" className="w-52 ml-2">
               {isAuthenticated && user ? (
                 <>
                   <DropdownMenuItem asChild>
@@ -261,6 +244,35 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Center: Logo */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0 group mr-auto">
+            <div className="relative h-8 w-8 flex items-center">
+              <Image
+                src="/icon.svg"
+                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                width={32}
+                height={32}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <span className="text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
+              {settings.storeName}
+            </span>
+          </Link>
+
+          {/* Right: Search Icon */}
+          <Button
+              onClick={() => setMobileSearchOpen(true)}
+              variant="ghost" 
+              size="icon"
+              className="flex-shrink-0 h-9 w-9"
+              style={{ color: settings.headerTextColor }}
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Desktop Header */}
