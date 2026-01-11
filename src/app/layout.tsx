@@ -123,10 +123,8 @@ export default async function RootLayout({
             <CartProvider>
               <LocationProvider>
               <div className="flex min-h-screen flex-col">
-                <Header>
-                  {null}
-                </Header>
-                <div className="flex flex-1 pt-24 md:pt-16">
+                <Header />
+                <div className="flex flex-1 pt-16">
                   <Suspense fallback={<div className="w-64 hidden lg:block" />}>
                     <PublicSidebar />
                   </Suspense>

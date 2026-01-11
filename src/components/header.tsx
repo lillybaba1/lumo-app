@@ -1,16 +1,22 @@
-
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, CheckSquare, Search, Store } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, Menu, LogOut, Package, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
 import MobileSearchModal from "./mobile-search-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface UserData {
   uid: string;
@@ -51,19 +57,15 @@ const defaultHeaderSettings: HeaderSettings = {
   storeName: 'JulaZone',
 };
 
-export default function Header({ children }: { children: React.ReactNode }) {
+export default function Header() {
   const { state } = useCart();
   const pathname = usePathname();
-  const router = useRouter();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  
-  // Check if we're on the homepage
-  const isHomePage = pathname === '/';
 
   useEffect(() => {
     // Fetch current user info from API
@@ -126,12 +128,6 @@ export default function Header({ children }: { children: React.ReactNode }) {
     fetchSettings();
   }, [pathname]);
 
-  const buttonStyle = settings.headerButtonStyle === 'solid' 
-    ? { backgroundColor: settings.headerButtonColor, color: '#fff', borderColor: 'transparent' }
-    : settings.headerButtonStyle === 'ghost'
-    ? { backgroundColor: 'transparent', color: settings.headerTextColor, borderColor: 'transparent' }
-    : { backgroundColor: 'transparent', color: settings.headerTextColor, borderColor: settings.headerButtonColor };
-
   return (
     <>
       <header 
@@ -139,114 +135,143 @@ export default function Header({ children }: { children: React.ReactNode }) {
         style={{ 
           backgroundColor: settings.headerBgColor,
           color: settings.headerTextColor,
-          paddingTop: 'max(env(safe-area-inset-top, 0px), 32px)', // Safe area for notched devices + padding for status bar
+          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="w-full flex h-14 items-center px-2 sm:px-4 md:px-6">
-          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-            <Link href="/" className="flex items-center gap-2 md:gap-3 group">
-              {/* Logo - Always use local /icon.svg for instant loading */}
-              <div className="relative h-10 flex items-center">
-                <Image
-                  src="/icon.svg"
-                  alt={settings.logoAlt || settings.storeName || 'Site Logo'}
-                  width={40}
-                  height={40}
-                  className="object-contain h-10 w-auto"
-                  priority
-                />
-              </div>
-            </Link>
-            {!isHomePage && (
-              <Link 
-                href="/"
-                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
-                style={{ 
-                  background: `linear-gradient(to right, ${settings.homeButtonGradientFrom}, ${settings.homeButtonGradientTo})` 
-                }}
-              >
-                <Home className="h-4 w-4" strokeWidth={2.5} />
-                <span className="hidden sm:inline">Home</span>
-              </Link>
-            )}
-          </div>
-          
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 justify-center px-4">
-            <SearchBar variant="header" placeholder="Search products..." className="max-w-md" />
-          </div>
-
-          <div className="flex items-center justify-end space-x-2">
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-2">
-              {children}
-              {isAuthenticated && user && (
-                <Button variant="outline" asChild style={buttonStyle}>
-                  <Link href="/account/profile">
-                    <User className="h-4 w-4 mr-2" />
-                    <span>{user.name}</span>
-                  </Link>
-                </Button>
-              )}
-              {user?.role === 'admin' && (
-                <Button variant="outline" asChild style={buttonStyle}>
-                  <Link href="/admin/dashboard">
-                    <Shield className="h-4 w-4 mr-2" />
-                    <span>Admin</span>
-                  </Link>
-                </Button>
-              )}
-              {user?.hasBusinessAccount && (
-                <Button variant="outline" asChild style={buttonStyle}>
-                  <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'}>
-                    <Store className="h-4 w-4 mr-2" />
-                    <span>Seller</span>
-                  </Link>
-                </Button>
-              )}
-              <Button variant="outline" asChild style={buttonStyle}>
-                <Link href="/wishlist">
-                  <Heart className="h-4 w-4 mr-2" />
-                  <span>Wishlist</span>
-                </Link>
-              </Button>
-              <Button variant="outline" className="relative" asChild style={buttonStyle}>
-                <Link href="/cart">
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  <span>Cart</span>
-                  {itemCount > 0 && (
-                    <Badge variant="destructive" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">
-                      {itemCount}
-                    </Badge>
-                  )}
-                </Link>
-              </Button>
-            </nav>
-
-            {/* Mobile Navigation */}
-            <div className="flex md:hidden items-center space-x-2">
-              {/* Search Button - Mobile */}
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9" 
-                style={buttonStyle}
-                onClick={() => setMobileSearchOpen(true)}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-              {/* Cart Button - Always visible on mobile */}
-              <Button variant="outline" size="icon" className="h-9 w-9 relative" asChild style={buttonStyle}>
-                <Link href="/cart">
-                  <ShoppingBag className="h-4 w-4" />
-                  {itemCount > 0 && (
-                    <Badge variant="destructive" className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]">
-                      {itemCount}
-                    </Badge>
-                  )}
-                </Link>
-              </Button>
+        <div className="w-full flex h-14 items-center px-3 sm:px-4 md:px-6 gap-3">
+          {/* Logo & Store Name */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
+            <div className="relative h-9 w-9 flex items-center">
+              <Image
+                src="/icon.svg"
+                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                width={36}
+                height={36}
+                className="object-contain"
+                priority
+              />
             </div>
+            <span className="hidden sm:block text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
+              {settings.storeName}
+            </span>
+          </Link>
+          
+          {/* Search Bar - Full Width Center (Desktop) */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
+            <SearchBar variant="header" placeholder="Search products, brands, and more..." className="w-full" />
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-2 ml-auto">
+            {/* Mobile Search Button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden h-9 w-9 hover:bg-white/10" 
+              style={{ color: settings.headerTextColor }}
+              onClick={() => setMobileSearchOpen(true)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
+            {/* User Account Dropdown */}
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="hidden sm:flex items-center gap-1 px-2 h-9 hover:bg-white/10"
+                    style={{ color: settings.headerTextColor }}
+                  >
+                    <User className="h-4 w-4" />
+                    <span className="text-sm font-medium max-w-[100px] truncate">{user.name?.split(' ')[0]}</span>
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/account/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/orders" className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/wishlist" className="flex items-center gap-2">
+                      <Heart className="h-4 w-4" />
+                      Wishlist
+                    </Link>
+                  </DropdownMenuItem>
+                  {user?.hasBusinessAccount && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'} className="flex items-center gap-2">
+                          <Store className="h-4 w-4" />
+                          Seller Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/dashboard" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/api/auth/logout" className="flex items-center gap-2 text-red-600">
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="hidden sm:flex h-9 px-3 hover:bg-white/10"
+                style={{ color: settings.headerTextColor }}
+              >
+                <Link href="/login">
+                  <User className="h-4 w-4 mr-1.5" />
+                  Sign In
+                </Link>
+              </Button>
+            )}
+
+            {/* Cart Button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative h-9 w-9 hover:bg-white/10" 
+              asChild 
+              style={{ color: settings.headerTextColor }}
+            >
+              <Link href="/cart">
+                <ShoppingBag className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
+                  >
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
           </div>
         </div>
       </header>

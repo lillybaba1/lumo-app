@@ -103,8 +103,8 @@ export function AppSidebar({
       {header && (
         <div
           className={cn(
-            "flex items-center gap-3 px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-accent/5",
-            collapsed && "px-3 justify-center"
+            "flex items-center gap-3 px-4 py-3 border-b bg-white",
+            collapsed && "px-2 justify-center"
           )}
         >
           {header({ collapsed, closeSidebar })}

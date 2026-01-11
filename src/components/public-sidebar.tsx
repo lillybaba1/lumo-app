@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { AppSidebar, SidebarSection } from '@/components/app-sidebar';
 import { Home, Grid, Clock, Star, Tag, Heart, ShoppingCart, User, HelpCircle, Mail, ShoppingBag, LogOut, Package } from 'lucide-react';
 import Link from 'next/link';
@@ -88,13 +89,17 @@ export default function PublicSidebar() {
   return (
     <AppSidebar
       sections={sections}
-      mobileTitle="Browse JulaZone"
+      mobileTitle="JulaZone"
       mobileIcon={
-        <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 text-white shadow-lg shadow-indigo-500/25">
-          <ShoppingBag className="h-5 w-5" />
-        </Link>
+        <Image 
+          src="/icon.svg" 
+          alt="JulaZone" 
+          width={32} 
+          height={32} 
+          className="rounded-lg"
+        />
       }
-      mobileOffsetClassName="top-[88px]"
+      mobileOffsetClassName="top-[56px]"
       header={({ collapsed, closeSidebar }) => (
         <Link 
           href="/" 
@@ -104,13 +109,17 @@ export default function PublicSidebar() {
           }}
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-teal-500 text-white shadow-lg shadow-indigo-500/25">
-            <ShoppingBag className="h-6 w-6" />
-          </div>
+          <Image 
+            src="/icon.svg" 
+            alt="JulaZone" 
+            width={40} 
+            height={40} 
+            className="rounded-lg flex-shrink-0"
+          />
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-base font-bold font-headline">JulaZone</span>
-              <span className="text-xs text-muted-foreground">Shop & Discover</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold text-gray-900">JulaZone</span>
+              <span className="text-xs text-gray-500">Shop & Discover</span>
             </div>
           )}
         </Link>
