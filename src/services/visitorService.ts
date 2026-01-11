@@ -1,4 +1,5 @@
-'use server';
+// Visitor tracking service - server-side only
+// Do NOT add 'use server' here as these functions are called from API routes
 
 import { logger } from '@/lib/logger';
 
@@ -260,12 +261,21 @@ export async function recordVisitor(visitorData: {
   threat_level?: string;
 }): Promise<Visitor | null> {
   try {
+    console.log('[VisitorService] recordVisitor called with visitor_id:', visitorData.visitor_id);
+    
     // Check if visitor exists
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: selectError } = await supabaseAdmin
       .from('visitors')
       .select('*')
       .eq('visitor_id', visitorData.visitor_id)
       .single();
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      // PGRST116 means no rows returned, which is expected for new visitors
+      console.error('[VisitorService] Error checking existing visitor:', selectError);
+    }
+
+    console.log('[VisitorService] Existing visitor found:', !!existing);
 
     if (existing) {
       // Update existing visitor - also update geo data if it was missing
@@ -313,31 +323,40 @@ export async function recordVisitor(visitorData: {
         .single();
 
       if (error) {
+        console.error('[VisitorService] Error updating visitor:', error.message, error.code, error.details);
         visitorLogger.error('Error updating visitor:', error);
         return null;
       }
+      console.log('[VisitorService] Visitor updated successfully:', data?.id);
       return data;
     } else {
       // Create new visitor
+      console.log('[VisitorService] Creating new visitor...');
+      const insertData = {
+        ...visitorData,
+        page_views: 1,
+        session_duration: 0,
+        last_activity: new Date().toISOString(),
+        is_returning: false,
+      };
+      console.log('[VisitorService] Insert data:', JSON.stringify(insertData, null, 2));
+      
       const { data, error } = await supabaseAdmin
         .from('visitors')
-        .insert({
-          ...visitorData,
-          page_views: 1,
-          session_duration: 0,
-          last_activity: new Date().toISOString(),
-          is_returning: false,
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
+        console.error('[VisitorService] Error creating visitor:', error.message, error.code, error.details, error.hint);
         visitorLogger.error('Error creating visitor:', error);
         return null;
       }
+      console.log('[VisitorService] Visitor created successfully:', data?.id);
       return data;
     }
   } catch (error) {
+    console.error('[VisitorService] Unexpected error recording visitor:', error);
     visitorLogger.error('Error recording visitor:', error);
     return null;
   }

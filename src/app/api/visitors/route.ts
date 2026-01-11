@@ -122,6 +122,7 @@ export async function POST(request: Request) {
 
     if (action === 'visit') {
       // Record new visit or update existing
+      console.log('[Visitor API] Recording visit for:', visitor_id, 'path:', page_path);
       const visitor = await recordVisitor({
         visitor_id,
         ip_address: ip,
@@ -145,11 +146,13 @@ export async function POST(request: Request) {
         threat_level: vpnInfo.threat_level,
       });
 
+      console.log('[Visitor API] Visit recorded:', visitor ? 'success' : 'FAILED');
       return NextResponse.json({ success: true, visitor, vpn_detected: vpnInfo.is_vpn || vpnInfo.is_proxy });
     }
 
     if (action === 'pageview') {
       // Record page view
+      console.log('[Visitor API] Recording pageview for:', visitor_id, 'path:', page_path);
       const pageView = await recordPageView({
         visitor_id,
         page_path: page_path || '/',
@@ -157,6 +160,7 @@ export async function POST(request: Request) {
         referrer: referrer || null,
       });
 
+      console.log('[Visitor API] Pageview recorded:', pageView ? 'success' : 'FAILED');
       return NextResponse.json({ success: true, pageView });
     }
 

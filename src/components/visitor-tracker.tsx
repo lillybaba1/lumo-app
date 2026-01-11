@@ -51,11 +51,21 @@ export function VisitorTracker() {
 
   // Track visit - only if analytics consent given
   const trackVisit = useCallback(async (pagePath: string, geoData: any = null) => {
-    if (!visitorIdRef.current) return;
-    if (!hasAnalyticsConsent()) return; // Don't track without consent
+    if (!visitorIdRef.current) {
+      console.log('[VisitorTracker] No visitor ID, skipping track');
+      return;
+    }
+    
+    const hasConsent = hasAnalyticsConsent();
+    console.log('[VisitorTracker] Analytics consent:', hasConsent);
+    if (!hasConsent) {
+      console.log('[VisitorTracker] No consent, skipping track');
+      return;
+    }
     
     try {
-      await fetch('/api/visitors', {
+      console.log('[VisitorTracker] Sending visit request for:', visitorIdRef.current, 'path:', pagePath);
+      const response = await fetch('/api/visitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -67,8 +77,10 @@ export function VisitorTracker() {
           geo_data: geoData,
         }),
       });
+      const result = await response.json();
+      console.log('[VisitorTracker] Visit response:', response.status, result);
     } catch (error) {
-      console.error('Failed to track visit:', error);
+      console.error('[VisitorTracker] Failed to track visit:', error);
     }
   }, []);
 
