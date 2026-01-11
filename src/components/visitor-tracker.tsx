@@ -55,16 +55,14 @@ export function VisitorTracker() {
       console.log('[VisitorTracker] No visitor ID, skipping track');
       return;
     }
-    
-    const hasConsent = hasAnalyticsConsent();
-    console.log('[VisitorTracker] Analytics consent:', hasConsent);
-    if (!hasConsent) {
-      console.log('[VisitorTracker] No consent, skipping track');
+    if (!hasAnalyticsConsent()) {
+      console.log('[VisitorTracker] No analytics consent, skipping track');
       return;
     }
     
+    console.log('[VisitorTracker] Tracking visit for:', visitorIdRef.current, 'path:', pagePath);
+    
     try {
-      console.log('[VisitorTracker] Sending visit request for:', visitorIdRef.current, 'path:', pagePath);
       const response = await fetch('/api/visitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,8 +75,9 @@ export function VisitorTracker() {
           geo_data: geoData,
         }),
       });
+      
       const result = await response.json();
-      console.log('[VisitorTracker] Visit response:', response.status, result);
+      console.log('[VisitorTracker] Visit tracking response:', result);
     } catch (error) {
       console.error('[VisitorTracker] Failed to track visit:', error);
     }
