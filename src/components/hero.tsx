@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react';
 import { Product } from '@/lib/types';
@@ -48,10 +48,10 @@ function HeroGridWidget({
   textColor?: string;
 }) {
   return (
-    <div className={`rounded-lg p-4 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-lg p-3.5 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-3 overflow-hidden">
+      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-2 overflow-hidden">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
           // Mock discount for "Deals" feel
@@ -123,8 +123,8 @@ function HeroLargeCardWidget({
   const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
 
   return (
-    <div className={`rounded-lg p-4 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[340px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-3 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-lg p-3.5 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+      <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
       <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-md p-4 flex-1 relative overflow-hidden group items-center justify-center flex">
          <div className="relative w-full h-full">
@@ -209,7 +209,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
   const [products, setProducts] = useState<Product[]>(cachedData?.products || []);
   const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>(
-    cachedData?.collections || { bestSellers: [], newArrivals: [], deals: [], featured: [] }
+    { bestSellers: [], newArrivals: [], deals: [], featured: [], ...(cachedData?.collections || {}) }
   );
   const [loading, setLoading] = useState(!cachedData); // Not loading if we have cached data
 
@@ -265,7 +265,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       // Fetch products for the widgets
       requestTypes.push('products');
       requests.push(
-        fetch('/api/products?limit=20', { 
+        fetch('/api/products?limit=50', { 
           next: { revalidate: 60 } 
         }).then(async (res) => {
           if (!res.ok) throw new Error(`Products request failed: ${res.status}`);
@@ -303,8 +303,13 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
               setProducts(newProducts);
               break;
             case 'collections':
-              newCollections = result.value || { bestSellers: [], newArrivals: [], deals: [], featured: [] };
-              setCollections(newCollections);
+              const colData = result.value || {};
+              setCollections({
+                bestSellers: colData.bestSellers || [],
+                newArrivals: colData.newArrivals || [],
+                deals: colData.deals || [],
+                featured: colData.featured || []
+              });
               break;
           }
         } else {
@@ -343,9 +348,32 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
     : []; // No fallback - only show if explicitly added to collection
 
   // Featured products from collections only
-  const featuredProducts = collections.featured.length > 0
+  const featuredProducts = useMemo(() => collections.featured.length > 0
     ? collections.featured.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : []; // No fallback - only show if explicitly added
+    : [], [collections.featured, products]); // No fallback - only show if explicitly added
+
+  // New Widgets Data derived from general products list
+  // 1. Budget Finds - Under $50
+  const budgetProducts = useMemo(() => products
+    .filter(p => p.price < 50 && !collections.deals.includes(p.id)) // Exclude deals to avoid duplicates
+    .sort((a, b) => a.price - b.price) // Cheapest first
+    .slice(0, 4), [products, collections.deals]);
+
+  // 2. Discover More - Random selection not in other lists
+  const discoverProducts = useMemo(() => {
+    const usedIds = new Set([
+      ...collections.newArrivals,
+      ...collections.bestSellers,
+      ...collections.deals,
+      ...collections.featured,
+      ...budgetProducts.map(p => p.id)
+    ]);
+  
+    return products
+      .filter(p => !usedIds.has(p.id))
+      .sort(() => 0.5 - Math.random()) // Shuffle
+      .slice(0, 4);
+  }, [products, collections, budgetProducts]);
 
   if (loading) {
     return (
@@ -468,6 +496,32 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                     />
                   </div>
                 )}
+
+                 {/* 5. Orange Card: Budget Finds */}
+                 {budgetProducts.length > 0 && (
+                  <div className="snap-center">
+                    <HeroGridWidget
+                      title="Budget finds under $50"
+                      products={budgetProducts}
+                      link="/products?maxPrice=50"
+                      bgColor="bg-[#FCA5A5]" // Light Red/Pink/Orange mix
+                      textColor="text-gray-900"
+                    />
+                  </div>
+                )}
+
+                {/* 6. Indigo/Blue Card: Discover More */}
+                {discoverProducts.length > 0 && (
+                  <div className="snap-center">
+                    <HeroGridWidget
+                      title="Discover something new"
+                      products={discoverProducts}
+                      link="/products"
+                      bgColor="bg-[#A5B4FC]" // Indigo
+                      textColor="text-gray-900"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -508,6 +562,22 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   products={featuredProducts}
                   link="/products?filter=featured"
                   bgColor="bg-[#FDE047]"
+                />
+             )}
+             {budgetProducts.length > 0 && (
+                <HeroGridWidget
+                  title="Budget Finds"
+                  products={budgetProducts}
+                  link="/products?maxPrice=50"
+                  bgColor="bg-[#FCA5A5]"
+                />
+             )}
+             {discoverProducts.length > 0 && (
+                <HeroGridWidget
+                  title="Discover More"
+                  products={discoverProducts}
+                  link="/products"
+                  bgColor="bg-[#A5B4FC]"
                 />
              )}
         </div>

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product-card';
+import CompactProductCard from '@/components/compact-product-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getProductsPaginated, getCategories } from '@/services/productService';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, Loader2 } from 'lucide-react';
 import type { Product, Category } from '@/lib/types';
@@ -81,7 +83,10 @@ function ProductsPage({ categories }: { categories: Category[] }) {
   const [sortBy, setSortBy] = useState('name-asc');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showInStockOnly, setShowInStockOnly] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  
+  // Use a derived state for showing desktop filters, but mobile uses Sheet
+  // Mobile sheet is controlled by its own trigger
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true);
 
   // Get filter parameter from URL
   const filterParam = searchParams?.get('filter');
@@ -204,14 +209,107 @@ function ProductsPage({ categories }: { categories: Category[] }) {
     }
   }, [filterParam]);
 
+  const FilterUI = ({ showSearch = false }: { showSearch?: boolean }) => (
+    <div className="space-y-6">
+      {showSearch && (
+        <>
+          <div className="space-y-3">
+             <Label className="text-sm font-semibold block">Search</Label>
+             <div className="relative">
+                <Input
+                  placeholder="Search products..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      <div>
+        <h3 className="font-semibold mb-3">Filters</h3>
+        <p className="text-sm text-muted-foreground">Refine your selection</p>
+      </div>
+
+      <Separator />
+
+      {/* Category Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold block">Category</Label>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      {/* Price Range Filter */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold block">
+          Price Range: ${priceRange[0]} - ${priceRange[1]}
+        </Label>
+        <div className="px-1">
+          <Slider
+            min={0}
+            max={1000}
+            step={10}
+            value={priceRange}
+            onValueChange={setPriceRange}
+            className="my-4"
+          />
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>$0</span>
+          <span>$1000</span>
+        </div>
+      </div>
+
+      <Separator />
+      
+      {/* Availability Filter */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="stock-filter" className="text-sm font-semibold cursor-pointer">In Stock Only</Label>
+          <Switch 
+            id="stock-filter"
+            checked={showInStockOnly}
+            onCheckedChange={setShowInStockOnly}
+          />
+        </div>
+      </div>
+      
+      <Separator />
+
+      {/* Filter Summary */}
+      <div className="pt-2 text-center">
+        <p className="text-sm font-medium">
+          Showing {products.length} of {totalCount} products
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 mb-8">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background py-8 md:py-12 mb-6 md:mb-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-bold mb-2">{pageTitle}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">{pageTitle}</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               {filterParam === 'new' && 'Discover our latest products'}
               {filterParam === 'bestsellers' && 'Shop our most popular items'}
               {filterParam === 'deals' && 'Amazing deals you don\'t want to miss'}
@@ -221,22 +319,22 @@ function ProductsPage({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="container mx-auto px-2 sm:px-6 lg:px-8 py-2 md:py-8">
           {/* Search and Sort Bar */}
-          <div className="flex flex-col md:flex-row gap-2 md:gap-4 mb-4 md:mb-8">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-2 mb-4 mx-2 md:flex-row md:items-center md:justify-between md:mb-8 md:mx-0 p-2 rounded-xl bg-white/60 backdrop-blur-sm border shadow-sm md:border-0 md:bg-transparent md:shadow-none md:p-0">
+            <div className="relative flex-1 hidden md:block">
               <Input
-                placeholder="Search for products..."
-                className="pl-9 h-9 md:h-10 text-sm"
+                placeholder="Search products..."
+                className="pl-9 h-9 md:h-10 text-sm bg-white/80"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
 
-            <div className="flex gap-1.5 md:gap-2">
+            <div className="flex gap-2 items-center w-full md:w-auto">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-[200px] h-9 md:h-10 text-xs md:text-sm">
+                <SelectTrigger className="w-full md:w-[200px] h-9 md:h-10 text-xs md:text-sm bg-white/80 flex-1">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -247,90 +345,44 @@ function ProductsPage({ categories }: { categories: Category[] }) {
                 </SelectContent>
               </Select>
 
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="md:hidden px-3 py-1.5 border rounded-lg hover:bg-accent"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </button>
+              {/* Mobile Filter Sheet Trigger */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="md:hidden shrink-0 h-9 w-9 bg-white/80">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+                  <SheetHeader className="mb-4">
+                    <SheetTitle>Filters & Search</SheetTitle>
+                  </SheetHeader>
+                  <FilterUI showSearch={true} />
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Filters Sidebar */}
-            {showFilters && (
-              <div className="md:col-span-1">
-                <Card className="sticky top-4">
-                  <CardContent className="pt-6 space-y-6">
-                    <div>
-                      <h3 className="font-semibold mb-4">Filters</h3>
-                    </div>
-
-                    <Separator />
-
-                    {/* Category Filter */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">
-                        Category
-                      </Label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Categories</SelectItem>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Separator />
-
-                    {/* Price Range Filter */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-3 block">
-                        Price Range: ${priceRange[0]} - ${priceRange[1]}
-                      </Label>
-                      <Slider
-                        min={0}
-                        max={1000}
-                        step={10}
-                        value={priceRange}
-                        onValueChange={setPriceRange}
-                        className="mb-2"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>$0</span>
-                        <span>$1000</span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Filter Summary */}
-                    <div className="pt-4 text-sm text-muted-foreground">
-                      Showing {products.length} of {totalCount} products
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            {/* Desktop Filters Sidebar */}
+            <div className="hidden md:block md:col-span-1">
+              <Card className="sticky top-24 border bg-white/60 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <FilterUI showSearch={false} />
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Products Grid */}
-            <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
+            <div className="md:col-span-3">
               {loading ? (
                  <div className="flex justify-center py-12">
                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
               ) : products.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
                     {products.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                      <CompactProductCard key={product.id} product={product} />
                     ))}
                   </div>
                   
@@ -359,6 +411,16 @@ function ProductsPage({ categories }: { categories: Category[] }) {
                 <div className="text-center py-12">
                   <p className="text-lg text-muted-foreground mb-2">No products found</p>
                   <p className="text-sm text-muted-foreground">Try adjusting your filters or search query</p>
+                  <Button 
+                    variant="link" 
+                    onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('all');
+                        setPriceRange([0, 1000]);
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
                 </div>
               )}
             </div>

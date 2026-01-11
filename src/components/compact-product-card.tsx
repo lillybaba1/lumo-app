@@ -58,13 +58,13 @@ export default function CompactProductCard({ product, index = 999 }: CompactProd
   return (
     <Link href={`/products/${product.id}`} className="block">
       <div className="bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
-        {/* Image Container - Square aspect */}
-        <div className="relative aspect-square bg-gray-50">
+        {/* Image Container - Square aspect, contain to view full product */}
+        <div className="relative aspect-square bg-white">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-contain p-2"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             priority={isPriority}
             loading={isPriority ? undefined : "lazy"}

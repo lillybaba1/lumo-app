@@ -408,7 +408,10 @@ function Home(props: {
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
       {/* Category Chips - Mobile only, scrolls with content */}
-      <div className="md:hidden bg-white px-3 py-2 border-b">
+      <div 
+        className="md:hidden bg-white px-3 py-2 border-b"
+        style={{ marginTop: 'calc(3.5rem + env(safe-area-inset-top))' }}
+      >
         <CategoryChips 
           categories={categories} 
           selectedCategory={selectedCategory}

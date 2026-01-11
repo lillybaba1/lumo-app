@@ -104,13 +104,13 @@ export default function ProductCard({ product, showQuickView = true, compact = f
           onMouseLeave={() => setIsHovered(false)}
         >
         <CardHeader className="p-0 relative overflow-hidden">
-            {/* Square on mobile, 4:5 on desktop for better mobile experience */}
-            <div className="relative aspect-square md:aspect-[4/5]" style={{ aspectRatio: compact ? '1/1' : undefined }}>
+            {/* Square aspect ratio for compact/mobile view to fit more content */}
+            <div className="relative aspect-square">
             <Image
                 src={imageUrl}
                 alt={product.name}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                 sizes={IMAGE_SIZES.productGrid}
                 priority={isPriority}
                 loading={isPriority ? undefined : "lazy"}

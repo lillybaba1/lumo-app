@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LucideIcon, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export type SidebarNavItem = {
   href: string;
@@ -98,16 +99,16 @@ export function AppSidebar({
     [currentPath, currentSearch]
   );
 
-  const SidebarContent = () => (
-    <>
+  const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => (
+    <div className="flex flex-col h-full bg-card/95 backdrop-blur-sm text-card-foreground">
       {header && (
         <div
           className={cn(
-            "flex items-center gap-3 px-4 py-3 border-b bg-white",
-            collapsed && "px-2 justify-center"
+            "flex items-center gap-3 px-4 py-3 border-b bg-card",
+            isCollapsed && "px-2 justify-center"
           )}
         >
-          {header({ collapsed, closeSidebar })}
+          {header({ collapsed: isCollapsed, closeSidebar })}
         </div>
       )}
 
@@ -115,7 +116,7 @@ export function AppSidebar({
         <div className="space-y-6">
           {sections.map((section, idx) => (
             <div key={section.label ?? idx}>
-              {!collapsed && section.label && (
+              {!isCollapsed && section.label && (
                 <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {section.label}
                 </h3>
@@ -133,12 +134,12 @@ export function AppSidebar({
                           "hover:bg-accent/50 hover:text-accent-foreground",
                           active && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
                           !active && "text-muted-foreground",
-                          collapsed && "justify-center"
+                          isCollapsed && "justify-center"
                         )}
-                        title={collapsed ? item.label : undefined}
+                        title={isCollapsed ? item.label : undefined}
                       >
                         <item.icon className={cn("h-5 w-5 flex-shrink-0", active && "drop-shadow")} />
-                        {!collapsed && (
+                        {!isCollapsed && (
                           <>
                             <span className="truncate">{item.label}</span>
                             {item.badge && <span className="ml-auto">{item.badge}</span>}
@@ -156,14 +157,36 @@ export function AppSidebar({
 
       {footer && (
         <div className="border-t bg-muted/30">
-          {footer({ collapsed })}
+          {footer({ collapsed: isCollapsed })}
         </div>
       )}
-    </>
+    </div>
   );
 
   return (
     <>
+       {/* Mobile Header & Trigger */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-background/95 backdrop-blur border-b shadow-sm">
+        <div className="flex items-center gap-3">
+           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+             <SheetTrigger asChild>
+               <Button variant="ghost" size="icon" className="-ml-2">
+                 <Menu className="h-6 w-6" />
+                 <span className="sr-only">Open menu</span>
+               </Button>
+             </SheetTrigger>
+             <SheetContent side="left" className="p-0 w-[280px]">
+               <SidebarContent isCollapsed={false} />
+             </SheetContent>
+           </Sheet>
+           
+           <div className="flex items-center gap-2">
+             {mobileIcon}
+             <span className="font-semibold text-lg">{mobileTitle}</span>
+           </div>
+        </div>
+      </div>
+
       {/* Desktop Sidebar - with subtle glass effect */}
       <aside
         className={cn(
@@ -183,7 +206,7 @@ export function AppSidebar({
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
 
-        <SidebarContent />
+        <SidebarContent isCollapsed={collapsed} />
       </aside>
     </>
   );
