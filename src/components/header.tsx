@@ -177,8 +177,8 @@ export default function Header() {
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  {/* Seller Dashboard - Show second for business accounts */}
-                  {user?.hasBusinessAccount && (
+                  {/* Seller Dashboard - Show second for business accounts or users with business role */}
+                  {(user?.hasBusinessAccount || user?.role === 'business' || user?.role === 'BUSINESS_ACCOUNT') && (
                     <>
                       <DropdownMenuItem asChild>
                         <Link href={user.businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending'} className="flex items-center gap-2">
