@@ -1,4 +1,3 @@
-
 import { DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
 import StatsCard from '@/components/dashboard/stats-card';
 import SalesChart from '@/components/dashboard/sales-chart';
@@ -6,6 +5,8 @@ import RecentOrdersTable from '@/components/dashboard/recent-orders-table';
 import { getSettings } from '@/app/admin/settings/actions';
 import { getAnalytics } from '@/services/analyticsService';
 import { getCurrencySymbol } from '@/lib/currency';
+
+export const dynamic = 'force-dynamic';
 
 function formatCurrency(amount: number, currencySymbol: string) {
   return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
