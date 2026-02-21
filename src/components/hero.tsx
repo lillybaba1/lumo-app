@@ -48,10 +48,10 @@ function HeroGridWidget({
   textColor?: string;
 }) {
   return (
-    <div className={`rounded-lg p-3.5 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+    <div className={`rounded-lg p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
       <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-2 overflow-hidden">
+      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-2 overflow-hidden p-1">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
           
@@ -120,7 +120,7 @@ function HeroLargeCardWidget({
   const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
 
   return (
-    <div className={`rounded-lg p-3.5 min-w-[340px] max-w-[360px] flex-shrink-0 flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
+    <div className={`rounded-lg p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
       <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
       <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-md p-4 flex-1 relative overflow-hidden group items-center justify-center flex">
@@ -528,7 +528,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             For now, let's keep the desktop version somewhat aligned but responsive. 
             Actually, let's adapt the desktop to use these cards too but in a grid. 
         */}
-        <div className="hidden md:flex flex-wrap justify-center gap-6 px-6 py-8 max-w-7xl mx-auto">
+        <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4 px-4 lg:px-6 py-6 max-w-[1400px] mx-auto">
              {dealsProducts.length > 0 && (
                 <HeroGridWidget
                   title="Continue shopping deals"
