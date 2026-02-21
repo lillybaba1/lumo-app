@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react';
 import { Product } from '@/lib/types';
@@ -31,6 +31,89 @@ type HeroSettings = {
 
 interface HeroProps {
   initialSettings?: HeroSettings;
+}
+
+// Mobile carousel wrapper with scroll indicator dots
+function MobileHeroCarousel({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [totalCards, setTotalCards] = useState(0);
+  const [showHint, setShowHint] = useState(true);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const cards = el.querySelectorAll(':scope > .snap-center');
+    setTotalCards(cards.length);
+
+    const handleScroll = () => {
+      if (!el) return;
+      const scrollLeft = el.scrollLeft;
+      const cardWidth = el.firstElementChild 
+        ? (el.firstElementChild as HTMLElement).offsetWidth + 16
+        : 300;
+      const index = Math.round(scrollLeft / cardWidth);
+      setActiveIndex(Math.min(index, cards.length - 1));
+      // Hide hint as soon as user scrolls
+      if (scrollLeft > 10) setShowHint(false);
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Auto-hide hint after 3 seconds
+    const timer = setTimeout(() => setShowHint(false), 3000);
+
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div className="relative mt-2">
+      <div 
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-2 px-4 scrollbar-hide snap-x snap-mandatory" 
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {children}
+      </div>
+
+      {/* Swipe hint overlay */}
+      {showHint && totalCards > 1 && (
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-black/60 text-white text-xs font-medium px-3 py-1.5 rounded-full animate-pulse pointer-events-none">
+          <span>Swipe</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </div>
+      )}
+
+      {/* Dot indicators */}
+      {totalCards > 1 && (
+        <div className="flex justify-center gap-1.5 py-2">
+          {Array.from({ length: totalCards }).map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Go to card ${i + 1}`}
+              onClick={() => {
+                const el = scrollRef.current;
+                if (!el) return;
+                const cards = el.querySelectorAll(':scope > .snap-center');
+                if (cards[i]) {
+                  cards[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+              }}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === activeIndex 
+                  ? 'w-6 bg-gray-800' 
+                  : 'w-1.5 bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Amazon-style Grid Widget for Hero
@@ -437,11 +520,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         {/* Mobile Layout - Horizontal Scroll Cards */}
         <div className="md:hidden">
           {products.length > 0 && (
-            <div className="relative mt-2">
-              <div 
-                 className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory" 
-                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
+            <MobileHeroCarousel>
                 {/* 1. Green Card: Continue Shopping / Deals */}
                 {dealsProducts.length > 0 && (
                   <div className="snap-center">
@@ -519,8 +598,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                     />
                   </div>
                 )}
-              </div>
-            </div>
+            </MobileHeroCarousel>
           )}
         </div>
 
