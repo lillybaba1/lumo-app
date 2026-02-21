@@ -55,7 +55,7 @@ export default async function FullDebugPage() {
         {/* Profile Lookup for Current User */}
         {user && (
           <div className="border rounded-lg p-6 bg-white shadow">
-            <h2 className="text-2xl font-semibold mb-4">2. Current User's Profile in user_profiles</h2>
+            <h2 className="text-2xl font-semibold mb-4">2. Current User&apos;s Profile in user_profiles</h2>
             {(() => {
               const profile = allProfiles?.find(p => p.id === user.id);
               if (profile) {
@@ -165,7 +165,7 @@ export default async function FullDebugPage() {
                 <div className="text-red-600">
                   <p className="font-bold text-lg">❌ PROBLEM FOUND: User ID Mismatch!</p>
                   <p className="mt-2">Your session user ID <code className="bg-red-100 px-2 py-1 rounded">{user.id}</code> does not have a profile in the user_profiles table.</p>
-                  <p className="mt-2">This means when you signed up, the profile wasn't created, or you're logged in with a different account.</p>
+                  <p className="mt-2">This means when you signed up, the profile wasn&apos;t created, or you&apos;re logged in with a different account.</p>
                   <p className="mt-4 font-semibold">Solution:</p>
                   <ul className="list-disc ml-6 mt-2">
                     <li>Log out and log in with the email that has admin role in the table above</li>
@@ -178,7 +178,7 @@ export default async function FullDebugPage() {
             if (profile.role !== 'admin') {
               return (
                 <div className="text-orange-600">
-                  <p className="font-bold text-lg">❌ PROBLEM FOUND: Role is not 'admin'!</p>
+                  <p className="font-bold text-lg">❌ PROBLEM FOUND: Role is not &apos;admin&apos;!</p>
                   <p className="mt-2">Your role is set to: <strong>{profile.role}</strong></p>
                   <p className="mt-2">It needs to be exactly: <strong>admin</strong> (lowercase)</p>
                   <p className="mt-4 font-semibold">Solution:</p>
@@ -195,7 +195,7 @@ WHERE id = '${user.id}';`}
             return (
               <div className="text-green-600">
                 <p className="font-bold text-lg">✅ Everything looks correct!</p>
-                <p className="mt-2">Your user ID matches, role is 'admin', but requireAdmin() failed.</p>
+                <p className="mt-2">Your user ID matches, role is &apos;admin&apos;, but requireAdmin() failed.</p>
                 <p className="mt-4">This might be a session/cookie issue. Try:</p>
                 <ul className="list-disc ml-6 mt-2">
                   <li>Log out completely</li>

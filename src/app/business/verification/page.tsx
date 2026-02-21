@@ -110,7 +110,7 @@ export default async function VerificationPage() {
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-green-700 dark:text-green-400 mb-2">
-              You're Verified!
+              You&apos;re Verified!
             </h2>
             <p className="text-muted-foreground max-w-md mx-auto">
               Congratulations! Your seller account has been verified. Your verified badge is now 
@@ -131,8 +131,8 @@ export default async function VerificationPage() {
               Verification Under Review
             </h2>
             <p className="text-muted-foreground max-w-md mx-auto mb-4">
-              We're reviewing your verification documents. This usually takes 1-3 business days. 
-              We'll notify you by email once the review is complete.
+              We&apos;re reviewing your verification documents. This usually takes 1-3 business days. 
+              We&apos;ll notify you by email once the review is complete.
             </p>
             <div className="bg-yellow-50 dark:bg-yellow-950 rounded-lg p-4 max-w-sm mx-auto">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
@@ -158,7 +158,7 @@ export default async function VerificationPage() {
                   Verification Rejected
                 </h2>
                 <p className="text-muted-foreground mb-3">
-                  Unfortunately, we couldn't verify your account. Please review the reason below and submit again.
+                  Unfortunately, we couldn&apos;t verify your account. Please review the reason below and submit again.
                 </p>
                 {businessAccount.verificationDocuments?.rejectionReason && (
                   <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4 mb-4">

@@ -477,7 +477,7 @@ export default function SetupBoutiqueForm({ businessAccount }: SetupBoutiqueForm
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-4">
               Our team will review your boutique within 1-2 business days.
-              You'll receive an email when your boutique is approved!
+              You&apos;ll receive an email when your boutique is approved!
             </p>
           </div>
         </form>

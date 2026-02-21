@@ -64,7 +64,7 @@ export default async function TestAuthPage() {
           {profile?.role === 'admin' ? (
             <div className="text-green-600">
               <p className="font-semibold text-xl">✓ You have admin access!</p>
-              <p className="mt-2">Your role is set to 'admin' in the database.</p>
+              <p className="mt-2">Your role is set to &apos;admin&apos; in the database.</p>
               <p className="mt-4">
                 <a href="/admin/dashboard" className="text-blue-600 hover:underline font-semibold">
                   → Go to Admin Dashboard

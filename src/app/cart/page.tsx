@@ -29,8 +29,9 @@ export default function CartPage() {
   const currencySymbol = getCurrencySymbol(settings?.currency);
 
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity: Math.max(1, quantity) } });
+  const updateQuantity = (productId: string, quantity: number, maxStock?: number) => {
+    const clampedQty = maxStock ? Math.min(Math.max(1, quantity), maxStock) : Math.max(1, quantity);
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity: clampedQty } });
   };
 
   const removeItem = (productId: string) => {
@@ -107,7 +108,7 @@ export default function CartPage() {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(product.id, quantity - 1)}
+                                onClick={() => updateQuantity(product.id, quantity - 1, product.stock)}
                                 disabled={quantity <= 1}
                               >
                                 <Minus className="h-3 w-3" />
@@ -117,7 +118,8 @@ export default function CartPage() {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(product.id, quantity + 1)}
+                                onClick={() => updateQuantity(product.id, quantity + 1, product.stock)}
+                                disabled={quantity >= product.stock}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -160,7 +162,6 @@ export default function CartPage() {
                               sizes={IMAGE_SIZES.cartItem}
                               placeholder="blur"
                               blurDataURL={PRODUCT_BLUR_DATA_URL}
-                              data-ai-hint={`${product.category} product`}
                             />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
@@ -171,7 +172,7 @@ export default function CartPage() {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(product.id, quantity - 1)}
+                                onClick={() => updateQuantity(product.id, quantity - 1, product.stock)}
                                 disabled={quantity <= 1}
                               >
                                 <Minus className="h-3 w-3" />
@@ -179,19 +180,24 @@ export default function CartPage() {
                               <Input
                                 type="number"
                                 min="1"
+                                max={product.stock}
                                 value={quantity}
-                                onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1)}
+                                onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1, product.stock)}
                                 className="w-16 text-center"
                               />
                               <Button
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(product.id, quantity + 1)}
+                                onClick={() => updateQuantity(product.id, quantity + 1, product.stock)}
+                                disabled={quantity >= product.stock}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
+                            {product.stock <= 5 && (
+                              <p className="text-xs text-orange-600 mt-1">Only {product.stock} in stock</p>
+                            )}
                           </TableCell>
                           <TableCell className="font-semibold">{currencySymbol}{(product.price * quantity).toFixed(2)}</TableCell>
                           <TableCell>

@@ -175,7 +175,7 @@ export default function CategorySectionForm({ settings }: Props) {
           Category Section Background
         </CardTitle>
         <CardDescription>
-          Customize the background of the "Shop by Category" section on your homepage
+          Customize the background of the &ldquo;Shop by Category&rdquo; section on your homepage
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

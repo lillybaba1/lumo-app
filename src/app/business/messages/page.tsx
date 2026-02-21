@@ -125,7 +125,7 @@ export default function MessagesPage() {
     }
   }
 
-  function useQuickReply(content: string) {
+  function applyQuickReply(content: string) {
     setNewMessage(content);
     setShowQuickReplies(false);
   }
@@ -371,7 +371,7 @@ export default function MessagesPage() {
                       key={qr.id}
                       variant="outline"
                       size="sm"
-                      onClick={() => useQuickReply(qr.content)}
+                      onClick={() => applyQuickReply(qr.content)}
                     >
                       {qr.title}
                     </Button>

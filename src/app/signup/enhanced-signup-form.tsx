@@ -525,7 +525,7 @@ export default function EnhancedSignupForm() {
                   </p>
                 )}
                 <p id="phone-help" className="text-xs text-muted-foreground">
-                  We'll send a verification code to this number
+                  We&apos;ll send a verification code to this number
                 </p>
               </div>
 
@@ -600,7 +600,7 @@ export default function EnhancedSignupForm() {
               </div>
               <CardTitle className="font-headline text-2xl">Verify Your Phone</CardTitle>
               <CardDescription>
-                We've sent a 6-digit code to {countryCode} {phoneNumber}
+                We&apos;ve sent a 6-digit code to {countryCode} {phoneNumber}
               </CardDescription>
             </CardHeader>
 
@@ -626,7 +626,7 @@ export default function EnhancedSignupForm() {
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                Didn't receive the code?{' '}
+                Didn&apos;t receive the code?{' '}
                 <button
                   onClick={handleResendCode}
                   className="underline hover:text-primary"

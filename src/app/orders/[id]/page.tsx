@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Package, MapPin, CreditCard, Calendar, FileText } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -105,17 +106,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             {order.items.map((item, index) => (
               <div key={index}>
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-muted rounded flex-shrink-0">
+                  <div className="w-20 h-20 bg-muted rounded flex-shrink-0 relative overflow-hidden">
                     {((item.product.productImages && item.product.productImages.length > 0) ||
                       (item.product.imageUrls && item.product.imageUrls.length > 0)) && (
-                      <img
+                      <Image
                         src={
                           (item.product.productImages && item.product.productImages.length > 0)
                             ? item.product.productImages[0]
                             : item.product.imageUrls[0]
                         }
                         alt={item.product.name}
-                        className="w-full h-full object-cover rounded"
+                        fill
+                        sizes="80px"
+                        className="object-cover rounded"
                       />
                     )}
                   </div>

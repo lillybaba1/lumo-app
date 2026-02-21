@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/product-card';
@@ -154,10 +155,12 @@ export function CategoryProductGrid({
             >
               <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
                 {imageUrl ? (
-                  <img 
+                  <Image 
                     src={imageUrl} 
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl">

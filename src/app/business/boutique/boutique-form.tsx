@@ -180,7 +180,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
             Basic Information
           </CardTitle>
           <CardDescription>
-            Set up your boutique's public profile
+            Set up your boutique&apos;s public profile
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -228,7 +228,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
             Branding
           </CardTitle>
           <CardDescription>
-            Customize your boutique's appearance
+            Customize your boutique&apos;s appearance
             {!canCustomize && (
               <span className="flex items-center gap-1 mt-1 text-amber-600">
                 <Lock className="h-3 w-3" />
@@ -498,7 +498,7 @@ export default function BoutiqueForm({ boutique, businessAccountId, canCustomize
               maxLength={4}
               className="w-32"
             />
-            <p className="text-xs text-muted-foreground">Show buyers how long you've been in business</p>
+            <p className="text-xs text-muted-foreground">Show buyers how long you&apos;ve been in business</p>
           </div>
 
           <div className="space-y-2">

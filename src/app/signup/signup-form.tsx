@@ -542,15 +542,15 @@ export default function SignupForm() {
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">You'll be logged in automatically</p>
+                    <p className="text-sm font-medium">You&apos;ll be logged in automatically</p>
                     <p className="text-xs text-muted-foreground">
-                      After verifying, you'll be redirected to the homepage
+                      After verifying, you&apos;ll be redirected to the homepage
                     </p>
                   </div>
                 </div>
               </div>
               <p className="text-xs text-center text-muted-foreground">
-                Didn't receive the email? Check your spam folder or{' '}
+                Didn&apos;t receive the email? Check your spam folder or{' '}
                 <button
                   onClick={handleResendEmail}
                   className="underline hover:text-primary"

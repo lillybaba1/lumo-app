@@ -289,7 +289,7 @@ export default function LoginForm() {
               {loading ? <Loader2 className="animate-spin" /> : 'Login'}
             </Button>
              <p className="text-xs text-muted-foreground">
-              Don't have an account? <Link href="/signup" className="underline">Sign up</Link>
+              Don&apos;t have an account? <Link href="/signup" className="underline">Sign up</Link>
             </p>
           </CardFooter>
         </form>

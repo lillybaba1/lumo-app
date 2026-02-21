@@ -96,11 +96,10 @@ export default function Footer() {
   const pathname = usePathname();
   
   // Hide on admin/business dashboards
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/business')) {
-    return null;
-  }
+  const isHidden = pathname?.startsWith('/admin') || pathname?.startsWith('/business');
 
   useEffect(() => {
+    if (isHidden) return;
     const fetchSettings = async () => {
       try {
         const response = await fetch('/api/settings', {
@@ -129,7 +128,9 @@ export default function Footer() {
 
     fetchSettings();
     checkAdmin();
-  }, []);
+  }, [isHidden]);
+
+  if (isHidden) return null;
 
   const paymentMethods = settings.footerPaymentMethods?.split(',').map(m => m.trim()).filter(Boolean) || [];
   const deliveryCountries = settings.footerDeliveryCountries?.split(',').map(c => c.trim()).filter(Boolean) || [];

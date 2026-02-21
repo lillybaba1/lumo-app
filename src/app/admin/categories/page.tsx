@@ -579,7 +579,7 @@ export default function CategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingCategory?.name}"? This action cannot be
+              Are you sure you want to delete &ldquo;{deletingCategory?.name}&rdquo;? This action cannot be
               undone. Products in this category will not be deleted but will need to be
               re-categorized.
             </AlertDialogDescription>

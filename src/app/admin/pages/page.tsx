@@ -161,7 +161,7 @@ export default function PagesPage() {
         <CardHeader>
           <CardTitle>All Pages ({pageEntries.length})</CardTitle>
           <CardDescription>
-            Manage your store's static content pages
+            Manage your store&apos;s static content pages
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -229,7 +229,7 @@ export default function PagesPage() {
                             <DialogHeader>
                               <DialogTitle>Delete Page?</DialogTitle>
                               <DialogDescription>
-                                Are you sure you want to delete "{page.title}"? This action cannot be undone.
+                                Are you sure you want to delete &ldquo;{page.title}&rdquo;? This action cannot be undone.
                               </DialogDescription>
                             </DialogHeader>
                             <DialogFooter>

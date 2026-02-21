@@ -54,8 +54,6 @@ function HeroGridWidget({
       <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-2 overflow-hidden">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
-          // Mock discount for "Deals" feel
-          const discount = Math.floor(Math.random() * (40 - 15) + 15);
           
           return (
             <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full relative p-2">
@@ -76,10 +74,9 @@ function HeroGridWidget({
                 )}
               </div>
               <div className="mt-auto">
-                 <span className="inline-block bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                   {discount}% off
-                 </span>
-                 <p className="text-[10px] text-gray-500 truncate mt-0.5 hidden">Deal</p>
+                 <p className="text-[10px] text-gray-700 font-medium truncate">
+                   {product.name}
+                 </p>
               </div>
             </Link>
           );

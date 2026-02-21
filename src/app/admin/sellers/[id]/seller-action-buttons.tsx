@@ -290,7 +290,7 @@ export function SellerActionButtons({ businessId, status, accountApproved, bouti
             <AlertDialogHeader>
               <AlertDialogTitle>Suspend Seller Account?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will suspend the seller's account. They will no longer be able to access their dashboard or sell products.
+                This will suspend the seller&apos;s account. They will no longer be able to access their dashboard or sell products.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -346,7 +346,7 @@ export function SellerActionButtons({ businessId, status, accountApproved, bouti
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Seller Account?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the seller's business account and their user account. 
+                This will permanently delete the seller&apos;s business account and their user account. 
                 This action cannot be undone. All their products, orders, and data will be lost.
               </AlertDialogDescription>
             </AlertDialogHeader>

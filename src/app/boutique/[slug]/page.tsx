@@ -283,7 +283,7 @@ export default async function BoutiquePage({ params }: Props) {
                     </div>
                     <div>
                       <p className="font-medium text-sm">Responsive Support</p>
-                      <p className="text-xs text-muted-foreground">We're here to help</p>
+                      <p className="text-xs text-muted-foreground">We&apos;re here to help</p>
                     </div>
                   </div>
                 </div>

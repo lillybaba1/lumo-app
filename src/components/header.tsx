@@ -62,17 +62,17 @@ export default function Header() {
   const pathname = usePathname();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   
-  // Hide header on dashboard pages (they have their own layouts)
-  if (pathname?.startsWith('/business') || pathname?.startsWith('/admin')) {
-    return null;
-  }
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  // Hide header on dashboard pages (they have their own layouts)
+  const isHidden = pathname?.startsWith('/business') || pathname?.startsWith('/admin');
+
   useEffect(() => {
+    if (isHidden) return;
     // Fetch current user info from API
     const fetchUserData = async () => {
       try {
@@ -131,7 +131,9 @@ export default function Header() {
 
     fetchUserData();
     fetchSettings();
-  }, [pathname]);
+  }, [pathname, isHidden]);
+
+  if (isHidden) return null;
 
   return (
     <>

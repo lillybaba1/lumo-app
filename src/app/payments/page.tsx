@@ -135,7 +135,7 @@ export default async function PaymentHistoryPage() {
                 <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-semibold mb-2">No Payment Records</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  You haven't made any payments yet.
+                  You haven&apos;t made any payments yet.
                 </p>
                 <Button asChild>
                   <Link href="/">Browse Products</Link>

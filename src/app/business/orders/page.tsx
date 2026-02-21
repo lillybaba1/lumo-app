@@ -28,7 +28,7 @@ export default async function BusinessOrdersPage() {
         </CardHeader>
         <CardContent>
           <p className="text-center text-muted-foreground py-8">
-            Order management interface coming soon. You'll be able to view and manage orders
+            Order management interface coming soon. You&apos;ll be able to view and manage orders
             containing your products, update order statuses, and track shipments.
           </p>
         </CardContent>

@@ -770,7 +770,7 @@ export default function HeroSettingsForm() {
           {/* Custom Position Input */}
           {heroImageObjectPosition === 'custom' && (
             <div className="space-y-2">
-              <Label htmlFor="custom-position">Custom Position (e.g., "50% 30%")</Label>
+              <Label htmlFor="custom-position">Custom Position (e.g., &ldquo;50% 30%&rdquo;)</Label>
               <Input
                 id="custom-position"
                 value={customPosition}

@@ -152,7 +152,7 @@ export default function VerificationForm({ businessAccountId, sellerType: initia
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="drivers_license" id="drivers_license" />
-                  <Label htmlFor="drivers_license">Driver's License</Label>
+                  <Label htmlFor="drivers_license">Driver&apos;s License</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="passport" id="passport" />

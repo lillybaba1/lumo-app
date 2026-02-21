@@ -24,7 +24,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
               <p>
-                Welcome to JulaZone ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+                Welcome to JulaZone (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
               </p>
               <p>
                 By using our services, you agree to the collection and use of information in accordance with this policy.
@@ -136,7 +136,7 @@ export default function PrivacyPolicyPage() {
               <ul className="list-disc pl-6 mb-4">
                 <li><strong>Right to Access:</strong> Request a copy of your personal data</li>
                 <li><strong>Right to Rectification:</strong> Request correction of inaccurate data</li>
-                <li><strong>Right to Erasure:</strong> Request deletion of your data ("right to be forgotten")</li>
+                <li><strong>Right to Erasure:</strong> Request deletion of your data (&ldquo;right to be forgotten&rdquo;)</li>
                 <li><strong>Right to Restriction:</strong> Request restriction of processing</li>
                 <li><strong>Right to Data Portability:</strong> Receive your data in a portable format</li>
                 <li><strong>Right to Object:</strong> Object to processing of your data</li>
@@ -183,7 +183,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold mb-4">Children&apos;s Privacy</h2>
               <p>
                 Our services are not intended for children under 13 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.
               </p>
@@ -192,7 +192,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Changes to This Policy</h2>
               <p>
-                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. We encourage you to review this Privacy Policy periodically.
+                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &ldquo;Last Updated&rdquo; date. We encourage you to review this Privacy Policy periodically.
               </p>
             </section>
 

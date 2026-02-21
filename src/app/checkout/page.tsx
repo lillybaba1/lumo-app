@@ -2,6 +2,7 @@
 "use client";
 
 import { useCart } from '@/hooks/use-cart';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,8 +125,6 @@ export default function CheckoutPage() {
         notes: notes || undefined,
       };
 
-      console.log('Creating order with data:', JSON.stringify(orderData, null, 2));
-
       const order = await createOrder(orderData);
 
       // Increment coupon usage if coupon was applied
@@ -170,10 +169,15 @@ export default function CheckoutPage() {
   };
 
   if (items.length === 0) {
-    if (typeof window !== 'undefined') {
-        router.push('/');
-    }
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <h2 className="text-xl font-bold mb-2">Your cart is empty</h2>
+        <p className="text-muted-foreground mb-4">Add some items to your cart before checking out.</p>
+        <Button asChild>
+          <a href="/">Continue Shopping</a>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -263,17 +267,19 @@ export default function CheckoutPage() {
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {items.map(item => (
                       <div key={item.product.id} className="flex gap-3">
-                        <div className="w-16 h-16 bg-muted rounded flex-shrink-0">
+                        <div className="w-16 h-16 bg-muted rounded flex-shrink-0 relative overflow-hidden">
                           {((item.product.productImages && item.product.productImages.length > 0) ||
                             (item.product.imageUrls && item.product.imageUrls.length > 0)) && (
-                            <img
+                            <Image
                               src={
                                 (item.product.productImages && item.product.productImages.length > 0)
                                   ? item.product.productImages[0]
                                   : item.product.imageUrls[0]
                               }
                               alt={item.product.name}
-                              className="w-full h-full object-cover rounded"
+                              fill
+                              className="object-cover rounded"
+                              sizes="64px"
                             />
                           )}
                         </div>
@@ -323,7 +329,7 @@ export default function CheckoutPage() {
                     </div>
                     {appliedCoupon && (
                       <div className="text-sm text-green-600 dark:text-green-400">
-                        ✓ Coupon "{appliedCoupon.code}" applied successfully!
+                        ✓ Coupon &ldquo;{appliedCoupon.code}&rdquo; applied successfully!
                       </div>
                     )}
                   </div>

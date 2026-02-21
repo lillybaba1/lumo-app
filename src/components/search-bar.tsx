@@ -316,7 +316,7 @@ export default function SearchBar({
                   }}
                   className="w-full flex items-center justify-between p-3 text-sm text-primary hover:bg-primary/5 rounded-xl transition-colors mt-1"
                 >
-                  <span>View all results for "{query}"</span>
+                  <span>View all results for &ldquo;{query}&rdquo;</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               )}
@@ -326,7 +326,7 @@ export default function SearchBar({
           {/* No results */}
           {!loading && query.length >= 2 && suggestions.length === 0 && boutiqueSuggestions.length === 0 && (
             <div className="p-4 text-center text-muted-foreground text-sm">
-              No products or boutiques found for "{query}"
+              No products or boutiques found for &ldquo;{query}&rdquo;
             </div>
           )}
 

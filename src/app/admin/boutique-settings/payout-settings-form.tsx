@@ -209,7 +209,7 @@ export default function PayoutSettingsForm({ settings }: Props) {
                   No Payout Methods Enabled
                 </p>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Sellers won't be able to receive payouts until at least one method is enabled.
+                  Sellers won&apos;t be able to receive payouts until at least one method is enabled.
                 </p>
               </div>
             </div>

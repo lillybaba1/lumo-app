@@ -22,11 +22,10 @@ export default function PublicSidebar() {
   const pathname = usePathname();
   
   // Hide on admin/business dashboards
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/business')) {
-    return null;
-  }
+  const isHidden = pathname?.startsWith('/admin') || pathname?.startsWith('/business');
 
   useEffect(() => {
+    if (isHidden) return;
     const fetchUserData = async () => {
       try {
         const response = await fetch('/api/auth/me', {
@@ -49,8 +48,9 @@ export default function PublicSidebar() {
     };
 
     fetchUserData();
-  }, []);
+  }, [isHidden]);
 
+  if (isHidden) return null;
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/';

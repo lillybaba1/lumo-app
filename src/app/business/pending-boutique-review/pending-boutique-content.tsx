@@ -72,7 +72,7 @@ export default function PendingBoutiqueContent({ businessAccount }: PendingBouti
             </h3>
             <p className="text-sm text-blue-800 dark:text-blue-200">
               Our team is reviewing your boutique details to ensure everything meets our quality standards. 
-              Once approved, you'll have full access to your seller dashboard.
+              Once approved, you&apos;ll have full access to your seller dashboard.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export default function PendingBoutiqueContent({ businessAccount }: PendingBouti
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            This usually takes 1-2 business days. We'll email you once it's approved!
+            This usually takes 1-2 business days. We&apos;ll email you once it&apos;s approved!
           </p>
 
           <div className="flex flex-col gap-2">

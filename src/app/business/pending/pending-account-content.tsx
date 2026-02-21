@@ -137,11 +137,11 @@ export default function PendingAccountContent({ businessAccount }: PendingAccoun
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Once approved, you'll set up your boutique storefront</span>
+                <span>Once approved, you&apos;ll set up your boutique storefront</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>After boutique review, you'll have full seller access</span>
+                <span>After boutique review, you&apos;ll have full seller access</span>
               </li>
             </ul>
           </div>

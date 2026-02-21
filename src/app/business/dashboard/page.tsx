@@ -33,7 +33,7 @@ export default async function BusinessDashboardPage() {
                   Account Pending Verification
                 </h3>
                 <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
-                  Your business account is under review. You can start adding products, but they won't be visible to customers until your account is approved.
+                  Your business account is under review. You can start adding products, but they won&apos;t be visible to customers until your account is approved.
                 </p>
               </div>
             </div>

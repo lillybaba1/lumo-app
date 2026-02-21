@@ -149,7 +149,7 @@ export default async function BusinessPendingPage() {
           </CardHeader>
           <CardContent className="text-center space-y-6">
             <p className="text-muted-foreground">
-              We've sent a verification link to <strong>{businessAccount.contactEmail}</strong>. 
+              We&apos;ve sent a verification link to <strong>{businessAccount.contactEmail}</strong>. 
               Please check your inbox and click the link to verify your email address.
             </p>
 

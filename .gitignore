@@ -56,3 +56,6 @@ android/keystore.properties
 android/app/build/
 android/.gradle/
 .env*.local
+
+# Android build artifacts
+*.aab

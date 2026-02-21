@@ -18,7 +18,7 @@ import {
 import {
   Palette,
   Layout,
-  Image,
+  Image as ImageIcon,
   FileText,
   Share2,
   Bell,
@@ -209,7 +209,7 @@ export default function CustomizePage() {
             Theme
           </TabsTrigger>
           <TabsTrigger value="banners">
-            <Image className="h-4 w-4 mr-2" />
+            <ImageIcon className="h-4 w-4 mr-2" />
             Banners
           </TabsTrigger>
           <TabsTrigger value="about">
@@ -361,7 +361,7 @@ export default function CustomizePage() {
             <CardContent>
               {banners.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                  <Image className="h-8 w-8 mb-2" />
+                  <ImageIcon className="h-8 w-8 mb-2" />
                   <p>No banners yet</p>
                   <Button variant="link" onClick={handleAddBanner}>
                     Add your first banner

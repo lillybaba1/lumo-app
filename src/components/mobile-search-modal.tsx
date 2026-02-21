@@ -319,7 +319,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
                 }}
                 className="flex items-center justify-between w-full p-3 text-sm text-primary hover:bg-primary/5 rounded-xl transition-colors mt-2"
               >
-                <span>View all results for "{query}"</span>
+                <span>View all results for &ldquo;{query}&rdquo;</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -329,7 +329,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
         {/* No results */}
         {!loading && query.length >= 2 && suggestions.length === 0 && boutiqueSuggestions.length === 0 && (
           <div className="p-6 text-center text-muted-foreground">
-            No products or boutiques found for "{query}"
+            No products or boutiques found for &ldquo;{query}&rdquo;
           </div>
         )}
 
