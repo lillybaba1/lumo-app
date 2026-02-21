@@ -131,29 +131,29 @@ function HeroGridWidget({
   textColor?: string;
 }) {
   return (
-    <div className={`rounded-lg p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-xl p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[340px] md:h-[320px] shadow-md ring-1 ring-black/5 ${bgColor} transition-shadow hover:shadow-lg`}>
+      <h3 className={`text-lg font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <div className="bg-white rounded-md flex-1 grid grid-cols-2 gap-2 overflow-hidden p-1">
+      <div className="bg-white rounded-lg flex-1 grid grid-cols-2 gap-1.5 overflow-hidden p-1.5">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
           
           return (
-            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full relative p-2">
-              <div className="aspect-square relative mb-1.5 flex-1 w-full">
+            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full relative p-1.5 rounded-md hover:bg-gray-50 transition-colors">
+              <div className="aspect-square relative mb-1 flex-1 w-full">
                 {imageUrl ? (
                   <Image
                     src={imageUrl}
                     alt={product.name}
                     fill
-                    className="object-contain p-1"
+                    className="object-contain p-0.5"
                     sizes="120px"
                     loading="lazy"
                     placeholder="blur"
                     blurDataURL={PRODUCT_BLUR_DATA_URL}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg bg-gray-50 text-gray-300">Image</div>
+                  <div className="w-full h-full flex items-center justify-center text-lg bg-gray-50 text-gray-300 rounded">Image</div>
                 )}
               </div>
               <div className="mt-auto">
@@ -164,20 +164,20 @@ function HeroGridWidget({
             </Link>
           );
         })}
-        {/* Fill empty spots if less than 4 - show subtle shopping icon */}
+        {/* Fill empty spots if less than 4 */}
         {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
-           <Link key={`empty-${i}`} href={link} className="bg-gray-50/80 rounded flex items-center justify-center hover:bg-gray-100 transition-colors">
-             <ShoppingBag className="h-6 w-6 text-gray-200" />
+           <Link key={`empty-${i}`} href={link} className="bg-gray-50/60 rounded-md flex items-center justify-center hover:bg-gray-100 transition-colors">
+             <ShoppingBag className="h-5 w-5 text-gray-200" />
            </Link>
         ))}
       </div>
       
-      <div className="mt-3">
+      <div className="mt-2.5">
         <Link 
           href={link} 
-          className={`text-sm font-medium hover:underline flex items-center gap-1 ${textColor}`}
+          className={`text-xs font-semibold hover:underline flex items-center gap-1 ${textColor}`}
         >
-          See all deals <ArrowRight className="h-3.5 w-3.5" />
+          See all deals <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
     </div>
@@ -203,29 +203,29 @@ function HeroLargeCardWidget({
   const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
 
   return (
-    <div className={`rounded-lg p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[420px] shadow-sm ring-1 ring-black/5 ${bgColor}`}>
-      <h3 className={`text-xl font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-xl p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[340px] md:h-[320px] shadow-md ring-1 ring-black/5 ${bgColor} transition-shadow hover:shadow-lg`}>
+      <h3 className={`text-lg font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
       
-      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-md p-4 flex-1 relative overflow-hidden group items-center justify-center flex">
+      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-lg p-3 flex-1 relative overflow-hidden group items-center justify-center flex">
          <div className="relative w-full h-full">
             {imageUrl ? (
               <Image
                 src={imageUrl}
                 alt={mainProduct.name}
                 fill
-                className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                className="object-contain p-1 group-hover:scale-105 transition-transform duration-500"
                 sizes="300px"
               />
             ) : null}
          </div>
       </Link>
       
-      <div className="mt-3">
+      <div className="mt-2.5">
         <Link 
           href={link} 
-          className={`text-sm font-medium hover:underline flex items-center gap-1 ${textColor}`}
+          className={`text-xs font-semibold hover:underline flex items-center gap-1 ${textColor}`}
         >
-          See more <ArrowRight className="h-3.5 w-3.5" />
+          See more <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
     </div>
@@ -508,9 +508,8 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       className="relative w-full overflow-hidden z-0"
       style={{ width: '100%', maxWidth: '100%' }}
     >
-      {/* Background Image - REMOVED for app-like style, using improved gradient background */}
-      <div className="absolute inset-0 bg-gray-100/50" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#A7F3D0]/30 via-transparent to-transparent h-40 pointer-events-none" />
+      {/* Subtle background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
 
       {/* Content */}
       <div className="relative w-full pb-6 pt-2">
@@ -602,17 +601,14 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           )}
         </div>
 
-        {/* Desktop Layout - Keep cleaner grid but styled similarly if needed, or keep original banner look? 
-            For now, let's keep the desktop version somewhat aligned but responsive. 
-            Actually, let's adapt the desktop to use these cards too but in a grid. 
-        */}
-        <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4 px-4 lg:px-6 py-6 max-w-[1400px] mx-auto">
+        {/* Desktop Layout — responsive grid that fills the row */}
+        <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 px-4 lg:px-6 py-4 max-w-[1440px] mx-auto">
              {dealsProducts.length > 0 && (
                 <HeroGridWidget
                   title="Continue shopping deals"
                   products={dealsProducts}
                   link="/products?filter=deals"
-                  bgColor="bg-[#66E887]"
+                  bgColor="bg-gradient-to-br from-[#66E887] to-[#34D399]"
                 />
              )}
              {bestSellersProducts.length > 0 && (
@@ -620,7 +616,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   title="Best Sellers"
                   products={bestSellersProducts}
                   link="/products?filter=bestsellers"
-                  bgColor="bg-[#D8B4FE]"
+                  bgColor="bg-gradient-to-br from-[#D8B4FE] to-[#C084FC]"
                 />
              )}
               {newArrivalsProducts.length > 0 && (
@@ -628,7 +624,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   title="New Arrivals"
                   products={newArrivalsProducts}
                   link="/products?filter=new"
-                  bgColor="bg-[#67E8F9]"
+                  bgColor="bg-gradient-to-br from-[#67E8F9] to-[#22D3EE]"
                 />
              )}
              {featuredProducts.length > 0 && (
@@ -636,7 +632,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   title="Featured"
                   products={featuredProducts}
                   link="/products?filter=featured"
-                  bgColor="bg-[#FDE047]"
+                  bgColor="bg-gradient-to-br from-[#FDE047] to-[#FACC15]"
                 />
              )}
              {budgetProducts.length > 0 && (
@@ -644,7 +640,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   title="Budget Finds"
                   products={budgetProducts}
                   link="/products?maxPrice=50"
-                  bgColor="bg-[#FCA5A5]"
+                  bgColor="bg-gradient-to-br from-[#FCA5A5] to-[#F87171]"
                 />
              )}
              {discoverProducts.length > 0 && (
@@ -652,7 +648,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
                   title="Discover More"
                   products={discoverProducts}
                   link="/products"
-                  bgColor="bg-[#A5B4FC]"
+                  bgColor="bg-gradient-to-br from-[#A5B4FC] to-[#818CF8]"
                 />
              )}
         </div>

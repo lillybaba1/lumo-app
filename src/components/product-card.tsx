@@ -164,9 +164,9 @@ export default function ProductCard({ product, showQuickView = true, compact = f
               </div>
             )}
         </CardHeader>
-        <CardContent className={`flex-grow flex flex-col min-w-0 ${compact ? 'p-1.5' : 'p-1.5 md:p-4'}`}>
+        <CardContent className={`flex-grow flex flex-col min-w-0 ${compact ? 'p-1.5' : 'p-1.5 md:p-3'}`}>
             <CardTitle
-              className={`leading-tight line-clamp-2 font-semibold ${compact ? 'text-[10px] md:text-xs mb-0' : 'text-[11px] md:text-base mb-0.5 md:mb-1.5 min-h-[1.75rem] md:min-h-[2.5rem]'}`}
+              className={`leading-tight line-clamp-2 font-semibold ${compact ? 'text-[10px] md:text-xs mb-0' : 'text-[11px] md:text-sm mb-0.5 md:mb-1 min-h-[1.75rem] md:min-h-[2rem]'}`}
               style={{
                 fontFamily: 'var(--font-heading)',
                 color: 'var(--color-text-primary)',
@@ -177,24 +177,24 @@ export default function ProductCard({ product, showQuickView = true, compact = f
             
             {/* Star Rating - hidden in compact mode */}
             {!compact && productReviews > 0 && (
-              <div className="mb-1 md:mb-2 hidden md:block">
+              <div className="mb-1 hidden md:block">
                 <StarRating rating={productRating} reviews={productReviews} size="sm" />
               </div>
             )}
             
             {!compact && (
               <p
-                className="text-xs md:text-sm flex-grow hidden md:line-clamp-2 text-muted-foreground"
+                className="text-xs flex-grow hidden md:line-clamp-2 text-muted-foreground leading-relaxed"
               >
                 {product.description}
               </p>
             )}
         </CardContent>
-        <CardFooter className={`flex flex-col mt-auto pt-0 ${compact ? 'p-1.5 gap-1' : 'p-1.5 md:p-4 gap-1 md:gap-2'}`}>
+        <CardFooter className={`flex flex-col mt-auto pt-0 ${compact ? 'p-1.5 gap-1' : 'p-1.5 md:p-3 gap-1 md:gap-1.5'}`}>
             <div className="flex flex-col w-full gap-0.5">
               <div className="flex justify-between items-center">
                 <p
-                  className={`font-bold whitespace-nowrap ${compact ? 'text-xs' : 'text-xs md:text-xl'}`}
+                  className={`font-bold whitespace-nowrap ${compact ? 'text-xs' : 'text-xs md:text-base'}`}
                   style={{
                     color: 'var(--color-text-primary)',
                   }}
@@ -202,7 +202,7 @@ export default function ProductCard({ product, showQuickView = true, compact = f
                   {currencySymbol}{product.price.toFixed(2)}
                 </p>
                 {!compact && product.stock > 0 && product.stock <= 5 && (
-                  <span className="text-[8px] md:text-xs text-orange-600 font-medium whitespace-nowrap ml-2">
+                  <span className="text-[8px] md:text-[11px] text-orange-600 font-medium whitespace-nowrap ml-2">
                     Only {product.stock} left
                   </span>
                 )}
@@ -232,9 +232,9 @@ export default function ProductCard({ product, showQuickView = true, compact = f
                 size="sm"
                 disabled={product.stock === 0}
                 aria-label={`Add ${product.name} to cart`}
-                className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-primary/90 text-white rounded-lg md:rounded-xl h-7 md:h-9 text-[9px] md:text-sm font-medium shadow-sm"
+                className="w-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 bg-primary hover:bg-primary/90 text-white rounded-lg md:rounded-xl h-7 md:h-8 text-[9px] md:text-xs font-medium shadow-sm"
               >
-                <ShoppingCart className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                <ShoppingCart className="mr-1 md:mr-1.5 h-3 w-3 md:h-3.5 md:w-3.5" />
                 <span className="hidden md:inline">{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
                 <span className="md:hidden">{product.stock === 0 ? 'Out' : 'Add'}</span>
               </Button>

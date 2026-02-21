@@ -343,26 +343,26 @@ function Home(props: {
     productIds: string[];
     viewAllLink?: string;
   }) => {
-    const collectionProducts = getProductsByIds(productIds).slice(0, 4);
+    const collectionProducts = getProductsByIds(productIds).slice(0, 5);
 
     if (collectionProducts.length === 0) return null;
 
     return (
-      <div className="mb-8 md:mb-12">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <div className="flex items-center gap-2 md:gap-3">
-            <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            <h2 className="text-xl md:text-2xl font-headline font-bold">{title}</h2>
+      <div className="mb-6 md:mb-10">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <h2 className="text-lg md:text-xl font-headline font-bold">{title}</h2>
           </div>
           {viewAllLink && (
             <Link href={viewAllLink}>
-              <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
-                View All <ChevronRight className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                View All <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
           {collectionProducts.map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} />
           ))}
@@ -439,20 +439,21 @@ function Home(props: {
         {/* Categories Section - With customizable background */}
         {categories.length > 0 && (
           <div 
-            className="w-full py-6 md:py-10 mb-0"
+            className="w-full py-5 md:py-8 mb-0"
             style={getCategorySectionStyle()}
           >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <h2 
-                  className="text-xl md:text-2xl font-headline font-bold"
+                  className="text-lg md:text-xl font-headline font-bold"
                   style={{ color: categoryTextColor }}
                 >
                   Shop by Category
                 </h2>
                 <Button 
                   variant="ghost" 
-                  className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4" 
+                  size="sm"
+                  className="gap-1 text-sm px-3" 
                   style={{ color: categoryTextColor }}
                   asChild
                 >
@@ -462,7 +463,7 @@ function Home(props: {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 gap-1.5 sm:gap-3 md:gap-4">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3 md:gap-3">
                 {categories.slice(0, 5).map((category) => {
                   const textClr = category.textColor || '#1f2937';
                   
@@ -516,7 +517,7 @@ function Home(props: {
           </div>
         )}
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
           {/* MOBILE: Dense Product Grid - Show 6+ products above fold */}
           <div className="md:hidden mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -538,23 +539,23 @@ function Home(props: {
             </div>
           </div>
 
-          {/* DESKTOP: Original Trending Products layout */}
+          {/* DESKTOP: Trending Products — tighter grid with more items */}
           {trendingProducts && trendingProducts.length > 0 && (
-            <div className="hidden md:block mb-8 md:mb-12">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
+            <div className="hidden md:block mb-8 md:mb-10">
+              <div className="flex items-center justify-between mb-3 md:mb-5">
                 <div className="flex items-center gap-2 md:gap-3">
-                  <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                  <h2 className="text-xl md:text-2xl font-headline font-bold">Trending Now</h2>
+                  <TrendingUp className="h-5 w-5 md:h-5 md:w-5 text-primary" />
+                  <h2 className="text-lg md:text-xl font-headline font-bold">Trending Now</h2>
                 </div>
                 <Link href="/products">
-                  <Button variant="ghost" className="gap-1 md:gap-2 text-sm md:text-base px-2 md:px-4">
-                    Shop All <ChevronRight className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                    Shop All <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
-                {trendingProducts.slice(0, 4).map((product, index) => (
-                  <ProductCard key={product.id} product={product} index={index} />
+              <div className="grid grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                {trendingProducts.slice(0, 6).map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} compact />
                 ))}
               </div>
             </div>
@@ -597,14 +598,14 @@ function Home(props: {
             viewAllLink="/products?filter=deals"
           />
 
-          {/* Category-Based Product Sections - Show products organized by category */}
+          {/* Category-Based Product Sections */}
           {categories.length > 0 && products.length > 0 && (
-            <div className="mb-8 md:mb-12">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
+            <div className="mb-6 md:mb-10">
+              <div className="flex items-center justify-between mb-3 md:mb-4">
                 <h2 className="text-lg md:text-xl font-headline font-bold">Shop by Category</h2>
                 <Link href="/products">
-                  <Button variant="ghost" className="gap-1 text-xs md:text-sm px-2 md:px-3">
-                    View All Products <ChevronRight className="h-3 w-3" />
+                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                    View All Products <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>
               </div>
