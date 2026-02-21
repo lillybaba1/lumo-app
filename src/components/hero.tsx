@@ -81,11 +81,11 @@ function HeroGridWidget({
             </Link>
           );
         })}
-        {/* Fill empty spots if less than 4 */}
+        {/* Fill empty spots if less than 4 - show subtle shopping icon */}
         {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
-           <div key={`empty-${i}`} className="bg-gray-50 rounded flex items-center justify-center">
-             <span className="text-gray-200 text-xs">More soon</span>
-           </div>
+           <Link key={`empty-${i}`} href={link} className="bg-gray-50/80 rounded flex items-center justify-center hover:bg-gray-100 transition-colors">
+             <ShoppingBag className="h-6 w-6 text-gray-200" />
+           </Link>
         ))}
       </div>
       
