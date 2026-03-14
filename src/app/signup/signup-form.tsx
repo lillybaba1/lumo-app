@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User } from 'lucide-react';
+import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -37,6 +37,53 @@ export default function SignupForm() {
   const [businessPhone, setBusinessPhone] = useState('');
   const [taxId, setTaxId] = useState('');
   const [website, setWebsite] = useState('');
+
+  // Business name availability state
+  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
+  const nameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCheckedName = useRef('');
+
+  // Debounced business name availability check
+  const checkBusinessName = useCallback(async (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed.length < 2) {
+      setNameStatus('idle');
+      setNameSuggestions([]);
+      return;
+    }
+    if (trimmed.toLowerCase() === lastCheckedName.current.toLowerCase()) return;
+    lastCheckedName.current = trimmed;
+    setNameStatus('checking');
+    try {
+      const res = await fetch(`/api/auth/check-business-name?name=${encodeURIComponent(trimmed)}`);
+      const data = await res.json();
+      // Only update if the name hasn't changed since we started
+      if (trimmed.toLowerCase() !== lastCheckedName.current.toLowerCase()) return;
+      if (data.available) {
+        setNameStatus('available');
+        setNameSuggestions([]);
+      } else {
+        setNameStatus('taken');
+        setNameSuggestions(data.suggestions || []);
+      }
+    } catch {
+      setNameStatus('idle');
+    }
+  }, []);
+
+  const handleBusinessNameChange = useCallback((value: string) => {
+    setBusinessName(value);
+    setNameStatus('idle');
+    setNameSuggestions([]);
+    if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current);
+    nameCheckTimer.current = setTimeout(() => checkBusinessName(value), 500);
+  }, [checkBusinessName]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => { if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current); };
+  }, []);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -87,6 +134,14 @@ export default function SignupForm() {
         toast({
           title: 'Missing Business Information',
           description: 'Please provide your business name and address.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (nameStatus === 'taken') {
+        toast({
+          title: 'Business Name Unavailable',
+          description: 'This business name is already taken. Please choose a different name.',
           variant: 'destructive',
         });
         return;
@@ -352,14 +407,61 @@ export default function SignupForm() {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="businessName">Business Name *</Label>
-                    <Input
-                      id="businessName"
-                      type="text"
-                      placeholder="Your Business LLC"
-                      required
-                      value={businessName}
-                      onChange={e => setBusinessName(e.target.value)}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="businessName"
+                        type="text"
+                        placeholder="Your Business LLC"
+                        required
+                        value={businessName}
+                        onChange={e => handleBusinessNameChange(e.target.value)}
+                        className={nameStatus === 'taken' ? 'border-amber-500 focus-visible:ring-amber-500' : nameStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : ''}
+                      />
+                      {nameStatus === 'checking' && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      {nameStatus === 'available' && (
+                        <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                      )}
+                      {nameStatus === 'taken' && (
+                        <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500" />
+                      )}
+                    </div>
+                    {nameStatus === 'taken' && (
+                      <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-2.5">
+                        <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                          This business name is already taken.
+                        </p>
+                        {nameSuggestions.length > 0 && (
+                          <div className="mt-1.5">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mb-1">Try one of these instead:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {nameSuggestions.map((s) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  className="text-xs px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800/60 transition-colors"
+                                  onClick={() => {
+                                    setBusinessName(s);
+                                    setNameStatus('idle');
+                                    setNameSuggestions([]);
+                                    lastCheckedName.current = '';
+                                    // Re-check the selected suggestion after a short delay
+                                    if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current);
+                                    nameCheckTimer.current = setTimeout(() => checkBusinessName(s), 300);
+                                  }}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {nameStatus === 'available' && (
+                      <p className="text-xs text-green-600 dark:text-green-400">✓ This name is available</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="businessAddress">Business Address *</Label>
