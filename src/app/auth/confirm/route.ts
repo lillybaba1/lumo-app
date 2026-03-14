@@ -1,6 +1,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 // This route handles the email confirmation from Supabase
 // It's the newer pattern that Supabase uses for email verification
@@ -87,7 +88,8 @@ export async function GET(request: NextRequest) {
   }
 
   // Check if user has a business account with PENDING_VERIFICATION status
-  const { data: businessAccount } = await supabase
+  // Use admin client to bypass RLS policies
+  const { data: businessAccount } = await supabaseAdmin
     .from('business_accounts')
     .select('id, status')
     .eq('owner_user_id', user.id)
@@ -95,7 +97,7 @@ export async function GET(request: NextRequest) {
 
   if (businessAccount && businessAccount.status === 'PENDING_VERIFICATION') {
     console.log('[Auth Confirm] Updating business account to PENDING_APPROVAL:', businessAccount.id)
-    const { error: businessError } = await supabase
+    const { error: businessError } = await supabaseAdmin
       .from('business_accounts')
       .update({
         status: 'PENDING_APPROVAL',

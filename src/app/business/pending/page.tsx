@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Mail, Store } from 'lucide-react';
 import Link from 'next/link';
 import { getBusinessAccountByOwner } from '@/services/businessAccountService';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { Suspense } from 'react';
 import PendingAccountContent from './pending-account-content';
 
@@ -133,8 +134,27 @@ export default async function BusinessPendingPage() {
     );
   }
 
-  // Pending verification - need to verify email first
+  // Pending verification - check if email is actually already verified
   if (businessAccount.status === 'PENDING_VERIFICATION') {
+    // Check the actual auth user to see if email was already confirmed
+    const isEmailConfirmed = !!authUser.email_confirmed_at;
+
+    if (isEmailConfirmed) {
+      // Email IS verified but business account status wasn't updated — fix it now
+      try {
+        await supabaseAdmin.from('business_accounts').update({
+          status: 'PENDING_APPROVAL',
+          updated_at: new Date().toISOString(),
+        }).eq('id', businessAccount.id);
+        console.log('[BusinessPending] Auto-updated business account to PENDING_APPROVAL (email already verified)');
+      } catch (err) {
+        console.error('[BusinessPending] Failed to auto-update status:', err);
+      }
+      // Reload the page to pick up the new status and show the correct pending approval screen
+      redirect('/business/pending');
+    }
+
+    // Email truly not verified — show the verify email screen
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-lg border-yellow-500">

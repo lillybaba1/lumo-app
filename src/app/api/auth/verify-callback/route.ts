@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 // This API route processes user profile creation/update after email verification
 // Called from the client-side callback page
@@ -75,9 +76,9 @@ export async function POST(request: NextRequest) {
 
     console.log('[Verify Callback API] User profile created/updated with role:', finalRole)
 
-    // Check and update business account status
+    // Check and update business account status using admin client to bypass RLS
     let businessStatus = null
-    const { data: businessAccount } = await supabase
+    const { data: businessAccount } = await supabaseAdmin
       .from('business_accounts')
       .select('id, status')
       .eq('owner_user_id', userId)
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     if (businessAccount && businessAccount.status === 'PENDING_VERIFICATION') {
       console.log('[Verify Callback API] Updating business account to PENDING_APPROVAL')
-      const { error: businessError } = await supabase
+      const { error: businessError } = await supabaseAdmin
         .from('business_accounts')
         .update({
           status: 'PENDING_APPROVAL',
