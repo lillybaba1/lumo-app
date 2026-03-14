@@ -57,6 +57,28 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
+    // Step 0: Check if business name is already taken (case-insensitive)
+    const { data: existingBusiness, error: checkError } = await supabaseAdmin
+      .from('business_accounts')
+      .select('id')
+      .ilike('business_name', businessName.trim())
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('[Business Signup] Error checking business name:', checkError);
+      return NextResponse.json(
+        { error: 'Failed to validate business name. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    if (existingBusiness) {
+      return NextResponse.json(
+        { error: 'Business name already taken', details: { fieldErrors: { businessName: ['A business with this name already exists. Please choose a different name.'] } } },
+        { status: 409 }
+      );
+    }
+
     // Get the site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     

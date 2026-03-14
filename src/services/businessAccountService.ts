@@ -117,6 +117,20 @@ export async function createBusinessAccount(
       businessName: dbData.business_name,
     });
 
+    // Check for duplicate business name (case-insensitive)
+    if (dbData.business_name) {
+      const { data: existing } = await supabaseAdmin
+        .from('business_accounts')
+        .select('id')
+        .ilike('business_name', dbData.business_name.trim())
+        .maybeSingle();
+
+      if (existing) {
+        businessaccountLogger.error('[BusinessAccount] Duplicate business name:', dbData.business_name);
+        return null;
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('business_accounts')
       .insert(dbData)

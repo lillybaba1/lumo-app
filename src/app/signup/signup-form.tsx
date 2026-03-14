@@ -196,6 +196,8 @@ export default function SignupForm() {
 
       if (error.message?.includes('already registered')) {
         errorMessage = 'An account with this email exists.';
+      } else if (error.message?.includes('Business name already taken') || error.message?.includes('business with this name already exists')) {
+        errorMessage = 'This business name is already taken. Please choose a different name.';
       } else if (error.message?.includes('Invalid email')) {
         errorMessage = 'Invalid email address.';
       } else if (error.message?.includes('Password') || error.message?.includes('password')) {
