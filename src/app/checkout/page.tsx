@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -15,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { getSettings } from '../admin/settings/actions';
 import { createOrder } from '@/services/orderService';
 import { validateCoupon, incrementCouponUsage } from '@/services/couponService';
-import { initiateWaveMoneyPayment, processCashOnDelivery } from '@/services/paymentService';
+import { processCashOnDelivery } from '@/services/paymentService';
 import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2 } from 'lucide-react';
@@ -97,7 +96,7 @@ export default function CheckoutPage() {
       const phone = formData.get('phone') as string;
       const address = formData.get('address') as string;
       const city = formData.get('city') as string;
-      const paymentMethod = formData.get('payment-method') as 'Wave Money' | 'Cash on Delivery';
+      const paymentMethod = 'Cash on Delivery' as const;
       const notes = formData.get('notes') as string;
 
       // Simplify items to avoid serialization issues
@@ -142,11 +141,7 @@ export default function CheckoutPage() {
         customerName: `${firstName} ${lastName}`,
       };
 
-      if (paymentMethod === 'Wave Money') {
-        await initiateWaveMoneyPayment(paymentData);
-      } else {
-        await processCashOnDelivery(paymentData);
-      }
+      await processCashOnDelivery(paymentData);
 
       toast({
         title: "Order Placed Successfully!",
@@ -236,22 +231,16 @@ export default function CheckoutPage() {
                   <CardTitle className="font-headline">Payment Method</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <RadioGroup defaultValue="Cash on Delivery" name="payment-method" className="space-y-3">
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
-                      <RadioGroupItem value="Wave Money" id="wave" />
-                      <Label htmlFor="wave" className="flex-1 cursor-pointer">
-                        <div className="font-medium">Wave Money Transfer</div>
-                        <div className="text-sm text-muted-foreground">Pay via Wave Money mobile wallet</div>
-                      </Label>
+                  <div className="flex items-center gap-3 border rounded-lg p-4 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-full">
+                      <span className="text-lg">💵</span>
                     </div>
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
-                      <RadioGroupItem value="Cash on Delivery" id="cod" />
-                      <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                        <div className="font-medium">Cash on Delivery</div>
-                        <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
-                      </Label>
+                    <div>
+                      <div className="font-medium">Cash on Delivery</div>
+                      <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
                     </div>
-                  </RadioGroup>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">Online payment options coming soon.</p>
                 </CardContent>
               </Card>
             </div>
