@@ -192,6 +192,18 @@ export default function SignupForm() {
             setLoading(false);
             return;
           }
+
+          // Handle email validation errors specifically
+          if (result?.error_code === 'email_address_invalid') {
+            toast({
+              title: 'Email Could Not Be Verified',
+              description: result.error || 'We couldn\'t verify this email address. Please double-check for typos, or try a different email.',
+              variant: 'destructive',
+            });
+            setLoading(false);
+            return;
+          }
+
           const fieldErrors = result?.details?.fieldErrors;
           if (fieldErrors) {
             const messages = Object.values(fieldErrors).flat().filter(Boolean) as string[];
@@ -247,22 +259,30 @@ export default function SignupForm() {
     } catch (error: any) {
       console.error('Signup error:', error);
 
+      let errorTitle = 'Signup Failed';
       let errorMessage = 'An unknown error occurred.';
 
-      if (error.message?.includes('already registered')) {
-        errorMessage = 'An account with this email exists.';
-      } else if (error.message?.includes('Business name already taken') || error.message?.includes('business with this name already exists')) {
+      const msg = error.message || '';
+      const code = error.code || error.error_code || '';
+
+      if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('already in use')) {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (msg.includes('Business name already taken') || msg.includes('business with this name already exists')) {
         errorMessage = 'This business name is already taken. Please choose a different name.';
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = 'Invalid email address.';
-      } else if (error.message?.includes('Password') || error.message?.includes('password')) {
+      } else if (code === 'email_address_invalid' || msg.includes('email_address_invalid') || (msg.toLowerCase().includes('email') && msg.toLowerCase().includes('invalid'))) {
+        errorTitle = 'Email Could Not Be Verified';
+        errorMessage = 'We couldn\'t verify this email address. Please double-check for typos, or try a different email address.';
+      } else if (msg.includes('Password') || msg.includes('password')) {
         errorMessage = 'Password must be at least 12 characters with uppercase, lowercase, number, and special character.';
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (msg.includes('rate') || msg.includes('Rate') || msg.includes('too many')) {
+        errorTitle = 'Too Many Attempts';
+        errorMessage = 'Please wait a moment before trying again.';
+      } else if (msg) {
+        errorMessage = msg;
       }
 
       toast({
-        title: 'Signup Failed',
+        title: errorTitle,
         description: errorMessage,
         variant: 'destructive',
       });

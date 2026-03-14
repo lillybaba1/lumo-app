@@ -101,12 +101,20 @@ export async function POST(request: Request) {
 
     if (signUpError) {
       const message = signUpError.message || 'Signup failed';
+      const errorCode = (signUpError as any).code || (signUpError as any).error_code || '';
       console.error('[Business Signup] signUp error:', signUpError);
 
       if (message.includes('already been registered') || message.includes('User already exists') || message.includes('already exists')) {
          return NextResponse.json(
           { error: 'Email already in use', details: { fieldErrors: { email: ['Email already in use'] } } },
           { status: 409 }
+        );
+      }
+
+      if (errorCode === 'email_address_invalid' || message.toLowerCase().includes('email') && message.toLowerCase().includes('invalid')) {
+        return NextResponse.json(
+          { error: 'We couldn\'t verify this email address. Please double-check for typos, or try a different email address.', error_code: 'email_address_invalid' },
+          { status: 400 }
         );
       }
 
