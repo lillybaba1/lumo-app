@@ -14,7 +14,7 @@ const websiteSchema = z
 
 const signupSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(12, 'Password must be at least 12 characters'),
   name: z.string().min(1),
   phone: z.string().optional().nullable(),
   businessName: z.string().min(1),

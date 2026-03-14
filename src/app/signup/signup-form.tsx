@@ -49,8 +49,15 @@ export default function SignupForm() {
   }, [cooldown]);
 
   const isStrongPassword = (value: string) => {
-    // At least 8 chars, one uppercase, one lowercase
-    return /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(value);
+    // Must match Supabase password policy:
+    // At least 12 chars, one uppercase, one lowercase, one number, one special character
+    return (
+      value.length >= 12 &&
+      /[a-z]/.test(value) &&
+      /[A-Z]/.test(value) &&
+      /[0-9]/.test(value) &&
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(value)
+    );
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -68,7 +75,7 @@ export default function SignupForm() {
     if (!isStrongPassword(password)) {
       toast({
         title: 'Weak Password',
-        description: 'Password must be at least 8 characters and include both uppercase and lowercase letters.',
+        description: 'Password must be at least 12 characters and include uppercase, lowercase, a number, and a special character.',
         variant: 'destructive',
       });
       return;
@@ -191,8 +198,8 @@ export default function SignupForm() {
         errorMessage = 'An account with this email exists.';
       } else if (error.message?.includes('Invalid email')) {
         errorMessage = 'Invalid email address.';
-      } else if (error.message?.includes('Password')) {
-        errorMessage = 'Password is too weak. Use at least 6 characters.';
+      } else if (error.message?.includes('Password') || error.message?.includes('password')) {
+        errorMessage = 'Password must be at least 12 characters with uppercase, lowercase, number, and special character.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -460,11 +467,11 @@ export default function SignupForm() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="At least 8 characters, upper & lower case"
+                    placeholder="Min 12 chars, upper, lower, number & symbol"
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    minLength={8}
+                    minLength={12}
                     className="pr-10"
                     autoComplete="new-password"
                   />
@@ -481,7 +488,7 @@ export default function SignupForm() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Must be 8+ characters with uppercase, lowercase, and number
+                  Must be 12+ characters with uppercase, lowercase, number, and special character (!@#$...)
                 </p>
               </div>
             </CardContent>

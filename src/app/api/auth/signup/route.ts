@@ -62,21 +62,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation: Password strength
-    if (password.length < 8) {
+    if (password.length < 12) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long.' },
+        { error: 'Password must be at least 12 characters long.' },
         { status: 400 }
       );
     }
 
-    // Strong password requirements
+    // Strong password requirements (must match Supabase password policy)
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password);
 
-    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
       return NextResponse.json(
-        { error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number.' },
+        { error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.' },
         { status: 400 }
       );
     }
