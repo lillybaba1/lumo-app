@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ShoppingBag, Sparkles, TrendingUp, Tag } from 'lucide-react';
+import { ArrowRight, ShoppingBag, ChevronRight } from 'lucide-react';
 import { Product } from '@/lib/types';
 import Image from 'next/image';
 import HeroAnnouncement, { HeroAnnouncementSettings } from './hero-announcement';
-import { HERO_BLUR_DATA_URL, PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
+import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-utils';
 
 type HeroSettings = {
   heroHeading?: string;
@@ -116,118 +116,128 @@ function MobileHeroCarousel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Amazon-style Grid Widget for Hero
+// Amazon-style 2×2 Grid Widget for Hero
 function HeroGridWidget({ 
   title, 
   products, 
   link,
   bgColor,
-  textColor = 'text-gray-900'
+  textColor = 'text-gray-900',
+  linkLabel = 'See all',
 }: { 
   title: string; 
   products: Product[]; 
   link: string;
   bgColor: string;
   textColor?: string;
+  linkLabel?: string;
 }) {
   return (
-    <div className={`rounded-xl p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[340px] md:h-[320px] shadow-md ring-1 ring-black/5 ${bgColor} transition-shadow hover:shadow-lg`}>
-      <h3 className={`text-lg font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-2xl p-4 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300 ring-1 ring-black/[0.04] ${bgColor}`}>
+      <h3 className={`text-[15px] font-bold mb-3 leading-snug ${textColor} line-clamp-1`}>{title}</h3>
       
-      <div className="bg-white rounded-lg flex-1 grid grid-cols-2 gap-1.5 overflow-hidden p-1.5">
+      <div className="grid grid-cols-2 gap-2 flex-1">
         {products.slice(0, 4).map((product) => {
           const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
           
           return (
-            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full relative p-1.5 rounded-md hover:bg-gray-50 transition-colors">
-              <div className="aspect-square relative mb-1 flex-1 w-full">
+            <Link 
+              key={product.id} 
+              href={`/products/${product.id}`} 
+              className="group bg-white rounded-xl overflow-hidden flex flex-col hover:ring-2 hover:ring-black/10 transition-all duration-200"
+            >
+              <div className="aspect-square relative bg-white p-1.5">
                 {imageUrl ? (
                   <Image
                     src={imageUrl}
                     alt={product.name}
                     fill
-                    className="object-contain p-0.5"
-                    sizes="120px"
+                    className="object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 130px, 150px"
                     loading="lazy"
                     placeholder="blur"
                     blurDataURL={PRODUCT_BLUR_DATA_URL}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg bg-gray-50 text-gray-300 rounded">Image</div>
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+                    <ShoppingBag className="h-6 w-6 text-gray-200" />
+                  </div>
                 )}
               </div>
-              <div className="mt-auto">
-                 <p className="text-[10px] text-gray-700 font-medium truncate">
-                   {product.name}
-                 </p>
+              <div className="px-2 pb-2 pt-1">
+                <p className="text-[11px] text-gray-700 font-medium truncate leading-tight">
+                  {product.name}
+                </p>
               </div>
             </Link>
           );
         })}
         {/* Fill empty spots if less than 4 */}
         {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
-           <Link key={`empty-${i}`} href={link} className="bg-gray-50/60 rounded-md flex items-center justify-center hover:bg-gray-100 transition-colors">
-             <ShoppingBag className="h-5 w-5 text-gray-200" />
+           <Link key={`empty-${i}`} href={link} className="bg-white/70 rounded-xl flex items-center justify-center hover:bg-white transition-colors">
+             <ShoppingBag className="h-5 w-5 text-gray-300/60" />
            </Link>
         ))}
       </div>
       
-      <div className="mt-2.5">
-        <Link 
-          href={link} 
-          className={`text-xs font-semibold hover:underline flex items-center gap-1 ${textColor}`}
-        >
-          See all deals <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
+      <Link 
+        href={link} 
+        className={`text-[13px] font-medium mt-3 hover:underline inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-800`}
+      >
+        {linkLabel} <ChevronRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }
 
-// Single Large Card (Purple one in design)
+// Single Featured Product Card
 function HeroLargeCardWidget({
   title,
   products,
   link,
   bgColor,
-  textColor = 'text-gray-900'
+  textColor = 'text-gray-900',
+  linkLabel = 'See more',
 }: {
   title: string;
   products: Product[];
   link: string;
   bgColor: string;
   textColor?: string;
+  linkLabel?: string;
 }) {
   const mainProduct = products[0];
   if (!mainProduct) return null;
   const imageUrl = mainProduct.productImages?.[0] || mainProduct.imageUrls?.[0] || '';
 
   return (
-    <div className={`rounded-xl p-3.5 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col h-[340px] md:h-[320px] shadow-md ring-1 ring-black/5 ${bgColor} transition-shadow hover:shadow-lg`}>
-      <h3 className={`text-lg font-bold mb-2 leading-tight ${textColor} line-clamp-1`}>{title}</h3>
+    <div className={`rounded-2xl p-4 min-w-[280px] md:min-w-0 md:max-w-none flex-shrink-0 md:flex-shrink flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300 ring-1 ring-black/[0.04] ${bgColor}`}>
+      <h3 className={`text-[15px] font-bold mb-3 leading-snug ${textColor} line-clamp-1`}>{title}</h3>
       
-      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-lg p-3 flex-1 relative overflow-hidden group items-center justify-center flex">
-         <div className="relative w-full h-full">
+      <Link href={`/products/${mainProduct.id}`} className="bg-white rounded-xl flex-1 relative overflow-hidden group flex items-center justify-center p-3 hover:ring-2 hover:ring-black/10 transition-all duration-200">
+         <div className="relative w-full h-full min-h-[140px]">
             {imageUrl ? (
               <Image
                 src={imageUrl}
                 alt={mainProduct.name}
                 fill
                 className="object-contain p-1 group-hover:scale-105 transition-transform duration-500"
-                sizes="300px"
+                sizes="(max-width: 768px) 260px, 300px"
               />
-            ) : null}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ShoppingBag className="h-10 w-10 text-gray-200" />
+              </div>
+            )}
          </div>
       </Link>
       
-      <div className="mt-2.5">
-        <Link 
-          href={link} 
-          className={`text-xs font-semibold hover:underline flex items-center gap-1 ${textColor}`}
-        >
-          See more <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
+      <Link 
+        href={link} 
+        className={`text-[13px] font-medium mt-3 hover:underline inline-flex items-center gap-0.5 text-blue-700 hover:text-blue-800`}
+      >
+        {linkLabel} <ChevronRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }
@@ -291,36 +301,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>(
     { bestSellers: [], newArrivals: [], deals: [], featured: [], ...(cachedData?.collections || {}) }
   );
-  const [loading, setLoading] = useState(!cachedData); // Not loading if we have cached data
-
-  // LOCAL DEFAULTS for instant loading - no waiting for API
-  // These values are hardcoded to match JulaZone branding
-  // Admin settings will override ONLY after successful fetch
-  const LOCAL_HERO_HEADING = 'Step into JulaZone';
-  const LOCAL_HERO_TAGLINE = 'Discover exceptional products crafted with care. Your journey to quality starts here.';
-  const LOCAL_HERO_IMAGE = ''; // Default to gradient
-  
-  // Use local defaults immediately, admin settings override after fetch
-  const heroHeading = settings?.heroHeading || LOCAL_HERO_HEADING;
-  const heroTagline = settings?.heroTagline || LOCAL_HERO_TAGLINE;
-  const heroBackgroundImage = settings?.heroBackgroundImage || initialSettings?.heroBackgroundImage || LOCAL_HERO_IMAGE;
-  const heroImageObjectPosition = settings?.heroImageObjectPosition || 'center';
-  const heroImageFit = settings?.heroImageFit || 'cover';
-  const heroHeadingColor = settings?.heroHeadingColor || '#ffffff';
-  const heroTaglineColor = settings?.heroTaglineColor || '#ffffff';
-  // Adjusted default positions to be higher (avoid overlap with product widgets at bottom)
-  const heroHeadingPosition = settings?.heroHeadingPosition || { x: 5, y: 8 };
-  const heroTaglinePosition = settings?.heroTaglinePosition || { x: 5, y: 22 };
-  const heroCtaPosition = settings?.heroCtaPosition || { x: 5, y: 38 };
-  
-  // Button colors
-  const heroButton1BgColor = settings?.heroButton1BgColor || '#3b82f6';
-  const heroButton1TextColor = settings?.heroButton1TextColor || '#ffffff';
-  const heroButton2BgColor = settings?.heroButton2BgColor || 'transparent';
-  const heroButton2TextColor = settings?.heroButton2TextColor || '#ffffff';
-  const heroButton2BorderColor = settings?.heroButton2BorderColor || '#ffffff';
-  const heroButton3BgColor = settings?.heroButton3BgColor || '#3b82f6';
-  const heroButton3TextColor = settings?.heroButton3TextColor || '#ffffff';
+  const [loading, setLoading] = useState(!cachedData);
 
   useEffect(() => {
     // If initialSettings were provided and we already have settings, 
@@ -458,45 +439,36 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   if (loading) {
     return (
       <div 
-        className="relative w-full overflow-hidden z-0"
-        style={{ 
-          minHeight: '400px',
-          width: '100%',
-          maxWidth: '100%',
-        }}
+        className="relative w-full overflow-hidden z-0 bg-[#f5f5f5]"
+        style={{ width: '100%', maxWidth: '100%' }}
       >
-        {/* Show hero image immediately while loading other content */}
-        {heroBackgroundImage ? (
-          <div className="absolute inset-0" style={{ backgroundColor: heroImageFit === 'contain' ? '#1a1a2e' : undefined }}>
-            <Image
-              src={heroBackgroundImage}
-              alt="Hero background"
-              fill
-              priority
-              className={heroImageFit === 'contain' ? 'object-contain' : 'object-cover'}
-              style={{ objectPosition: heroImageObjectPosition }}
-              sizes={IMAGE_SIZES.hero}
-              placeholder="blur"
-              blurDataURL={HERO_BLUR_DATA_URL}
-            />
-            {heroImageFit === 'cover' && (
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
-            )}
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600" />
-        )}
-        
-        {/* Loading content overlay */}
-        <div className="relative h-full flex items-center py-12 md:py-32 px-6 md:px-12">
-          <div className="animate-pulse space-y-4 w-full max-w-lg">
-            <div className="h-10 md:h-16 bg-white/30 rounded w-3/4"></div>
-            <div className="h-5 md:h-6 bg-white/20 rounded w-full"></div>
-            <div className="h-5 md:h-6 bg-white/20 rounded w-2/3"></div>
-            <div className="flex gap-3 mt-6">
-              <div className="h-11 w-40 bg-white/30 rounded-lg"></div>
-              <div className="h-11 w-40 bg-white/20 rounded-lg"></div>
+        {/* Loading skeleton matching card grid */}
+        <div className="px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
+          {/* Mobile: single card skeleton */}
+          <div className="md:hidden px-4 pt-3">
+            <div className="bg-white rounded-2xl p-4 animate-pulse">
+              <div className="h-4 w-40 bg-gray-200 rounded mb-3" />
+              <div className="grid grid-cols-2 gap-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-gray-100 rounded-xl" />
+                ))}
+              </div>
+              <div className="h-3 w-20 bg-gray-200 rounded mt-3" />
             </div>
+          </div>
+          {/* Desktop: grid of card skeletons */}
+          <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
+                <div className="h-4 w-32 bg-gray-200 rounded mb-3" />
+                <div className="grid grid-cols-2 gap-2">
+                  {[...Array(4)].map((_, j) => (
+                    <div key={j} className="aspect-square bg-gray-100 rounded-xl" />
+                  ))}
+                </div>
+                <div className="h-3 w-16 bg-gray-200 rounded mt-3" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -509,10 +481,10 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
       style={{ width: '100%', maxWidth: '100%' }}
     >
       {/* Subtle background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
+      <div className="absolute inset-0 bg-[#f5f5f5]" />
 
       {/* Content */}
-      <div className="relative w-full pb-6 pt-2">
+      <div className="relative w-full pb-4 pt-1">
         {/* Hero Announcement Overlay */}
         {settings && <HeroAnnouncement settings={settings} />}
 
@@ -520,80 +492,74 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         <div className="md:hidden">
           {products.length > 0 && (
             <MobileHeroCarousel>
-                {/* 1. Green Card: Continue Shopping / Deals */}
                 {dealsProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroGridWidget
                       title="Continue shopping deals"
                       products={dealsProducts}
                       link="/products?filter=deals"
-                      bgColor="bg-[#66E887]" // Bright green
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="See all deals"
                     />
                   </div>
                 )}
                 
-                {/* 2. Purple Card: Best Sellers */}
                 {bestSellersProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroLargeCardWidget
-                      title="Deals on your best sellers"
+                      title="Best sellers in your area"
                       products={bestSellersProducts}
                       link="/products?filter=bestsellers"
-                      bgColor="bg-[#D8B4FE]" // Purple
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="See more"
                     />
                   </div>
                 )}
                 
-                {/* 3. Blue/Teal Card: New Arrivals */}
                 {newArrivalsProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroGridWidget
-                      title="Check out new arrivals"
+                      title="New arrivals"
                       products={newArrivalsProducts}
                       link="/products?filter=new"
-                      bgColor="bg-[#67E8F9]" // Cyan
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="Explore new arrivals"
                     />
                   </div>
                 )}
                 
-                {/* 4. Yellow/Orange Card: Featured */}
                 {featuredProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroLargeCardWidget
                       title="Featured for you"
                       products={featuredProducts}
                       link="/products?filter=featured"
-                      bgColor="bg-[#FDE047]" // Yellow
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="See more"
                     />
                   </div>
                 )}
 
-                 {/* 5. Orange Card: Budget Finds */}
-                 {budgetProducts.length > 0 && (
+                {budgetProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroGridWidget
                       title="Budget finds under $50"
                       products={budgetProducts}
                       link="/products?maxPrice=50"
-                      bgColor="bg-[#FCA5A5]" // Light Red/Pink/Orange mix
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="See more"
                     />
                   </div>
                 )}
 
-                {/* 6. Indigo/Blue Card: Discover More */}
                 {discoverProducts.length > 0 && (
                   <div className="snap-center">
                     <HeroGridWidget
                       title="Discover something new"
                       products={discoverProducts}
                       link="/products"
-                      bgColor="bg-[#A5B4FC]" // Indigo
-                      textColor="text-gray-900"
+                      bgColor="bg-white"
+                      linkLabel="Explore more"
                     />
                   </div>
                 )}
@@ -601,126 +567,65 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
           )}
         </div>
 
-        {/* Desktop Layout — responsive grid that fills the row */}
-        <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 px-4 lg:px-6 py-4 max-w-[1440px] mx-auto">
+        {/* Desktop Layout — Amazon-style widget grid */}
+        <div className="hidden md:block px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 auto-rows-fr">
              {dealsProducts.length > 0 && (
                 <HeroGridWidget
                   title="Continue shopping deals"
                   products={dealsProducts}
                   link="/products?filter=deals"
-                  bgColor="bg-gradient-to-br from-[#66E887] to-[#34D399]"
+                  bgColor="bg-white"
+                  linkLabel="See all deals"
                 />
              )}
              {bestSellersProducts.length > 0 && (
                 <HeroLargeCardWidget
-                  title="Best Sellers"
+                  title="Best sellers in your area"
                   products={bestSellersProducts}
                   link="/products?filter=bestsellers"
-                  bgColor="bg-gradient-to-br from-[#D8B4FE] to-[#C084FC]"
+                  bgColor="bg-white"
+                  linkLabel="See more"
                 />
              )}
               {newArrivalsProducts.length > 0 && (
                 <HeroGridWidget
-                  title="New Arrivals"
+                  title="New arrivals"
                   products={newArrivalsProducts}
                   link="/products?filter=new"
-                  bgColor="bg-gradient-to-br from-[#67E8F9] to-[#22D3EE]"
+                  bgColor="bg-white"
+                  linkLabel="Explore new arrivals"
                 />
              )}
              {featuredProducts.length > 0 && (
                 <HeroLargeCardWidget
-                  title="Featured"
+                  title="Featured for you"
                   products={featuredProducts}
                   link="/products?filter=featured"
-                  bgColor="bg-gradient-to-br from-[#FDE047] to-[#FACC15]"
+                  bgColor="bg-white"
+                  linkLabel="See more"
                 />
              )}
              {budgetProducts.length > 0 && (
                 <HeroGridWidget
-                  title="Budget Finds"
+                  title="Budget finds under $50"
                   products={budgetProducts}
                   link="/products?maxPrice=50"
-                  bgColor="bg-gradient-to-br from-[#FCA5A5] to-[#F87171]"
+                  bgColor="bg-white"
+                  linkLabel="See more"
                 />
              )}
              {discoverProducts.length > 0 && (
                 <HeroGridWidget
-                  title="Discover More"
+                  title="Discover more"
                   products={discoverProducts}
                   link="/products"
-                  bgColor="bg-gradient-to-br from-[#A5B4FC] to-[#818CF8]"
+                  bgColor="bg-white"
+                  linkLabel="Explore more"
                 />
              )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HeroWhiteCard({
-  title,
-  products,
-  link,
-  icon: Icon
-}: {
-  title: string;
-  products: Product[];
-  link: string;
-  icon: React.ElementType;
-}) {
-  const isSingle = products.length === 1;
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col h-[340px]">
-      <div className="flex items-center gap-2 mb-3">
-        {false && <Icon className="h-5 w-5 text-indigo-600" />} {/* Icon disabled to match ref exactly */}
-        <h3 className="text-xl font-bold text-gray-900 leading-tight">{title}</h3>
-      </div>
-
-      <div className="flex-1 relative mb-3">
-        {isSingle ? (
-          <Link href={`/products/${products[0].id}`} className="block w-full h-full relative">
-            <Image
-              src={products[0].productImages?.[0] || products[0].imageUrls?.[0] || ''}
-              alt={products[0].name}
-              fill
-              className="object-contain"
-              sizes="300px"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={PRODUCT_BLUR_DATA_URL}
-            />
-          </Link>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 h-full">
-            {products.slice(0, 4).map((product) => (
-               <Link key={product.id} href={`/products/${product.id}`} className="relative h-full">
-                  <Image
-                    src={product.productImages?.[0] || product.imageUrls?.[0] || ''}
-                    alt={product.name}
-                    fill
-                    className="object-contain" // Contain to show full product like ref
-                    sizes="150px"
-                    loading="lazy"
-                  />
-                  {/* Subtle label overlay if needed */}
-               </Link>
-            ))}
-             {/* Fill empty spots */}
-            {[...Array(Math.max(0, 4 - products.length))].map((_, i) => (
-              <div key={`empty-${i}`} className="bg-gray-50/50 rounded" />
-            ))}
           </div>
-        )}
-      </div>
-
-      <div>
-        <Link 
-          href={link} 
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
-        >
-          See more <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        </div>
       </div>
     </div>
   );
