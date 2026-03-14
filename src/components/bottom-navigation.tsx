@@ -1,11 +1,11 @@
 "use client";
 
-import { Home, Search, ShoppingCart, Package, User } from 'lucide-react';
+import { Home, Search, ShoppingCart, Package, User, Store } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from './ui/badge';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import MobileSearchModal from './mobile-search-modal';
 
 interface NavItem {
@@ -15,7 +15,7 @@ interface NavItem {
   action?: 'search';
 }
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '#', icon: Search, label: 'Search', action: 'search' },
   { href: '/cart', icon: ShoppingCart, label: 'Cart' },
@@ -28,6 +28,36 @@ export default function BottomNavigation() {
   const { state } = useCart();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [hasBusinessAccount, setHasBusinessAccount] = useState(false);
+  const [businessStatus, setBusinessStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setHasBusinessAccount(data.user.hasBusinessAccount || false);
+            setBusinessStatus(data.user.businessStatus || null);
+          }
+        }
+      } catch {}
+    };
+    fetchUser();
+  }, []);
+
+  const navItems = useMemo(() => {
+    if (!hasBusinessAccount) return baseNavItems;
+    const storeHref = businessStatus === 'ACTIVE' ? '/business/dashboard' : '/business/pending';
+    return [
+      { href: '/', icon: Home, label: 'Home' },
+      { href: '#', icon: Search, label: 'Search', action: 'search' as const },
+      { href: storeHref, icon: Store, label: 'My Store' },
+      { href: '/cart', icon: ShoppingCart, label: 'Cart' },
+      { href: '/account/profile', icon: User, label: 'Account' },
+    ];
+  }, [hasBusinessAccount, businessStatus]);
 
   // Hide on admin/business dashboards
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/business')) {

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Phone, Calendar, Shield, ShoppingBag, Heart } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Shield, ShoppingBag, Heart, Store } from 'lucide-react';
 import ProfileEditForm from './profile-edit-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -44,6 +44,13 @@ export default async function ProfilePage() {
     .single();
 
   const wishlistCount = wishlistData?.product_ids?.length || 0;
+
+  // Check for business account
+  const { data: businessAccount } = await supabase
+    .from('business_accounts')
+    .select('id, status, business_name')
+    .eq('owner_user_id', user.id)
+    .single();
 
   const userData = {
     id: user.id,
@@ -197,6 +204,34 @@ export default async function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Seller Dashboard Card */}
+        {businessAccount && (
+          <Card className="border-emerald-500/50">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Store className="h-5 w-5" />
+                    Seller Dashboard
+                  </CardTitle>
+                  <CardDescription>Manage your store{businessAccount.business_name ? ` — ${businessAccount.business_name}` : ''}</CardDescription>
+                </div>
+                <Badge variant={businessAccount.status === 'ACTIVE' ? 'default' : 'secondary'} className="gap-1">
+                  {businessAccount.status === 'ACTIVE' ? 'Active' : businessAccount.status === 'PENDING' ? 'Pending' : businessAccount.status}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                <Link href={businessAccount.status === 'ACTIVE' ? '/business/dashboard' : '/business/pending'}>
+                  <Store className="h-4 w-4 mr-2" />
+                  {businessAccount.status === 'ACTIVE' ? 'Go to Seller Dashboard' : 'Check Application Status'}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Admin Access Card */}
         {userData.role === 'admin' && (
