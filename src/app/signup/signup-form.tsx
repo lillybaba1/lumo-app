@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User, AlertTriangle } from 'lucide-react';
+import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User, AlertTriangle, ArrowLeft, ArrowRight, Shield, Sparkles, Lock, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -348,85 +348,164 @@ export default function SignupForm() {
     { code: '+27', name: 'South Africa' },
   ];
 
+  // Password strength calculation
+  const getPasswordStrength = (value: string) => {
+    let score = 0;
+    if (value.length >= 8) score++;
+    if (value.length >= 12) score++;
+    if (/[a-z]/.test(value)) score++;
+    if (/[A-Z]/.test(value)) score++;
+    if (/[0-9]/.test(value)) score++;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(value)) score++;
+    return score; // 0-6
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const strengthLabel = passwordStrength <= 2 ? 'Weak' : passwordStrength <= 4 ? 'Fair' : 'Strong';
+  const strengthColor = passwordStrength <= 2 ? 'bg-red-500' : passwordStrength <= 4 ? 'bg-amber-500' : 'bg-green-500';
+
+  // Password requirement checks
+  const pwChecks = {
+    length: password.length >= 12,
+    lower: /[a-z]/.test(password),
+    upper: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password),
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
-       <div className="absolute top-4 left-4">
-            <Button variant="outline" asChild>
-                <Link href="/">Back to Shop</Link>
-            </Button>
-        </div>
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-8 px-4">
+      {/* Background decorations */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-blue-500/5 blur-3xl" />
+      </div>
+
+      <div className="absolute top-4 left-4 z-10">
+        <Button variant="ghost" size="sm" asChild className="gap-2 text-muted-foreground hover:text-foreground">
+          <Link href="/"><ArrowLeft className="h-4 w-4" /> Back to Shop</Link>
+        </Button>
+      </div>
+
+      <div className="w-full max-w-lg">
+        {/* Progress indicator */}
+        {step !== 'account-type' && (
+          <div className="mb-6 flex items-center justify-center gap-2">
+            {['account-type', 'signup', 'verify'].map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                  s === step ? 'bg-primary scale-125' :
+                  ['account-type', 'signup', 'verify'].indexOf(s) < ['account-type', 'signup', 'verify'].indexOf(step) ? 'bg-primary' :
+                  'bg-muted-foreground/20'
+                }`} />
+                {i < 2 && <div className={`h-0.5 w-8 transition-all duration-300 ${
+                  ['account-type', 'signup', 'verify'].indexOf(s) < ['account-type', 'signup', 'verify'].indexOf(step) ? 'bg-primary' : 'bg-muted-foreground/20'
+                }`} />}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Card className="border-0 shadow-xl shadow-black/5 dark:shadow-black/20 backdrop-blur-sm">
         {step === 'account-type' ? (
           <div>
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <ShoppingBag className="h-8 w-8 text-primary" />
+            <CardHeader className="text-center pb-2 pt-8">
+              <div className="flex justify-center mb-3">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <ShoppingBag className="h-7 w-7 text-primary" />
+                </div>
               </div>
-              <CardTitle className="font-headline text-2xl">Choose Account Type</CardTitle>
-              <CardDescription>Select the type of account you want to create</CardDescription>
+              <CardTitle className="font-headline text-2xl tracking-tight">Join JulaZone</CardTitle>
+              <CardDescription className="text-base">How would you like to get started?</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 px-6">
               <RadioGroup value={accountType} onValueChange={(value) => setAccountType(value as AccountType)}>
-                <div className="flex items-start space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="PERSONAL_ACCOUNT" id="personal" className="mt-1" />
-                  <Label htmlFor="personal" className="cursor-pointer flex-1">
+                <label
+                  htmlFor="personal"
+                  className={`flex items-start space-x-4 border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 ${
+                    accountType === 'PERSONAL_ACCOUNT'
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-muted hover:border-muted-foreground/30 hover:bg-muted/30'
+                  }`}
+                >
+                  <RadioGroupItem value="PERSONAL_ACCOUNT" id="personal" className="mt-0.5" />
+                  <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <User className="h-5 w-5" />
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
                       <span className="font-semibold">Personal Account</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      For individual shoppers. Browse products and make purchases.
+                    <p className="text-sm text-muted-foreground ml-10">
+                      Browse products, save favorites, and make purchases.
                     </p>
-                  </Label>
-                </div>
-                <div className="flex items-start space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="BUSINESS_ACCOUNT" id="business" className="mt-1" />
-                  <Label htmlFor="business" className="cursor-pointer flex-1">
+                  </div>
+                </label>
+                <label
+                  htmlFor="business"
+                  className={`flex items-start space-x-4 border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 ${
+                    accountType === 'BUSINESS_ACCOUNT'
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-muted hover:border-muted-foreground/30 hover:bg-muted/30'
+                  }`}
+                >
+                  <RadioGroupItem value="BUSINESS_ACCOUNT" id="business" className="mt-0.5" />
+                  <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Store className="h-5 w-5" />
+                      <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <Store className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      </div>
                       <span className="font-semibold">Business Account</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      For sellers. List your products and manage your business on our marketplace.
+                    <p className="text-sm text-muted-foreground ml-10">
+                      Set up your boutique, list products, and start selling.
                     </p>
-                  </Label>
-                </div>
+                  </div>
+                </label>
               </RadioGroup>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-3 px-6 pb-8">
               <Button
                 type="button"
-                className="w-full"
+                className="w-full h-11 text-base gap-2"
                 onClick={() => setStep('signup')}
               >
-                Continue
+                Continue <ArrowRight className="h-4 w-4" />
               </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Already have an account?{' '}
+                <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
+              </p>
             </CardFooter>
           </div>
         ) : step === 'signup' ? (
           <form onSubmit={handleSignup}>
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                {accountType === 'BUSINESS_ACCOUNT' ? (
-                  <Store className="h-8 w-8 text-primary" />
-                ) : (
-                  <ShoppingBag className="h-8 w-8 text-primary" />
-                )}
+            <CardHeader className="text-center pb-2 pt-8">
+              <div className="flex justify-center mb-3">
+                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
+                  accountType === 'BUSINESS_ACCOUNT' ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-primary/10'
+                }`}>
+                  {accountType === 'BUSINESS_ACCOUNT' ? (
+                    <Store className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+                  ) : (
+                    <User className="h-7 w-7 text-primary" />
+                  )}
+                </div>
               </div>
-              <CardTitle className="font-headline text-2xl">
-                {accountType === 'BUSINESS_ACCOUNT' ? 'Create Business Account' : 'Create an Account'}
+              <CardTitle className="font-headline text-2xl tracking-tight">
+                {accountType === 'BUSINESS_ACCOUNT' ? 'Create Business Account' : 'Create Your Account'}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-base">
                 {accountType === 'BUSINESS_ACCOUNT'
-                  ? 'Join as a seller and start selling today'
-                  : 'Join the JulaZone family today!'}
+                  ? 'Set up your seller profile to start selling'
+                  : 'Fill in your details to get started'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-6">
               {accountType === 'BUSINESS_ACCOUNT' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="businessName">Business Name *</Label>
+                    <Label htmlFor="businessName" className="text-sm font-medium">Business Name <span className="text-red-500">*</span></Label>
                     <div className="relative">
                       <Input
                         id="businessName"
@@ -435,7 +514,7 @@ export default function SignupForm() {
                         required
                         value={businessName}
                         onChange={e => handleBusinessNameChange(e.target.value)}
-                        className={nameStatus === 'taken' ? 'border-amber-500 focus-visible:ring-amber-500' : nameStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : ''}
+                        className={`h-11 ${nameStatus === 'taken' ? 'border-amber-500 focus-visible:ring-amber-500' : nameStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : ''}`}
                       />
                       {nameStatus === 'checking' && (
                         <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -448,25 +527,24 @@ export default function SignupForm() {
                       )}
                     </div>
                     {nameStatus === 'taken' && (
-                      <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-2.5">
+                      <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3">
                         <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
                           This business name is already taken.
                         </p>
                         {nameSuggestions.length > 0 && (
-                          <div className="mt-1.5">
-                            <p className="text-xs text-amber-700 dark:text-amber-300 mb-1">Try one of these instead:</p>
+                          <div className="mt-2">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mb-1.5">Try one of these instead:</p>
                             <div className="flex flex-wrap gap-1.5">
                               {nameSuggestions.map((s) => (
                                 <button
                                   key={s}
                                   type="button"
-                                  className="text-xs px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800/60 transition-colors"
+                                  className="text-xs px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800/60 transition-colors font-medium"
                                   onClick={() => {
                                     setBusinessName(s);
                                     setNameStatus('idle');
                                     setNameSuggestions([]);
                                     lastCheckedName.current = '';
-                                    // Re-check the selected suggestion after a short delay
                                     if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current);
                                     nameCheckTimer.current = setTimeout(() => checkBusinessName(s), 300);
                                   }}
@@ -480,25 +558,29 @@ export default function SignupForm() {
                       </div>
                     )}
                     {nameStatus === 'available' && (
-                      <p className="text-xs text-green-600 dark:text-green-400">✓ This name is available</p>
+                      <p className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> This name is available
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="businessAddress">Business Address *</Label>
+                    <Label htmlFor="businessAddress" className="text-sm font-medium">Business Address <span className="text-red-500">*</span></Label>
                     <Textarea
                       id="businessAddress"
                       placeholder="123 Main St, Suite 100, City, State, ZIP"
                       required
                       value={businessAddress}
                       onChange={e => setBusinessAddress(e.target.value)}
-                      rows={3}
+                      rows={2}
+                      className="resize-none"
                     />
                   </div>
+                  <div className="border-t border-dashed my-1" />
                 </>
               )}
               <div className="space-y-2">
-                <Label htmlFor="name">
-                  {accountType === 'BUSINESS_ACCOUNT' ? 'Contact Person Name *' : 'Full Name'}
+                <Label htmlFor="name" className="text-sm font-medium">
+                  {accountType === 'BUSINESS_ACCOUNT' ? 'Contact Person Name' : 'Full Name'} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -509,29 +591,31 @@ export default function SignupForm() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   autoComplete="name"
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@julazone.com"
+                  placeholder="you@example.com"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   autoComplete="email"
+                  className="h-11"
                 />
-                <p className="text-xs text-muted-foreground">For order confirmations and updates</p>
+                <p className="text-xs text-muted-foreground">We&apos;ll send a verification link to this email</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">
-                  {accountType === 'BUSINESS_ACCOUNT' ? 'Contact Phone Number' : 'Phone Number (Optional)'}
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  Phone Number {accountType === 'PERSONAL_ACCOUNT' && <span className="text-muted-foreground font-normal">(optional)</span>}
                 </Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode}>
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[110px] h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -546,57 +630,53 @@ export default function SignupForm() {
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="5551234567"
+                    placeholder="555 123 4567"
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                     autoComplete="tel"
-                    className="flex-1"
+                    className="flex-1 h-11"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {accountType === 'BUSINESS_ACCOUNT'
-                    ? 'For customer inquiries and order updates'
-                    : 'For order updates and notifications'}
-                </p>
               </div>
               {accountType === 'BUSINESS_ACCOUNT' && (
-                <>
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="taxId">Tax ID / Business Registration Number (Optional)</Label>
+                    <Label htmlFor="taxId" className="text-sm font-medium">Tax ID <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <Input
                       id="taxId"
                       type="text"
                       placeholder="XX-XXXXXXX"
                       value={taxId}
                       onChange={e => setTaxId(e.target.value)}
+                      className="h-11"
                     />
-                    <p className="text-xs text-muted-foreground">Required for tax reporting</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="website">Business Website (Optional)</Label>
+                    <Label htmlFor="website" className="text-sm font-medium">Website <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <Input
                       id="website"
                       type="url"
-                      placeholder="https://yourbusiness.com"
+                      placeholder="https://..."
                       value={website}
                       onChange={e => setWebsite(e.target.value)}
+                      className="h-11"
                     />
                   </div>
-                </>
+                </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">Password <span className="text-red-500">*</span></Label>
                 <div className="relative">
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Min 12 chars, upper, lower, number & symbol"
+                    placeholder="Create a strong password"
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     minLength={12}
-                    className="pr-10"
+                    className="pr-10 h-11"
                     autoComplete="new-password"
                   />
                   <Button
@@ -608,104 +688,165 @@ export default function SignupForm() {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Must be 12+ characters with uppercase, lowercase, number, and special character (!@#$...)
-                </p>
+                {/* Password strength bar */}
+                {password.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden flex gap-0.5">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className={`flex-1 rounded-full transition-all duration-300 ${
+                            i <= passwordStrength ? strengthColor : 'bg-transparent'
+                          }`} />
+                        ))}
+                      </div>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength <= 2 ? 'text-red-500' : passwordStrength <= 4 ? 'text-amber-500' : 'text-green-500'
+                      }`}>{strengthLabel}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                      {[
+                        { key: 'length', label: '12+ characters' },
+                        { key: 'lower', label: 'Lowercase letter' },
+                        { key: 'upper', label: 'Uppercase letter' },
+                        { key: 'number', label: 'Number' },
+                        { key: 'special', label: 'Special character' },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center gap-1.5">
+                          {pwChecks[key as keyof typeof pwChecks] ? (
+                            <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <X className="h-3 w-3 text-muted-foreground/40 flex-shrink-0" />
+                          )}
+                          <span className={`text-xs ${pwChecks[key as keyof typeof pwChecks] ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                            {label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <div className="flex gap-2 w-full">
+            <CardFooter className="flex flex-col gap-3 px-6 pb-8">
+              <div className="flex gap-3 w-full">
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1"
+                  size="lg"
+                  className="gap-1"
                   onClick={() => setStep('account-type')}
                   disabled={loading}
                 >
-                  Back
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <Button type="submit" className="flex-1" disabled={loading || cooldown > 0}>
-                  {loading ? <Loader2 className="animate-spin" /> : cooldown > 0 ? `Wait ${cooldown}s` : 'Create Account'}
+                <Button type="submit" size="lg" className="flex-1 h-11 text-base gap-2" disabled={loading || cooldown > 0}>
+                  {loading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Creating account...</>
+                  ) : cooldown > 0 ? (
+                    `Wait ${cooldown}s`
+                  ) : (
+                    <>Create Account <ArrowRight className="h-4 w-4" /></>
+                  )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Already have an account? <Link href="/login" className="underline">Log in</Link>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Shield className="h-3 w-3" /> Secure
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Lock className="h-3 w-3" /> Encrypted
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Already have an account?{' '}
+                <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
               </p>
             </CardFooter>
           </form>
         ) : (
           <div>
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                   <Mail className="h-8 w-8 text-primary" />
+            <CardHeader className="text-center pb-2 pt-8">
+              <div className="flex justify-center mb-3">
+                <div className="h-14 w-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Mail className="h-7 w-7 text-green-600 dark:text-green-400" />
+                </div>
               </div>
-              <CardTitle className="font-headline text-2xl">Verify Your Email</CardTitle>
-              <CardDescription>We sent a verification link to {email}</CardDescription>
+              <CardTitle className="font-headline text-2xl tracking-tight">Check Your Email</CardTitle>
+              <CardDescription className="text-base">We sent a verification link to <strong className="text-foreground">{email}</strong></CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
-                <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium">
-                  ⏱️ This link expires in 30 minutes
+            <CardContent className="space-y-4 px-6">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium flex items-center justify-center gap-2">
+                  <span>⏱️</span> This link expires in 30 minutes
                 </p>
               </div>
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Check your email</p>
-                    <p className="text-xs text-muted-foreground">
-                      We sent a verification link to <strong>{email}</strong>
-                    </p>
+              <div className="space-y-1">
+                {[
+                  { title: 'Open your email inbox', desc: `Look for an email from JulaZone at ${email}` },
+                  { title: 'Click the verification link', desc: 'Confirm your email address to activate your account' },
+                  { title: 'Start exploring', desc: accountType === 'BUSINESS_ACCOUNT' ? 'Set up your boutique once approved' : 'Browse products and start shopping' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-primary">{i + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Click the verification link</p>
-                    <p className="text-xs text-muted-foreground">
-                      Open your email and click the confirmation link
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">You&apos;ll be logged in automatically</p>
-                    <p className="text-xs text-muted-foreground">
-                      After verifying, you&apos;ll be redirected to the homepage
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
-              <p className="text-xs text-center text-muted-foreground">
-                Didn&apos;t receive the email? Check your spam folder or{' '}
-                <button
-                  onClick={handleResendEmail}
-                  className="underline hover:text-primary"
-                  type="button"
-                  disabled={loading}
-                >
-                  resend
-                </button>
-              </p>
+              <div className="border-t pt-3">
+                <p className="text-xs text-center text-muted-foreground">
+                  Didn&apos;t receive the email? Check your spam folder or{' '}
+                  <button
+                    onClick={handleResendEmail}
+                    className="text-primary font-medium hover:underline"
+                    type="button"
+                    disabled={loading}
+                  >
+                    resend verification email
+                  </button>
+                </p>
+              </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-3 px-6 pb-8">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-11 gap-2"
                 onClick={() => setStep('signup')}
                 disabled={loading}
               >
-                Back to Signup
+                <ArrowLeft className="h-4 w-4" /> Back to Signup
               </Button>
             </CardFooter>
           </div>
         )}
-      </Card>
+        </Card>
+
+        {/* Trust badges */}
+        {step === 'account-type' && (
+          <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5" />
+              <span>Secure signup</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Free to join</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Data protected</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
