@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, ChevronRight } from 'lucide-react';
 import { Product } from '@/lib/types';
@@ -242,238 +242,77 @@ function HeroLargeCardWidget({
   );
 }
 
-// Cache keys for localStorage
-const CACHE_KEYS = {
-  products: 'julazone_hero_products',
-  collections: 'julazone_hero_collections',
-  timestamp: 'julazone_hero_cache_time',
-};
+// ─── Mock Product Data ───────────────────────────────────────────────────────
+// Placeholder images from picsum.photos for visual testing of grid layouts.
+// Each card needs exactly 4 products to test the 2×2 grid properly.
 
-// Cache duration: 5 minutes (products can be updated frequently)
-const CACHE_DURATION = 5 * 60 * 1000;
-
-// Get cached data from localStorage
-function getCachedData() {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const timestamp = localStorage.getItem(CACHE_KEYS.timestamp);
-    if (!timestamp) return null;
-    
-    // Check if cache is still valid
-    const cacheAge = Date.now() - parseInt(timestamp, 10);
-    if (cacheAge > CACHE_DURATION) return null;
-    
-    const products = localStorage.getItem(CACHE_KEYS.products);
-    const collections = localStorage.getItem(CACHE_KEYS.collections);
-    
-    if (products && collections) {
-      return {
-        products: JSON.parse(products),
-        collections: JSON.parse(collections),
-      };
-    }
-  } catch (e) {
-    console.error('Error reading cache:', e);
-  }
-  return null;
+function mockProduct(id: string, name: string, price: number, imageId: number): Product {
+  return {
+    id,
+    name,
+    description: '',
+    price,
+    sellerId: 'mock-seller',
+    imageUrls: [`https://picsum.photos/seed/${imageId}/400/400`],
+    productImages: [`https://picsum.photos/seed/${imageId}/400/400`],
+    category: 'mock',
+    stock: 10,
+  };
 }
 
-// Save data to localStorage cache
-function setCachedData(products: Product[], collections: any) {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem(CACHE_KEYS.products, JSON.stringify(products));
-    localStorage.setItem(CACHE_KEYS.collections, JSON.stringify(collections));
-    localStorage.setItem(CACHE_KEYS.timestamp, Date.now().toString());
-  } catch (e) {
-    console.error('Error saving cache:', e);
-  }
-}
+const MOCK_DEALS: Product[] = [
+  mockProduct('deal-1', 'Wireless Earbuds Pro', 29.99, 101),
+  mockProduct('deal-2', 'Cotton Throw Blanket', 18.50, 102),
+  mockProduct('deal-3', 'LED Desk Lamp', 24.99, 103),
+  mockProduct('deal-4', 'Travel Water Bottle', 12.99, 104),
+];
+
+const MOCK_BEST_SELLERS: Product[] = [
+  mockProduct('best-1', 'Premium Yoga Mat', 39.99, 201),
+  mockProduct('best-2', 'Stainless Steel Tumbler', 22.00, 202),
+  mockProduct('best-3', 'Bamboo Cutting Board Set', 34.99, 203),
+  mockProduct('best-4', 'Organic Soy Candle', 16.50, 204),
+];
+
+const MOCK_NEW_ARRIVALS: Product[] = [
+  mockProduct('new-1', 'Minimalist Backpack', 54.99, 301),
+  mockProduct('new-2', 'Ceramic Planter Set', 28.00, 302),
+  mockProduct('new-3', 'Linen Table Runner', 19.99, 303),
+  mockProduct('new-4', 'Handmade Soap Bundle', 15.50, 304),
+];
+
+const MOCK_FEATURED: Product[] = [
+  mockProduct('feat-1', 'Smart Bluetooth Speaker', 49.99, 401),
+  mockProduct('feat-2', 'Artisan Coffee Mug', 14.99, 402),
+  mockProduct('feat-3', 'Woven Storage Basket', 32.00, 403),
+  mockProduct('feat-4', 'Essential Oil Diffuser', 27.50, 404),
+];
+
+const MOCK_BUDGET: Product[] = [
+  mockProduct('budget-1', 'Phone Stand Holder', 8.99, 501),
+  mockProduct('budget-2', 'Reusable Grocery Bags', 6.50, 502),
+  mockProduct('budget-3', 'Silicone Spatula Set', 9.99, 503),
+  mockProduct('budget-4', 'Notebook Journal', 7.25, 504),
+];
+
+const MOCK_DISCOVER: Product[] = [
+  mockProduct('disc-1', 'Macramé Wall Hanging', 42.00, 601),
+  mockProduct('disc-2', 'Portable Blender', 35.99, 602),
+  mockProduct('disc-3', 'Scented Drawer Liners', 11.99, 603),
+  mockProduct('disc-4', 'Cork Yoga Block Set', 19.00, 604),
+];
 
 export default function Hero({ initialSettings }: HeroProps = {}) {
-  // Initialize with cached data for instant display
-  const cachedData = typeof window !== 'undefined' ? getCachedData() : null;
-  
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
-  const [products, setProducts] = useState<Product[]>(cachedData?.products || []);
-  const [collections, setCollections] = useState<{ bestSellers: string[]; newArrivals: string[]; deals: string[]; featured: string[] }>(
-    { bestSellers: [], newArrivals: [], deals: [], featured: [], ...(cachedData?.collections || {}) }
-  );
-  const [loading, setLoading] = useState(!cachedData);
 
   useEffect(() => {
-    // If initialSettings were provided and we already have settings, 
-    // only fetch the products (not settings again)
-    const load = async () => {
-      const requests: Promise<any>[] = [];
-      const requestTypes: string[] = [];
-
-      // Only fetch settings if not provided initially
-      if (!initialSettings) {
-        requestTypes.push('settings');
-        requests.push(
-          fetch('/api/settings', { 
-            next: { revalidate: 60 } // Cache for 60 seconds
-          }).then(async (res) => {
-            if (!res.ok) throw new Error(`Settings request failed: ${res.status}`);
-            return res.json();
-          })
-        );
-      }
-
-      // Fetch products for the widgets
-      requestTypes.push('products');
-      requests.push(
-        fetch('/api/products?limit=50', { 
-          next: { revalidate: 60 } 
-        }).then(async (res) => {
-          if (!res.ok) throw new Error(`Products request failed: ${res.status}`);
-          return res.json();
-        })
-      );
-
-      // Fetch collections for the hero widgets
-      // These collections are "auto-analyzed" by the backend (based on sales/views) 
-      // but can be manually overridden by admins via the admin panel.
-      requestTypes.push('collections');
-      requests.push(
-        fetch('/api/collections', { 
-          next: { revalidate: 60 } 
-        }).then(async (res) => {
-          if (!res.ok) throw new Error(`Collections request failed: ${res.status}`);
-          return res.json();
-        })
-      );
-
-      const results = await Promise.allSettled(requests);
-
-      let newProducts: Product[] = [];
-      let newCollections: any = { bestSellers: [], newArrivals: [], deals: [], featured: [] };
-
-      results.forEach((result, index) => {
-        const type = requestTypes[index];
-        if (result.status === 'fulfilled') {
-          switch (type) {
-            case 'settings':
-              setSettings(result.value);
-              break;
-            case 'products':
-              newProducts = Array.isArray(result.value) ? result.value : (result.value?.products || []);
-              setProducts(newProducts);
-              break;
-            case 'collections':
-              const colData = result.value || {};
-              setCollections({
-                bestSellers: colData.bestSellers || [],
-                newArrivals: colData.newArrivals || [],
-                deals: colData.deals || [],
-                featured: colData.featured || []
-              });
-              break;
-          }
-        } else {
-          console.error(`Failed to load ${type}:`, result.reason);
-        }
-      });
-
-      // Cache the fresh data for instant loading on next visit
-      if (newProducts.length > 0) {
-        setCachedData(newProducts, newCollections);
-      }
-
-      setLoading(false);
-    };
-
-    // Always fetch fresh data in background, even if we have cache
-    load().catch(err => {
-      console.error('Failed to load hero section:', err);
-      setLoading(false);
-    });
+    if (!initialSettings) {
+      fetch('/api/settings', { next: { revalidate: 60 } })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setSettings(data); })
+        .catch(() => {});
+    }
   }, [initialSettings]);
-
-  const getProductById = (id: string) => products.find(p => p.id === id);
-
-  // Get products for hero widgets - ONLY show products from collections, no fallbacks
-  const newArrivalsProducts = collections.newArrivals.length > 0
-    ? collections.newArrivals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : []; // No fallback - only show if explicitly added to collection
-  
-  const bestSellersProducts = collections.bestSellers.length > 0
-    ? collections.bestSellers.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : []; // No fallback - only show if explicitly added to collection
-  
-  const dealsProducts = collections.deals.length > 0
-    ? collections.deals.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : []; // No fallback - only show if explicitly added to collection
-
-  // Featured products from collections only
-  const featuredProducts = useMemo(() => collections.featured.length > 0
-    ? collections.featured.map(id => getProductById(id)).filter(Boolean) as Product[]
-    : [], [collections.featured, products]); // No fallback - only show if explicitly added
-
-  // New Widgets Data derived from general products list
-  // 1. Budget Finds - Under $50
-  const budgetProducts = useMemo(() => products
-    .filter(p => p.price < 50 && !collections.deals.includes(p.id)) // Exclude deals to avoid duplicates
-    .sort((a, b) => a.price - b.price) // Cheapest first
-    .slice(0, 4), [products, collections.deals]);
-
-  // 2. Discover More - Random selection not in other lists
-  const discoverProducts = useMemo(() => {
-    const usedIds = new Set([
-      ...collections.newArrivals,
-      ...collections.bestSellers,
-      ...collections.deals,
-      ...collections.featured,
-      ...budgetProducts.map(p => p.id)
-    ]);
-  
-    return products
-      .filter(p => !usedIds.has(p.id))
-      .sort(() => 0.5 - Math.random()) // Shuffle
-      .slice(0, 4);
-  }, [products, collections, budgetProducts]);
-
-  if (loading) {
-    return (
-      <div 
-        className="relative w-full overflow-hidden z-0 bg-[#f5f5f5]"
-        style={{ width: '100%', maxWidth: '100%' }}
-      >
-        {/* Loading skeleton matching card grid */}
-        <div className="px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
-          {/* Mobile: single card skeleton */}
-          <div className="md:hidden px-4 pt-3">
-            <div className="bg-white rounded-2xl p-4 animate-pulse">
-              <div className="h-4 w-40 bg-gray-200 rounded mb-3" />
-              <div className="grid grid-cols-2 gap-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-100 rounded-xl" />
-                ))}
-              </div>
-              <div className="h-3 w-20 bg-gray-200 rounded mt-3" />
-            </div>
-          </div>
-          {/* Desktop: grid of card skeletons */}
-          <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
-                <div className="h-4 w-32 bg-gray-200 rounded mb-3" />
-                <div className="grid grid-cols-2 gap-2">
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="aspect-square bg-gray-100 rounded-xl" />
-                  ))}
-                </div>
-                <div className="h-3 w-16 bg-gray-200 rounded mt-3" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -490,140 +329,109 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Mobile Layout - Horizontal Scroll Cards */}
         <div className="md:hidden">
-          {products.length > 0 && (
-            <MobileHeroCarousel>
-                {dealsProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroGridWidget
-                      title="Continue shopping deals"
-                      products={dealsProducts}
-                      link="/products?filter=deals"
-                      bgColor="bg-white"
-                      linkLabel="See all deals"
-                    />
-                  </div>
-                )}
-                
-                {bestSellersProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroLargeCardWidget
-                      title="Best sellers in your area"
-                      products={bestSellersProducts}
-                      link="/products?filter=bestsellers"
-                      bgColor="bg-white"
-                      linkLabel="See more"
-                    />
-                  </div>
-                )}
-                
-                {newArrivalsProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroGridWidget
-                      title="New arrivals"
-                      products={newArrivalsProducts}
-                      link="/products?filter=new"
-                      bgColor="bg-white"
-                      linkLabel="Explore new arrivals"
-                    />
-                  </div>
-                )}
-                
-                {featuredProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroLargeCardWidget
-                      title="Featured for you"
-                      products={featuredProducts}
-                      link="/products?filter=featured"
-                      bgColor="bg-white"
-                      linkLabel="See more"
-                    />
-                  </div>
-                )}
-
-                {budgetProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroGridWidget
-                      title="Budget finds under $50"
-                      products={budgetProducts}
-                      link="/products?maxPrice=50"
-                      bgColor="bg-white"
-                      linkLabel="See more"
-                    />
-                  </div>
-                )}
-
-                {discoverProducts.length > 0 && (
-                  <div className="snap-center">
-                    <HeroGridWidget
-                      title="Discover something new"
-                      products={discoverProducts}
-                      link="/products"
-                      bgColor="bg-white"
-                      linkLabel="Explore more"
-                    />
-                  </div>
-                )}
-            </MobileHeroCarousel>
-          )}
+          <MobileHeroCarousel>
+            <div className="snap-center">
+              <HeroGridWidget
+                title="Continue shopping deals"
+                products={MOCK_DEALS}
+                link="/products?filter=deals"
+                bgColor="bg-white"
+                linkLabel="See all deals"
+              />
+            </div>
+            <div className="snap-center">
+              <HeroLargeCardWidget
+                title="Best sellers in your area"
+                products={MOCK_BEST_SELLERS}
+                link="/products?filter=bestsellers"
+                bgColor="bg-white"
+                linkLabel="See more"
+              />
+            </div>
+            <div className="snap-center">
+              <HeroGridWidget
+                title="New arrivals"
+                products={MOCK_NEW_ARRIVALS}
+                link="/products?filter=new"
+                bgColor="bg-white"
+                linkLabel="Explore new arrivals"
+              />
+            </div>
+            <div className="snap-center">
+              <HeroLargeCardWidget
+                title="Featured for you"
+                products={MOCK_FEATURED}
+                link="/products?filter=featured"
+                bgColor="bg-white"
+                linkLabel="See more"
+              />
+            </div>
+            <div className="snap-center">
+              <HeroGridWidget
+                title="Budget finds under $50"
+                products={MOCK_BUDGET}
+                link="/products?maxPrice=50"
+                bgColor="bg-white"
+                linkLabel="See more"
+              />
+            </div>
+            <div className="snap-center">
+              <HeroGridWidget
+                title="Discover something new"
+                products={MOCK_DISCOVER}
+                link="/products"
+                bgColor="bg-white"
+                linkLabel="Explore more"
+              />
+            </div>
+          </MobileHeroCarousel>
         </div>
 
         {/* Desktop Layout — Amazon-style widget grid */}
         <div className="hidden md:block px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
           <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 auto-rows-fr">
-             {dealsProducts.length > 0 && (
-                <HeroGridWidget
-                  title="Continue shopping deals"
-                  products={dealsProducts}
-                  link="/products?filter=deals"
-                  bgColor="bg-white"
-                  linkLabel="See all deals"
-                />
-             )}
-             {bestSellersProducts.length > 0 && (
-                <HeroLargeCardWidget
-                  title="Best sellers in your area"
-                  products={bestSellersProducts}
-                  link="/products?filter=bestsellers"
-                  bgColor="bg-white"
-                  linkLabel="See more"
-                />
-             )}
-              {newArrivalsProducts.length > 0 && (
-                <HeroGridWidget
-                  title="New arrivals"
-                  products={newArrivalsProducts}
-                  link="/products?filter=new"
-                  bgColor="bg-white"
-                  linkLabel="Explore new arrivals"
-                />
-             )}
-             {featuredProducts.length > 0 && (
-                <HeroLargeCardWidget
-                  title="Featured for you"
-                  products={featuredProducts}
-                  link="/products?filter=featured"
-                  bgColor="bg-white"
-                  linkLabel="See more"
-                />
-             )}
-             {budgetProducts.length > 0 && (
-                <HeroGridWidget
-                  title="Budget finds under $50"
-                  products={budgetProducts}
-                  link="/products?maxPrice=50"
-                  bgColor="bg-white"
-                  linkLabel="See more"
-                />
-             )}
-             {discoverProducts.length > 0 && (
-                <HeroGridWidget
-                  title="Discover more"
-                  products={discoverProducts}
-                  link="/products"
-                  bgColor="bg-white"
-                  linkLabel="Explore more"
-                />
-             )}
+            <HeroGridWidget
+              title="Continue shopping deals"
+              products={MOCK_DEALS}
+              link="/products?filter=deals"
+              bgColor="bg-white"
+              linkLabel="See all deals"
+            />
+            <HeroLargeCardWidget
+              title="Best sellers in your area"
+              products={MOCK_BEST_SELLERS}
+              link="/products?filter=bestsellers"
+              bgColor="bg-white"
+              linkLabel="See more"
+            />
+            <HeroGridWidget
+              title="New arrivals"
+              products={MOCK_NEW_ARRIVALS}
+              link="/products?filter=new"
+              bgColor="bg-white"
+              linkLabel="Explore new arrivals"
+            />
+            <HeroLargeCardWidget
+              title="Featured for you"
+              products={MOCK_FEATURED}
+              link="/products?filter=featured"
+              bgColor="bg-white"
+              linkLabel="See more"
+            />
+            <HeroGridWidget
+              title="Budget finds under $50"
+              products={MOCK_BUDGET}
+              link="/products?maxPrice=50"
+              bgColor="bg-white"
+              linkLabel="See more"
+            />
+            <HeroGridWidget
+              title="Discover more"
+              products={MOCK_DISCOVER}
+              link="/products"
+              bgColor="bg-white"
+              linkLabel="Explore more"
+            />
           </div>
         </div>
       </div>
