@@ -16,7 +16,7 @@ export default async function BusinessDashboardPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-headline font-bold">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
           Welcome back, {businessAccount.contactPersonName}
         </p>
@@ -58,7 +58,7 @@ export default async function BusinessDashboardPage() {
             </div>
             {stats.totalRevenue === 0 ? (
               <div className="mt-2">
-                <Link href="/business/products/new" className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1 group">
+                <Link href="/business/products/add" className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1 group">
                   Start generating revenue 
                   <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
@@ -96,7 +96,7 @@ export default async function BusinessDashboardPage() {
             {stats.activeProducts === 0 ? (
               <div className="mt-2">
                 <Button variant="outline" size="sm" className="h-7 text-xs w-full" asChild>
-                  <Link href="/business/products/new">
+                  <Link href="/business/products/add">
                     <Plus className="h-3 w-3 mr-1" /> Add Product
                   </Link>
                 </Button>
@@ -202,7 +202,7 @@ export default async function BusinessDashboardPage() {
                 </p>
                 {stats.activeProducts === 0 ? (
                   <Button size="sm" asChild>
-                    <Link href="/business/products/new">
+                    <Link href="/business/products/add">
                       Add Your First Product
                     </Link>
                   </Button>

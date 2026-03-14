@@ -228,6 +228,7 @@ export async function saveProduct(prevState: SaveProductState, formData: FormDat
     }
 
     revalidatePath('/admin/products');
+    revalidatePath('/business/products');
     revalidatePath('/products');
 
     return { success: true, message: 'Product saved successfully.' };

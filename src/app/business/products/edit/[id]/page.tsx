@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import ProductForm from '@/components/product-form';
 import { Category, Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -92,10 +93,12 @@ export default function EditProductPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-headline font-bold">Edit Product</h1>
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold">Edit Product</h1>
         <p className="text-muted-foreground mt-1">Update your product details</p>
       </div>
-      <ProductForm product={product} categories={categories} userType="seller" />
+      <Card>
+        <ProductForm product={product} categories={categories} userType="seller" />
+      </Card>
     </div>
   );
 }

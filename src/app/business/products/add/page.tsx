@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ProductForm from '@/components/product-form';
 import { Category } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 export default function AddProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -56,10 +57,12 @@ export default function AddProductPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-headline font-bold">Add Product</h1>
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold">Add Product</h1>
         <p className="text-muted-foreground mt-1">Create a new product listing</p>
       </div>
-      <ProductForm categories={categories} userType="seller" />
+      <Card>
+        <ProductForm categories={categories} userType="seller" />
+      </Card>
     </div>
   );
 }
