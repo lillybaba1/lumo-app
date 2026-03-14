@@ -311,16 +311,30 @@ export default function SignupForm() {
 
       toast({
         title: 'Email Resent',
-        description: `A new verification email has been sent to ${email}`,
+        description: `A new verification email has been sent to ${email}. Check your spam folder too!`,
       });
+
+      // Set cooldown to prevent rapid resends
+      setCooldown(120);
 
       setLoading(false);
     } catch (error: any) {
       console.error('Resend email error:', error);
 
+      const msg = error.message || '';
+      let description = 'Could not resend verification email. Please try again.';
+
+      if (msg.includes('rate') || msg.includes('Rate') || msg.includes('security') || error.status === 429) {
+        // Extract seconds from message if present
+        const match = msg.match(/after\s+(\d+)\s*seconds?/i);
+        const secs = match ? parseInt(match[1], 10) : 120;
+        setCooldown(secs);
+        description = `Please wait ${secs} seconds before requesting another email.`;
+      }
+
       toast({
-        title: 'Failed to Resend',
-        description: error.message || 'Could not resend verification email. Please try again.',
+        title: 'Could Not Resend',
+        description,
         variant: 'destructive',
       });
 
@@ -786,6 +800,7 @@ export default function SignupForm() {
               <div className="space-y-1">
                 {[
                   { title: 'Open your email inbox', desc: `Look for an email from JulaZone at ${email}` },
+                  { title: 'Check spam/junk folder', desc: 'New senders sometimes land in spam — also check Gmail\'s Promotions tab' },
                   { title: 'Click the verification link', desc: 'Confirm your email address to activate your account' },
                   { title: 'Start exploring', desc: accountType === 'BUSINESS_ACCOUNT' ? 'Set up your boutique once approved' : 'Browse products and start shopping' },
                 ].map((item, i) => (
@@ -800,17 +815,21 @@ export default function SignupForm() {
                   </div>
                 ))}
               </div>
-              <div className="border-t pt-3">
+              <div className="border-t pt-3 space-y-2">
                 <p className="text-xs text-center text-muted-foreground">
-                  Didn&apos;t receive the email? Check your spam folder or{' '}
-                  <button
-                    onClick={handleResendEmail}
-                    className="text-primary font-medium hover:underline"
-                    type="button"
-                    disabled={loading}
-                  >
-                    resend verification email
-                  </button>
+                  Didn&apos;t receive the email?{' '}
+                  {cooldown > 0 ? (
+                    <span className="text-muted-foreground font-medium">Resend available in {cooldown}s</span>
+                  ) : (
+                    <button
+                      onClick={handleResendEmail}
+                      className="text-primary font-medium hover:underline"
+                      type="button"
+                      disabled={loading}
+                    >
+                      Resend verification email
+                    </button>
+                  )}
                 </p>
               </div>
             </CardContent>

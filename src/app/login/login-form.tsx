@@ -185,10 +185,16 @@ export default function LoginForm() {
         throw error;
       }
 
-      setError('Verification email has been resent. Please check your inbox.');
+      setError('Verification email resent! Check your inbox and spam/junk folder.');
+      setNeedsVerification(false);
     } catch (e: any) {
       console.error('Resend verification error:', e);
-      setError('Failed to resend verification email. Please try again.');
+      const msg = e.message || '';
+      if (msg.includes('rate') || msg.includes('Rate') || msg.includes('security') || e.status === 429) {
+        setError('Please wait 2 minutes before requesting another verification email.');
+      } else {
+        setError('Failed to resend verification email. Please try again later.');
+      }
     }
   }
 
