@@ -1,21 +1,28 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductCard from '@/components/product-card';
-import { 
-  TrendingUp, Sparkles, Tag, ChevronRight, 
-  ArrowRight, ShoppingBag, Crown,
-  Gift, Shield, Truck, RefreshCw, Headphones
-} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import Hero from '@/components/hero';
+import { Input } from '@/components/ui/input';
+import { Search, SlidersHorizontal, TrendingUp, Sparkles, Tag, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category, PromoBannerSettings } from '@/lib/types';
 import { ProductGridSkeleton, CategoryGridSkeleton } from '@/components/skeletons';
 import { CATEGORY_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
-import { DetailedTrustSection } from '@/components/service-highlights';
+import ServiceHighlights, { PromoBanner, DetailedTrustSection } from '@/components/service-highlights';
 import SearchBar from '@/components/search-bar';
+import CategoryProductSection, { CategoryProductGrid } from '@/components/category-product-section';
 import { RecentlyViewedProducts } from '@/components/recently-viewed-products';
+import CategoryChips from '@/components/category-chips';
 import CompactProductCard from '@/components/compact-product-card';
 
 type Collections = {
@@ -85,307 +92,6 @@ const DEFAULT_PROMO_BANNER: PromoBannerSettings = {
   productIds: [],
 };
 
-/* ─────────────── Quick Trust Bar ─────────────── */
-function QuickTrustBar() {
-  const items = [
-    { icon: Truck, label: 'Free Delivery', sub: 'On orders over D500', color: 'text-blue-600', bg: 'bg-blue-50' },
-    { icon: Shield, label: 'Secure Payment', sub: '100% protected', color: 'text-green-600', bg: 'bg-green-50' },
-    { icon: RefreshCw, label: 'Easy Returns', sub: '7-day guarantee', color: 'text-orange-600', bg: 'bg-orange-50' },
-    { icon: Headphones, label: 'Local Support', sub: 'We speak your language', color: 'text-purple-600', bg: 'bg-purple-50' },
-  ];
-  return (
-    <div className="w-full bg-white border-b">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="hidden md:flex items-center justify-between py-3">
-          {items.map((h, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <div className={`p-1.5 rounded-lg ${h.bg}`}><h.icon className={`h-4 w-4 ${h.color}`} /></div>
-              <div>
-                <p className="text-xs font-semibold text-gray-900">{h.label}</p>
-                <p className="text-[10px] text-gray-500">{h.sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="md:hidden flex items-center gap-5 overflow-x-auto py-2.5 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-          {items.map((h, i) => (
-            <div key={i} className="flex items-center gap-2 flex-shrink-0">
-              <h.icon className={`h-3.5 w-3.5 ${h.color}`} />
-              <span className="text-[11px] font-medium text-gray-700 whitespace-nowrap">{h.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────── Hero Banner ─────────────── */
-function HeroBanner() {
-  return (
-    <div className="relative w-full overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-      {/* Decorative blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-300/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-300/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      </div>
-      {/* Subtle grid overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M0 0h1v40H0zM40 0h1v40h-1zM0 0h40v1H0zM0 40h40v1H0z'/%3E%3C/g%3E%3C/svg%3E\")" }} />
-
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 lg:py-20">
-        <div className="max-w-2xl mx-auto text-center md:text-left md:mx-0">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white/90 text-xs font-medium mb-4 md:mb-5 border border-white/20">
-            <Sparkles className="h-3.5 w-3.5" />
-            Africa&apos;s Trusted Marketplace
-          </div>
-
-          {/* Heading */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-4 md:mb-5">
-            Shop Smart,{' '}
-            <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-              Shop Local
-            </span>
-          </h1>
-
-          {/* Tagline */}
-          <p className="text-base md:text-lg text-white/80 mb-6 md:mb-8 max-w-lg mx-auto md:mx-0 leading-relaxed">
-            Discover quality products from verified sellers across Africa. Secure payments, fast delivery, and local support.
-          </p>
-
-          {/* Search Bar */}
-          <div className="max-w-xl mx-auto md:mx-0 mb-6">
-            <SearchBar variant="hero" placeholder="What are you looking for today?" className="shadow-xl" />
-          </div>
-
-          {/* Quick links */}
-          <div className="flex flex-wrap justify-center md:justify-start gap-2">
-            {[
-              { label: '🔥 Hot Deals', href: '/products?filter=deals' },
-              { label: '✨ New Arrivals', href: '/products?filter=new' },
-              { label: '⭐ Best Sellers', href: '/products?filter=bestsellers' },
-              { label: '🏪 Boutiques', href: '/boutiques' },
-            ].map((lnk) => (
-              <Link
-                key={lnk.label}
-                href={lnk.href}
-                className="px-3.5 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs font-medium hover:bg-white/20 transition-all duration-200"
-              >
-                {lnk.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────── Category Section ─────────────── */
-function CategorySection({ categories, style, textColor }: { categories: Category[]; style: React.CSSProperties; textColor: string }) {
-  if (categories.length === 0) return null;
-  return (
-    <section className="w-full py-6 md:py-10" style={style}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <div>
-            <h2 className="text-lg md:text-2xl font-bold" style={{ color: textColor }}>Shop by Category</h2>
-            <p className="text-xs md:text-sm mt-0.5 opacity-70" style={{ color: textColor }}>Find exactly what you need</p>
-          </div>
-          <Link href="/categories" className="group flex items-center gap-1 text-sm font-medium hover:underline" style={{ color: textColor }}>
-            View All <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-        {/* Desktop grid */}
-        <div className="hidden md:grid grid-cols-5 lg:grid-cols-6 gap-3">
-          {categories.slice(0, 6).map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`}>
-              <div className="group relative rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <div className="aspect-[4/3] relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                  {category.image ? (
-                    <Image src={category.image} alt={category.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes={IMAGE_SIZES.category} placeholder="blur" blurDataURL={CATEGORY_BLUR_DATA_URL} />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/10">
-                      <span className="text-3xl md:text-4xl">{category.icon || '🛍️'}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                <div className="p-2.5 md:p-3 text-center">
-                  <span className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-1">{category.name}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Mobile scrollable */}
-        <div className="md:hidden flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-          {categories.slice(0, 8).map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`} className="flex-shrink-0 w-[100px]">
-              <div className="group flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm ring-1 ring-black/5 mb-1.5 relative">
-                  {category.image ? (
-                    <Image src={category.image} alt={category.name} fill className="object-cover" sizes="64px" placeholder="blur" blurDataURL={CATEGORY_BLUR_DATA_URL} />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><span className="text-2xl">{category.icon || '🛍️'}</span></div>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium text-gray-700 text-center line-clamp-1 w-full">{category.name}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────── Product Showcase ─────────────── */
-function ProductShowcase({ title, icon: Icon, products, viewAllLink, viewAllLabel = 'View All' }: {
-  title: string; icon: any; products: Product[]; viewAllLink: string; viewAllLabel?: string;
-}) {
-  if (products.length === 0) return null;
-  return (
-    <section className="mb-8 md:mb-12">
-      <div className="flex items-center justify-between mb-4 md:mb-5">
-        <div className="flex items-center gap-2 md:gap-2.5">
-          <div className="p-1.5 rounded-lg bg-primary/10"><Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" /></div>
-          <h2 className="text-base md:text-xl font-bold text-gray-900">{title}</h2>
-        </div>
-        <Link href={viewAllLink} className="group flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-          {viewAllLabel} <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-        </Link>
-      </div>
-      <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {products.slice(0, 5).map((product, index) => (
-          <ProductCard key={product.id} product={product} index={index} compact />
-        ))}
-      </div>
-      <div className="md:hidden grid grid-cols-2 gap-2">
-        {products.slice(0, 4).map((product, index) => (
-          <CompactProductCard key={product.id} product={product} index={index} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────── Promo Banner ─────────────── */
-function PromoBannerSection({ settings }: { settings: PromoBannerSettings }) {
-  if (!settings.enabled) return null;
-  return (
-    <section className="mb-8 md:mb-12">
-      <Link href={settings.ctaLink || '/products?filter=deals'}>
-        <div
-          className="relative overflow-hidden rounded-2xl p-6 md:p-10 cursor-pointer group"
-          style={{ background: `linear-gradient(135deg, ${settings.bgGradientFrom || '#4f46e5'}, ${settings.bgGradientTo || '#06b6d4'})` }}
-        >
-          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 group-hover:scale-110 transition-transform duration-500" />
-          <div className="absolute -left-4 -bottom-4 w-24 h-24 rounded-full bg-white/5" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Gift className="h-5 w-5 text-yellow-300" />
-                <span className="text-yellow-300 text-sm font-semibold uppercase tracking-wide">Limited Time</span>
-              </div>
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-1">{settings.title || '🎉 Special Offers!'}</h3>
-              <p className="text-white/80 text-sm md:text-base">{settings.subtitle || 'Get up to 30% off on selected items.'}</p>
-            </div>
-            <div className="flex-shrink-0">
-              <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-900 rounded-xl font-semibold text-sm group-hover:bg-yellow-50 transition-colors shadow-lg">
-                {settings.ctaText || 'Shop Deals'} <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </section>
-  );
-}
-
-/* ─────────────── JulaZone Promise ─────────────── */
-function JulaZonePromise({ settings }: { settings: LumoPromiseSettings }) {
-  if (settings.lumoPromiseEnabled === false) return null;
-  const features = [
-    { icon: settings.lumoPromiseFeature1Icon || '🌱', title: settings.lumoPromiseFeature1Title || 'Sustainable', subtitle: settings.lumoPromiseFeature1Subtitle || 'Eco-friendly materials and processes' },
-    { icon: settings.lumoPromiseFeature2Icon || '✨', title: settings.lumoPromiseFeature2Title || 'Quality Crafted', subtitle: settings.lumoPromiseFeature2Subtitle || 'Handpicked for excellence' },
-    { icon: settings.lumoPromiseFeature3Icon || '🤝', title: settings.lumoPromiseFeature3Title || 'Fair Trade', subtitle: settings.lumoPromiseFeature3Subtitle || 'Supporting artisan communities' },
-  ];
-  return (
-    <section className="mb-8 md:mb-12">
-      <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ backgroundColor: settings.lumoPromiseBgColor || '#ffffff' }}>
-        <div className="p-5 md:p-10" style={{ color: settings.lumoPromiseTextColor || '#000000' }}>
-          <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-lg md:text-3xl font-bold mb-2">{settings.lumoPromiseTitle || 'The JulaZone Promise'}</h2>
-            <p className="text-sm md:text-base opacity-75 max-w-xl mx-auto">{settings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.'}</p>
-          </div>
-          <div className="grid grid-cols-3 gap-3 md:gap-8 max-w-2xl mx-auto">
-            {features.map((f, i) => (
-              <div key={i} className="text-center">
-                <div className="text-2xl md:text-4xl mb-2 md:mb-3">{f.icon}</div>
-                <h3 className="text-xs md:text-base font-semibold mb-0.5 md:mb-1">{f.title}</h3>
-                <p className="text-[10px] md:text-sm opacity-60 hidden md:block">{f.subtitle}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────── Meet the Makers ─────────────── */
-function MeetMakers({ settings }: { settings: MeetMakersSettings }) {
-  if (settings.meetMakersEnabled === false) return null;
-  return (
-    <section className="mb-8 md:mb-12">
-      <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ backgroundColor: settings.meetMakersBgColor || '#ffffff' }}>
-        <div className="p-5 md:p-10 text-center" style={{ color: settings.meetMakersTextColor || '#000000' }}>
-          <div className="max-w-2xl mx-auto">
-            <div className="flex justify-center gap-2 mb-3 md:mb-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center text-lg md:text-xl">🧵</div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-200 to-cyan-200 flex items-center justify-center text-lg md:text-xl">🎨</div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-200 to-emerald-200 flex items-center justify-center text-lg md:text-xl">🪵</div>
-            </div>
-            <h2 className="text-lg md:text-3xl font-bold mb-2">{settings.meetMakersTitle || 'Meet the Makers'}</h2>
-            <p className="text-sm md:text-base opacity-75 mb-5">{settings.meetMakersDescription || 'Behind every product is a story of skilled artisans dedicated to their craft, using traditional techniques passed down through generations.'}</p>
-            <Link href="/boutiques">
-              <Button variant="outline" className="rounded-xl gap-2"><ShoppingBag className="h-4 w-4" /> Explore Boutiques</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────── Seller CTA ─────────────── */
-function SellerCTA() {
-  return (
-    <section className="mb-8 md:mb-12">
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-gray-900 to-gray-800 p-6 md:p-10">
-        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-5 md:gap-8">
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-lg md:text-2xl font-bold text-white mb-2">Start Selling on JulaZone</h3>
-            <p className="text-gray-300 text-sm md:text-base max-w-lg">Reach thousands of customers across Africa. Set up your boutique in minutes and start growing your business.</p>
-          </div>
-          <Link href="/signup">
-            <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 rounded-xl font-semibold gap-2 px-6 shadow-lg">
-              Open Your Store <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ═══════════════════ MAIN PAGE ═══════════════════ */
-
 export default function HomePageDataContainer() {
   const [products, setProducts] = useState<Product[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
@@ -400,6 +106,7 @@ export default function HomePageDataContainer() {
 
   useEffect(() => {
     async function fetchData() {
+      // Use proper caching - let browser and server cache responses
       const [productsRes, categoriesRes, collectionsRes, settingsRes, heroRes, trendingRes, promoRes] = await Promise.all([
         fetch('/api/products').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch('/api/categories').then(r => r.ok ? r.json() : { categories: [] }).catch(() => ({ categories: [] })),
@@ -409,7 +116,7 @@ export default function HomePageDataContainer() {
         fetch('/api/trending').then(r => r.ok ? r.json() : { products: [] }).catch(() => ({ products: [] })),
         fetch('/api/promo-banner').then(r => r.ok ? r.json() : DEFAULT_PROMO_BANNER).catch(() => DEFAULT_PROMO_BANNER) as Promise<PromoBannerSettings>,
       ]);
-
+      
       setProducts(Array.isArray(productsRes) ? productsRes : (productsRes.products || []));
       setTrendingProducts(trendingRes.products || []);
       setCategories(categoriesRes.categories || (Array.isArray(categoriesRes) ? categoriesRes : []));
@@ -457,19 +164,28 @@ export default function HomePageDataContainer() {
     fetchData();
   }, []);
 
+  // Show skeleton loading state while fetching data
   if (loading) {
     return (
-      <div className="flex flex-col w-full">
-        <div className="w-full h-10 bg-white border-b" />
-        <div className="w-full h-[280px] md:h-[400px] bg-gradient-to-br from-indigo-100 to-purple-100 animate-pulse" />
-        <div className="w-full py-6 md:py-10 bg-gray-50">
+      <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
+        <Hero initialSettings={heroSettings || undefined} />
+
+        {/* Categories Skeleton */}
+        <div className="w-full py-6 md:py-10 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="h-7 w-48 bg-gray-200 rounded animate-pulse mb-5" />
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <div className="h-7 w-40 bg-muted animate-pulse rounded"></div>
+            </div>
             <CategoryGridSkeleton count={6} />
           </div>
         </div>
+
+        {/* Products Skeleton */}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="h-7 w-40 bg-gray-200 rounded animate-pulse mb-5" />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-6 w-6 bg-muted animate-pulse rounded"></div>
+            <div className="h-7 w-40 bg-muted animate-pulse rounded"></div>
+          </div>
           <ProductGridSkeleton count={8} />
         </div>
       </div>
@@ -477,12 +193,12 @@ export default function HomePageDataContainer() {
   }
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
-      <Home
-        products={products}
-        categories={categories}
-        collections={collections}
-        categorySectionSettings={categorySectionSettings}
+    <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>}>
+      <Home 
+        products={products} 
+        categories={categories} 
+        collections={collections} 
+        categorySectionSettings={categorySectionSettings} 
         trendingProducts={trendingProducts}
         lumoPromiseSettings={lumoPromiseSettings}
         meetMakersSettings={meetMakersSettings}
@@ -492,106 +208,674 @@ export default function HomePageDataContainer() {
   );
 }
 
-function Home(props: {
-  products: Product[];
-  categories: Category[];
-  collections: Collections;
-  categorySectionSettings: CategorySectionSettings;
-  trendingProducts: Product[];
-  lumoPromiseSettings: LumoPromiseSettings;
-  meetMakersSettings: MeetMakersSettings;
-  promoBannerSettings: PromoBannerSettings;
+function Home(props: { 
+  products: Product[], 
+  categories: Category[], 
+  collections: Collections,
+  categorySectionSettings: CategorySectionSettings,
+  trendingProducts: Product[],
+  lumoPromiseSettings: LumoPromiseSettings,
+  meetMakersSettings: MeetMakersSettings,
+  promoBannerSettings: PromoBannerSettings
 }) {
   const { products, categories, collections, categorySectionSettings, trendingProducts, lumoPromiseSettings, meetMakersSettings, promoBannerSettings } = props;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('name-asc');
+  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const getProductsByIds = (ids: string[]) =>
-    ids.map(id => products.find(p => p.id === id)).filter(Boolean) as Product[];
+  // Open filters by default on desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setShowFilters(true);
+      } else {
+        setShowFilters(false);
+      }
+    };
 
+    // Set initial state
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Calculate max price from products
+  const maxPrice = useMemo(() => {
+    return Math.max(...products.map(p => p.price), 1000);
+  }, [products]);
+
+  // Update price range when products change
+  useEffect(() => {
+    setPriceRange([0, maxPrice]);
+  }, [maxPrice]);
+
+  // read category from URL params when component mounts or params change
+  useEffect(() => {
+    const cat = searchParams?.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+      // Scroll to products section when category is selected
+      setTimeout(() => {
+        const productsSection = document.getElementById('products-section');
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+    
+    const search = searchParams?.get('search');
+    if (search) {
+      setSearchQuery(search);
+      // Scroll to products section after a short delay
+      setTimeout(() => {
+        const productsSection = document.getElementById('products-section');
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [searchParams]);
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products;
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      const category = categories.find(c => c.id === selectedCategory);
+      if (category) {
+        filtered = filtered.filter(p => p.category === category.name);
+      }
+    }
+
+    // Filter by price range
+    filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
+    // Filter by stock
+    if (showInStockOnly) {
+      filtered = filtered.filter(p => p.stock > 0);
+    }
+
+    // Sort products
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case 'name-asc':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name-desc':
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case 'price-asc':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'stock':
+        sorted.sort((a, b) => b.stock - a.stock);
+        break;
+    }
+
+    return sorted;
+  }, [products, categories, searchQuery, selectedCategory, priceRange, showInStockOnly, sortBy]);
+
+  // Helper function to get products by IDs
+  const getProductsByIds = (ids: string[]) => {
+    return ids.map(id => products.find(p => p.id === id)).filter(Boolean) as Product[];
+  };
+
+  const CollectionSection = ({ title, icon: Icon, productIds, viewAllLink }: {
+    title: string;
+    icon: any;
+    productIds: string[];
+    viewAllLink?: string;
+  }) => {
+    const collectionProducts = getProductsByIds(productIds).slice(0, 5);
+
+    if (collectionProducts.length === 0) return null;
+
+    return (
+      <div className="mb-6 md:mb-10">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <h2 className="text-lg md:text-xl font-headline font-bold">{title}</h2>
+          </div>
+          {viewAllLink && (
+            <Link href={viewAllLink}>
+              <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                View All <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+          {collectionProducts.map((product, index) => (
+            <ProductCard key={product.id} product={product} index={index} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Generate category section background style
   const getCategorySectionStyle = (): React.CSSProperties => {
-    const s = categorySectionSettings;
-    switch (s.categorySectionBgType) {
+    const { 
+      categorySectionBgType, 
+      categorySectionBgColor, 
+      categorySectionBgImage,
+      categorySectionBgGradientFrom,
+      categorySectionBgGradientTo,
+      categorySectionBgGradientDirection
+    } = categorySectionSettings;
+
+    switch (categorySectionBgType) {
       case 'image':
-        return { backgroundImage: s.categorySectionBgImage ? `url(${s.categorySectionBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: s.categorySectionBgColor || '#f9fafb' };
+        return {
+          backgroundImage: categorySectionBgImage ? `url(${categorySectionBgImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: categorySectionBgColor || '#f3f4f6',
+        };
       case 'gradient':
-        return { background: `linear-gradient(${s.categorySectionBgGradientDirection || 'to right'}, ${s.categorySectionBgGradientFrom || '#667eea'}, ${s.categorySectionBgGradientTo || '#764ba2'})` };
+        return {
+          background: `linear-gradient(${categorySectionBgGradientDirection || 'to right'}, ${categorySectionBgGradientFrom || '#667eea'}, ${categorySectionBgGradientTo || '#764ba2'})`,
+        };
+      case 'color':
       default:
-        return { backgroundColor: s.categorySectionBgColor || '#f9fafb' };
+        return {
+          backgroundColor: categorySectionBgColor || '#f3f4f6',
+        };
     }
   };
 
   const categoryTextColor = categorySectionSettings.categorySectionTextColor || '#1f2937';
-  const bestSellerProducts = getProductsByIds(collections.bestSellers);
-  const newArrivalProducts = getProductsByIds(collections.newArrivals);
-  const dealProducts = getProductsByIds(collections.deals);
-  const showcaseProducts = trendingProducts.length > 0 ? trendingProducts : products;
 
   return (
-    <div className="flex flex-col w-full bg-gray-50/50">
-      {/* 1) Trust Bar */}
-      <QuickTrustBar />
+    <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
+      {/* Category Chips - Mobile only, FIXED below header */}
+      <div 
+        className="md:hidden fixed left-0 right-0 z-40 bg-white px-3 py-2 border-b shadow-sm"
+        style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+      >
+        <CategoryChips 
+          categories={categories} 
+          selectedCategory={selectedCategory}
+          onCategorySelect={(catId) => {
+            setSelectedCategory(catId);
+            if (catId !== 'all') {
+              router.push(`/?category=${catId}`, { scroll: false });
+            } else {
+              router.push('/', { scroll: false });
+            }
+          }}
+          maxVisible={6}
+        />
+      </div>
 
-      {/* 2) Hero */}
-      <HeroBanner />
+      {/* Spacer for Fixed Header + Fixed Category Bar */}
+      {/* Header is 3.5rem (56px) + safe area */}
+      {/* Category Bar is approx 53px (py-2 + content) */}
+      <div className="md:hidden w-full" style={{ height: '53px' }} />
 
-      {/* 3) Categories */}
-      <CategorySection categories={categories} style={getCategorySectionStyle()} textColor={categoryTextColor} />
+      <div className="w-full" style={{ width: '100%' }}>
+        <Hero />
+      </div>
 
-      {/* 4) Product Sections */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <ProductShowcase title="Trending Now" icon={TrendingUp} products={showcaseProducts} viewAllLink="/products" viewAllLabel="Shop All" />
-
-        {bestSellerProducts.length > 0 && (
-          <ProductShowcase title="Best Sellers" icon={Crown} products={bestSellerProducts} viewAllLink="/products?filter=bestsellers" />
-        )}
-
-        <PromoBannerSection settings={promoBannerSettings} />
-
-        {newArrivalProducts.length > 0 && (
-          <ProductShowcase title="New Arrivals" icon={Sparkles} products={newArrivalProducts} viewAllLink="/products?filter=new" />
-        )}
-
-        {dealProducts.length > 0 && (
-          <ProductShowcase title="Deals & Offers" icon={Tag} products={dealProducts} viewAllLink="/products?filter=deals" />
-        )}
-
-        {/* Explore All Products */}
-        {products.length > 0 && (
-          <section className="mb-8 md:mb-12">
-            <div className="flex items-center justify-between mb-4 md:mb-5">
-              <div className="flex items-center gap-2 md:gap-2.5">
-                <div className="p-1.5 rounded-lg bg-primary/10"><ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-primary" /></div>
-                <h2 className="text-base md:text-xl font-bold text-gray-900">Explore Products</h2>
-                <span className="hidden md:inline text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{products.length} items</span>
+      <div className="w-full">
+        {/* Categories Section - With customizable background */}
+        {categories.length > 0 && (
+          <div 
+            className="w-full py-5 md:py-8 mb-0"
+            style={getCategorySectionStyle()}
+          >
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 
+                  className="text-lg md:text-xl font-headline font-bold"
+                  style={{ color: categoryTextColor }}
+                >
+                  Shop by Category
+                </h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="gap-1 text-sm px-3" 
+                  style={{ color: categoryTextColor }}
+                  asChild
+                >
+                  <Link href="/categories">
+                    <span style={{ color: categoryTextColor }}>View All</span> 
+                    <ChevronRight className="h-4 w-4" style={{ color: categoryTextColor }} />
+                  </Link>
+                </Button>
               </div>
-              <Link href="/products" className="group flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-                View All <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3 md:gap-3">
+                {categories.slice(0, 5).map((category) => {
+                  const textClr = category.textColor || '#1f2937';
+                  
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        router.push(`/?category=${category.id}`, { scroll: false });
+                        setTimeout(() => {
+                          const productsSection = document.getElementById('products-section');
+                          if (productsSection) {
+                            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }}
+                      className="group relative flex flex-col rounded-lg sm:rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 text-left"
+                    >
+                      {/* Image Container - compact on mobile */}
+                      <div className="aspect-[3/2] sm:aspect-square relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+                        {category.image ? (
+                          <Image
+                            src={category.image}
+                            alt={category.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes={IMAGE_SIZES.category}
+                            placeholder="blur"
+                            blurDataURL={CATEGORY_BLUR_DATA_URL}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-2xl sm:text-4xl md:text-5xl">{category.icon || '🛍️'}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Label - minimal on mobile */}
+                      <div className="p-1 sm:p-3 md:p-4 text-center border-t">
+                        <span 
+                          className="text-[10px] sm:text-sm font-medium line-clamp-1"
+                          style={{ color: textClr }}
+                        >
+                          {category.name}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+          {/* MOBILE: Dense Product Grid - Show 6+ products above fold */}
+          <div className="md:hidden mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h2 className="text-base font-bold">Trending Now</h2>
+              </div>
+              <Link href="/products">
+                <Button variant="ghost" size="sm" className="gap-1 text-xs px-2 h-7">
+                  See All <ChevronRight className="h-3 w-3" />
+                </Button>
               </Link>
             </div>
-            <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {products.slice(0, 10).map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} compact />
-              ))}
-            </div>
-            <div className="md:hidden grid grid-cols-2 gap-2">
-              {products.slice(0, 6).map((product, index) => (
+            {/* Dense 2x3 grid for mobile - 6 products visible */}
+            <div className="grid grid-cols-2 gap-2">
+              {(trendingProducts.length > 0 ? trendingProducts : products).slice(0, 6).map((product, index) => (
                 <CompactProductCard key={product.id} product={product} index={index} />
               ))}
             </div>
-            <div className="md:hidden mt-3 text-center">
-              <Link href="/products">
-                <Button variant="outline" className="w-full rounded-xl gap-2">View All Products <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-            </div>
-          </section>
-        )}
+          </div>
 
-        <JulaZonePromise settings={lumoPromiseSettings} />
-        <SellerCTA />
-        <MeetMakers settings={meetMakersSettings} />
+          {/* DESKTOP: Trending Products — tighter grid with more items */}
+          {trendingProducts && trendingProducts.length > 0 && (
+            <div className="hidden md:block mb-8 md:mb-10">
+              <div className="flex items-center justify-between mb-3 md:mb-5">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <TrendingUp className="h-5 w-5 md:h-5 md:w-5 text-primary" />
+                  <h2 className="text-lg md:text-xl font-headline font-bold">Trending Now</h2>
+                </div>
+                <Link href="/products">
+                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                    Shop All <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                {trendingProducts.slice(0, 6).map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} compact />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Featured Collections */}
+          <CollectionSection
+            title="Best Sellers"
+            icon={TrendingUp}
+            productIds={collections.bestSellers}
+            viewAllLink="/products?filter=bestsellers"
+          />
+          
+          {/* Promotional Banner */}
+          {promoBannerSettings.enabled && (
+            <div className="mb-8 md:mb-12">
+              <PromoBanner 
+                title={promoBannerSettings.title}
+                subtitle={promoBannerSettings.subtitle}
+                ctaText={promoBannerSettings.ctaText}
+                ctaLink={promoBannerSettings.ctaLink}
+                bgGradientFrom={promoBannerSettings.bgGradientFrom}
+                bgGradientTo={promoBannerSettings.bgGradientTo}
+                textColor={promoBannerSettings.textColor}
+                iconType={promoBannerSettings.icon}
+              />
+            </div>
+          )}
+
+          <CollectionSection
+            title="New Arrivals"
+            icon={Sparkles}
+            productIds={collections.newArrivals}
+            viewAllLink="/products?filter=new"
+          />
+          <CollectionSection
+            title="Deals & Offers"
+            icon={Tag}
+            productIds={collections.deals}
+            viewAllLink="/products?filter=deals"
+          />
+
+          {/* Category-Based Product Sections */}
+          {categories.length > 0 && products.length > 0 && (
+            <div className="mb-6 md:mb-10">
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <h2 className="text-lg md:text-xl font-headline font-bold">Shop by Category</h2>
+                <Link href="/products">
+                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                    View All Products <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+              
+              {/* Horizontal category product sections */}
+              {categories.slice(0, 6).map((category) => (
+                <CategoryProductSection 
+                  key={category.id}
+                  category={category}
+                  products={products}
+                  maxProducts={8}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Enhanced Search and Sort Bar */}
+          <div id="products-section" className="mb-4 flex flex-col gap-2 rounded-xl border bg-white/60 backdrop-blur-sm p-2 md:p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search for products..."
+                className="pl-9 h-9 text-sm border-0 bg-white/80 focus-visible:ring-1"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  borderRadius: 'var(--radius-input)',
+                  color: 'var(--color-text-primary)',
+                }}
+              />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                style={{ color: 'var(--color-text-secondary)' }}
+              />
+            </div>
+
+            <div className="flex gap-1.5 items-center">
+              <span className="text-sm text-muted-foreground hidden md:inline">Sort by:</span>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger
+                  className="w-full md:w-[200px] border-0 bg-white/80 flex-1 h-9 text-xs md:text-sm"
+                  style={{
+                    borderRadius: 'var(--radius-button)',
+                  }}
+                >
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                  <SelectItem value="price-asc">Price (Low to High)</SelectItem>
+                  <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+                  <SelectItem value="stock">Most in Stock</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="md:hidden px-3 py-1.5 border hover:bg-accent transition-colors rounded-lg"
+                style={{
+                  borderColor: 'var(--color-border-subtle)',
+                }}
+              >
+                <SlidersHorizontal className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
+            {/* Enhanced Filters Sidebar */}
+            <aside className={`
+              ${showFilters ? 'fixed inset-0 z-50 bg-white p-6 overflow-y-auto' : 'hidden'}
+              md:relative md:block md:z-0 md:bg-transparent md:p-0 md:overflow-visible md:col-span-1
+            `}>
+                <div className="md:sticky md:top-20 w-full rounded-2xl border-0 md:border bg-white/70 backdrop-blur-sm p-0 md:p-5 shadow-none md:shadow-sm space-y-6 h-full md:h-auto">
+                  {/* Filter Header */}
+                  <div className="flex items-center justify-between md:block">
+                    <div>
+                      <h3 className="font-headline font-bold text-lg">Filters</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Refine your search
+                      </p>
+                    </div>
+                    <button onClick={() => setShowFilters(false)} className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground">
+                        <X className="h-6 w-6" />
+                    </button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Category Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Category
+                    </Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="border-0 bg-white/80">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  {/* Price Range Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Price Range
+                    </Label>
+                    <div className="text-sm font-medium text-center py-2 px-3 bg-white/80 rounded-lg">
+                      ${priceRange[0]} - ${priceRange[1]}
+                    </div>
+                    <Slider
+                      min={0}
+                      max={maxPrice}
+                      step={10}
+                      value={priceRange}
+                      onValueChange={setPriceRange}
+                      className="my-2"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>$0</span>
+                      <span>${maxPrice}</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Availability Filter Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold block">
+                      Availability
+                    </Label>
+                    <div className="flex items-center justify-between p-3 bg-white/80 rounded-lg">
+                      <Label htmlFor="in-stock" className="text-sm cursor-pointer">
+                        In Stock Only
+                      </Label>
+                      <Switch
+                        id="in-stock"
+                        checked={showInStockOnly}
+                        onCheckedChange={setShowInStockOnly}
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Filter Summary */}
+                  <div className="pt-2 text-center">
+                    <p className="text-sm font-medium">
+                      {filteredAndSortedProducts.length} of {products.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      products found
+                    </p>
+                  </div>
+                </div>
+              </aside>
+
+            {/* Products Grid - Dense on mobile, standard on desktop */}
+            <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
+              {filteredAndSortedProducts.length > 0 ? (
+                <>
+                  {/* Mobile: Dense 2-column grid with compact cards */}
+                  <div className="md:hidden grid grid-cols-2 gap-2">
+                    {filteredAndSortedProducts.map((product, index) => (
+                      <CompactProductCard key={product.id} product={product} index={index} />
+                    ))}
+                  </div>
+                  {/* Desktop: Standard grid */}
+                  <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredAndSortedProducts.map((product, index) => (
+                      <ProductCard key={product.id} product={product} index={index} />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-lg text-muted-foreground mb-2">No products found</p>
+                  <p className="text-sm text-muted-foreground">Try adjusting your filters or search query</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Trust & Story Sections */}
+          <section className="mt-6 md:mt-16 space-y-4 md:space-y-12">
+            {/* The JulaZone Promise */}
+            {lumoPromiseSettings.lumoPromiseEnabled !== false && (
+              <Card 
+                className="overflow-hidden rounded-xl md:rounded-2xl border backdrop-blur-sm shadow-sm"
+                style={{ backgroundColor: lumoPromiseSettings.lumoPromiseBgColor || '#ffffff' }}
+              >
+                <CardContent className="p-3 md:p-12">
+                  <div className="max-w-3xl mx-auto text-center space-y-1.5 md:space-y-4" style={{ color: lumoPromiseSettings.lumoPromiseTextColor || '#000000' }}>
+                    <h2 
+                      className={`font-headline text-base md:text-4xl font-${lumoPromiseSettings.lumoPromiseTitleWeight || 'bold'}`}
+                      style={{ fontWeight: lumoPromiseSettings.lumoPromiseTitleWeight === 'extrabold' ? 800 : lumoPromiseSettings.lumoPromiseTitleWeight === 'bold' ? 700 : lumoPromiseSettings.lumoPromiseTitleWeight === 'semibold' ? 600 : lumoPromiseSettings.lumoPromiseTitleWeight === 'medium' ? 500 : 400 }}
+                    >
+                      {lumoPromiseSettings.lumoPromiseTitle || 'The JulaZone Promise'}
+                    </h2>
+                    <p className="text-xs md:text-lg leading-relaxed opacity-80">
+                      {lumoPromiseSettings.lumoPromiseDescription || 'Every product in our collection is carefully curated with ethics, craftsmanship, and sustainability at its core.'}
+                    </p>
+                    <div className="grid grid-cols-3 gap-1.5 md:gap-6 mt-2 md:mt-8">
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature1Icon || '🌱'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature1Title || 'Sustainable'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature1Subtitle || 'Eco-friendly materials and processes'}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature2Icon || '✨'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature2Title || 'Quality Crafted'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature2Subtitle || 'Handpicked for excellence'}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 md:space-y-2">
+                        <div className="text-lg md:text-2xl">{lumoPromiseSettings.lumoPromiseFeature3Icon || '🤝'}</div>
+                        <h3 className="font-semibold text-[10px] md:text-base">{lumoPromiseSettings.lumoPromiseFeature3Title || 'Fair Trade'}</h3>
+                        <p className="text-[10px] md:text-sm opacity-70 hidden md:block">
+                          {lumoPromiseSettings.lumoPromiseFeature3Subtitle || 'Supporting artisan communities'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Meet the Makers */}
+            {meetMakersSettings.meetMakersEnabled !== false && (
+              <Card 
+                className="overflow-hidden rounded-xl md:rounded-2xl border backdrop-blur-sm shadow-sm"
+                style={{ backgroundColor: meetMakersSettings.meetMakersBgColor || '#ffffff' }}
+              >
+                <CardContent className="p-3 md:p-12">
+                  <div className="max-w-3xl mx-auto space-y-1 md:space-y-4" style={{ color: meetMakersSettings.meetMakersTextColor || '#000000' }}>
+                    <h2 
+                      className={`font-headline text-base md:text-4xl text-center`}
+                      style={{ fontWeight: meetMakersSettings.meetMakersTitleWeight === 'extrabold' ? 800 : meetMakersSettings.meetMakersTitleWeight === 'bold' ? 700 : meetMakersSettings.meetMakersTitleWeight === 'semibold' ? 600 : meetMakersSettings.meetMakersTitleWeight === 'medium' ? 500 : 400 }}
+                    >
+                      {meetMakersSettings.meetMakersTitle || 'Meet the Makers'}
+                    </h2>
+                    <p className="text-xs md:text-lg leading-relaxed text-center opacity-80">
+                      {meetMakersSettings.meetMakersDescription || 'Behind every product is a story of skilled artisans dedicated to their craft, using traditional techniques passed down through generations.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        </div>
       </div>
 
+      {/* Recently Viewed Products - Only shows if preference cookies enabled */}
       <RecentlyViewedProducts allProducts={products} maxItems={4} />
-      <DetailedTrustSection className="mt-4" />
+
+      {/* Detailed Trust Section - Near Footer */}
+      <DetailedTrustSection className="mt-8" />
     </div>
   );
 }
+
