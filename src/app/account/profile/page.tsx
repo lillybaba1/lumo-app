@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Phone, Calendar, Shield, ShoppingBag, Heart, Store } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Shield, ShoppingBag, Heart, Store, Lock } from 'lucide-react';
 import ProfileEditForm from './profile-edit-form';
+import ChangePasswordForm from './change-password-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -182,6 +183,20 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent>
             <ProfileEditForm user={userData} />
+          </CardContent>
+        </Card>
+
+        {/* Change Password Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Change Password
+            </CardTitle>
+            <CardDescription>Update your account password</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChangePasswordForm />
           </CardContent>
         </Card>
 

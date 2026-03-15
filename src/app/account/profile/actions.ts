@@ -87,3 +87,72 @@ export async function updateProfile(
     };
   }
 }
+
+// ─── Change Password ─────────────────────────────────────────────────────────
+
+const passwordSchema = z.object({
+  new_password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirm_password: z.string(),
+}).refine(data => data.new_password === data.confirm_password, {
+  message: 'Passwords do not match',
+  path: ['confirm_password'],
+});
+
+type ChangePasswordState = {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[]> | null;
+};
+
+export async function changePassword(
+  prevState: ChangePasswordState,
+  formData: FormData
+): Promise<ChangePasswordState> {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        message: 'You must be logged in to change your password.',
+      };
+    }
+
+    const rawFormData = Object.fromEntries(formData.entries());
+    const validatedFields = passwordSchema.safeParse(rawFormData);
+
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        message: 'Validation failed.',
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    const { new_password } = validatedFields.data;
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: new_password,
+    });
+
+    if (updateError) {
+      console.error('Failed to change password:', updateError);
+      return {
+        success: false,
+        message: updateError.message || 'Failed to change password. Please try again.',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Password changed successfully!',
+    };
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred. Please try again.',
+    };
+  }
+}
