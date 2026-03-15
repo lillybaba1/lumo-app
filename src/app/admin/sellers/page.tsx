@@ -17,7 +17,11 @@ export default async function AdminSellersPage() {
   const active = businessAccounts.filter(b => b.status === 'ACTIVE');
   const suspended = businessAccounts.filter(b => b.status === 'SUSPENDED');
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (account: typeof businessAccounts[0]) => {
+    const status = account.status;
+    if (status === 'ACTIVE' && account.accountApproved && !account.boutiqueApproved) {
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300"><Store className="h-3 w-3 mr-1" /> Setting Up Boutique</Badge>;
+    }
     switch (status) {
       case 'PENDING_APPROVAL':
         return <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300"><Clock className="h-3 w-3 mr-1" /> Pending Approval</Badge>;
@@ -172,7 +176,7 @@ export default async function AdminSellersPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold truncate">{account.businessName}</h3>
-                        {getStatusBadge(account.status)}
+                        {getStatusBadge(account)}
                       </div>
                       <p className="text-sm text-muted-foreground truncate">
                         {account.contactPersonName} • <span className="break-all">{account.contactEmail}</span>

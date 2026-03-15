@@ -7,18 +7,14 @@ import { sendEmail, getSellerApprovalEmail, getAccountApprovalEmail } from '@/li
 export async function approveBusinessAccount(businessId: string) {
   try {
     // Step 1: Approve Account
-    // This allows the user to access the dashboard and create a boutique
+    // This allows the user to access the dashboard and set up their boutique
+    // Set status to ACTIVE so they're no longer stuck in "pending" state
     const { error: businessError } = await supabaseAdmin
       .from('business_accounts')
       .update({
         account_approved: true,
         account_approved_at: new Date().toISOString(),
-        // We do NOT set status to ACTIVE yet, that happens after boutique approval
-        // But if status was PENDING_VERIFICATION, we might want to move it to PENDING_APPROVAL or similar?
-        // Actually, status is separate. Let's keep status as is or update if needed.
-        // If it was PENDING_APPROVAL, it remains so until boutique is approved?
-        // Or maybe we use a new status?
-        // For now, let's just set the flag.
+        status: 'ACTIVE',
         updated_at: new Date().toISOString()
       })
       .eq('id', businessId);
