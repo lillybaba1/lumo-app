@@ -64,6 +64,9 @@ export default function ProductCard({ product, showQuickView = true, compact = f
   const { settings, auth } = useSettings();
   const [isHovered, setIsHovered] = useState(false);
   
+  // Detect mock/sample products
+  const isMock = product.sellerId === 'mock-seller' || product.sellerId === 'mock-seller-id' || product.category === 'mock';
+  
   // Determine if this image should load with priority (above the fold)
   const isPriority = index < 4;
   
@@ -124,6 +127,11 @@ export default function ProductCard({ product, showQuickView = true, compact = f
             
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+              {isMock && (
+                <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full uppercase tracking-wide">
+                  Sample
+                </span>
+              )}
               {product.stock === 0 && (
                 <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] md:text-xs font-medium rounded-full">
                   Out of Stock

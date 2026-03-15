@@ -163,6 +163,11 @@ function HeroGridWidget({
                     <ShoppingBag className="h-6 w-6 text-gray-200" />
                   </div>
                 )}
+                {isMockProduct(product) && (
+                  <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-amber-500/90 text-white text-[8px] font-bold rounded uppercase tracking-wide z-10">
+                    Sample
+                  </span>
+                )}
               </div>
               <div className="px-2 pb-2 pt-1">
                 <p className="text-[11px] text-gray-700 font-medium truncate leading-tight">
@@ -230,6 +235,11 @@ function HeroLargeCardWidget({
               </div>
             )}
          </div>
+         {isMockProduct(mainProduct) && (
+           <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-500/90 text-white text-[9px] font-bold rounded uppercase tracking-wide z-10">
+             Sample
+           </span>
+         )}
       </Link>
       
       <Link 
@@ -240,6 +250,11 @@ function HeroLargeCardWidget({
       </Link>
     </div>
   );
+}
+
+// ─── Helper ─────────────────────────────────────────────────────────────────
+function isMockProduct(product: Product): boolean {
+  return product.sellerId === 'mock-seller' || product.sellerId === 'mock-seller-id' || product.category === 'mock';
 }
 
 // ─── Mock Product Data ───────────────────────────────────────────────────────
@@ -329,6 +344,11 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Mobile Layout - Horizontal Scroll Cards */}
         <div className="md:hidden">
+          {/* Sample products notice */}
+          <div className="mx-4 mb-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
+            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
+            <p className="text-[11px] text-amber-800">These are sample products for demonstration. Real products will appear once sellers list them.</p>
+          </div>
           <MobileHeroCarousel>
             <div className="snap-center">
               <HeroGridWidget
@@ -389,6 +409,11 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Desktop Layout — Amazon-style widget grid */}
         <div className="hidden md:block px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
+          {/* Sample products notice */}
+          <div className="mb-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5">
+            <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
+            <p className="text-sm text-amber-800">These are sample products for demonstration purposes. Real products will appear as sellers list them on the marketplace.</p>
+          </div>
           <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 auto-rows-fr">
             <HeroGridWidget
               title="Continue shopping deals"

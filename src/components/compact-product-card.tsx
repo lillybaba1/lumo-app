@@ -22,6 +22,9 @@ export default function CompactProductCard({ product, index = 999 }: CompactProd
   const { settings } = useSettings();
   const isPriority = index < 6;
   
+  // Detect mock/sample products
+  const isMock = product.sellerId === 'mock-seller' || product.sellerId === 'mock-seller-id' || product.category === 'mock';
+  
   // Get image URL
   const baseImageUrl = (product.productImages && product.productImages.length > 0)
     ? product.productImages[0]
@@ -76,6 +79,18 @@ export default function CompactProductCard({ product, index = 999 }: CompactProd
           {hasDiscount && discountPercent > 0 && (
             <div className="absolute top-1 left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
               -{discountPercent}%
+            </div>
+          )}
+
+          {/* Sample Badge */}
+          {isMock && !hasDiscount && (
+            <div className="absolute top-1 left-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+              Sample
+            </div>
+          )}
+          {isMock && hasDiscount && (
+            <div className="absolute top-1 right-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+              Sample
             </div>
           )}
 
