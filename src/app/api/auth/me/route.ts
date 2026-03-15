@@ -36,8 +36,10 @@ export async function GET() {
       .single();
 
     // Determine effective role - if EITHER table says admin, they are admin
+    // Support both 'admin' (legacy) and 'APP_OWNER_ADMIN' (Supabase migration) roles
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
     let role = 'customer';
-    if (userProfile?.role === 'admin' || userData?.role === 'admin') {
+    if (ADMIN_ROLES.includes(userProfile?.role) || ADMIN_ROLES.includes(userData?.role)) {
       role = 'admin';
     } else {
       role = userProfile?.role || userData?.role || 'customer';

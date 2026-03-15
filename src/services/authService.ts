@@ -232,7 +232,9 @@ export async function getUserRole(userId: string): Promise<string | null> {
       .single();
 
     // If either says admin, return admin
-    if (profile?.role === 'admin' || user?.role === 'admin') {
+    // Support both 'admin' (legacy) and 'APP_OWNER_ADMIN' (Supabase migration) roles
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+    if (ADMIN_ROLES.includes(profile?.role) || ADMIN_ROLES.includes(user?.role)) {
       return 'admin';
     }
 
@@ -263,7 +265,9 @@ export async function getUserRoleClient(userId: string): Promise<string | null> 
       .single();
 
     // If either says admin, return admin
-    if (profile?.role === 'admin' || user?.role === 'admin') {
+    // Support both 'admin' (legacy) and 'APP_OWNER_ADMIN' (Supabase migration) roles
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+    if (ADMIN_ROLES.includes(profile?.role) || ADMIN_ROLES.includes(user?.role)) {
       return 'admin';
     }
 
