@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBusinessAccount } from '@/services/businessAccountService';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { checkPhoneExists } from '@/lib/otp-service';
 import { z } from 'zod';
 
 const websiteSchema = z
@@ -13,7 +14,8 @@ const websiteSchema = z
   .pipe(z.string().url({ message: 'Invalid url' }).optional().nullable());
 
 const signupSchema = z.object({
-  email: z.string().email(),
+  signupMethod: z.enum(['email', 'phone']).default('email'),
+  email: z.string().email().optional().nullable(),
   password: z.string().min(12, 'Password must be at least 12 characters'),
   name: z.string().min(1),
   phone: z.string().optional().nullable(),
@@ -22,7 +24,14 @@ const signupSchema = z.object({
   businessPhone: z.string().optional().nullable(),
   taxId: z.string().optional().nullable(),
   website: websiteSchema,
-});
+}).refine(
+  (data) => {
+    if (data.signupMethod === 'email') return !!data.email;
+    if (data.signupMethod === 'phone') return !!data.phone;
+    return true;
+  },
+  { message: 'Email is required for email signup, phone is required for phone signup' }
+);
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +53,7 @@ export async function POST(request: Request) {
     }
 
     const {
+      signupMethod,
       email,
       password,
       name,
@@ -56,6 +66,17 @@ export async function POST(request: Request) {
     } = parsed.data;
 
     const supabase = await createClient();
+
+    // Check if phone number already has an account
+    if (signupMethod === 'phone' && phone) {
+      const phoneExists = await checkPhoneExists(phone);
+      if (phoneExists) {
+        return NextResponse.json(
+          { error: 'An account with this phone number already exists. Please sign in instead, or use a different number.' },
+          { status: 409 }
+        );
+      }
+    }
 
     // Step 0: Check if business name is already taken (case-insensitive)
     const { data: existingBusiness, error: checkError } = await supabaseAdmin
@@ -82,31 +103,54 @@ export async function POST(request: Request) {
     // Get the site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     
-    // Step 1: Create auth user using regular signUp (this sends verification email automatically)
-    console.log('[Business Signup] Creating auth user for:', email);
-    console.log('[Business Signup] Using redirect URL:', `${siteUrl}/auth/callback`);
+    // Step 1: Create auth user using signUp
+    console.log('[Business Signup] Creating auth user via', signupMethod, ':', signupMethod === 'phone' ? phone : email);
     
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
-      password,
-      options: {
-        data: {
-          name,
-          phone_number: phone,
-          role: 'BUSINESS_ACCOUNT',
-        },
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-      }
-    });
+    let authData;
+    let signUpError;
+
+    if (signupMethod === 'phone' && phone) {
+      // Phone-based signup (sends OTP automatically)
+      const result = await supabase.auth.signUp({
+        phone,
+        password,
+        options: {
+          data: {
+            name,
+            phone_number: phone,
+            role: 'BUSINESS_ACCOUNT',
+          },
+        }
+      });
+      authData = result.data;
+      signUpError = result.error;
+    } else {
+      // Email-based signup (sends verification email automatically)
+      console.log('[Business Signup] Using redirect URL:', `${siteUrl}/auth/callback`);
+      const result = await supabase.auth.signUp({
+        email: email!.toLowerCase().trim(),
+        password,
+        options: {
+          data: {
+            name,
+            phone_number: phone,
+            role: 'BUSINESS_ACCOUNT',
+          },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        }
+      });
+      authData = result.data;
+      signUpError = result.error;
+    }
 
     if (signUpError) {
       const message = signUpError.message || 'Signup failed';
       const errorCode = (signUpError as any).code || (signUpError as any).error_code || '';
       console.error('[Business Signup] signUp error:', signUpError);
 
-      if (message.includes('already been registered') || message.includes('User already exists') || message.includes('already exists')) {
+      if (message.includes('already been registered') || message.includes('User already exists') || message.includes('already exists') || message.includes('already in use')) {
          return NextResponse.json(
-          { error: 'Email already in use', details: { fieldErrors: { email: ['Email already in use'] } } },
+          { error: signupMethod === 'phone' ? 'Phone number already in use' : 'Email already in use', details: { fieldErrors: signupMethod === 'phone' ? { phone: ['Phone number already in use'] } : { email: ['Email already in use'] } } },
           { status: 409 }
         );
       }
@@ -141,10 +185,10 @@ export async function POST(request: Request) {
       .from('users')
       .upsert({
         id: userId,
-        email: email.toLowerCase().trim(),
+        email: email ? email.toLowerCase().trim() : null,
         name: name.trim(),
         phone_number: phone || null,
-        role: 'BUSINESS_ACCOUNT', // Business users get BUSINESS_ACCOUNT role
+        role: 'BUSINESS_ACCOUNT',
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'id',
@@ -172,7 +216,7 @@ export async function POST(request: Request) {
       businessAccount = await createBusinessAccount(userId, {
         businessName,
         contactPersonName: name,
-        contactEmail: email,
+        contactEmail: email || undefined,
         businessAddress,
         businessPhone: businessPhone || phone || undefined,
         taxId: taxId || undefined,
@@ -194,12 +238,15 @@ export async function POST(request: Request) {
 
     console.log('[Business Signup] Business account created successfully:', businessAccount.id);
 
-    // Note: Verification email was already sent by supabase.auth.signUp in Step 1
-    console.log('[Business Signup] Verification email sent automatically by signUp');
+    // Note: Verification was sent automatically by signUp (email link or SMS OTP)
+    console.log('[Business Signup] Verification sent via', signupMethod);
 
     return NextResponse.json({
       success: true,
-      message: 'Business account created successfully. Please check your email to verify your account.',
+      signupMethod,
+      message: signupMethod === 'phone'
+        ? 'Business account created. Please verify your phone with the OTP code sent.'
+        : 'Business account created successfully. Please check your email to verify your account.',
       userId: userId,
       businessAccountId: businessAccount.id,
     }, { status: 201 });

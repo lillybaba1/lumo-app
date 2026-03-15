@@ -6,26 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User, AlertTriangle, ArrowLeft, ArrowRight, Shield, Sparkles, Lock, Check, X } from 'lucide-react';
+import { ShoppingBag, Loader2, Eye, EyeOff, Mail, CheckCircle2, Store, User, AlertTriangle, ArrowLeft, ArrowRight, Shield, Sparkles, Lock, Check, X, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
+import { CountryPicker } from '@/components/country-picker';
+import { COUNTRIES, type Country, validatePhoneForCountry, formatE164 } from '@/lib/countries';
 
 type AccountType = 'PERSONAL_ACCOUNT' | 'BUSINESS_ACCOUNT';
+type SignupMethod = 'email' | 'phone';
 
 export default function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [accountType, setAccountType] = useState<AccountType>('PERSONAL_ACCOUNT');
+  const [signupMethod, setSignupMethod] = useState<SignupMethod>('phone');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Gambia default
+  const [countryCode, setCountryCode] = useState('+220');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -110,13 +115,34 @@ export default function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email) {
-      toast({
-        title: 'Email Required',
-        description: 'Please enter your email address.',
-        variant: 'destructive',
-      });
-      return;
+    // Validate based on signup method
+    if (signupMethod === 'email') {
+      if (!email) {
+        toast({
+          title: 'Email Required',
+          description: 'Please enter your email address.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    } else {
+      // Phone method
+      if (!phoneNumber) {
+        toast({
+          title: 'Phone Number Required',
+          description: 'Please enter your phone number.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!validatePhoneForCountry(phoneNumber, selectedCountry)) {
+        toast({
+          title: 'Invalid Phone Number',
+          description: `Please enter a valid phone number for ${selectedCountry.name}. Expected ${selectedCountry.maxLength} digits.`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     if (!isStrongPassword(password)) {
@@ -151,8 +177,22 @@ export default function SignupForm() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const fullPhoneNumber = phoneNumber ? `${countryCode}${phoneNumber}` : null;
+      const fullPhoneNumber = phoneNumber ? formatE164(selectedCountry.dialCode, phoneNumber) : null;
+
+      // Check if phone number already has an account
+      if (signupMethod === 'phone' && fullPhoneNumber) {
+        const phoneCheck = await fetch(`/api/auth/check-phone?phone=${encodeURIComponent(fullPhoneNumber)}`);
+        const phoneCheckData = await phoneCheck.json();
+        if (phoneCheckData.exists) {
+          toast({
+            title: 'Phone Number Already Registered',
+            description: 'An account with this phone number already exists. Please sign in instead, or use a different number.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+      }
 
       if (accountType === 'BUSINESS_ACCOUNT') {
         // Business account signup flow
@@ -160,10 +200,11 @@ export default function SignupForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email,
+            signupMethod,
+            email: signupMethod === 'email' ? email : undefined,
+            phone: fullPhoneNumber,
             password,
             name,
-            phone: fullPhoneNumber,
             businessName,
             businessAddress,
             businessPhone: businessPhone || fullPhoneNumber,
@@ -214,44 +255,86 @@ export default function SignupForm() {
           throw new Error(result.error || result.message || 'Failed to create business account');
         }
 
-        toast({
-          title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
-        });
+        if (signupMethod === 'phone') {
+          setOtpSent(true);
+          toast({
+            title: 'Verification Code Sent',
+            description: `We sent a 6-digit code to ${selectedCountry.dialCode} ${phoneNumber}. Enter it below to verify your account.`,
+          });
+        } else {
+          toast({
+            title: 'Verification Email Sent',
+            description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
+          });
+        }
 
         setStep('verify');
       } else {
-        // Personal account signup flow (existing logic)
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-              name,
-              phone_number: fullPhoneNumber,
-              role: 'PERSONAL_ACCOUNT',
+        // Personal account signup flow
+        const supabase = createClient();
+
+        if (signupMethod === 'phone') {
+          // Phone signup: use Supabase phone auth
+          const fullPhone = formatE164(selectedCountry.dialCode, phoneNumber);
+
+          const { data, error: signUpError } = await supabase.auth.signUp({
+            phone: fullPhone,
+            password,
+            options: {
+              data: {
+                name,
+                phone_number: fullPhone,
+                role: 'PERSONAL_ACCOUNT',
+              }
             }
+          });
+
+          if (signUpError) {
+            throw signUpError;
           }
-        });
 
-        if (signUpError) {
-          throw signUpError;
+          if (!data.user) {
+            throw new Error('Failed to create user account');
+          }
+
+          setOtpSent(true);
+          toast({
+            title: 'Verification Code Sent',
+            description: `We sent a 6-digit code to ${selectedCountry.dialCode} ${phoneNumber}. Enter it below to verify your account.`,
+          });
+
+          setStep('verify');
+        } else {
+          // Email signup flow (existing logic)
+          const fullPhoneNumber = phoneNumber ? `${selectedCountry.dialCode}${phoneNumber}` : null;
+          const { data, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth/callback`,
+              data: {
+                name,
+                phone_number: fullPhoneNumber,
+                role: 'PERSONAL_ACCOUNT',
+              }
+            }
+          });
+
+          if (signUpError) {
+            throw signUpError;
+          }
+
+          if (!data.user) {
+            throw new Error('Failed to create user account');
+          }
+
+          toast({
+            title: 'Verification Email Sent',
+            description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
+          });
+
+          setStep('verify');
         }
-
-        if (!data.user) {
-          throw new Error('Failed to create user account');
-        }
-
-        // Note: User profile will be created in /auth/callback AFTER email verification
-        // This ensures only verified users exist in user_profiles table
-
-        toast({
-          title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
-        });
-
-        setStep('verify');
       }
 
       setLoading(false);
@@ -266,7 +349,9 @@ export default function SignupForm() {
       const code = error.code || error.error_code || '';
 
       if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('already in use')) {
-        errorMessage = 'An account with this email already exists. Please sign in instead.';
+        errorMessage = signupMethod === 'phone'
+          ? 'An account with this phone number already exists. Please sign in instead.'
+          : 'An account with this email already exists. Please sign in instead.';
       } else if (msg.includes('Business name already taken') || msg.includes('business with this name already exists')) {
         errorMessage = 'This business name is already taken. Please choose a different name.';
       } else if (code === 'email_address_invalid' || msg.includes('email_address_invalid') || (msg.toLowerCase().includes('email') && msg.toLowerCase().includes('invalid'))) {
@@ -342,25 +427,98 @@ export default function SignupForm() {
     }
   };
 
-  // Popular country codes
-  const countryCodes = [
-    { code: '+1', name: 'US/Canada' },
-    { code: '+44', name: 'UK' },
-    { code: '+91', name: 'India' },
-    { code: '+86', name: 'China' },
-    { code: '+81', name: 'Japan' },
-    { code: '+49', name: 'Germany' },
-    { code: '+33', name: 'France' },
-    { code: '+61', name: 'Australia' },
-    { code: '+55', name: 'Brazil' },
-    { code: '+52', name: 'Mexico' },
-    { code: '+34', name: 'Spain' },
-    { code: '+39', name: 'Italy' },
-    { code: '+7', name: 'Russia' },
-    { code: '+82', name: 'South Korea' },
-    { code: '+62', name: 'Indonesia' },
-    { code: '+27', name: 'South Africa' },
-  ];
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+      const fullPhone = formatE164(selectedCountry.dialCode, phoneNumber);
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: fullPhone,
+        token: otp,
+        type: 'sms',
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Phone Verified! 🎉',
+        description: 'Your account has been created successfully.',
+      });
+
+      // Redirect to home page or dashboard
+      router.push('/');
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+
+      const msg = error.message || '';
+      let description = 'The code you entered is incorrect. Please try again.';
+
+      if (msg.includes('expired')) {
+        description = 'This code has expired. Please request a new one.';
+      } else if (msg.includes('Invalid') || msg.includes('invalid')) {
+        description = 'Invalid verification code. Please check and try again.';
+      }
+
+      toast({
+        title: 'Verification Failed',
+        description,
+        variant: 'destructive',
+      });
+
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+      const fullPhone = formatE164(selectedCountry.dialCode, phoneNumber);
+
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: fullPhone,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setOtp('');
+      toast({
+        title: 'Code Resent',
+        description: `A new verification code has been sent to ${selectedCountry.dialCode} ${phoneNumber}.`,
+      });
+
+      setCooldown(60);
+      setLoading(false);
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+
+      const msg = error.message || '';
+      let description = 'Could not resend code. Please try again.';
+
+      if (msg.includes('rate') || msg.includes('Rate') || error.status === 429) {
+        const match = msg.match(/after\s+(\d+)\s*seconds?/i);
+        const secs = match ? parseInt(match[1], 10) : 60;
+        setCooldown(secs);
+        description = `Please wait ${secs} seconds before requesting another code.`;
+      }
+
+      toast({
+        title: 'Could Not Resend',
+        description,
+        variant: 'destructive',
+      });
+
+      setLoading(false);
+    }
+  };
 
   // Password strength calculation
   const getPasswordStrength = (value: string) => {
@@ -516,6 +674,33 @@ export default function SignupForm() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 px-6">
+              {/* Signup method toggle - for both personal and business accounts */}
+              <div className="flex rounded-lg bg-muted p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSignupMethod('phone')}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-sm font-medium transition-all ${
+                      signupMethod === 'phone'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    Phone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupMethod('email')}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-sm font-medium transition-all ${
+                      signupMethod === 'email'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </button>
+                </div>
               {accountType === 'BUSINESS_ACCOUNT' && (
                 <>
                   <div className="space-y-2">
@@ -608,50 +793,79 @@ export default function SignupForm() {
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="h-11"
-                />
-                <p className="text-xs text-muted-foreground">We&apos;ll send a verification link to this email</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium">
-                  Phone Number {accountType === 'PERSONAL_ACCOUNT' && <span className="text-muted-foreground font-normal">(optional)</span>}
-                </Label>
-                <div className="flex gap-2">
-                  <Select value={countryCode} onValueChange={setCountryCode}>
-                    <SelectTrigger className="w-[110px] h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryCodes.map(({ code, name }) => (
-                        <SelectItem key={code} value={code}>
-                          {code} {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="555 123 4567"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                    autoComplete="tel"
-                    className="flex-1 h-11"
-                  />
+              {/* Conditional fields based on signup method */}
+              {signupMethod === 'email' ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      autoComplete="email"
+                      className="h-11"
+                    />
+                    <p className="text-xs text-muted-foreground">We&apos;ll send a verification link to this email</p>
+                  </div>
+                  {/* Optional phone for email signup */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-medium">
+                      Phone Number <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <CountryPicker
+                        value={selectedCountry.code}
+                        onChange={(country) => {
+                          setSelectedCountry(country);
+                          setCountryCode(country.dialCode);
+                        }}
+                      />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder={selectedCountry.maxLength ? '0'.repeat(selectedCountry.maxLength) : '1234567890'}
+                        value={phoneNumber}
+                        onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                        autoComplete="tel"
+                        className="flex-1 h-11"
+                        maxLength={selectedCountry.maxLength || 15}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Phone signup method */
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number <span className="text-red-500">*</span></Label>
+                  <div className="flex gap-2">
+                    <CountryPicker
+                      value={selectedCountry.code}
+                      onChange={(country) => {
+                        setSelectedCountry(country);
+                        setCountryCode(country.dialCode);
+                      }}
+                    />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder={selectedCountry.maxLength ? '0'.repeat(selectedCountry.maxLength) : '1234567890'}
+                      required
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      autoComplete="tel"
+                      className="flex-1 h-11"
+                      maxLength={selectedCountry.maxLength || 15}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">We&apos;ll send a verification code via SMS to this number</p>
                 </div>
-              </div>
+              )}
               {accountType === 'BUSINESS_ACCOUNT' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -785,53 +999,123 @@ export default function SignupForm() {
             <CardHeader className="text-center pb-2 pt-8">
               <div className="flex justify-center mb-3">
                 <div className="h-14 w-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Mail className="h-7 w-7 text-green-600 dark:text-green-400" />
+                  {signupMethod === 'phone' ? (
+                    <Smartphone className="h-7 w-7 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <Mail className="h-7 w-7 text-green-600 dark:text-green-400" />
+                  )}
                 </div>
               </div>
-              <CardTitle className="font-headline text-2xl tracking-tight">Check Your Email</CardTitle>
-              <CardDescription className="text-base">We sent a verification link to <strong className="text-foreground">{email}</strong></CardDescription>
+              <CardTitle className="font-headline text-2xl tracking-tight">
+                {signupMethod === 'phone' ? 'Verify Your Phone' : 'Check Your Email'}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {signupMethod === 'phone' ? (
+                  <>We sent a 6-digit code to <strong className="text-foreground">{selectedCountry.dialCode} {phoneNumber}</strong></>
+                ) : (
+                  <>We sent a verification link to <strong className="text-foreground">{email}</strong></>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 px-6">
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium flex items-center justify-center gap-2">
-                  <span>⏱️</span> This link expires in 30 minutes
-                </p>
-              </div>
-              <div className="space-y-1">
-                {[
-                  { title: 'Open your email inbox', desc: `Look for an email from JulaZone at ${email}` },
-                  { title: 'Check spam/junk folder', desc: 'New senders sometimes land in spam — also check Gmail\'s Promotions tab' },
-                  { title: 'Click the verification link', desc: 'Confirm your email address to activate your account' },
-                  { title: 'Start exploring', desc: accountType === 'BUSINESS_ACCOUNT' ? 'Set up your boutique once approved' : 'Browse products and start shopping' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-primary">{i + 1}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
+              {signupMethod === 'phone' ? (
+                /* Phone OTP verification */
+                <>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <p className="text-sm text-blue-800 dark:text-blue-200 text-center font-medium flex items-center justify-center gap-2">
+                      <span>📱</span> Enter the code sent to your phone
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="border-t pt-3 space-y-2">
-                <p className="text-xs text-center text-muted-foreground">
-                  Didn&apos;t receive the email?{' '}
-                  {cooldown > 0 ? (
-                    <span className="text-muted-foreground font-medium">Resend available in {cooldown}s</span>
-                  ) : (
-                    <button
-                      onClick={handleResendEmail}
-                      className="text-primary font-medium hover:underline"
-                      type="button"
-                      disabled={loading}
-                    >
-                      Resend verification email
-                    </button>
-                  )}
-                </p>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otp" className="text-sm font-medium">Verification Code</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="000000"
+                      maxLength={6}
+                      value={otp}
+                      onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="h-12 text-center text-2xl tracking-[0.5em] font-mono"
+                      autoFocus
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    className="w-full h-11 text-base gap-2"
+                    onClick={handleVerifyOtp}
+                    disabled={loading || otp.length !== 6}
+                  >
+                    {loading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Verifying...</>
+                    ) : (
+                      <>Verify & Continue <ArrowRight className="h-4 w-4" /></>
+                    )}
+                  </Button>
+                  <div className="border-t pt-3 space-y-2">
+                    <p className="text-xs text-center text-muted-foreground">
+                      Didn&apos;t receive the code?{' '}
+                      {cooldown > 0 ? (
+                        <span className="text-muted-foreground font-medium">Resend in {cooldown}s</span>
+                      ) : (
+                        <button
+                          onClick={handleResendOtp}
+                          className="text-primary font-medium hover:underline"
+                          type="button"
+                          disabled={loading}
+                        >
+                          Resend code
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                /* Email verification */
+                <>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium flex items-center justify-center gap-2">
+                      <span>⏱️</span> This link expires in 30 minutes
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      { title: 'Open your email inbox', desc: `Look for an email from JulaZone at ${email}` },
+                      { title: 'Check spam/junk folder', desc: 'New senders sometimes land in spam — also check Gmail\'s Promotions tab' },
+                      { title: 'Click the verification link', desc: 'Confirm your email address to activate your account' },
+                      { title: 'Start exploring', desc: accountType === 'BUSINESS_ACCOUNT' ? 'Set up your boutique once approved' : 'Browse products and start shopping' },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">{i + 1}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t pt-3 space-y-2">
+                    <p className="text-xs text-center text-muted-foreground">
+                      Didn&apos;t receive the email?{' '}
+                      {cooldown > 0 ? (
+                        <span className="text-muted-foreground font-medium">Resend available in {cooldown}s</span>
+                      ) : (
+                        <button
+                          onClick={handleResendEmail}
+                          className="text-primary font-medium hover:underline"
+                          type="button"
+                          disabled={loading}
+                        >
+                          Resend verification email
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col gap-3 px-6 pb-8">
               <Button
