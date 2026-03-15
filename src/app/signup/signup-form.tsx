@@ -216,7 +216,7 @@ export default function SignupForm() {
 
         toast({
           title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email}. Link expires in 30 minutes.`,
+          description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
         });
 
         setStep('verify');
@@ -248,7 +248,7 @@ export default function SignupForm() {
 
         toast({
           title: 'Verification Email Sent',
-          description: `Please check your inbox at ${email}. Link expires in 30 minutes.`,
+          description: `Please check your inbox at ${email}. If you don't see it, check your spam/junk folder. Link expires in 30 minutes.`,
         });
 
         setStep('verify');

@@ -173,6 +173,12 @@ export default async function BusinessPendingPage() {
               Please check your inbox and click the link to verify your email address.
             </p>
 
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                📩 Can&apos;t find the email? Check your <strong>spam/junk folder</strong> — and Gmail&apos;s <strong>Promotions</strong> tab too.
+              </p>
+            </div>
+
             <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
                 Once verified, your application will be reviewed by our team.
