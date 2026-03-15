@@ -7,13 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail, CheckCircle2, ArrowLeft, ArrowRight, Shield, Lock } from 'lucide-react';
+import { ShoppingBag, Loader2, AlertTriangle, Eye, EyeOff, Mail, CheckCircle2, ArrowLeft, ArrowRight, Shield, Lock, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createClient } from '@/lib/supabase/client';
+import { CountryPicker } from '@/components/country-picker';
+import { COUNTRIES, type Country, formatE164 } from '@/lib/countries';
+
+type LoginMethod = 'email' | 'phone';
 
 export default function LoginForm() {
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('phone');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Gambia default
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -86,13 +93,28 @@ export default function LoginForm() {
     setNeedsVerification(false);
 
     try {
-      console.log('Attempting Supabase sign in...');
+      console.log('Attempting Supabase sign in via', loginMethod);
       const supabase = createClient();
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      let data;
+      let signInError;
+
+      if (loginMethod === 'phone') {
+        const fullPhone = formatE164(selectedCountry.dialCode, phoneNumber);
+        const result = await supabase.auth.signInWithPassword({
+          phone: fullPhone,
+          password,
+        });
+        data = result.data;
+        signInError = result.error;
+      } else {
+        const result = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        data = result.data;
+        signInError = result.error;
+      }
 
       if (signInError) {
         throw signInError;
@@ -104,8 +126,8 @@ export default function LoginForm() {
 
       console.log('Supabase sign in successful', data.user.id);
 
-      // Check if email is verified
-      if (!data.user.email_confirmed_at) {
+      // Check if email is verified (skip for phone-only users)
+      if (data.user.email && !data.user.email_confirmed_at) {
         console.log('Email not verified');
         setNeedsVerification(true);
         setError('Please verify your email before logging in. Check your inbox for the verification link.');
@@ -157,7 +179,9 @@ export default function LoginForm() {
       console.error('Login error:', e);
       let errorMessage = 'An unknown error occurred. Please try again.';
        if (e.message?.includes('Invalid login credentials')) {
-           errorMessage = 'Invalid email or password.';
+           errorMessage = loginMethod === 'phone'
+             ? 'Invalid phone number or password.'
+             : 'Invalid email or password.';
        } else if (e.message?.includes('Email not confirmed')) {
            errorMessage = 'Please verify your email before logging in.';
            setNeedsVerification(true);
@@ -259,20 +283,73 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="h-11"
-                />
+              {/* Login method toggle */}
+              <div className="flex rounded-lg bg-muted p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setLoginMethod('phone'); setError(null); }}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-sm font-medium transition-all ${
+                    loginMethod === 'phone'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Smartphone className="h-4 w-4" />
+                  Phone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginMethod('email'); setError(null); }}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-sm font-medium transition-all ${
+                    loginMethod === 'email'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Mail className="h-4 w-4" />
+                  Email
+                </button>
               </div>
+
+              {/* Conditional login field */}
+              {loginMethod === 'email' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    autoComplete="email"
+                    className="h-11"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                  <div className="flex gap-2">
+                    <CountryPicker
+                      value={selectedCountry.code}
+                      onChange={(country) => setSelectedCountry(country)}
+                    />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder={selectedCountry.maxLength ? '0'.repeat(selectedCountry.maxLength) : '1234567890'}
+                      required
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      autoComplete="tel"
+                      className="flex-1 h-11"
+                      maxLength={selectedCountry.maxLength || 15}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium">Password</Label>
