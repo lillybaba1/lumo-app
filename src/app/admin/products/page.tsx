@@ -428,7 +428,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell className="font-medium max-w-[200px] truncate">{product.name}</TableCell>
                 <TableCell className="max-w-[120px] truncate">{product.category}</TableCell>
-                <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
+                <TableCell>{currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                 <TableCell>
                   <span className={product.stock && product.stock < 10 ? 'text-orange-600 font-semibold' : ''}>
                     {product.stock}

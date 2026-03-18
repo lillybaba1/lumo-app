@@ -207,7 +207,7 @@ export default function ProductCard({ product, showQuickView = true, compact = f
                     color: 'var(--color-text-primary)',
                   }}
                 >
-                  {currencySymbol}{product.price.toFixed(2)}
+                  {currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {!compact && product.stock > 0 && product.stock <= 5 && (
                   <span className="text-[8px] md:text-[11px] text-orange-600 font-medium whitespace-nowrap ml-2">

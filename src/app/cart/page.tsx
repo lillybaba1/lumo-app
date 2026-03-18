@@ -98,7 +98,7 @@ export default function CartPage() {
                             </Button>
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {currencySymbol}{product.price.toFixed(2)} each
+                            {currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
                           </p>
                           
                           {/* Quantity and Total */}
@@ -165,7 +165,7 @@ export default function CartPage() {
                             />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>{currencySymbol}{product.price.toFixed(2)}</TableCell>
+                          <TableCell>{currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Button

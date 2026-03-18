@@ -168,7 +168,7 @@ export default async function WishlistPage() {
                       </p>
                       <div className="flex items-center justify-between pt-2">
                         <span className="text-2xl font-bold text-primary">
-                          {currencySymbol}{product.price.toFixed(2)}
+                          {currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         {isLowStock && !isOutOfStock && (
                           <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">

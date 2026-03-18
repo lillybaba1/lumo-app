@@ -77,7 +77,7 @@ export default async function BusinessProductsPage() {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">${product.price.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     <p className="text-sm text-muted-foreground">
                       Stock: {product.stock} units
                     </p>

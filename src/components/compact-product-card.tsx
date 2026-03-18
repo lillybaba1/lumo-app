@@ -135,11 +135,11 @@ export default function CompactProductCard({ product, index = 999 }: CompactProd
           {/* Price */}
           <div className="flex items-baseline gap-1.5 mb-1.5">
             <span className="text-sm font-bold text-gray-900">
-              {currencySymbol}{product.price.toFixed(2)}
+              {currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             {hasDiscount && originalPrice && (
               <span className="text-[10px] text-gray-400 line-through">
-                {currencySymbol}{originalPrice.toFixed(2)}
+                {currencySymbol}{originalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             )}
           </div>

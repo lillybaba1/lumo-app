@@ -157,7 +157,7 @@ export default async function AnalyticsPage() {
                                                 {item.product.name}
                                             </Link>
                                             <p className="text-sm text-muted-foreground">
-                                                {currencySymbol}{item.product.price.toFixed(2)}
+                                                {currencySymbol}{item.product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                         <div className="text-right">

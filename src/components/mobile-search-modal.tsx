@@ -302,7 +302,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
                         <p className="text-xs text-muted-foreground">{product.category}</p>
                       </div>
                       <span className="text-sm font-semibold text-primary">
-                        ${product.price.toFixed(2)}
+                        ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </button>
                   ))}

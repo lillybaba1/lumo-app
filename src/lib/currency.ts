@@ -31,7 +31,7 @@ export function formatPrice(
 ): string {
   const symbol = getCurrencySymbol(currencyCode);
   const decimals = options?.decimals ?? 2;
-  return `${symbol}${amount.toFixed(decimals)}`;
+  return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
 }
 
 /**
@@ -43,5 +43,5 @@ export function formatPriceRange(
   currencyCode?: string
 ): string {
   const symbol = getCurrencySymbol(currencyCode);
-  return `${symbol}${min.toFixed(2)} - ${symbol}${max.toFixed(2)}`;
+  return `${symbol}${min.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - ${symbol}${max.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

@@ -133,7 +133,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           {/* Price */}
           <div>
-            <p className="text-3xl font-bold text-primary">{currencySymbol}{product.price.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-primary">{currencySymbol}{product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
 
           {/* Description */}
