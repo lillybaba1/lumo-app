@@ -5,6 +5,7 @@ import { CreditCard, Calendar, DollarSign, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getSettings } from '@/app/admin/settings/actions';
+import { formatAmount } from '@/lib/currency';
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
   if (!currencyCode) return '$';
@@ -90,7 +91,7 @@ export default async function PaymentHistoryPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Paid</p>
-                  <p className="font-semibold text-lg">{currencySymbol}{totalPaid.toFixed(2)}</p>
+                  <p className="font-semibold text-lg">{currencySymbol}{formatAmount(totalPaid)}</p>
                 </div>
               </div>
             </CardContent>
@@ -180,7 +181,7 @@ export default async function PaymentHistoryPage() {
 
                     <div className="flex flex-col md:items-end gap-2">
                       <p className="text-2xl font-bold text-primary">
-                        {currencySymbol}{payment.amount.toFixed(2)}
+                        {currencySymbol}{formatAmount(payment.amount)}
                       </p>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3" />

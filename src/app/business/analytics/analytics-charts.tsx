@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, TrendingUp, Eye, Percent } from "lucide-react";
+import { formatAmount } from '@/lib/currency';
 
 interface DailySale {
   date: string;
@@ -69,7 +70,7 @@ export default function AnalyticsCharts({ dailySales, topByRevenue, topByViews, 
                           height: `${Math.max((day.revenue / maxRevenue) * 100, day.revenue > 0 ? 5 : 0)}%`,
                           minHeight: day.revenue > 0 ? '4px' : '0'
                         }}
-                        title={`${formatDate(day.date)}: $${day.revenue.toFixed(2)} (${day.orders} orders)`}
+                        title={`${formatDate(day.date)}: $${formatAmount(day.revenue)} (${day.orders} orders)`}
                       />
                     </div>
                     {/* Show date label every 5 days */}
@@ -87,7 +88,7 @@ export default function AnalyticsCharts({ dailySales, topByRevenue, topByViews, 
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total Revenue</p>
                   <p className="text-lg font-bold">
-                    ${dailySales.reduce((sum, d) => sum + d.revenue, 0).toFixed(2)}
+                    ${formatAmount(dailySales.reduce((sum, d) => sum + d.revenue, 0))}
                   </p>
                 </div>
                 <div className="text-center">
@@ -99,7 +100,7 @@ export default function AnalyticsCharts({ dailySales, topByRevenue, topByViews, 
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Avg/Day</p>
                   <p className="text-lg font-bold">
-                    ${(dailySales.reduce((sum, d) => sum + d.revenue, 0) / 30).toFixed(2)}
+                    ${formatAmount(dailySales.reduce((sum, d) => sum + d.revenue, 0) / 30)}
                   </p>
                 </div>
               </div>
@@ -146,7 +147,7 @@ export default function AnalyticsCharts({ dailySales, topByRevenue, topByViews, 
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-600">${product.revenue.toFixed(2)}</p>
+                        <p className="font-bold text-green-600">${formatAmount(product.revenue)}</p>
                       </div>
                       {/* Progress bar */}
                       <div className="w-24 bg-muted rounded-full h-2">

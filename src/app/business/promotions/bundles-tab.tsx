@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { formatAmount } from '@/lib/currency';
 import { 
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle, DialogTrigger 
@@ -251,7 +252,7 @@ export default function BundlesTab({ bundles, products, sellerId }: Props) {
                             {product.name}
                           </label>
                           <span className="text-sm font-medium">
-                            ${product.price.toFixed(2)}
+                            ${formatAmount(product.price)}
                           </span>
                         </div>
                       ))}
@@ -260,7 +261,7 @@ export default function BundlesTab({ bundles, products, sellerId }: Props) {
                 </ScrollArea>
                 {selectedProducts.length > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    {selectedProducts.length} products selected • Original total: ${originalPrice.toFixed(2)}
+                    {selectedProducts.length} products selected • Original total: ${formatAmount(originalPrice)}
                   </p>
                 )}
               </div>
@@ -283,7 +284,7 @@ export default function BundlesTab({ bundles, products, sellerId }: Props) {
                 {bundlePrice && originalPrice > 0 && (
                   <p className={`text-sm ${savingsPercent > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {savingsPercent > 0 
-                      ? `Customers save ${savingsPercent}% ($${(originalPrice - parseFloat(bundlePrice)).toFixed(2)})`
+                      ? `Customers save ${savingsPercent}% ($${formatAmount(originalPrice - parseFloat(bundlePrice))})`
                       : 'Bundle price must be less than original total'
                     }
                   </p>
@@ -361,8 +362,8 @@ export default function BundlesTab({ bundles, products, sellerId }: Props) {
 
                   <div className="mt-3 flex flex-wrap gap-4 text-sm">
                     <span className="flex items-center gap-1">
-                      <span className="text-muted-foreground line-through">${bundle.original_price.toFixed(2)}</span>
-                      <span className="font-bold text-green-600">${bundle.bundle_price.toFixed(2)}</span>
+                      <span className="text-muted-foreground line-through">${formatAmount(bundle.original_price)}</span>
+                      <span className="font-bold text-green-600">${formatAmount(bundle.bundle_price)}</span>
                     </span>
                     <span className="text-muted-foreground">
                       {bundle.product_ids?.length || 0} products

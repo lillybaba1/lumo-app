@@ -31,6 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { getAllPayments, updatePaymentStatus, refundPayment } from '@/services/paymentService';
 import { Payment } from '@/lib/types';
+import { formatAmount } from '@/lib/currency';
 
 const statusVariant = {
   'Pending': 'default',
@@ -137,19 +138,19 @@ export default function PaymentsPage() {
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <div className="border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Total Payments</p>
-          <p className="text-2xl font-bold">${stats.total.toFixed(2)}</p>
+          <p className="text-2xl font-bold">${formatAmount(stats.total)}</p>
           <p className="text-xs text-muted-foreground mt-1">{payments.length} transactions</p>
         </div>
         <div className="border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Successful Payments</p>
-          <p className="text-2xl font-bold text-green-600">${stats.paid.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-green-600">${formatAmount(stats.paid)}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {payments.filter(p => p.status === 'Completed').length} paid
           </p>
         </div>
         <div className="border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Pending Payments</p>
-          <p className="text-2xl font-bold text-yellow-600">${stats.pending.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-yellow-600">${formatAmount(stats.pending)}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {payments.filter(p => p.status === 'Pending').length} pending
           </p>

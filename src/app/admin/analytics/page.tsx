@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, Users, Package, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
 export default async function AnalyticsPage() {
     const [settings, analytics] = await Promise.all([
@@ -36,7 +36,7 @@ export default async function AnalyticsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                                <p className="text-2xl font-bold">{currencySymbol}{analytics.totalRevenue.toFixed(2)}</p>
+                                <p className="text-2xl font-bold">{currencySymbol}{formatAmount(analytics.totalRevenue)}</p>
                                 <div className="flex items-center gap-1 mt-1">
                                     <TrendingUp className="h-3 w-3 text-green-600" />
                                     <span className="text-xs text-green-600">+{revenueChange}%</span>

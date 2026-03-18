@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getOrders } from '@/services/orderService';
 import { getSettings } from '@/app/admin/settings/actions';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
 const statusVariant = {
     'Pending': 'default',
@@ -64,7 +64,7 @@ export default async function OrdersPage() {
                 <TableCell>
                   <Badge variant={statusVariant[order.status]}>{order.status}</Badge>
                 </TableCell>
-                <TableCell className="text-right">{currencySymbol}{order.total.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{currencySymbol}{formatAmount(order.total)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

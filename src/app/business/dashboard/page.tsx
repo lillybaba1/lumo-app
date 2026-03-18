@@ -4,6 +4,7 @@ import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight, Plus } fro
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +55,7 @@ export default async function BusinessDashboardPage() {
           </CardHeader>
           <CardContent className="relative z-10">
             <div className={`text-3xl font-bold ${stats.totalRevenue > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-              ${stats.totalRevenue.toFixed(2)}
+              ${formatAmount(stats.totalRevenue)}
             </div>
             {stats.totalRevenue === 0 ? (
               <div className="mt-2">
@@ -114,7 +115,7 @@ export default async function BusinessDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${stats.totalOrders > 0 ? (stats.totalRevenue / stats.totalOrders).toFixed(2) : '0.00'}
+              ${stats.totalOrders > 0 ? formatAmount(stats.totalRevenue / stats.totalOrders) : '0.00'}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Per order average</p>
           </CardContent>
@@ -224,7 +225,7 @@ export default async function BusinessDashboardPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {product.sales_count} sold · ${product.revenue?.toFixed(2) || '0.00'}
+                        {product.sales_count} sold · ${product.revenue ? formatAmount(product.revenue) : '0.00'}
                       </p>
                     </div>
                   </div>

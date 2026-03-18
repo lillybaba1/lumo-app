@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { HeroData, HeroProduct, Product } from '@/lib/types';
 import Image from 'next/image';
+import { formatAmount } from '@/lib/currency';
 
 export default function HeroAdminPage() {
   const { toast } = useToast();
@@ -355,7 +356,7 @@ export default function HeroAdminPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">${product.price.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">${formatAmount(product.price)}</p>
                           </div>
                         </button>
                       ))}
@@ -577,7 +578,7 @@ export default function HeroAdminPage() {
                       {/* Product info overlay */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
                         <p className="text-white text-xs font-semibold truncate">{product.name}</p>
-                        <p className="text-white/80 text-xs">${product.price.toFixed(2)}</p>
+                        <p className="text-white/80 text-xs">${formatAmount(product.price)}</p>
                       </div>
 
                       {/* Drag handle */}

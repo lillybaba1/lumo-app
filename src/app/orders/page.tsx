@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,7 +105,7 @@ export default async function MyOrdersPage() {
                       </p>
                       <div className="flex items-center gap-4 text-sm">
                         <span>{order.items?.length || 0} item(s)</span>
-                        <span className="font-semibold">${order.total.toFixed(2)}</span>
+                        <span className="font-semibold">${formatAmount(order.total)}</span>
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground hidden md:block" />

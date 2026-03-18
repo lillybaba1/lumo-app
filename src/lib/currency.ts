@@ -35,6 +35,16 @@ export function formatPrice(
 }
 
 /**
+ * Format a number with comma separators (no currency symbol)
+ */
+export function formatAmount(
+  amount: number,
+  decimals: number = 2
+): string {
+  return amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+/**
  * Format a price range
  */
 export function formatPriceRange(

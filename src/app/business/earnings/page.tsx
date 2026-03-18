@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { SUBSCRIPTION_TIERS } from '@/lib/types';
+import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,7 @@ export default async function EarningsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(totalEarnings)}</div>
             <p className="text-xs text-muted-foreground">After commission</p>
           </CardContent>
         </Card>
@@ -89,7 +90,7 @@ export default async function EarningsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${thisMonthEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(thisMonthEarnings)}</div>
             <p className="text-xs text-muted-foreground">{thisMonthTransactions.length} sales</p>
           </CardContent>
         </Card>
@@ -102,7 +103,7 @@ export default async function EarningsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${pendingPayout.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(pendingPayout)}</div>
             <p className="text-xs text-muted-foreground">Available for withdrawal</p>
           </CardContent>
         </Card>
@@ -115,7 +116,7 @@ export default async function EarningsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalCommission.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(totalCommission)}</div>
             <p className="text-xs text-muted-foreground">{commissionRate}% rate</p>
           </CardContent>
         </Card>
@@ -186,11 +187,11 @@ export default async function EarningsPage() {
                         transaction.type === 'sale' ? 'text-green-600' :
                         transaction.type === 'refund' ? 'text-red-600' : ''
                       }`}>
-                        {transaction.type === 'refund' ? '-' : '+'}${Math.abs(transaction.net_amount || transaction.amount).toFixed(2)}
+                        {transaction.type === 'refund' ? '-' : '+'}${formatAmount(Math.abs(transaction.net_amount || transaction.amount))}
                       </p>
                       {transaction.commission_amount && (
                         <p className="text-xs text-muted-foreground">
-                          -{transaction.commission_amount.toFixed(2)} commission
+                          -{formatAmount(transaction.commission_amount)} commission
                         </p>
                       )}
                     </div>
@@ -226,7 +227,7 @@ export default async function EarningsPage() {
                         <Clock className="h-4 w-4 text-yellow-600" />
                       </div>
                       <div>
-                        <p className="font-medium">${payout.amount.toFixed(2)}</p>
+                        <p className="font-medium">${formatAmount(payout.amount)}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(payout.created_at).toLocaleDateString()}
                         </p>

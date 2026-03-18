@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatAmount } from '@/lib/currency';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -202,7 +203,7 @@ export default function CouponsPage() {
                   <TableCell className="font-mono font-bold">{coupon.code}</TableCell>
                   <TableCell className="capitalize">{coupon.type}</TableCell>
                   <TableCell>
-                    {coupon.type === 'percentage' ? `${coupon.value}%` : `$${coupon.value.toFixed(2)}`}
+                    {coupon.type === 'percentage' ? `${coupon.value}%` : `$${formatAmount(coupon.value)}`}
                   </TableCell>
                   <TableCell>
                     {coupon.usedCount} / {coupon.usageLimit || '∞'}

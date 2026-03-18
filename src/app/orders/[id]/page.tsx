@@ -1,5 +1,6 @@
 import { getOrderById } from '@/services/orderService';
 import { getPaymentByOrder } from '@/services/paymentService';
+import { formatAmount } from '@/lib/currency';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -127,7 +128,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <p className="text-sm text-muted-foreground">{item.product.description}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <span className="text-sm">Qty: {item.quantity}</span>
-                      <span className="font-semibold">${(item.product.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-semibold">${formatAmount(item.product.price * item.quantity)}</span>
                     </div>
                   </div>
                 </div>
@@ -141,18 +142,18 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
-                <span>${order.subtotal.toFixed(2)}</span>
+                <span>${formatAmount(order.subtotal)}</span>
               </div>
               {order.discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                   <span>Discount {order.couponCode && `(${order.couponCode})`}</span>
-                  <span>-${order.discount.toFixed(2)}</span>
+                  <span>-${formatAmount(order.discount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span>${order.total.toFixed(2)}</span>
+                <span>${formatAmount(order.total)}</span>
               </div>
             </div>
           </CardContent>

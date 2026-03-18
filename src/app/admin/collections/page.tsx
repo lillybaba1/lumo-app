@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
+import { formatAmount } from '@/lib/currency';
 
 type Collections = {
   bestSellers: string[];
@@ -317,7 +318,7 @@ export default function CollectionsPage() {
                         <div>
                           <p className="text-sm font-medium">{product.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {unitsSold} sold • ${revenue.toFixed(2)} revenue
+                            {unitsSold} sold • ${formatAmount(revenue)} revenue
                           </p>
                         </div>
                       </div>
@@ -380,7 +381,7 @@ export default function CollectionsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">${product.price.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">${formatAmount(product.price)}</p>
                           </div>
                         </button>
                       ))}
@@ -416,7 +417,7 @@ export default function CollectionsPage() {
                         <div>
                           <p className="text-sm font-medium">{product.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            ${product.price.toFixed(2)} • {product.category}
+                            ${formatAmount(product.price)} • {product.category}
                           </p>
                         </div>
                       </div>
@@ -526,7 +527,7 @@ export default function CollectionsPage() {
                           <div>
                             <p className="text-sm font-medium">{product.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {unitsSold} sold • ${revenue.toFixed(2)} revenue
+                              {unitsSold} sold • ${formatAmount(revenue)} revenue
                             </p>
                           </div>
                         </div>
@@ -598,7 +599,7 @@ export default function CollectionsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">${product.price.toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">${formatAmount(product.price)}</p>
                         </div>
                       </button>
                     ))}
@@ -634,7 +635,7 @@ export default function CollectionsPage() {
                       <div>
                         <p className="text-sm font-medium">{product.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          ${product.price.toFixed(2)} • {product.category}
+                          ${formatAmount(product.price)} • {product.category}
                         </p>
                       </div>
                     </div>

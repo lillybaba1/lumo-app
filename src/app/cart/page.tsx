@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect, useState } from 'react';
 import { getSettings } from '../admin/settings/actions';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 import { PRODUCT_BLUR_DATA_URL, IMAGE_SIZES } from '@/lib/image-utils';
 
 type Settings = { currency?: string };
@@ -125,7 +125,7 @@ export default function CartPage() {
                               </Button>
                             </div>
                             <p className="font-semibold text-primary">
-                              {currencySymbol}{(product.price * quantity).toFixed(2)}
+                              {currencySymbol}{formatAmount(product.price * quantity)}
                             </p>
                           </div>
                         </div>
@@ -199,7 +199,7 @@ export default function CartPage() {
                               <p className="text-xs text-orange-600 mt-1">Only {product.stock} in stock</p>
                             )}
                           </TableCell>
-                          <TableCell className="font-semibold">{currencySymbol}{(product.price * quantity).toFixed(2)}</TableCell>
+                          <TableCell className="font-semibold">{currencySymbol}{formatAmount(product.price * quantity)}</TableCell>
                           <TableCell>
                             <Button 
                               variant="ghost" 
@@ -227,7 +227,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                    <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{formatAmount(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
@@ -236,7 +236,7 @@ export default function CartPage() {
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span className="text-primary">{currencySymbol}{subtotal.toFixed(2)}</span>
+                      <span className="text-primary">{currencySymbol}{formatAmount(subtotal)}</span>
                     </div>
                   </div>
                 </CardContent>

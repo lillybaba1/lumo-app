@@ -19,7 +19,7 @@ import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2 } from 'lucide-react';
 import { CheckoutConsent } from '@/components/checkout-consent';
-import { getCurrencySymbol } from '@/lib/currency';
+import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
 type Settings = { currency?: string };
 
@@ -64,7 +64,7 @@ export default function CheckoutPage() {
         setAppliedCoupon(coupon);
         toast({
           title: "Coupon Applied!",
-          description: `You saved ${currencySymbol}${calculateDiscount(subtotal, coupon).toFixed(2)}`,
+          description: `You saved ${currencySymbol}${formatAmount(calculateDiscount(subtotal, coupon))}`,  
         });
       } else {
         toast({
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
                           <div className="text-sm text-muted-foreground">Qty: {item.quantity}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">{currencySymbol}{(item.product.price * item.quantity).toFixed(2)}</div>
+                          <div className="font-medium">{currencySymbol}{formatAmount(item.product.price * item.quantity)}</div>
                         </div>
                       </div>
                     ))}
@@ -329,18 +329,18 @@ export default function CheckoutPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
-                      <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+                      <span>{currencySymbol}{formatAmount(subtotal)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                         <span>Discount</span>
-                        <span>-{currencySymbol}{discount.toFixed(2)}</span>
+                        <span>-{currencySymbol}{formatAmount(discount)}</span>
                       </div>
                     )}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>{currencySymbol}{total.toFixed(2)}</span>
+                      <span>{currencySymbol}{formatAmount(total)}</span>
                     </div>
                   </div>
                 </CardContent>

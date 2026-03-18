@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { formatAmount } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -90,7 +91,7 @@ export default function OrderEditForm({ order }: { order: any }) {
               <span className="font-medium">{order.paymentMethod}</span>
 
               <span className="text-muted-foreground">Total:</span>
-              <span className="font-medium">${order.total.toFixed(2)}</span>
+              <span className="font-medium">${formatAmount(order.total)}</span>
             </div>
           </CardContent>
         </Card>

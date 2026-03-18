@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import AnalyticsCharts from "./analytics-charts";
+import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -236,7 +237,7 @@ export default async function BusinessAnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${analytics.summary.todayRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(analytics.summary.todayRevenue)}</div>
             <p className="text-xs text-muted-foreground">
               {analytics.summary.todayOrders} orders today
             </p>
@@ -249,7 +250,7 @@ export default async function BusinessAnalyticsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${analytics.summary.monthRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatAmount(analytics.summary.monthRevenue)}</div>
             <div className="flex items-center text-xs">
               {analytics.summary.revenueGrowth >= 0 ? (
                 <span className="text-green-600 flex items-center">
@@ -286,7 +287,7 @@ export default async function BusinessAnalyticsPage() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.summary.overallConversionRate.toFixed(2)}%</div>
+            <div className="text-2xl font-bold">{formatAmount(analytics.summary.overallConversionRate)}%</div>
             <p className="text-xs text-muted-foreground">
               Views to sales
             </p>

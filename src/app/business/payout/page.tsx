@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CreditCard, Wallet, DollarSign, Calendar, CheckCircle, AlertCircle, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutSettingsForm from "./payout-form";
+import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +54,7 @@ export default async function BusinessPayoutPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Earnings</p>
-                <p className="text-xl font-bold">${(businessAccount.totalEarnings || 0).toFixed(2)}</p>
+                <p className="text-xl font-bold">${formatAmount(businessAccount.totalEarnings || 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -66,7 +67,7 @@ export default async function BusinessPayoutPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pending Payout</p>
-                <p className="text-xl font-bold">${(businessAccount.pendingPayout || 0).toFixed(2)}</p>
+                <p className="text-xl font-bold">${formatAmount(businessAccount.pendingPayout || 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -79,7 +80,7 @@ export default async function BusinessPayoutPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Commission Paid</p>
-                <p className="text-xl font-bold">${(businessAccount.totalCommissionPaid || 0).toFixed(2)}</p>
+                <p className="text-xl font-bold">${formatAmount(businessAccount.totalCommissionPaid || 0)}</p>
               </div>
             </div>
           </CardContent>
