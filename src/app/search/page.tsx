@@ -68,11 +68,13 @@ function SearchResultsContent() {
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;
 
-    // Filter by search query
+    // Filter by search query (name, description, or store name)
     if (searchQuery) {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+        product.name.toLowerCase().includes(q) ||
+        product.description.toLowerCase().includes(q) ||
+        (product.sellerName && product.sellerName.toLowerCase().includes(q))
       );
     }
 

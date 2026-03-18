@@ -56,13 +56,28 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
         categories:category_id (
           id,
           name
+        ),
+        business_accounts:seller_id (
+          business_name
         )
       `, { count: 'exact' })
       .eq('is_active', true);
 
-    // Apply filters
+    // Apply filters — search product name, description, or store name
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      // Find seller IDs matching the search term
+      const { data: matchingSellers } = await supabaseAdmin
+        .from('business_accounts')
+        .select('id')
+        .ilike('business_name', `%${search}%`);
+
+      const sellerIds = matchingSellers?.map(s => s.id) || [];
+
+      if (sellerIds.length > 0) {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,seller_id.in.(${sellerIds.join(',')})`);
+      } else {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      }
     }
 
     if (categoryId) {
@@ -165,6 +180,7 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
         weight: product.weight ? parseFloat(product.weight) : undefined,
         dimensions: product.dimensions,
         sellerId: product.seller_id,
+        sellerName: product.business_accounts?.business_name,
       };
     });
 
@@ -229,6 +245,9 @@ export async function getProducts(): Promise<Product[]> {
           image_url,
           display_order,
           is_primary
+        ),
+        business_accounts:seller_id (
+          business_name
         )
       `)
       .eq('is_active', true)
@@ -271,6 +290,7 @@ export async function getProducts(): Promise<Product[]> {
         weight: product.weight ? parseFloat(product.weight) : undefined,
         dimensions: product.dimensions,
         sellerId: product.seller_id,
+        sellerName: product.business_accounts?.business_name,
       };
     });
   } catch (error) {
