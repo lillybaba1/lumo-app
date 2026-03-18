@@ -64,6 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
     
     // Always use /icon.svg - no admin override for favicon
     return {
+      metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://julazone.com'),
       title: siteName,
       description: 'Your modern e-commerce experience.',
       icons: {

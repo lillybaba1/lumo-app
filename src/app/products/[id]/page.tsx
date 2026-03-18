@@ -37,8 +37,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://julazone.com';
   const productUrl = `${siteUrl}/products/${product.id}`;
-  const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || `${siteUrl}/icon.svg`;
+  const rawImageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
   const description = product.description?.slice(0, 200) || `${product.name} - Available on JulaZone`;
+
+  // Proxy the image through our domain so social media crawlers
+  // can reliably fetch it (Supabase storage has cache-control: no-cache
+  // which some crawlers don't handle well)
+  const ogImageUrl = rawImageUrl
+    ? `${siteUrl}/api/og?url=${encodeURIComponent(rawImageUrl)}`
+    : `${siteUrl}/icon.svg`;
 
   return {
     title: product.name,
@@ -50,9 +57,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       siteName: 'JulaZone',
       images: [
         {
-          url: imageUrl,
-          width: 800,
-          height: 800,
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
           alt: product.name,
         },
       ],
@@ -62,7 +69,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       card: 'summary_large_image',
       title: product.name,
       description,
-      images: [imageUrl],
+      images: [ogImageUrl],
     },
   };
 }
