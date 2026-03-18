@@ -35,19 +35,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: 'Product Not Found' };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://julazone.com';
+  const siteUrl = 'https://julazone.com';
   const productUrl = `${siteUrl}/products/${product.id}`;
   const rawImageUrl = product.productImages?.[0] || product.imageUrls?.[0] || '';
   const description = product.description?.slice(0, 200) || `${product.name} - Available on JulaZone`;
 
-  // Proxy the image through our domain so social media crawlers
-  // can reliably fetch it (Supabase storage has cache-control: no-cache
-  // which some crawlers don't handle well)
-  const ogImageUrl = rawImageUrl
-    ? `${siteUrl}/api/og?url=${encodeURIComponent(rawImageUrl)}`
-    : `${siteUrl}/icon.svg`;
+  // Use the direct image URL (Supabase public storage) so social media
+  // crawlers can fetch it without any proxy
+  const ogImageUrl = rawImageUrl || `${siteUrl}/icon.svg`;
 
   return {
+    metadataBase: new URL('https://julazone.com'),
     title: product.name,
     description,
     openGraph: {

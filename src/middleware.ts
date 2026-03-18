@@ -13,7 +13,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname === '/business/pending' ||
     pathname === '/icon.svg' ||
-    pathname.startsWith('/api/public/')
+    pathname.startsWith('/api/public/') ||
+    pathname.startsWith('/api/og')
   ) {
     return NextResponse.next();
   }
