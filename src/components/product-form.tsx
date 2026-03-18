@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, Upload, X, Save, Crop as CropIcon, Sparkles } from 'lucide-react';
+import { Loader2, Upload, X, Save, Crop as CropIcon, Sparkles, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveProduct } from '@/app/admin/products/actions';
 import { uploadImageAndGetUrl } from '@/services/storageService';
@@ -59,6 +59,7 @@ export default function ProductForm({ product = null, categories, userType = 'ad
             : (product?.imageUrls || [])
     );
     const [isUploading, setIsUploading] = React.useState(false);
+    const [uploadProgress, setUploadProgress] = React.useState<string>('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const productImageInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -76,11 +77,9 @@ export default function ProductForm({ product = null, categories, userType = 'ad
     const [selectedCategory, setSelectedCategory] = React.useState<string>(product?.categoryId || product?.category || '');
     const [isGeneratingAttributes, setIsGeneratingAttributes] = React.useState(false);
 
-    // Crop modal state
+    // Crop modal state — optional post-upload cropping only
     const [cropModalOpen, setCropModalOpen] = React.useState(false);
     const [currentCropImage, setCurrentCropImage] = React.useState<string>('');
-    const [pendingFile, setPendingFile] = React.useState<File | null>(null);
-    const [fileQueue, setFileQueue] = React.useState<File[]>([]);
 
     // Keep local state in sync if a different product record is loaded
     React.useEffect(() => {
@@ -113,115 +112,46 @@ export default function ProductForm({ product = null, categories, userType = 'ad
         }
     }, [state, product, router, toast, redirectUrl]);
 
+    // Direct batch upload — no mandatory crop modal per image
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
         const validFiles: File[] = [];
-
-        // Validate all files
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file.size > 4 * 1024 * 1024) {
-                toast({
-                    title: "Image too large",
-                    description: `${file.name} exceeds 4MB limit.`,
-                    variant: "destructive"
-                });
+                toast({ title: "Too large", description: `${file.name} exceeds 4MB. Skipped.`, variant: "destructive" });
                 continue;
             }
             validFiles.push(file);
         }
-
         if (validFiles.length === 0) return;
 
-        // Start processing first file
-        const firstFile = validFiles[0];
-        const remainingFiles = validFiles.slice(1);
-
-        setFileQueue(remainingFiles);
-
-        const objectUrl = URL.createObjectURL(firstFile);
-        setCurrentCropImage(objectUrl);
-        setPendingFile(firstFile);
-        setCropModalOpen(true);
-    };
-
-    const handleCropComplete = async (cropData: CropData) => {
-        if (!pendingFile) return;
-
         setIsUploading(true);
+        let uploaded = 0;
 
-        try {
-            const url = await uploadImageAndGetUrl(pendingFile, `products/${Date.now()}-${pendingFile.name}`);
-
-            // Add image to product images array
-            setProductImages(prev => [...prev, url]);
-
-            // Store crop data
-            setImageCropData(prev => {
-                const updated = new Map(prev);
-                updated.set(url, cropData);
-                return updated;
-            });
-
-            toast({
-                title: 'Upload successful',
-                description: 'Image uploaded and cropped.',
-                variant: 'default'
-            });
-
-            URL.revokeObjectURL(currentCropImage);
-
-            // Process next file in queue
-            if (fileQueue.length > 0) {
-                const nextFile = fileQueue[0];
-                const remainingFiles = fileQueue.slice(1);
-                setFileQueue(remainingFiles);
-
-                const objectUrl = URL.createObjectURL(nextFile);
-                setCurrentCropImage(objectUrl);
-                setPendingFile(nextFile);
-                // Modal stays open for next file
-            } else {
-                // No more files, close modal and reset
-                setCropModalOpen(false);
-                setPendingFile(null);
-
-                // Reset file input
-                if (productImageInputRef.current) {
-                    productImageInputRef.current.value = '';
-                }
+        for (const file of validFiles) {
+            uploaded++;
+            setUploadProgress(`Uploading ${uploaded}/${validFiles.length}...`);
+            try {
+                const url = await uploadImageAndGetUrl(file, `products/${Date.now()}-${file.name}`);
+                setProductImages(prev => [...prev, url]);
+            } catch (error: any) {
+                toast({ title: 'Upload failed', description: `${file.name}: ${error.message}`, variant: 'destructive' });
             }
-        } catch (error: any) {
-            toast({
-                title: 'Upload failed',
-                description: error.message,
-                variant: 'destructive'
-            });
+        }
 
-            // On error, still try to process remaining files
-            if (fileQueue.length > 0) {
-                const nextFile = fileQueue[0];
-                const remainingFiles = fileQueue.slice(1);
-                setFileQueue(remainingFiles);
+        setIsUploading(false);
+        setUploadProgress('');
+        toast({ title: 'Done', description: `${uploaded} image(s) uploaded.` });
 
-                URL.revokeObjectURL(currentCropImage);
-                const objectUrl = URL.createObjectURL(nextFile);
-                setCurrentCropImage(objectUrl);
-                setPendingFile(nextFile);
-            } else {
-                setCropModalOpen(false);
-                setPendingFile(null);
-                if (productImageInputRef.current) {
-                    productImageInputRef.current.value = '';
-                }
-            }
-        } finally {
-            setIsUploading(false);
+        if (productImageInputRef.current) {
+            productImageInputRef.current.value = '';
         }
     };
 
+    // Open crop modal for an existing image (optional)
     const handleOpenCropModal = (imageUrl: string) => {
         setCurrentCropImage(imageUrl);
         setCropModalOpen(true);
@@ -241,57 +171,6 @@ export default function ProductForm({ product = null, categories, userType = 'ad
             description: 'Image crop adjusted.',
             variant: 'default'
         });
-    };
-
-    // Handle using original image without cropping
-    const handleUseOriginal = async () => {
-        if (!pendingFile) return;
-
-        setIsUploading(true);
-
-        try {
-            const url = await uploadImageAndGetUrl(pendingFile, `products/${Date.now()}-${pendingFile.name}`);
-
-            // Add image to product images array (no crop data)
-            setProductImages(prev => [...prev, url]);
-
-            toast({
-                title: 'Upload successful',
-                description: 'Original image uploaded without cropping.',
-                variant: 'default'
-            });
-
-            URL.revokeObjectURL(currentCropImage);
-
-            // Process next file in queue
-            if (fileQueue.length > 0) {
-                const nextFile = fileQueue[0];
-                const remainingFiles = fileQueue.slice(1);
-                setFileQueue(remainingFiles);
-
-                const objectUrl = URL.createObjectURL(nextFile);
-                setCurrentCropImage(objectUrl);
-                setPendingFile(nextFile);
-                // Modal stays open for next file
-            } else {
-                // No more files, close modal and reset
-                setCropModalOpen(false);
-                setPendingFile(null);
-
-                // Reset file input
-                if (productImageInputRef.current) {
-                    productImageInputRef.current.value = '';
-                }
-            }
-        } catch (error: any) {
-            toast({
-                title: 'Upload failed',
-                description: error.message,
-                variant: 'destructive'
-            });
-        } finally {
-            setIsUploading(false);
-        }
     };
 
     const handleRemoveImage = (urlToRemove: string) => {
@@ -525,117 +404,20 @@ export default function ProductForm({ product = null, categories, userType = 'ad
             <input type="hidden" name="imageUrls" value={imageUrls.join(',')} />
             <input type="hidden" name="productImages" value={productImages.join(',')} />
 
-            <CardContent className="space-y-6 pt-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="name">Product Name</Label>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleGenerateTitle}
-                                disabled={isGeneratingTitle || productImages.length === 0}
-                                className="gap-1.5 h-7"
-                            >
-                                {isGeneratingTitle ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                    <Sparkles className="h-3 w-3" />
-                                )}
-                                AI
-                            </Button>
-                        </div>
-                        <Input
-                            id="name"
-                            name="name"
-                            value={productName}
-                            onChange={(e) => setProductName(e.target.value)}
-                            required
-                            placeholder="Enter product name or generate with AI..."
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select
-                            name="category"
-                            value={selectedCategory}
-                            onValueChange={setSelectedCategory}
-                            required
-                        >
-                            <SelectTrigger id="category">
-                                <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="description">Description</Label>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGenerateDescription}
-                            disabled={isGeneratingDescription || productImages.length === 0}
-                            className="gap-1.5"
-                        >
-                            {isGeneratingDescription ? (
-                                <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    Generate with AI
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                    <Textarea
-                        id="description"
-                        name="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                        rows={5}
-                        placeholder="Enter product description or generate one with AI using product images..."
-                    />
-                    {productImages.length === 0 && (
-                        <p className="text-xs text-muted-foreground">
-                            💡 Tip: Upload product images first, then use AI to generate a description
-                        </p>
-                    )}
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="price">Price</Label>
-                        <Input id="price" name="price" type="number" step="0.01" defaultValue={product?.price} required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="stock">Stock</Label>
-                        <Input id="stock" name="stock" type="number" defaultValue={product?.stock} required />
-                    </div>
-                </div>
+            <CardContent className="space-y-5 pt-6">
 
-                {/* Product Images Section */}
-                <div className="space-y-4">
-                    <div>
-                        <Label>Product Images *</Label>
-                        <p className="text-sm text-muted-foreground">Main product photos shown in carousel. At least one required.</p>
-                    </div>
-                    <div className="flex items-center gap-4">
+                {/* ── Images First (most important) ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <Label>Product Images *</Label>
+                            <p className="text-xs text-muted-foreground">At least one required. First image is the main photo.</p>
+                        </div>
                         <label htmlFor="product-image-upload" className="cursor-pointer">
-                            <Button asChild variant="outline" type="button" disabled={isUploading}>
+                            <Button asChild variant="outline" size="sm" type="button" disabled={isUploading}>
                                 <div>
                                     {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                                    {isUploading ? 'Uploading...' : 'Upload Product Images'}
+                                    {isUploading ? uploadProgress : 'Upload Images'}
                                 </div>
                             </Button>
                             <input
@@ -648,97 +430,176 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                                 onChange={handleImageChange}
                             />
                         </label>
-                        {productImages.length > 0 && (
-                            <span className="text-sm text-muted-foreground">{productImages.length} image(s) uploaded</span>
-                        )}
-                        {fileQueue.length > 0 && (
-                            <span className="text-sm text-muted-foreground">({fileQueue.length} in queue)</span>
-                        )}
                     </div>
-                    {productImages.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {productImages.map(url => (
-                                <div key={url} className="relative space-y-2">
-                                    <div className="relative w-full aspect-square rounded-md overflow-hidden border">
-                                        <Image src={url} alt="Product" fill className="object-cover" unoptimized />
-                                        <Button
-                                            variant="destructive"
-                                            size="icon"
-                                            type="button"
-                                            className="absolute top-1 right-1 h-6 w-6 bg-black/50 hover:bg-destructive/80 text-white"
-                                            onClick={() => handleRemoveImage(url)}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            type="button"
-                                            onClick={() => handleOpenCropModal(url)}
-                                            className="w-full"
-                                        >
-                                            <CropIcon className="h-3 w-3 mr-1" />
-                                            Crop
-                                        </Button>
-                                        <Button
-                                            variant={productImages[0] === url ? "default" : "outline"}
-                                            size="sm"
-                                            type="button"
-                                            onClick={() => handleSetPrimary(url)}
-                                            className="w-full"
-                                        >
-                                            {productImages[0] === url ? 'Primary' : 'Set Primary'}
-                                        </Button>
+
+                    {productImages.length > 0 ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                            {productImages.map((url, idx) => (
+                                <div key={url} className="relative group">
+                                    <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary/50 transition-colors">
+                                        <Image src={url} alt={`Product ${idx + 1}`} fill className="object-cover" unoptimized />
+                                        {/* Primary badge */}
+                                        {idx === 0 && (
+                                            <div className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-br-md">
+                                                MAIN
+                                            </div>
+                                        )}
+                                        {/* Overlay actions on hover */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                                            <Button
+                                                variant="secondary"
+                                                size="icon"
+                                                type="button"
+                                                className="h-7 w-7"
+                                                onClick={() => handleOpenCropModal(url)}
+                                                title="Crop"
+                                            >
+                                                <CropIcon className="h-3.5 w-3.5" />
+                                            </Button>
+                                            {idx !== 0 && (
+                                                <Button
+                                                    variant="secondary"
+                                                    size="icon"
+                                                    type="button"
+                                                    className="h-7 w-7"
+                                                    onClick={() => handleSetPrimary(url)}
+                                                    title="Set as main image"
+                                                >
+                                                    <Star className="h-3.5 w-3.5" />
+                                                </Button>
+                                            )}
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                type="button"
+                                                className="h-7 w-7"
+                                                onClick={() => handleRemoveImage(url)}
+                                                title="Remove"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    )}
-                    {productImages.length === 0 && (
-                        <div className="w-full h-32 rounded-md border border-dashed flex items-center justify-center bg-muted/50">
-                            {isUploading ? <Loader2 className="animate-spin" /> : <span className="text-xs text-muted-foreground">No Product Images</span>}
+                    ) : (
+                        <div className="w-full h-24 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/30">
+                            {isUploading ? (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    {uploadProgress}
+                                </div>
+                            ) : (
+                                <span className="text-xs text-muted-foreground">No images yet — click Upload Images above</span>
+                            )}
                         </div>
+                    )}
+                    {productImages.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            {productImages.length} image(s) • Hover to crop, set as main, or remove
+                        </p>
                     )}
                 </div>
 
-                <Separator className="my-8" />
-
-                {/* Product Attributes Section - Only for admins */}
-                {userType === 'admin' && (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-medium">Product Attributes</h3>
-                            <p className="text-sm text-muted-foreground">Add specifications, features, or variants</p>
+                {/* ── Name + Category ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="name">Product Name</Label>
+                            <Button
+                                type="button" variant="ghost" size="sm"
+                                onClick={handleGenerateTitle}
+                                disabled={isGeneratingTitle || productImages.length === 0}
+                                className="gap-1 h-6 text-xs px-2"
+                            >
+                                {isGeneratingTitle ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                AI
+                            </Button>
                         </div>
+                        <Input
+                            id="name" name="name"
+                            value={productName}
+                            onChange={(e) => setProductName(e.target.value)}
+                            required placeholder="Product name..."
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="category">Category</Label>
+                        <Select name="category" value={selectedCategory} onValueChange={setSelectedCategory} required>
+                            <SelectTrigger id="category">
+                                <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                {/* ── Description ── */}
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="description">Description</Label>
                         <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGenerateAttributes}
-                            disabled={isGeneratingAttributes || productImages.length === 0}
-                            className="gap-1.5"
+                            type="button" variant="ghost" size="sm"
+                            onClick={handleGenerateDescription}
+                            disabled={isGeneratingDescription || productImages.length === 0}
+                            className="gap-1 h-6 text-xs px-2"
                         >
-                            {isGeneratingAttributes ? (
-                                <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    Generate with AI
-                                </>
-                            )}
+                            {isGeneratingDescription ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            Generate with AI
                         </Button>
                     </div>
-                    <ProductAttributesManager
-                        attributes={attributes}
-                        onChange={setAttributes}
+                    <Textarea
+                        id="description" name="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        required rows={3}
+                        placeholder="Product description..."
                     />
+                    {productImages.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">💡 Upload images first, then use AI to generate a description</p>
+                    )}
                 </div>
+
+                {/* ── Price + Stock ── */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="price">Price</Label>
+                        <Input id="price" name="price" type="number" step="0.01" defaultValue={product?.price} required />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="stock">Stock</Label>
+                        <Input id="stock" name="stock" type="number" defaultValue={product?.stock} required />
+                    </div>
+                </div>
+
+                {/* ── Product Attributes (admin only) ── */}
+                {userType === 'admin' && (
+                    <>
+                        <Separator />
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-medium">Product Attributes</h3>
+                                    <p className="text-xs text-muted-foreground">Specs, features, or variants</p>
+                                </div>
+                                <Button
+                                    type="button" variant="outline" size="sm"
+                                    onClick={handleGenerateAttributes}
+                                    disabled={isGeneratingAttributes || productImages.length === 0}
+                                    className="gap-1 h-7 text-xs"
+                                >
+                                    {isGeneratingAttributes ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                    Generate with AI
+                                </Button>
+                            </div>
+                            <ProductAttributesManager attributes={attributes} onChange={setAttributes} />
+                        </div>
+                    </>
                 )}
 
             </CardContent>
@@ -747,19 +608,13 @@ export default function ProductForm({ product = null, categories, userType = 'ad
                 <SubmitButton isSubmitting={isSubmitting} />
             </CardFooter>
 
-            {/* Image Crop Modal */}
+            {/* Optional Crop Modal (post-upload) */}
             <ImageCropModal
                 isOpen={cropModalOpen}
-                onClose={() => {
-                    setCropModalOpen(false);
-                    if (currentCropImage.startsWith('blob:')) {
-                        URL.revokeObjectURL(currentCropImage);
-                    }
-                }}
+                onClose={() => setCropModalOpen(false)}
                 imageSrc={currentCropImage}
-                onCropComplete={pendingFile ? handleCropComplete : handlePostUploadCropComplete}
-                onUseOriginal={pendingFile ? handleUseOriginal : undefined}
-                allowOriginal={!!pendingFile}
+                onCropComplete={handlePostUploadCropComplete}
+                allowOriginal={false}
                 initialCrop={imageCropData.get(currentCropImage)}
             />
         </form>
