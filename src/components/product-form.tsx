@@ -85,7 +85,11 @@ export default function ProductForm({ product = null, categories, userType = 'ad
     // Keep local state in sync if a different product record is loaded
     React.useEffect(() => {
         setImageUrls(product?.imageUrls || []);
-        setProductImages(product?.productImages || []);
+        setProductImages(
+            (product?.productImages && product.productImages.length > 0)
+                ? product.productImages
+                : (product?.imageUrls || [])
+        );
         setDescription(product?.description || '');
         setProductName(product?.name || '');
         setSelectedCategory(product?.categoryId || product?.category || '');

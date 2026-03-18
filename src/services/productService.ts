@@ -329,9 +329,11 @@ export async function getProductById(id: string): Promise<Product | null> {
       ? data.product_images
       : []) as DbProductImage[];
 
-    const orderedImageUrls = images
-      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-      .map((img) => img.image_url);
+    const orderedImageUrls = images.length > 0
+      ? images
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map((img) => img.image_url)
+      : (data.image_urls || []);
 
     // Get boutique slug separately if seller exists
     let boutiqueSlug: string | null = null;
