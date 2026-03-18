@@ -1,5 +1,6 @@
 
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getProductById } from '@/services/productService';
 import { getReviewsByProduct, getProductStats, getUserReviewForProduct } from '@/services/reviewService';
 import Image from 'next/image';
@@ -24,6 +25,47 @@ import { RecentlyViewedTracker } from '@/components/recently-viewed-tracker';
 // ISR: Revalidate product pages every 60 seconds
 // Ensures fresh stock/price data while maintaining fast TTFB
 export const revalidate = 60;
+
+// Generate Open Graph metadata so product image/title show when link is shared
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(id);
+
+  if (!product) {
+    return { title: 'Product Not Found' };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://julazone.com';
+  const productUrl = `${siteUrl}/products/${product.id}`;
+  const imageUrl = product.productImages?.[0] || product.imageUrls?.[0] || `${siteUrl}/icon.svg`;
+  const description = product.description?.slice(0, 200) || `${product.name} - Available on JulaZone`;
+
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      url: productUrl,
+      siteName: 'JulaZone',
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: product.name,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
     if (!currencyCode) return '$';
