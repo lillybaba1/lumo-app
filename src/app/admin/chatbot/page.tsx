@@ -167,10 +167,10 @@ export default function ChatbotSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Chatbot Settings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">AI Chatbot</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Customize your AI assistant&apos;s appearance and behavior
           </p>
         </div>

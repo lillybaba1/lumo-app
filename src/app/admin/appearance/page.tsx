@@ -9,11 +9,11 @@ export default async function AppearancePage() {
   const settings = await getSettings();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Site Appearance</h1>
-        <p className="text-muted-foreground">
-          Choose a theme to customize the look and feel of your store. Changes will be visible to all visitors.
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold">Site Appearance</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Customize the look and feel of your store
         </p>
       </div>
 

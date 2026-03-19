@@ -8,9 +8,9 @@ export default async function LogoAdminPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-headline font-bold">Logo & Branding</h1>
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">Logo & Branding</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Customize your store logo and favicon with image cropping
+            Customize your store logo and favicon
           </p>
         </div>
       </div>

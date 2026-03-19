@@ -71,8 +71,8 @@ export default function ContactAdminPage() {
   if (loading) {
     return (
       <div>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-headline font-bold">Manage Contact Page</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">Contact</h1>
           <Skeleton className="h-10 w-32" />
         </div>
         <Skeleton className="h-96 w-full" />
@@ -82,10 +82,10 @@ export default function ContactAdminPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-headline font-bold">Manage Contact Page</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">Contact</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Update your contact information and social media links
           </p>
         </div>

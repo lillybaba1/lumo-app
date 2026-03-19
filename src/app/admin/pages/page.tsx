@@ -121,8 +121,8 @@ export default function PagesPage() {
   if (loading) {
     return (
       <div>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-headline font-bold">Manage Pages</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">Pages</h1>
           <Skeleton className="h-10 w-32" />
         </div>
         <Card>
@@ -144,10 +144,10 @@ export default function PagesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-headline font-bold">Manage Pages</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-headline font-bold">Pages</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Create and edit static pages for your store
           </p>
         </div>
