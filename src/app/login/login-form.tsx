@@ -141,9 +141,9 @@ export default function LoginForm() {
       
       if (meData?.user?.hasBusinessAccount) {
         console.log('Business account found:', meData.user.businessStatus);
-        // Business user - always go to pending page first
-        // The pending page will handle the redirect logic based on approval status
-        window.location.href = '/business/pending';
+        // Business user - go to home page like everyone else
+        // They can navigate to their dashboard from the menu
+        window.location.href = next;
         return;
       }
       
