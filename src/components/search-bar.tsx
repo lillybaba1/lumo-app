@@ -46,6 +46,7 @@ export default function SearchBar({
   const [boutiqueSuggestions, setBoutiqueSuggestions] = useState<Boutique[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTab, setSearchTab] = useState<'products' | 'boutiques'>('products');
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -223,82 +224,118 @@ export default function SearchBar({
           {/* Suggestions */}
           {!loading && (suggestions.length > 0 || boutiqueSuggestions.length > 0) && (
             <div className="p-2">
-              {/* Boutique suggestions */}
-              {boutiqueSuggestions.length > 0 && (
+              {/* Tab Toggle */}
+              <div className="flex gap-1.5 mb-2 p-1 bg-muted/30 rounded-xl">
+                <button
+                  onClick={() => setSearchTab('products')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                    searchTab === 'products'
+                      ? 'bg-white text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <TrendingUp className="h-3 w-3" />
+                  Products
+                  {suggestions.length > 0 && (
+                    <span className="text-[10px] px-1 py-0.5 rounded-full bg-muted-foreground/10">{suggestions.length}</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setSearchTab('boutiques')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                    searchTab === 'boutiques'
+                      ? 'bg-white text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Store className="h-3 w-3" />
+                  Boutiques
+                  {boutiqueSuggestions.length > 0 && (
+                    <span className="text-[10px] px-1 py-0.5 rounded-full bg-muted-foreground/10">{boutiqueSuggestions.length}</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Products Tab */}
+              {searchTab === 'products' && (
                 <>
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <Store className="h-3 w-3" />
-                    Boutiques
-                  </div>
-                  {boutiqueSuggestions.map((boutique) => (
-                    <Link
-                      key={boutique.id}
-                      href={`/boutique/${boutique.slug}`}
-                      onClick={() => {
-                        saveRecentSearch(boutique.displayName);
-                        setIsOpen(false);
-                        setQuery('');
-                      }}
-                      className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                    >
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0 flex items-center justify-center">
-                        {boutique.logo ? (
+                  {suggestions.length > 0 ? (
+                    suggestions.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSuggestionClick(product)}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                           <Image
-                            src={boutique.logo}
-                            alt={boutique.displayName}
+                            src={getProductImage(product)}
+                            alt={product.name}
                             fill
                             sizes="48px"
                             className="object-cover"
                             unoptimized
                           />
-                        ) : (
-                          <Store className="h-6 w-6 text-primary" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{boutique.displayName}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {boutique.tagline || `${boutique.totalProducts} products`}
-                        </p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </Link>
-                  ))}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">{product.category}</p>
+                        </div>
+                        <span className="text-sm font-semibold text-primary">
+                          ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-muted-foreground text-sm">
+                      No products found for &ldquo;{query}&rdquo;
+                    </div>
+                  )}
                 </>
               )}
-              
-              {/* Product suggestions */}
-              {suggestions.length > 0 && (
+
+              {/* Boutiques Tab */}
+              {searchTab === 'boutiques' && (
                 <>
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <TrendingUp className="h-3 w-3" />
-                    Products
-                  </div>
-                  {suggestions.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => handleSuggestionClick(product)}
-                      className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                    >
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <Image
-                          src={getProductImage(product)}
-                          alt={product.name}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.category}</p>
-                      </div>
-                      <span className="text-sm font-semibold text-primary">
-                        ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </button>
-                  ))}
+                  {boutiqueSuggestions.length > 0 ? (
+                    boutiqueSuggestions.map((boutique) => (
+                      <Link
+                        key={boutique.id}
+                        href={`/boutique/${boutique.slug}`}
+                        onClick={() => {
+                          saveRecentSearch(boutique.displayName);
+                          setIsOpen(false);
+                          setQuery('');
+                        }}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0 flex items-center justify-center">
+                          {boutique.logo ? (
+                            <Image
+                              src={boutique.logo}
+                              alt={boutique.displayName}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <Store className="h-6 w-6 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{boutique.displayName}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {boutique.tagline || `${boutique.totalProducts} products`}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-muted-foreground text-sm">
+                      No boutiques found for &ldquo;{query}&rdquo;
+                    </div>
+                  )}
                 </>
               )}
               
