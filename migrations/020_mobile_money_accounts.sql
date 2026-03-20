@@ -16,5 +16,4 @@ ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_payment_method_check;
 ALTER TABLE public.orders ADD CONSTRAINT orders_payment_method_check 
   CHECK (payment_method IN ('Wave Money', 'Cash on Delivery', 'Credit Card', 'Bank Transfer', 'PayDunya', 'Mobile Money'));
 
--- Also update the payments table if it has a similar constraint
-ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_payment_method_check;
+-- Note: payments table uses no CHECK constraint (text column only)
