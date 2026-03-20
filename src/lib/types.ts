@@ -117,7 +117,7 @@ export interface Order {
   discount: number;
   total: number;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  paymentMethod: 'Wave Money' | 'Cash on Delivery';
+  paymentMethod: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
   couponCode?: string;
   notes?: string;
@@ -323,6 +323,12 @@ export interface BusinessAccount {
   // Payout settings
   payoutMethod?: 'bank_transfer' | 'paypal' | 'stripe';
   payoutDetails?: Record<string, any>;
+  // Mobile Money settings (for receiving payments from buyers)
+  mobileMoneyAccounts?: Array<{
+    provider: 'QMoney' | 'Afrimoney' | 'Wave';
+    number: string;
+    accountName: string;
+  }>;
   // Commission tracking
   totalEarnings: number;
   totalCommissionPaid: number;
@@ -591,7 +597,7 @@ export interface Payment {
   orderId: string;
   amount: number;
   currency: string;
-  paymentMethod: 'Wave Money' | 'Cash on Delivery';
+  paymentMethod: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
   transactionId?: string;
   customerEmail: string;

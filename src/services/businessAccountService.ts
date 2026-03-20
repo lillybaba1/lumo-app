@@ -102,6 +102,7 @@ export async function createBusinessAccount(
       status: businessData.status || 'PENDING_VERIFICATION',
       payout_method: businessData.payoutMethod,
       payout_details: businessData.payoutDetails,
+      mobile_money_accounts: businessData.mobileMoneyAccounts,
       shipping_policies: businessData.shippingPolicies,
       return_policy: businessData.returnPolicy,
       created_at: new Date().toISOString(),
@@ -181,6 +182,7 @@ export async function updateBusinessAccount(
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.payoutMethod !== undefined) dbUpdates.payout_method = updates.payoutMethod;
     if (updates.payoutDetails !== undefined) dbUpdates.payout_details = updates.payoutDetails;
+    if (updates.mobileMoneyAccounts !== undefined) dbUpdates.mobile_money_accounts = updates.mobileMoneyAccounts;
     if (updates.shippingPolicies !== undefined) dbUpdates.shipping_policies = updates.shippingPolicies;
     if (updates.returnPolicy !== undefined) dbUpdates.return_policy = updates.returnPolicy;
     // New boutique fields
@@ -302,6 +304,11 @@ interface DbBusinessAccountRow {
   pending_payout: string | number | null;
   payout_method: string | null;
   payout_details: Record<string, unknown> | null;
+  mobile_money_accounts: Array<{
+    provider: string;
+    number: string;
+    accountName: string;
+  }> | null;
   shipping_policies: string | null;
   return_policy: string | null;
   created_at: string;
@@ -350,6 +357,7 @@ function mapDbToBusinessAccount(dbRecord: DbBusinessAccountRow): BusinessAccount
     // Original fields
     payoutMethod: dbRecord.payout_method as 'bank_transfer' | 'paypal' | 'stripe' | undefined,
     payoutDetails: dbRecord.payout_details ?? undefined,
+    mobileMoneyAccounts: (dbRecord.mobile_money_accounts as BusinessAccount['mobileMoneyAccounts']) ?? undefined,
     shippingPolicies: dbRecord.shipping_policies ?? undefined,
     returnPolicy: dbRecord.return_policy ?? undefined,
     createdAt: dbRecord.created_at,

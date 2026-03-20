@@ -94,7 +94,7 @@ export const orderStatusSchema = z.enum([
   'Cancelled',
 ]);
 
-export const paymentMethodSchema = z.enum(['Wave Money', 'Cash on Delivery']);
+export const paymentMethodSchema = z.enum(['Wave Money', 'Cash on Delivery', 'PayDunya', 'Mobile Money']);
 
 export const paymentStatusSchema = z.enum(['Pending', 'Paid', 'Failed']);
 

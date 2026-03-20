@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Building } from "lucide-react";
+import { Loader2, Save, Building, Smartphone, Plus, Trash2 } from "lucide-react";
 import { BusinessAccount } from "@/lib/types";
 
 export default function BusinessProfilePage() {
@@ -260,6 +260,101 @@ export default function BusinessProfilePage() {
                 placeholder="Describe your return and refund policy..."
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Mobile Money Accounts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Mobile Money Accounts
+            </CardTitle>
+            <CardDescription>
+              Add your mobile money numbers so buyers can pay you directly via QMoney, Afrimoney, or Wave
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(businessAccount.mobileMoneyAccounts || []).map((account, index) => (
+              <div key={index} className="flex gap-3 items-start p-3 border rounded-lg bg-muted/30">
+                <div className="flex-1 grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Provider</Label>
+                    <select
+                      value={account.provider}
+                      onChange={(e) => {
+                        const updated = [...(businessAccount.mobileMoneyAccounts || [])];
+                        updated[index] = { ...updated[index], provider: e.target.value as any };
+                        setBusinessAccount({ ...businessAccount, mobileMoneyAccounts: updated });
+                      }}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="QMoney">QMoney</option>
+                      <option value="Afrimoney">Afrimoney</option>
+                      <option value="Wave">Wave</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone Number</Label>
+                    <Input
+                      placeholder="+220 XXXXXXX"
+                      value={account.number}
+                      onChange={(e) => {
+                        const updated = [...(businessAccount.mobileMoneyAccounts || [])];
+                        updated[index] = { ...updated[index], number: e.target.value };
+                        setBusinessAccount({ ...businessAccount, mobileMoneyAccounts: updated });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Account Name</Label>
+                    <Input
+                      placeholder="Name on account"
+                      value={account.accountName}
+                      onChange={(e) => {
+                        const updated = [...(businessAccount.mobileMoneyAccounts || [])];
+                        updated[index] = { ...updated[index], accountName: e.target.value };
+                        setBusinessAccount({ ...businessAccount, mobileMoneyAccounts: updated });
+                      }}
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive mt-5"
+                  onClick={() => {
+                    const updated = (businessAccount.mobileMoneyAccounts || []).filter((_, i) => i !== index);
+                    setBusinessAccount({ ...businessAccount, mobileMoneyAccounts: updated });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const current = businessAccount.mobileMoneyAccounts || [];
+                setBusinessAccount({
+                  ...businessAccount,
+                  mobileMoneyAccounts: [...current, { provider: 'QMoney' as const, number: '', accountName: '' }]
+                });
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Mobile Money Account
+            </Button>
+
+            {(!businessAccount.mobileMoneyAccounts || businessAccount.mobileMoneyAccounts.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                No mobile money accounts added yet. Add one so buyers can pay you directly.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

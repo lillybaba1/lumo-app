@@ -12,7 +12,7 @@ export interface Payment {
   orderId: string;
   amount: number;
   currency: string;
-  paymentMethod: 'Wave Money' | 'Cash on Delivery';
+  paymentMethod: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
   transactionId?: string;
   customerEmail: string;
@@ -30,7 +30,7 @@ interface DbPaymentRow {
   order_id: string;
   amount: number;
   currency: string;
-  payment_method: 'Wave Money' | 'Cash on Delivery';
+  payment_method: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
   transaction_id: string | null;
   customer_email: string;
@@ -61,7 +61,7 @@ interface DbPaymentInsert {
   order_id: string;
   amount: number;
   currency: string;
-  payment_method: 'Wave Money' | 'Cash on Delivery';
+  payment_method: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Refunded';
   transaction_id?: string;
   customer_email: string;
@@ -257,6 +257,97 @@ export async function processCashOnDelivery(payment: Omit<Payment, 'id' | 'creat
   } catch (error) {
     paymentLogger.error('Failed to create COD payment', error as Error);
     throw new Error('Could not create Cash on Delivery payment.');
+  }
+}
+
+/**
+ * Create a PayDunya payment record (status will be updated via IPN callback)
+ */
+export async function processPayDunyaPayment(payment: Omit<Payment, 'id' | 'createdAt' | 'status'>, paydunyaToken: string): Promise<Payment> {
+  try {
+    const newPayment = await createPayment({
+      ...payment,
+      status: 'Processing',
+      transactionId: paydunyaToken,
+      metadata: {
+        ...payment.metadata,
+        paymentProvider: 'PayDunya',
+        paydunyaToken,
+        note: 'Payment processing via PayDunya (Wave/Card)',
+      },
+    });
+
+    paymentLogger.debug('PayDunya payment created', { paymentId: newPayment.id, token: paydunyaToken });
+
+    return newPayment;
+  } catch (error) {
+    paymentLogger.error('Failed to create PayDunya payment', error as Error);
+    throw new Error('Could not create PayDunya payment.');
+  }
+}
+
+/**
+ * Create a Mobile Money transfer payment record (manual verification)
+ */
+export async function processMobileMoneyPayment(payment: Omit<Payment, 'id' | 'createdAt' | 'status'>, mobileMoneyDetails: {
+  provider: string;
+  referenceNumber: string;
+  senderNumber: string;
+  receiverNumber: string;
+}): Promise<Payment> {
+  try {
+    const newPayment = await createPayment({
+      ...payment,
+      status: 'Pending',
+      transactionId: mobileMoneyDetails.referenceNumber,
+      metadata: {
+        ...payment.metadata,
+        paymentProvider: 'Mobile Money',
+        mobileMoneyProvider: mobileMoneyDetails.provider,
+        referenceNumber: mobileMoneyDetails.referenceNumber,
+        senderNumber: mobileMoneyDetails.senderNumber,
+        receiverNumber: mobileMoneyDetails.receiverNumber,
+        note: `Manual mobile money transfer via ${mobileMoneyDetails.provider}. Pending seller confirmation.`,
+      },
+    });
+
+    paymentLogger.debug('Mobile Money payment created', { paymentId: newPayment.id, provider: mobileMoneyDetails.provider });
+
+    return newPayment;
+  } catch (error) {
+    paymentLogger.error('Failed to create Mobile Money payment', error as Error);
+    throw new Error('Could not create Mobile Money payment.');
+  }
+}
+
+/**
+ * Update payment by PayDunya token (used by IPN callback)
+ */
+export async function updatePaymentByToken(paydunyaToken: string, status: Payment['status']): Promise<void> {
+  try {
+    // Find the payment by transaction_id (which stores the PayDunya token)
+    const { data, error: findError } = await supabaseAdmin
+      .from('payments')
+      .select('*')
+      .eq('transaction_id', paydunyaToken)
+      .single();
+
+    if (findError || !data) {
+      paymentLogger.error('Payment not found for PayDunya token', { token: paydunyaToken });
+      throw new Error('Payment not found');
+    }
+
+    const payment = mapDbToPayment(data);
+    await updatePaymentStatus(payment.id, status, paydunyaToken);
+
+    paymentLogger.info('Payment updated via PayDunya callback', { 
+      paymentId: payment.id, 
+      token: paydunyaToken, 
+      status 
+    });
+  } catch (error) {
+    paymentLogger.error('Failed to update payment by token', { token: paydunyaToken, error: String(error) });
+    throw error;
   }
 }
 

@@ -32,6 +32,9 @@ export async function PUT(request: Request) {
       description: updates.description,
       shippingPolicies: updates.shippingPolicies,
       returnPolicy: updates.returnPolicy,
+      mobileMoneyAccounts: updates.mobileMoneyAccounts,
+      payoutMethod: updates.payoutMethod,
+      payoutDetails: updates.payoutDetails,
     };
 
     const updatedBusiness = await updateBusinessAccount(businessAccount.id, allowedUpdates);
