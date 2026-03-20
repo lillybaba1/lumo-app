@@ -7,6 +7,15 @@ const routeLogger = logger.child('PayDunyaCreate');
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if PayDunya is configured
+    if (!process.env.PAYDUNYA_MASTER_KEY || !process.env.PAYDUNYA_PRIVATE_KEY || !process.env.PAYDUNYA_TOKEN) {
+      routeLogger.warn('PayDunya API keys not configured');
+      return NextResponse.json(
+        { error: 'Online payments are not yet configured. Please use Cash on Delivery or Mobile Money.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { orderId, amount, description, customerName, customerEmail, customerPhone, items } = body;
 

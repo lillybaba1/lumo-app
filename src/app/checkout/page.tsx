@@ -246,31 +246,46 @@ export default function CheckoutPage() {
           }),
         });
 
+        const contentType = paydunyaRes.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('Payment service is not available yet. Please try Cash on Delivery.');
+        }
+
         const paydunyaData = await paydunyaRes.json();
 
         if (!paydunyaRes.ok || !paydunyaData.checkoutUrl) {
           throw new Error(paydunyaData.error || 'Failed to create payment. Please try another method.');
         }
 
-        await processPayDunyaPayment(
-          { ...paymentBase, paymentMethod: 'PayDunya' },
-          paydunyaData.token
-        );
+        // Payment record is optional — don't block redirect if it fails
+        try {
+          await processPayDunyaPayment(
+            { ...paymentBase, paymentMethod: 'PayDunya' },
+            paydunyaData.token
+          );
+        } catch (payErr) {
+          console.warn('PayDunya payment record creation failed (non-critical):', payErr);
+        }
 
         dispatch({ type: 'CLEAR_CART' });
         window.location.href = paydunyaData.checkoutUrl;
         return;
 
       } else if (paymentMethod === 'mobile_money') {
-        await processMobileMoneyPayment(
-          { ...paymentBase, paymentMethod: 'Mobile Money' },
-          {
-            provider: mmSelectedProvider,
-            referenceNumber: mmReferenceNumber.trim(),
-            senderNumber: mmSenderNumber.trim(),
-            receiverNumber: mmSelectedReceiverNumber,
-          }
-        );
+        // Payment record is optional — don't block order if it fails
+        try {
+          await processMobileMoneyPayment(
+            { ...paymentBase, paymentMethod: 'Mobile Money' },
+            {
+              provider: mmSelectedProvider,
+              referenceNumber: mmReferenceNumber.trim(),
+              senderNumber: mmSenderNumber.trim(),
+              receiverNumber: mmSelectedReceiverNumber,
+            }
+          );
+        } catch (payErr) {
+          console.warn('Mobile money payment record creation failed (non-critical):', payErr);
+        }
 
         toast({
           title: "Order Placed!",
@@ -278,7 +293,12 @@ export default function CheckoutPage() {
         });
 
       } else {
-        await processCashOnDelivery({ ...paymentBase, paymentMethod: 'Cash on Delivery' });
+        // COD: payment record is optional, order is the important thing
+        try {
+          await processCashOnDelivery({ ...paymentBase, paymentMethod: 'Cash on Delivery' });
+        } catch (payErr) {
+          console.warn('Payment record creation failed (non-critical for COD):', payErr);
+        }
 
         toast({
           title: "Order Placed Successfully!",
