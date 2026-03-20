@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export class UnauthorizedError extends Error {
   statusCode: number;
@@ -48,18 +49,25 @@ export async function requireAdmin(
     const userId = user.id;
     const email = user.email || '';
 
-    // Check user role from users table (primary source)
-    const { data: userData } = await supabase
+    // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
 
-    // Determine role - users table is the source of truth
-    const role = userData?.role || 'customer';
+    // Also check user_profiles as fallback
+    const { data: profileData } = await supabaseAdmin
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
 
-    // Support both new and legacy admin roles
-    if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
+    // Determine role - check both tables
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+    const role = userData?.role || profileData?.role || 'customer';
+
+    if (!ADMIN_ROLES.includes(role)) {
       return fail('Admin role required', 'unauthorized');
     }
 
@@ -88,18 +96,24 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from users table (primary source)
-      const { data: userData } = await supabase
+      // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+      const { data: userData } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
 
-      // Determine role - users table is the source of truth
-      const role = userData?.role || 'customer';
+      const { data: profileData } = await supabaseAdmin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
 
-      // Support both new and legacy admin roles
-      if (role !== 'admin' && role !== 'APP_OWNER_ADMIN') {
+      // Determine role - check both tables
+      const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+      const role = userData?.role || profileData?.role || 'customer';
+
+      if (!ADMIN_ROLES.includes(role)) {
         return null;
       }
 
@@ -127,8 +141,8 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       const userId = user.id;
       const email = user.email || '';
 
-      // Check user role from users table (primary source)
-      const { data: userData, error: userError } = await supabase
+      // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+      const { data: userData, error: userError } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', userId)

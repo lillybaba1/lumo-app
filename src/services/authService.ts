@@ -248,6 +248,14 @@ export async function getUserRole(userId: string): Promise<string | null> {
 // Client-callable function to get role
 export async function getUserRoleClient(userId: string): Promise<string | null> {
   try {
+    // Use API route to bypass broken RLS is_admin() function
+    const res = await fetch('/api/auth/check-role');
+    if (res.ok) {
+      const data = await res.json();
+      return data?.role || 'customer';
+    }
+
+    // Fallback: try direct query (may fail due to RLS)
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 

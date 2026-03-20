@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,18 +19,18 @@ export async function GET() {
       return NextResponse.json({ authenticated: false, user: null }, { status: 200 });
     }
 
-    // Get user profile from user_profiles table AND users table to ensure we get the correct role
-    // This handles the migration phase where data might be in either or both
+    // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+    // Get user profile from user_profiles table AND users table
     
     // Try user_profiles first (Supabase migration)
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseAdmin
       .from('user_profiles')
       .select('*')
       .eq('id', user.id)
       .single();
     
     // Also try users table (Legacy/Firebase migration)
-    const { data: userData } = await supabase
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('id', user.id)
@@ -52,7 +53,7 @@ export async function GET() {
     let hasBusinessAccount = false;
     let businessStatus = null;
     
-    const { data: businessAccount } = await supabase
+    const { data: businessAccount } = await supabaseAdmin
       .from('business_accounts')
       .select('id, status')
       .eq('owner_user_id', user.id)

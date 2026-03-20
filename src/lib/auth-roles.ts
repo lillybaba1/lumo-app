@@ -1,6 +1,7 @@
 import { User, UserRole } from '@/lib/types';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { getBusinessAccountByOwner } from '@/services/businessAccountService';
 
 async function getCurrentUser(): Promise<User | null> {
@@ -9,7 +10,7 @@ async function getCurrentUser(): Promise<User | null> {
   
   if (!authUser) return null;
 
-  const { data: userData, error } = await supabase
+  const { data: userData, error } = await supabaseAdmin
     .from('users')
     .select('*')
     .eq('id', authUser.id)

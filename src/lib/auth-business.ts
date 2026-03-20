@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { User, BusinessAccount } from '@/lib/types';
 import { getBusinessAccountByOwner, createBusinessAccount } from '@/services/businessAccountService';
 
@@ -50,8 +51,8 @@ export async function requireBusiness(
     const userId = authUser.id;
     const email = authUser.email || '';
 
-    // Get user record with role
-    const { data: userData, error: userError } = await supabase
+    // Get user record with role (use service role to bypass broken RLS)
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('id', userId)
@@ -173,7 +174,7 @@ export async function checkBusinessAccess(): Promise<{
       return null;
     }
 
-    const { data: userData } = await supabase
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('id', authUser.id)

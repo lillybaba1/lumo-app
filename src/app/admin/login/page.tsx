@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { getUserRoleClient } from '@/services/authService';
 
 function AdminLoginContent() {
   const router = useRouter();
@@ -39,8 +38,10 @@ function AdminLoginContent() {
 
       const user = data.user;
 
-      // Check if user has admin role
-      const role = await getUserRoleClient(user.id);
+      // Check if user has admin role via server-side API (bypasses RLS)
+      const roleRes = await fetch('/api/auth/check-role');
+      const roleData = await roleRes.json();
+      const role = roleData?.role;
 
       if (role !== 'admin') {
         toast({

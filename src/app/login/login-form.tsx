@@ -38,18 +38,16 @@ export default function LoginForm() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!cancelled && session) {
-          // Check if this is a business user and redirect them appropriately
-          const { data: businessAccount } = await supabase
-            .from('business_accounts')
-            .select('id, status, account_approved, boutique_approved')
-            .eq('owner_user_id', session.user.id)
-            .single();
+          // Use API route to check role (bypasses broken RLS)
+          const roleRes = await fetch('/api/auth/check-role');
+          const roleData = await roleRes.json();
+
+          // Check if this is a business user
+          const meRes = await fetch('/api/auth/me');
+          const meData = await meRes.json();
           
-          if (businessAccount) {
-            // Business user - redirect based on their approval status
-            const isFullyApproved = businessAccount.status === 'ACTIVE' ||
-              (businessAccount.account_approved && businessAccount.boutique_approved);
-            
+          if (meData?.user?.hasBusinessAccount) {
+            const isFullyApproved = meData.user.businessStatus === 'ACTIVE';
             if (isFullyApproved) {
               window.location.href = '/business/dashboard';
             } else {
@@ -58,14 +56,7 @@ export default function LoginForm() {
             return;
           }
           
-          // Check if admin
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (userData?.role === 'admin' || userData?.role === 'APP_OWNER_ADMIN') {
+          if (roleData?.role === 'admin') {
             window.location.href = '/admin/dashboard';
             return;
           }
@@ -144,29 +135,19 @@ export default function LoginForm() {
         body: JSON.stringify({ loginType: 'password' }),
       }).catch(console.error);
       
-      // Check if user has a business account
-      const { data: businessAccount } = await supabase
-        .from('business_accounts')
-        .select('id, status')
-        .eq('owner_user_id', data.user.id)
-        .single();
+      // Check account type via API route (bypasses broken RLS)
+      const meRes = await fetch('/api/auth/me');
+      const meData = await meRes.json();
       
-      if (businessAccount) {
-        console.log('Business account found:', businessAccount.status);
+      if (meData?.user?.hasBusinessAccount) {
+        console.log('Business account found:', meData.user.businessStatus);
         // Business user - always go to pending page first
         // The pending page will handle the redirect logic based on approval status
         window.location.href = '/business/pending';
         return;
       }
       
-      // Check if user is admin
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-      
-      if (userData?.role === 'admin' || userData?.role === 'APP_OWNER_ADMIN') {
+      if (meData?.user?.role === 'admin') {
         console.log('Admin user, redirecting to admin dashboard');
         window.location.href = '/admin/dashboard';
         return;
