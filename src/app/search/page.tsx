@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import Link from 'next/link';
 import type { Product, Category } from '@/lib/types';
 import { ProductGridSkeleton } from '@/components/skeletons';
+import { useTracking } from '@/hooks/use-tracking';
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
@@ -33,11 +34,17 @@ function SearchResultsContent() {
   // Use a derived state for showing desktop filters, but mobile uses Sheet
   const [showDesktopFilters, setShowDesktopFilters] = useState(true);
 
+  const { trackSearch } = useTracking();
+
   // Update search query when URL changes
   useEffect(() => {
     const q = searchParams?.get('q') || '';
     setSearchQuery(q);
-  }, [searchParams]);
+    // Track search query for intelligence engine
+    if (q.trim().length >= 2) {
+      trackSearch(q.trim());
+    }
+  }, [searchParams, trackSearch]);
 
   // Fetch data
   useEffect(() => {

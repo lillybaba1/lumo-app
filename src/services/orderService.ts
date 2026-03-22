@@ -2,6 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
+import { trackPurchase } from '@/services/intelligenceService';
 
 const orderLogger = logger.child('OrderService');
 
@@ -181,7 +182,7 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
       throw new Error(`Database error: ${error.message || error.code || 'Unknown error'}`);
     }
 
-    return {
+    const createdOrder: Order = {
       id: data.id,
       customerName: data.customer_name,
       customerEmail: data.customer_email,
@@ -199,6 +200,22 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
+
+    // Track purchase for intelligence engine (fire-and-forget, never blocks checkout)
+    const effectiveUserId = userId || insertPayload.user_id;
+    if (effectiveUserId && orderData.items?.length > 0) {
+      trackPurchase(
+        effectiveUserId,
+        orderData.items
+          .filter(item => item.product?.id)
+          .map(item => ({
+            product: { id: item.product.id },
+            quantity: item.quantity || 1,
+          }))
+      ).catch(err => orderLogger.debug('Purchase tracking failed (non-critical)', { error: err }));
+    }
+
+    return createdOrder;
   } catch (error) {
     orderLogger.error('Failed to create order:', error);
     throw error;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useReducer, ReactNode, useEffect, useState } from 'react';
+import React, { createContext, useReducer, ReactNode, useEffect, useState, useCallback } from 'react';
 import type { CartItem, Product } from '@/lib/types';
 
 interface CartState {
@@ -72,8 +72,29 @@ export const CartContext = createContext<{
 } | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [state, baseDispatch] = useReducer(cartReducer, initialState);
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wrap dispatch to track cart-add events via intelligence engine
+  const dispatch: React.Dispatch<CartAction> = useCallback((action: CartAction) => {
+    baseDispatch(action);
+    if (action.type === 'ADD_ITEM') {
+      try {
+        const payload = JSON.stringify({
+          eventType: 'cart_add',
+          productId: action.payload.id,
+          categoryId: action.payload.categoryId || undefined,
+          sessionId: typeof window !== 'undefined' ? (sessionStorage.getItem('jz_session_id') || '') : '',
+        });
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+          const blob = new Blob([payload], { type: 'application/json' });
+          navigator.sendBeacon('/api/track', blob);
+        } else {
+          fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+        }
+      } catch {}
+    }
+  }, []);
 
   // Restore cart from localStorage on mount
   useEffect(() => {

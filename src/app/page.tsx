@@ -17,6 +17,7 @@ import CategoryProductSection from '@/components/category-product-section';
 import { RecentlyViewedProducts } from '@/components/recently-viewed-products';
 import CategoryChips from '@/components/category-chips';
 import CompactProductCard from '@/components/compact-product-card';
+import { ForYouSection } from '@/components/recommendation-sections';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -468,7 +469,8 @@ function Home(props: {
             </div>
           )}
 
-          {/* ── Best Sellers Collection ── */}
+          {/* ── Recommended For You (AI-powered, personalized) ── */}
+          <ForYouSection className="mb-6 md:mb-10" />
           <CollectionSection
             title="Best Sellers"
             icon={TrendingUp}
