@@ -84,6 +84,32 @@ export async function GET() {
       collectionProducts = (data || []).map(mapProduct);
     }
 
+    // Fetch recent active products for category sections and general browsing
+    // Exclude IDs we already have to avoid duplicates
+    const existingIds = new Set([
+      ...collectionProducts.map(p => p.id),
+      ...(trendingData || []).map((p: Product) => p.id),
+    ]);
+
+    const { data: recentProducts } = await supabaseAdmin
+      .from('products')
+      .select(`
+        *,
+        categories:category_id (id, name),
+        product_images!left (image_url, display_order, is_primary)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(40);
+
+    const allProducts = [
+      ...(trendingData || []),
+      ...collectionProducts,
+      ...(recentProducts || [])
+        .map(mapProduct)
+        .filter(p => !existingIds.has(p.id)),
+    ];
+
     // Build response
     return NextResponse.json({
       settings: siteSettings,
@@ -92,6 +118,7 @@ export async function GET() {
       collections,
       collectionProducts,
       trendingProducts: trendingData,
+      products: allProducts,
       promoBanner: promoBannerResult,
     }, {
       headers: {
@@ -107,6 +134,7 @@ export async function GET() {
       collections: { bestSellers: [], newArrivals: [], deals: [], featured: [] },
       collectionProducts: [],
       trendingProducts: [],
+      products: [],
       promoBanner: DEFAULT_PROMO_BANNER_SETTINGS,
     }, { status: 200 });
   }

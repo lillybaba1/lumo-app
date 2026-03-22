@@ -81,6 +81,7 @@ type HomepageData = {
   collections: Collections;
   collectionProducts: Product[];
   trendingProducts: Product[];
+  products: Product[];
   promoBanner: PromoBannerSettings;
 };
 
@@ -120,6 +121,7 @@ export default function HomePageDataContainer() {
           collections: { bestSellers: [], newArrivals: [], deals: [] },
           collectionProducts: [],
           trendingProducts: [],
+          products: [],
           promoBanner: DEFAULT_PROMO_BANNER,
         });
       } finally {
@@ -200,6 +202,7 @@ export default function HomePageDataContainer() {
         collections={data.collections}
         collectionProducts={data.collectionProducts}
         trendingProducts={data.trendingProducts}
+        products={data.products}
         categorySectionSettings={categorySectionSettings}
         lumoPromiseSettings={lumoPromiseSettings}
         meetMakersSettings={meetMakersSettings}
@@ -216,6 +219,7 @@ function Home(props: {
   collections: Collections;
   collectionProducts: Product[];
   trendingProducts: Product[];
+  products: Product[];
   categorySectionSettings: CategorySectionSettings;
   lumoPromiseSettings: LumoPromiseSettings;
   meetMakersSettings: MeetMakersSettings;
@@ -226,6 +230,7 @@ function Home(props: {
     collections,
     collectionProducts,
     trendingProducts,
+    products,
     categorySectionSettings,
     lumoPromiseSettings,
     meetMakersSettings,
@@ -238,25 +243,16 @@ function Home(props: {
   // Build a product map for collection lookups
   const productMap = useMemo(() => {
     const map = new Map<string, Product>();
-    collectionProducts.forEach(p => map.set(p.id, p));
-    // Also add trending products in case they overlap
-    trendingProducts.forEach(p => { if (!map.has(p.id)) map.set(p.id, p); });
+    products.forEach(p => map.set(p.id, p));
     return map;
-  }, [collectionProducts, trendingProducts]);
+  }, [products]);
 
   // Helper: resolve product IDs → Product[]
   const getProductsByIds = (ids: string[]) =>
     ids.map(id => productMap.get(id)).filter(Boolean) as Product[];
 
-  // All products for category sections (trending + collection)
-  const allProducts = useMemo(() => {
-    const seen = new Set<string>();
-    const result: Product[] = [];
-    [...trendingProducts, ...collectionProducts].forEach(p => {
-      if (!seen.has(p.id)) { seen.add(p.id); result.push(p); }
-    });
-    return result;
-  }, [trendingProducts, collectionProducts]);
+  // All products for category sections
+  const allProducts = products;
 
   // ─── Collection Section Component ──────────────────────────────────────────
 
