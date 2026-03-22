@@ -723,7 +723,7 @@ function Home(props: {
                       Price Range
                     </Label>
                     <div className="text-sm font-medium text-center py-2 px-3 bg-white/80 rounded-lg">
-                      ${priceRange[0]} - ${priceRange[1]}
+                      D{priceRange[0]} - D{priceRange[1]}
                     </div>
                     <Slider
                       min={0}
@@ -734,8 +734,8 @@ function Home(props: {
                       className="my-2"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>$0</span>
-                      <span>${maxPrice}</span>
+                      <span>D0</span>
+                      <span>D{maxPrice}</span>
                     </div>
                   </div>
 

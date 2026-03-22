@@ -73,9 +73,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 async function getCurrencySymbol(currencyCode: string | undefined) {
-    if (!currencyCode) return '$';
+    if (!currencyCode) return 'D';
     if (currencyCode === 'GMD') return 'D';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || '$';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).formatToParts(1).find(p => p.type === 'currency')?.value || 'D';
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -115,7 +115,37 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       : url
   );
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || `${product.name} - Available on JulaZone`,
+    image: displayImages[0] || '',
+    url: `https://julazone.com/products/${product.id}`,
+    brand: product.sellerName ? { '@type': 'Brand', name: product.sellerName } : undefined,
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: settings?.currency || 'GMD',
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: product.sellerName ? { '@type': 'Organization', name: product.sellerName } : undefined,
+    },
+    ...(stats?.averageRating ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: stats.averageRating,
+        reviewCount: stats.totalReviews,
+      },
+    } : {}),
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Track this product view (if preference cookies allowed) */}
       <RecentlyViewedTracker productId={product.id} />
@@ -304,5 +334,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         />
       </div>
     </div>
+    </>
   );
 }

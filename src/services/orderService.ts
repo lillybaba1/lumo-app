@@ -207,9 +207,42 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'u
 
 /**
  * Update an existing order
+ * Requires authentication: only the order owner (by email) or admin can update
  */
 export async function updateOrder(orderId: string, orderData: Partial<Order>): Promise<Order | null> {
   try {
+    // SECURITY: Verify caller is authenticated and authorized
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Authentication required');
+    }
+
+    // Check admin or order ownership
+    const { data: existingOrder } = await supabaseAdmin
+      .from('orders')
+      .select('customer_email')
+      .eq('id', orderId)
+      .single();
+
+    if (!existingOrder) {
+      throw new Error('Order not found');
+    }
+
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+    const isAdmin = userData?.role && ADMIN_ROLES.includes(userData.role);
+    const isOwner = user.email === existingOrder.customer_email;
+
+    if (!isAdmin && !isOwner) {
+      throw new Error('Not authorized to update this order');
+    }
+
     const updateData: Partial<Record<string, unknown>> = {
       updated_at: new Date().toISOString(),
     };
@@ -266,12 +299,31 @@ export async function updateOrder(orderId: string, orderData: Partial<Order>): P
 
 /**
  * Update order status
+ * Requires authentication: only admin can update order status
  */
 export async function updateOrderStatus(
   orderId: string,
   status: Order['status']
 ): Promise<void> {
   try {
+    // SECURITY: Verify caller is authenticated admin
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+    if (!userData?.role || !ADMIN_ROLES.includes(userData.role)) {
+      throw new Error('Admin access required to update order status');
+    }
+
     const { error } = await supabaseAdmin
       .from('orders')
       .update({

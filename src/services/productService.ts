@@ -65,18 +65,25 @@ export async function getProductsPaginated(options: GetProductsOptions = {}): Pr
 
     // Apply filters — search product name, description, or store name
     if (search) {
+      // Sanitize PostgREST special characters to prevent filter injection
+      const sanitized = search.replace(/[%_\\(),.*]/g, '');
+      if (sanitized.length === 0) {
+        // If search is entirely special chars, return empty
+        return { data: [], count: 0 };
+      }
+
       // Find seller IDs matching the search term
       const { data: matchingSellers } = await supabaseAdmin
         .from('business_accounts')
         .select('id')
-        .ilike('business_name', `%${search}%`);
+        .ilike('business_name', `%${sanitized}%`);
 
       const sellerIds = matchingSellers?.map(s => s.id) || [];
 
       if (sellerIds.length > 0) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,seller_id.in.(${sellerIds.join(',')})`);
+        query = query.or(`name.ilike.%${sanitized}%,description.ilike.%${sanitized}%,seller_id.in.(${sellerIds.join(',')})`);
       } else {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+        query = query.or(`name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`);
       }
     }
 

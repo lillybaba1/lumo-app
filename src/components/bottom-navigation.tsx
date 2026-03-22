@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from './ui/badge';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import MobileSearchModal from './mobile-search-modal';
+import { useSettings } from '@/context/settings-context';
 
 interface NavItem {
   href: string;
@@ -28,24 +29,10 @@ export default function BottomNavigation() {
   const { state } = useCart();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [hasBusinessAccount, setHasBusinessAccount] = useState(false);
-  const [businessStatus, setBusinessStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated && data.user) {
-            setHasBusinessAccount(data.user.hasBusinessAccount || false);
-            setBusinessStatus(data.user.businessStatus || null);
-          }
-        }
-      } catch {}
-    };
-    fetchUser();
-  }, []);
+  const { auth } = useSettings();
+  
+  const hasBusinessAccount = auth.user?.hasBusinessAccount || false;
+  const businessStatus = auth.user?.businessStatus || null;
 
   const navItems = useMemo(() => {
     if (!hasBusinessAccount) return baseNavItems;

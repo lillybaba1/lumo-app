@@ -259,7 +259,7 @@ function ProductsPage({ categories }: { categories: Category[] }) {
       {/* Price Range Filter */}
       <div className="space-y-3">
         <Label className="text-sm font-semibold block">
-          Price Range: ${priceRange[0]} - ${priceRange[1]}
+          Price Range: D{priceRange[0]} - D{priceRange[1]}
         </Label>
         <div className="px-1">
           <Slider
@@ -272,8 +272,8 @@ function ProductsPage({ categories }: { categories: Category[] }) {
           />
         </div>
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>$0</span>
-          <span>$1000</span>
+          <span>D0</span>
+          <span>D1000</span>
         </div>
       </div>
 

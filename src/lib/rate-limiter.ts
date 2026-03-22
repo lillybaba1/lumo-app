@@ -174,8 +174,8 @@ class RedisBackend implements RateLimiterBackend {
       return false;
     } catch (error) {
       rateLimitLogger.error('Redis rate limit check failed', error as Error);
-      // Fail open on Redis errors - allow the request
-      return false;
+      // Fail closed on Redis errors - block request for safety
+      return true;
     }
   }
 

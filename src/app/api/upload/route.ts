@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createClient } from '@/lib/supabase/server';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 
 // File upload constraints
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -10,11 +11,14 @@ const ALLOWED_IMAGE_TYPES = [
     'image/png',
     'image/webp',
     'image/gif',
-    'image/svg+xml'
 ];
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting
+        const rateLimit = await withRateLimit(request, RATE_LIMITS.UPLOAD, 'upload');
+        if (!rateLimit.allowed) return rateLimit.response!;
+
         // SECURITY: Require authentication for file uploads
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -29,18 +33,23 @@ export async function POST(request: NextRequest) {
         // Check if user is admin for admin-only folders
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
-        const folder = (formData.get('folder') as string) || 'uploads';
+        let folder = (formData.get('folder') as string) || 'uploads';
+        
+        // SECURITY: Sanitize folder path to prevent directory traversal
+        folder = folder.replace(/\.\./g, '').replace(/[\\/]+/g, '/').replace(/^[\/]+/, '').replace(/[\/]+$/, '');
+        if (!folder || folder.length === 0) folder = 'uploads';
         
         // Admin-only folders require admin role
         const adminOnlyFolders = ['chatbot', 'hero', 'store'];
         if (adminOnlyFolders.includes(folder)) {
-            const { data: profile } = await supabase
-                .from('profiles')
+            const { data: userData } = await supabaseAdmin
+                .from('users')
                 .select('role')
                 .eq('id', user.id)
                 .single();
             
-            if (profile?.role !== 'admin') {
+            const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
+            if (!userData?.role || !ADMIN_ROLES.includes(userData.role)) {
                 return NextResponse.json(
                     { error: 'Admin access required for this folder' },
                     { status: 403 }

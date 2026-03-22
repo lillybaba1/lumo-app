@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getProductsPaginated } from '@/services/productService';
 import { errors, paginated } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 
 const apiLogger = logger.child('API:Products');
 
@@ -23,6 +24,10 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimit = await withRateLimit(request, RATE_LIMITS.API_GENERAL, 'products');
+    if (!rateLimit.allowed) return rateLimit.response!;
+
     const { searchParams } = new URL(request.url);
     
     // Validate query parameters

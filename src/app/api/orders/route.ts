@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getOrdersByEmail } from '@/services/orderService';
 import { logger } from '@/lib/logger';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 
 const apiLogger = logger.child('API:Orders');
 
@@ -12,6 +13,10 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimit = await withRateLimit(request, RATE_LIMITS.API_GENERAL, 'orders');
+    if (!rateLimit.allowed) return rateLimit.response!;
+
     // SECURITY: Require authentication
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

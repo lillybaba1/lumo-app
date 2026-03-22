@@ -6,7 +6,7 @@
  * Get the currency symbol for a given currency code
  */
 export function getCurrencySymbol(currencyCode: string | undefined): string {
-  if (!currencyCode) return '$';
+  if (!currencyCode) return 'D';
   if (currencyCode === 'GMD') return 'D';
   
   try {
@@ -15,9 +15,9 @@ export function getCurrencySymbol(currencyCode: string | undefined): string {
       currency: currencyCode 
     }).formatToParts(1);
     
-    return parts.find(p => p.type === 'currency')?.value || '$';
+    return parts.find(p => p.type === 'currency')?.value || 'D';
   } catch {
-    return '$';
+    return 'D';
   }
 }
 

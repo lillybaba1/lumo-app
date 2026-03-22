@@ -5,13 +5,60 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface Settings {
   currency?: string;
   storeName?: string;
-  // Add other commonly used settings
+  // Header settings
+  headerBgColor?: string;
+  headerTextColor?: string;
+  headerButtonStyle?: string;
+  headerButtonColor?: string;
+  homeButtonGradientFrom?: string;
+  homeButtonGradientTo?: string;
+  logoUrl?: string;
+  logoAlt?: string;
+  logoWidth?: number;
+  logoHeight?: number;
+  // Footer settings
+  storeTagline?: string;
+  footerDescription?: string;
+  footerCopyright?: string;
+  footerTagline?: string;
+  footerEmail?: string;
+  footerPhone?: string;
+  footerWhatsApp?: string;
+  socialFacebook?: string;
+  socialInstagram?: string;
+  socialX?: string;
+  socialTiktok?: string;
+  socialYoutube?: string;
+  trustBadge1Title?: string;
+  trustBadge1Subtitle?: string;
+  trustBadge2Title?: string;
+  trustBadge2Subtitle?: string;
+  trustBadge3Title?: string;
+  trustBadge3Subtitle?: string;
+  trustBadge4Title?: string;
+  trustBadge4Subtitle?: string;
+  trustBadge5Title?: string;
+  trustBadge5Subtitle?: string;
+  footerPaymentMethods?: string;
+  footerDeliveryCountries?: string;
+  // Allow additional dynamic keys from admin settings
+  [key: string]: unknown;
+}
+
+interface UserData {
+  uid: string;
+  email: string;
+  role: string;
+  name: string;
+  hasBusinessAccount?: boolean;
+  businessStatus?: string;
 }
 
 interface AuthState {
   userId?: string;
   isAuthenticated: boolean;
   isLoading: boolean;
+  user?: UserData | null;
 }
 
 interface SettingsContextType {
@@ -66,6 +113,7 @@ export function SettingsProvider({
         userId: authData.authenticated ? authData.user?.uid : undefined,
         isAuthenticated: authData.authenticated || false,
         isLoading: false,
+        user: authData.authenticated ? authData.user : null,
       };
       setSettings(settingsCache);
       setAuth(authCache);

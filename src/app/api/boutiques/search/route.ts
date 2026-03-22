@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimit = await withRateLimit(request, RATE_LIMITS.API_GENERAL, 'boutiques-search');
+    if (!rateLimit.allowed) return rateLimit.response!;
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const limit = parseInt(searchParams.get('limit') || '5');

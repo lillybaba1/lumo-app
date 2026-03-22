@@ -59,8 +59,38 @@ export default function CheckoutPage() {
   const [mmSelectedReceiverNumber, setMmSelectedReceiverNumber] = useState('');
   const [copiedNumber, setCopiedNumber] = useState('');
 
+  // Pre-fill form data for logged-in users
+  const [prefill, setPrefill] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+
   useEffect(() => {
     getSettings().then(s => setSettings(s || {}));
+    // Fetch user info to pre-fill checkout form
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.authenticated && data.user) {
+          const nameParts = (data.user.name || '').split(' ');
+          setPrefill({
+            name: data.user.name || '',
+            email: data.user.email || '',
+            phone: '',
+          });
+          // Set form defaults via DOM after render
+          setTimeout(() => {
+            const firstNameEl = document.getElementById('first-name') as HTMLInputElement;
+            const lastNameEl = document.getElementById('last-name') as HTMLInputElement;
+            const emailEl = document.getElementById('email') as HTMLInputElement;
+            if (firstNameEl && !firstNameEl.value) firstNameEl.value = nameParts[0] || '';
+            if (lastNameEl && !lastNameEl.value) lastNameEl.value = nameParts.slice(1).join(' ') || '';
+            if (emailEl && !emailEl.value) emailEl.value = data.user.email || '';
+          }, 100);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch seller mobile money details when mobile money is selected

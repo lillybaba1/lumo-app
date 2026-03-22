@@ -20,34 +20,29 @@ export async function GET() {
     }
 
     // Use service role client to bypass RLS (the is_admin() RLS function is broken)
-    // Get user profile from user_profiles table AND users table
-    
-    // Try user_profiles first (Supabase migration)
-    const { data: userProfile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    
-    // Also try users table (Legacy/Firebase migration)
+    // Single source of truth: users table
     const { data: userData } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    // Determine effective role - if EITHER table says admin, they are admin
-    // Support both 'admin' (legacy) and 'APP_OWNER_ADMIN' (Supabase migration) roles
+    // Also fetch user_profiles for display fields (name, etc.) but NOT for role
+    const { data: userProfile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+
+    // Determine role from users table only
     const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
-    let role = 'customer';
-    if (ADMIN_ROLES.includes(userProfile?.role) || ADMIN_ROLES.includes(userData?.role)) {
+    let role = userData?.role || 'customer';
+    if (ADMIN_ROLES.includes(role)) {
       role = 'admin';
-    } else {
-      role = userProfile?.role || userData?.role || 'customer';
     }
 
-    // Use profile data, preferring userProfile for other fields if available
-    const profile = userProfile || userData;
+    // Use users table as primary profile
+    const profile = userData;
 
     // Check for business account
     let hasBusinessAccount = false;
@@ -70,7 +65,7 @@ export async function GET() {
         uid: user.id,
         email: user.email || user.phone || '',
         role: role,
-        name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+        name: profile?.name || userProfile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         hasBusinessAccount,
         businessStatus,
       },

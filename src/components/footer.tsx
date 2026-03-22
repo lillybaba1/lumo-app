@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Truck, CreditCard, HeadphonesIcon, MapPin, Mail, Phone, Facebook, Instagram, MessageCircle } from 'lucide-react';
+import { useSettings } from '@/context/settings-context';
 
 // X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -92,43 +93,19 @@ const trustBadgeIcons = [
 
 export default function Footer() {
   const [settings, setSettings] = useState<FooterSettings>(defaultSettings);
-  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
+  const { settings: globalSettings, auth } = useSettings();
+  const isAdmin = auth.isAuthenticated && auth.user?.role === 'admin';
   
   // Hide on admin/business dashboards
   const isHidden = pathname?.startsWith('/admin') || pathname?.startsWith('/business');
 
+  // Apply settings from context instead of fetching independently
   useEffect(() => {
-    if (isHidden) return;
-    const fetchSettings = async () => {
-      try {
-        const response = await fetch('/api/settings', {
-          cache: 'no-store'
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSettings({ ...defaultSettings, ...data });
-        }
-      } catch (error) {
-        console.error('Error fetching footer settings:', error);
-      }
-    };
-
-    const checkAdmin = async () => {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(data.authenticated && data.user?.role === 'admin');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      }
-    };
-
-    fetchSettings();
-    checkAdmin();
-  }, [isHidden]);
+    if (globalSettings && Object.keys(globalSettings).length > 0) {
+      setSettings({ ...defaultSettings, ...globalSettings as unknown as FooterSettings });
+    }
+  }, [globalSettings]);
 
   if (isHidden) return null;
 

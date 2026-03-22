@@ -50,22 +50,15 @@ export async function requireAdmin(
     const email = user.email || '';
 
     // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+    // Single source of truth: users table only
     const { data: userData } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', userId)
       .single();
 
-    // Also check user_profiles as fallback
-    const { data: profileData } = await supabaseAdmin
-      .from('user_profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-
-    // Determine role - check both tables
     const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
-    const role = userData?.role || profileData?.role || 'customer';
+    const role = userData?.role || 'customer';
 
     if (!ADMIN_ROLES.includes(role)) {
       return fail('Admin role required', 'unauthorized');
@@ -97,21 +90,15 @@ export async function checkAdminAccess(): Promise<{ userId: string; email: strin
       const email = user.email || '';
 
       // Use service role client to bypass RLS (the is_admin() RLS function is broken)
+      // Single source of truth: users table only
       const { data: userData } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
 
-      const { data: profileData } = await supabaseAdmin
-        .from('user_profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      // Determine role - check both tables
       const ADMIN_ROLES = ['admin', 'APP_OWNER_ADMIN'];
-      const role = userData?.role || profileData?.role || 'customer';
+      const role = userData?.role || 'customer';
 
       if (!ADMIN_ROLES.includes(role)) {
         return null;
@@ -148,14 +135,6 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
         .eq('id', userId)
         .single();
 
-      // Diagnostic logging
-      console.log('[Auth] getCurrentUser:', {
-        userId,
-        email,
-        userDataRole: userData?.role,
-        userError: userError?.message,
-      });
-
       // Determine role - users table is the source of truth
       let role = userData?.role || 'customer';
 
@@ -163,8 +142,6 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string;
       if (role === 'user') {
         role = 'customer';
       }
-
-      console.log('[Auth] Final role determined:', role);
 
       return { userId, email, role };
     }

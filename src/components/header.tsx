@@ -10,6 +10,7 @@ import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
 import MobileSearchModal from "./mobile-search-modal";
+import { useSettings } from "@/context/settings-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,77 +62,35 @@ export default function Header() {
   const { state } = useCart();
   const pathname = usePathname();
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
+  const { settings: globalSettings, auth } = useSettings();
   
-  const [user, setUser] = useState<UserData | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+  const user: UserData | null = auth.user || null;
+  const isAuthenticated = auth.isAuthenticated;
+  const authChecked = !auth.isLoading;
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Hide header on dashboard pages (they have their own layouts)
   const isHidden = pathname?.startsWith('/business') || pathname?.startsWith('/admin');
 
+  // Apply settings from context
   useEffect(() => {
-    if (isHidden) return;
-    // Fetch current user info from API
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch('/api/auth/me', {
-          method: 'GET',
-          credentials: 'same-origin',
-          cache: 'no-store',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.authenticated && data.user) {
-            setUser(data.user);
-            setIsAuthenticated(true);
-          } else {
-            setUser(null);
-            setIsAuthenticated(false);
-          }
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-        setAuthChecked(true);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setUser(null);
-        setIsAuthenticated(false);
-        setAuthChecked(true);
-      }
-    };
-
-    // Fetch header settings
-    const fetchSettings = async () => {
-      try {
-        const response = await fetch('/api/settings');
-        if (response.ok) {
-          const data = await response.json();
-          setSettings({
-            headerBgColor: data.headerBgColor || defaultHeaderSettings.headerBgColor,
-            headerTextColor: data.headerTextColor || defaultHeaderSettings.headerTextColor,
-            headerButtonStyle: data.headerButtonStyle || defaultHeaderSettings.headerButtonStyle,
-            headerButtonColor: data.headerButtonColor || defaultHeaderSettings.headerButtonColor,
-            homeButtonGradientFrom: data.homeButtonGradientFrom || defaultHeaderSettings.homeButtonGradientFrom,
-            homeButtonGradientTo: data.homeButtonGradientTo || defaultHeaderSettings.homeButtonGradientTo,
-            logoUrl: data.logoUrl || defaultHeaderSettings.logoUrl,
-            logoAlt: data.logoAlt || defaultHeaderSettings.logoAlt,
-            logoWidth: data.logoWidth || defaultHeaderSettings.logoWidth,
-            logoHeight: data.logoHeight || defaultHeaderSettings.logoHeight,
-            storeName: data.storeName || defaultHeaderSettings.storeName,
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      }
-    };
-
-    fetchUserData();
-    fetchSettings();
-  }, [pathname, isHidden]);
+    if (globalSettings && Object.keys(globalSettings).length > 0) {
+      setSettings({
+        headerBgColor: (globalSettings.headerBgColor as string) || defaultHeaderSettings.headerBgColor,
+        headerTextColor: (globalSettings.headerTextColor as string) || defaultHeaderSettings.headerTextColor,
+        headerButtonStyle: (globalSettings.headerButtonStyle as 'outline' | 'solid' | 'ghost') || defaultHeaderSettings.headerButtonStyle,
+        headerButtonColor: (globalSettings.headerButtonColor as string) || defaultHeaderSettings.headerButtonColor,
+        homeButtonGradientFrom: (globalSettings.homeButtonGradientFrom as string) || defaultHeaderSettings.homeButtonGradientFrom,
+        homeButtonGradientTo: (globalSettings.homeButtonGradientTo as string) || defaultHeaderSettings.homeButtonGradientTo,
+        logoUrl: (globalSettings.logoUrl as string) || defaultHeaderSettings.logoUrl,
+        logoAlt: (globalSettings.logoAlt as string) || defaultHeaderSettings.logoAlt,
+        logoWidth: (globalSettings.logoWidth as number) || defaultHeaderSettings.logoWidth,
+        logoHeight: (globalSettings.logoHeight as number) || defaultHeaderSettings.logoHeight,
+        storeName: (globalSettings.storeName as string) || defaultHeaderSettings.storeName,
+      });
+    }
+  }, [globalSettings]);
 
   if (isHidden) return null;
 
