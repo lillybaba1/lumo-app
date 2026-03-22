@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.julazone.app",
+      "sha256_cert_fingerprints": [
+        "B1:6F:E4:51:C0:2A:AC:9E:F8:7E:3D:90:55:01:48:EB:77:B3:7C:81:BA:86:21:30:B9:6F:61:CF:25:77:EF:F5"
+      ]
+    }
+  }
+]

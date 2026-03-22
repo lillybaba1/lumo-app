@@ -14,8 +14,22 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
+
+# ── Capacitor ──────────────────────────────────────────────
+-keep class com.getcapacitor.** { *; }
+-keep class com.julazone.app.** { *; }
+-dontwarn com.getcapacitor.**
+
+# Keep WebView JavaScript interface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# AndroidX
+-keep class androidx.** { *; }
+-dontwarn androidx.**

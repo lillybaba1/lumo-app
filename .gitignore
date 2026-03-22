@@ -60,3 +60,4 @@ android/.gradle/
 # Android build artifacts
 *.aab
 src/app/page.tsx.bak
+*.aab
