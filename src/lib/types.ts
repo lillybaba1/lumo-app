@@ -75,6 +75,13 @@ export interface Product {
   stockByLocation?: Record<string, number>; // { locationId: quantity }
   weight?: number; // in kg
   dimensions?: { length: number; width: number; height: number }; // in cm
+  // Smart placement & analytics fields
+  viewCount?: number;
+  salesCount?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  isFeatured?: boolean;
+  createdAt?: string;
   // Seller info (populated when fetching single product details)
   sellerName?: string;
   sellerVerified?: boolean;

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProductCard from '@/components/product-card';
 import { Card, CardContent } from "@/components/ui/card";
 import Hero from '@/components/hero';
-import { TrendingUp, Sparkles, Tag, ChevronRight, ShoppingBag } from 'lucide-react';
+import { TrendingUp, Sparkles, Tag, ChevronRight, Grid3X3, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Product, Category, PromoBannerSettings } from '@/lib/types';
@@ -239,13 +239,16 @@ function Home(props: {
 
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const PRODUCTS_PER_PAGE = 12;
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
 
-  // Build a product map for collection lookups
+  // Build a product map for collection lookups (all products + collection products)
   const productMap = useMemo(() => {
     const map = new Map<string, Product>();
     products.forEach(p => map.set(p.id, p));
+    collectionProducts.forEach(p => map.set(p.id, p));
     return map;
-  }, [products]);
+  }, [products, collectionProducts]);
 
   // Helper: resolve product IDs → Product[]
   const getProductsByIds = (ids: string[]) =>
@@ -510,35 +513,70 @@ function Home(props: {
             <div className="mb-6 md:mb-10">
               <div className="flex items-center justify-between mb-3 md:mb-4">
                 <h2 className="text-lg md:text-xl font-headline font-bold">Shop by Category</h2>
-                <Link href="/products">
-                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
-                    View All Products <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
               </div>
-              {categories.slice(0, 6).map((category) => (
+              {categories.slice(0, 4).map((category) => (
                 <CategoryProductSection
                   key={category.id}
                   category={category}
                   products={allProducts}
-                  maxProducts={8}
+                  maxProducts={6}
                 />
               ))}
             </div>
           )}
 
-          {/* ── Shop All Products CTA ── */}
-          <div className="my-8 md:my-12 text-center">
-            <Link href="/products">
-              <Button size="lg" className="gap-2 px-8 py-6 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all">
-                <ShoppingBag className="h-5 w-5" />
-                Shop All Products
-              </Button>
-            </Link>
-            <p className="text-sm text-muted-foreground mt-3">
-              Browse our full collection with filters, search &amp; sorting
-            </p>
-          </div>
+          {/* ── All Products — Marketplace Grid ── */}
+          {allProducts.length > 0 && (
+            <div className="mb-8 md:mb-12">
+              <div className="flex items-center justify-between mb-3 md:mb-5">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Grid3X3 className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  <h2 className="text-lg md:text-xl font-headline font-bold">All Products</h2>
+                  <span className="text-xs md:text-sm text-muted-foreground">
+                    ({allProducts.length} {allProducts.length === 1 ? 'product' : 'products'})
+                  </span>
+                </div>
+                <Link href="/products">
+                  <Button variant="ghost" size="sm" className="gap-1 text-sm px-3">
+                    Browse All <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Product Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                {allProducts.slice(0, visibleCount).map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} />
+                ))}
+              </div>
+
+              {/* Load More / Show Less */}
+              {allProducts.length > PRODUCTS_PER_PAGE && (
+                <div className="flex justify-center mt-6 gap-3">
+                  {visibleCount < allProducts.length ? (
+                    <Button
+                      onClick={() => setVisibleCount(prev => Math.min(prev + PRODUCTS_PER_PAGE, allProducts.length))}
+                      variant="outline"
+                      size="lg"
+                      className="gap-2 px-8 rounded-xl"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                      Load More ({Math.min(PRODUCTS_PER_PAGE, allProducts.length - visibleCount)} more)
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setVisibleCount(PRODUCTS_PER_PAGE)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground"
+                    >
+                      Show Less
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── Trust & Story Sections ── */}
           <section className="mt-6 md:mt-16 space-y-4 md:space-y-12">

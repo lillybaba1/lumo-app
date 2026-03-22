@@ -4,23 +4,28 @@ import { getCategories } from '@/services/categoryService';
 import { getCollections } from '@/app/admin/collections/actions';
 import { getHeroData } from '@/app/admin/hero/actions';
 import { DEFAULT_PROMO_BANNER_SETTINGS } from '@/lib/types';
-import type { Order, Product } from '@/lib/types';
+import type { Product } from '@/lib/types';
 
 /**
  * GET /api/homepage
  * Single aggregated endpoint for all homepage data.
- * Replaces 7 separate API calls with 1 server-side fetch.
+ * 
+ * Philosophy:
+ *   - ALL active products are shown on the homepage (marketplace model)
+ *   - Admin manually picks products for collections (best sellers, new arrivals, deals)
+ *   - Smart engine auto-fills trending + suggests for empty collections
+ *   - Admin picks always take priority over smart suggestions
  */
 export async function GET() {
   try {
-    // Fetch ALL homepage data in parallel — single round-trip
     const [
       settingsResult,
       heroData,
       categoriesData,
       collectionsData,
-      trendingData,
       promoBannerResult,
+      allProductsRaw,
+      ordersData,
     ] = await Promise.all([
       // 1. Site settings
       Promise.resolve(
@@ -41,13 +46,10 @@ export async function GET() {
       // 3. Categories
       getCategories().catch(() => []),
 
-      // 4. Collections (best sellers, new arrivals, deals, featured)
+      // 4. Collections (admin-curated: best sellers, new arrivals, deals, featured)
       getCollections().catch(() => ({ bestSellers: [], newArrivals: [], deals: [], featured: [] })),
 
-      // 5. Trending products (top 8 for homepage)
-      getTrendingProducts().catch(() => []),
-
-      // 6. Promo banner
+      // 5. Promo banner
       Promise.resolve(
         supabaseAdmin
           .from('site_settings')
@@ -59,65 +61,151 @@ export async function GET() {
             return { ...DEFAULT_PROMO_BANNER_SETTINGS, ...data?.value };
           })
       ).catch(() => DEFAULT_PROMO_BANNER_SETTINGS),
+
+      // 6. ALL active products (marketplace: every seller's product is shown)
+      Promise.resolve(
+        supabaseAdmin
+          .from('products')
+          .select(`
+            *,
+            categories:category_id (id, name),
+            product_images!left (image_url, display_order, is_primary)
+          `)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .then(({ data }) => data || [])
+      ).catch(() => [] as any[]),
+
+      // 7. Recent orders for smart scoring (last 30 days)
+      Promise.resolve(
+        supabaseAdmin
+          .from('orders')
+          .select('items, created_at')
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+          .neq('status', 'Cancelled')
+          .then(({ data }) => data || [])
+      ).catch(() => [] as any[]),
     ]);
 
-    // Get general site settings from the flat key-value store
+    // Map all products
+    const allProducts = (allProductsRaw as any[]).map(mapProduct);
+    const allProductsWithMeta = (allProductsRaw as any[]).map(p => ({
+      mapped: mapProduct(p),
+      raw: p,
+    }));
+
+    // ─── Smart Product Scoring Engine ────────────────────────────────────────
+    // Computes a score for each product based on multiple signals.
+    // Admin picks always override, this fills gaps intelligently.
+
+    const recentSales = new Map<string, number>();
+    (ordersData as any[]).forEach((order: any) => {
+      if (order.items && Array.isArray(order.items)) {
+        order.items.forEach((item: any) => {
+          const pid = item.product?.id;
+          if (pid) recentSales.set(pid, (recentSales.get(pid) || 0) + (item.quantity || 1));
+        });
+      }
+    });
+
+    const now = Date.now();
+    const scoredProducts = allProductsWithMeta.map(({ mapped, raw }) => {
+      const ageHours = (now - new Date(raw.created_at).getTime()) / (1000 * 60 * 60);
+      const ageDays = ageHours / 24;
+
+      // Scoring weights
+      const salesScore = (recentSales.get(mapped.id) || raw.sales_count || 0) * 10;
+      const viewScore = (raw.view_count || 0) * 0.5;
+      const ratingScore = (raw.average_rating || 0) * (raw.review_count || 0) * 3;
+      const recencyBoost = ageDays < 7 ? 30 : ageDays < 14 ? 20 : ageDays < 30 ? 10 : 0;
+      const stockPenalty = (raw.stock || 0) === 0 ? -50 : 0;
+      const featuredBoost = raw.is_featured ? 15 : 0;
+
+      const totalScore = salesScore + viewScore + ratingScore + recencyBoost + stockPenalty + featuredBoost;
+
+      return { product: mapped, raw, score: totalScore, ageDays };
+    });
+
+    // Sort by score descending
+    const ranked = scoredProducts.sort((a, b) => b.score - a.score);
+
+    // ─── Build Smart Sections ────────────────────────────────────────────────
+    // Admin picks first, then smart engine fills the rest
+
     const siteSettings = (settingsResult as Record<string, any>)['site_settings'] || {};
-
-    // Fetch products for collections (only the IDs we need, max ~30 products)
-    const allCollectionIds = new Set<string>();
+    const adminTrendingIds: string[] = (settingsResult as Record<string, any>)['trending_products']?.productIds || [];
     const collections = collectionsData || { bestSellers: [], newArrivals: [], deals: [], featured: [] };
-    [...(collections.bestSellers || []), ...(collections.newArrivals || []), ...(collections.deals || [])].forEach(id => allCollectionIds.add(id));
 
-    let collectionProducts: Product[] = [];
-    if (allCollectionIds.size > 0) {
-      const { data } = await supabaseAdmin
-        .from('products')
-        .select(`
-          *,
-          categories:category_id (id, name),
-          product_images!left (image_url, display_order, is_primary)
-        `)
-        .in('id', Array.from(allCollectionIds))
-        .eq('is_active', true);
+    const productLookup = new Map(allProducts.map(p => [p.id, p]));
 
-      collectionProducts = (data || []).map(mapProduct);
-    }
+    // TRENDING: admin picks + smart top scorers
+    const trendingProducts = buildSection(
+      adminTrendingIds,
+      ranked.map(r => r.product.id),
+      productLookup,
+      12
+    );
 
-    // Fetch recent active products for category sections and general browsing
-    // Exclude IDs we already have to avoid duplicates
-    const existingIds = new Set([
-      ...collectionProducts.map(p => p.id),
-      ...(trendingData || []).map((p: Product) => p.id),
-    ]);
+    // BEST SELLERS: admin picks + top by sales_count
+    const bestSellerIds = ranked
+      .filter(r => (recentSales.get(r.product.id) || r.raw.sales_count || 0) > 0)
+      .sort((a, b) => {
+        const aSales = (recentSales.get(a.product.id) || 0) + (a.raw.sales_count || 0);
+        const bSales = (recentSales.get(b.product.id) || 0) + (b.raw.sales_count || 0);
+        return bSales - aSales;
+      })
+      .map(r => r.product.id);
+    const smartBestSellers = buildSection(
+      collections.bestSellers || [],
+      bestSellerIds,
+      productLookup,
+      10
+    ).map(p => p.id);
 
-    const { data: recentProducts } = await supabaseAdmin
-      .from('products')
-      .select(`
-        *,
-        categories:category_id (id, name),
-        product_images!left (image_url, display_order, is_primary)
-      `)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(40);
+    // NEW ARRIVALS: admin picks + newest products (< 30 days)
+    const newArrivalIds = ranked
+      .filter(r => r.ageDays < 30)
+      .sort((a, b) => a.ageDays - b.ageDays)
+      .map(r => r.product.id);
+    const smartNewArrivals = buildSection(
+      collections.newArrivals || [],
+      newArrivalIds,
+      productLookup,
+      10
+    ).map(p => p.id);
 
-    const allProducts = [
-      ...(trendingData || []),
-      ...collectionProducts,
-      ...(recentProducts || [])
-        .map(mapProduct)
-        .filter(p => !existingIds.has(p.id)),
-    ];
+    // DEALS: admin picks + products with high view-to-sale ratio or featured
+    const dealIds = ranked
+      .filter(r => r.raw.is_featured || r.score > 20)
+      .map(r => r.product.id);
+    const smartDeals = buildSection(
+      collections.deals || [],
+      dealIds,
+      productLookup,
+      10
+    ).map(p => p.id);
 
-    // Build response
+    const smartCollections = {
+      bestSellers: smartBestSellers,
+      newArrivals: smartNewArrivals,
+      deals: smartDeals,
+      featured: collections.featured || [],
+    };
+
+    // Collect all products referenced by collections for the collectionProducts field
+    const collectionProductIds = new Set<string>();
+    [...smartBestSellers, ...smartNewArrivals, ...smartDeals, ...(collections.featured || [])].forEach(id => collectionProductIds.add(id));
+    const collectionProducts = Array.from(collectionProductIds)
+      .map(id => productLookup.get(id))
+      .filter(Boolean) as Product[];
+
     return NextResponse.json({
       settings: siteSettings,
       hero: heroData,
       categories: categoriesData,
-      collections,
+      collections: smartCollections,
       collectionProducts,
-      trendingProducts: trendingData,
+      trendingProducts,
       products: allProducts,
       promoBanner: promoBannerResult,
     }, {
@@ -140,68 +228,36 @@ export async function GET() {
   }
 }
 
-/** Get top 8 trending products for the homepage */
-async function getTrendingProducts(): Promise<Product[]> {
-  // Get admin-selected trending products
-  const { data: settingsData } = await supabaseAdmin
-    .from('site_settings')
-    .select('value')
-    .eq('key', 'trending_products')
-    .single();
+/**
+ * Build a section: admin picks first, then smart suggestions fill remaining slots.
+ * Admin-selected IDs always take priority. Smart IDs fill empty slots.
+ */
+function buildSection(
+  adminIds: string[],
+  smartIds: string[],
+  lookup: Map<string, Product>,
+  maxItems: number
+): Product[] {
+  const seen = new Set<string>();
+  const result: Product[] = [];
 
-  const adminSelectedIds: string[] = settingsData?.value?.productIds || [];
-
-  // Get orders from last 30 days
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const { data: orders } = await supabaseAdmin
-    .from('orders')
-    .select('items')
-    .gte('created_at', thirtyDaysAgo.toISOString())
-    .neq('status', 'Cancelled');
-
-  // Calculate top sellers
-  const productSales = new Map<string, number>();
-  (orders || []).forEach((order: any) => {
-    if (order.items && Array.isArray(order.items)) {
-      order.items.forEach((item: any) => {
-        const productId = item.product?.id;
-        if (productId) {
-          productSales.set(productId, (productSales.get(productId) || 0) + (item.quantity || 1));
-        }
-      });
-    }
-  });
-
-  const topSellingIds = Array.from(productSales.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([id]) => id);
-
-  const allIds = [...new Set([...adminSelectedIds, ...topSellingIds])].slice(0, 8);
-
-  if (allIds.length === 0) {
-    // Fallback: get newest active products
-    const { data } = await supabaseAdmin
-      .from('products')
-      .select(`*, categories:category_id (id, name), product_images!left (image_url, display_order, is_primary)`)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(8);
-
-    return (data || []).map(mapProduct);
+  // 1. Admin picks first (verified to exist & active)
+  for (const id of adminIds) {
+    if (seen.has(id)) continue;
+    const p = lookup.get(id);
+    if (p) { result.push(p); seen.add(id); }
+    if (result.length >= maxItems) return result;
   }
 
-  const { data: products } = await supabaseAdmin
-    .from('products')
-    .select(`*, categories:category_id (id, name), product_images!left (image_url, display_order, is_primary)`)
-    .in('id', allIds)
-    .eq('is_active', true);
+  // 2. Smart suggestions fill remaining slots
+  for (const id of smartIds) {
+    if (seen.has(id)) continue;
+    const p = lookup.get(id);
+    if (p) { result.push(p); seen.add(id); }
+    if (result.length >= maxItems) return result;
+  }
 
-  // Maintain priority order
-  const productMap = new Map((products || []).map(p => [p.id, p]));
-  return allIds.filter(id => productMap.has(id)).map(id => mapProduct(productMap.get(id)!));
+  return result;
 }
 
 /** Map a DB product row to our Product type */
@@ -223,5 +279,12 @@ function mapProduct(p: any): Product {
     stock: p.stock || 0,
     sellerId: p.seller_id,
     sellerName: p.business_accounts?.business_name,
+    // Smart placement fields
+    viewCount: p.view_count || 0,
+    salesCount: p.sales_count || 0,
+    averageRating: p.average_rating || 0,
+    reviewCount: p.review_count || 0,
+    isFeatured: p.is_featured || false,
+    createdAt: p.created_at,
   };
 }
