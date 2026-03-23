@@ -1,5 +1,3 @@
-"use server";
-
 import { logger } from '@/lib/logger';
 
 const paydunyaLogger = logger.child('PayDunya');
@@ -157,7 +155,20 @@ export async function createPayDunyaInvoice(params: {
       body: JSON.stringify(requestBody),
     });
 
-    const data: PayDunyaCreateInvoiceResponse = await response.json();
+    const responseText = await response.text();
+    paydunyaLogger.info('PayDunya raw response', {
+      status: response.status,
+      contentType: response.headers.get('content-type'),
+      body: responseText.substring(0, 500),
+    });
+
+    let data: PayDunyaCreateInvoiceResponse;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      paydunyaLogger.error('PayDunya returned non-JSON response', { body: responseText.substring(0, 500) });
+      return { success: false, error: 'Payment gateway returned an invalid response. Please try again.' };
+    }
 
     paydunyaLogger.info('PayDunya create invoice response', { 
       responseCode: data.response_code, 
@@ -198,7 +209,14 @@ export async function checkPayDunyaInvoiceStatus(token: string): Promise<PayDuny
       headers: getHeaders(),
     });
 
-    const data: PayDunyaInvoiceStatus = await response.json();
+    const text = await response.text();
+    let data: PayDunyaInvoiceStatus;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      paydunyaLogger.error('PayDunya status check returned non-JSON', { token, body: text.substring(0, 500) });
+      return null;
+    }
 
     paydunyaLogger.info('PayDunya status check response', {
       token,

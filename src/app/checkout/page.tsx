@@ -277,11 +277,15 @@ export default function CheckoutPage() {
         });
 
         const contentType = paydunyaRes.headers.get('content-type') || '';
+        let paydunyaData: any;
+        
         if (!contentType.includes('application/json')) {
-          throw new Error('Payment service is not available yet. Please try Cash on Delivery.');
+          const text = await paydunyaRes.text();
+          console.error('PayDunya non-JSON response:', paydunyaRes.status, text.substring(0, 200));
+          throw new Error('Payment service returned an unexpected response. Please try Cash on Delivery.');
         }
 
-        const paydunyaData = await paydunyaRes.json();
+        paydunyaData = await paydunyaRes.json();
 
         if (!paydunyaRes.ok || !paydunyaData.checkoutUrl) {
           throw new Error(paydunyaData.error || 'Failed to create payment. Please try another method.');
