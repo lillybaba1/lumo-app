@@ -1,70 +1,13 @@
 -- ============================================================================
--- Migration 020: Seller Payouts Table
--- Tracks all payouts made from the platform to sellers
+-- Migration 020: Extend existing seller_payouts table
+-- Adds columns needed for admin payout management
+-- Original table from 20251202_boutique_system.sql uses business_account_id
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS seller_payouts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  seller_id UUID NOT NULL REFERENCES business_accounts(id) ON DELETE CASCADE,
-  business_name TEXT NOT NULL DEFAULT '',
-  amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-  commission DECIMAL(10,2) NOT NULL DEFAULT 0,
-  payout_method TEXT,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
-  notes TEXT,
-  processed_by TEXT,
-  processed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Add missing columns to the existing seller_payouts table
+ALTER TABLE seller_payouts ADD COLUMN IF NOT EXISTS business_name TEXT DEFAULT '';
+ALTER TABLE seller_payouts ADD COLUMN IF NOT EXISTS commission DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE seller_payouts ADD COLUMN IF NOT EXISTS processed_by TEXT;
 
--- Indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_seller_payouts_seller ON seller_payouts(seller_id);
-CREATE INDEX IF NOT EXISTS idx_seller_payouts_status ON seller_payouts(status);
+-- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_seller_payouts_created ON seller_payouts(created_at DESC);
-
--- RLS policies
-ALTER TABLE seller_payouts ENABLE ROW LEVEL SECURITY;
-
--- Admin can read all payouts
-CREATE POLICY "Admins can read all payouts"
-  ON seller_payouts FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role IN ('admin', 'APP_OWNER_ADMIN')
-    )
-  );
-
--- Admin can insert payouts
-CREATE POLICY "Admins can insert payouts"
-  ON seller_payouts FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role IN ('admin', 'APP_OWNER_ADMIN')
-    )
-  );
-
--- Admin can update payouts
-CREATE POLICY "Admins can update payouts"
-  ON seller_payouts FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role IN ('admin', 'APP_OWNER_ADMIN')
-    )
-  );
-
--- Sellers can read their own payouts
-CREATE POLICY "Sellers can read own payouts"
-  ON seller_payouts FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM business_accounts ba
-      WHERE ba.id = seller_payouts.seller_id
-      AND ba.owner_user_id = auth.uid()
-    )
-  );

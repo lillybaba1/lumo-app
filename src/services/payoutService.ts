@@ -164,47 +164,12 @@ export async function calculateAllSellerEarnings(): Promise<SellerEarnings[]> {
 // ─── Payout Records (persisted in DB) ────────────────────────────────────────
 
 /**
- * Create payouts table if it doesn't exist yet.
- * Safe to call multiple times — uses IF NOT EXISTS.
+ * Verify seller_payouts table is accessible.
  */
 async function ensurePayoutsTable(): Promise<void> {
-  try {
-    // Check if table exists by attempting a query
-    const { error } = await supabaseAdmin
-      .from('seller_payouts')
-      .select('id')
-      .limit(1);
-
-    if (error && error.code === '42P01') {
-      // Table doesn't exist — create it
-      const { error: createError } = await supabaseAdmin.rpc('exec_sql', {
-        sql: `
-          CREATE TABLE IF NOT EXISTS seller_payouts (
-            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-            seller_id UUID NOT NULL,
-            business_name TEXT NOT NULL,
-            amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-            commission DECIMAL(10,2) NOT NULL DEFAULT 0,
-            payout_method TEXT,
-            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
-            notes TEXT,
-            processed_by TEXT,
-            processed_at TIMESTAMPTZ,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-          );
-          CREATE INDEX IF NOT EXISTS idx_seller_payouts_seller ON seller_payouts(seller_id);
-          CREATE INDEX IF NOT EXISTS idx_seller_payouts_status ON seller_payouts(status);
-        `,
-      });
-
-      if (createError) {
-        payoutLogger.warn('Could not auto-create seller_payouts table via RPC:', createError);
-        // Table creation via RPC may not be available — that's fine, we'll handle gracefully
-      }
-    }
-  } catch {
-    // Silently continue — table operations will fail gracefully
-  }
+  // Table already exists from 20251202_boutique_system migration
+  // Uses business_account_id as the seller reference column
+  return;
 }
 
 /**
@@ -228,8 +193,8 @@ export async function getPayoutRecords(): Promise<PayoutRecord[]> {
 
     return (data || []).map((row: Record<string, unknown>) => ({
       id: row.id as string,
-      sellerId: row.seller_id as string,
-      businessName: row.business_name as string,
+      sellerId: row.business_account_id as string,
+      businessName: (row.business_name as string) || '',
       amount: parseFloat(String(row.amount)) || 0,
       commission: parseFloat(String(row.commission)) || 0,
       payoutMethod: (row.payout_method as string) || '',
@@ -268,8 +233,8 @@ export async function processSellerPayout(
     const { data: payoutData, error: payoutError } = await supabaseAdmin
       .from('seller_payouts')
       .insert({
-        seller_id: sellerId,
-        business_name: '', // Will be filled below
+        business_account_id: sellerId,
+        business_name: '',
         amount,
         commission,
         payout_method: payoutMethod,
@@ -298,8 +263,8 @@ export async function processSellerPayout(
     const currentPaid = parseFloat(String(accountData?.total_earnings)) || 0;
     const currentCommission = parseFloat(String(accountData?.total_commission_paid)) || 0;
 
-    // Update the payout record with business name if we created one
-    if (payoutData && accountData?.business_name) {
+    // Update the payout record with business name
+    if (payoutData?.id && accountData?.business_name) {
       await supabaseAdmin
         .from('seller_payouts')
         .update({ business_name: accountData.business_name })
