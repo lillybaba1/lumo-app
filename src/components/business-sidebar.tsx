@@ -75,7 +75,7 @@ const navGroups = [
       { href: '/business/verification', icon: Shield, label: 'Verification' },
       { href: '/business/profile', icon: User, label: 'Business Profile' },
       { href: '/business/shipping', icon: Truck, label: 'Shipping Settings' },
-      { href: '/business/payout', icon: CreditCard, label: 'Payout Settings' },
+      { href: '/business/payout', icon: CreditCard, label: 'Payment Methods' },
       { href: '/business/settings', icon: Settings, label: 'Account Settings' },
     ]
   }

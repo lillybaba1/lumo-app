@@ -171,13 +171,13 @@ export default async function BusinessDashboardPage() {
 
               <div className="flex items-center gap-3">
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                  businessAccount.payoutMethod ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  businessAccount.payoutMethod || (businessAccount.mobileMoneyAccounts && businessAccount.mobileMoneyAccounts.length > 0) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {businessAccount.payoutMethod ? '✓' : '4'}
+                  {businessAccount.payoutMethod || (businessAccount.mobileMoneyAccounts && businessAccount.mobileMoneyAccounts.length > 0) ? '✓' : '4'}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Set up payouts</p>
-                  <p className="text-xs text-muted-foreground">Configure how you receive payments</p>
+                  <p className="text-sm font-medium">Set up payment methods</p>
+                  <p className="text-xs text-muted-foreground">Add mobile money so customers can pay you</p>
                 </div>
               </div>
             </div>

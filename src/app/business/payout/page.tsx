@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CreditCard, Wallet, DollarSign, Calendar, CheckCircle, AlertCircle, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutSettingsForm from "./payout-form";
+import MobileMoneyManager from "./mobile-money-manager";
 import { formatAmount } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
@@ -114,6 +115,12 @@ export default async function BusinessPayoutPage() {
           currentDetails={businessAccount.payoutDetails || {}}
         />
       )}
+
+      {/* Mobile Money Accounts — shown to buyers at checkout */}
+      <MobileMoneyManager
+        businessAccountId={businessAccount.id}
+        currentAccounts={businessAccount.mobileMoneyAccounts || []}
+      />
     </div>
   );
 }
