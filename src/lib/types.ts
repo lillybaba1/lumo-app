@@ -180,7 +180,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierDetail
     name: 'Starter',
     monthlyPrice: 0,
     annualPrice: 0,
-    commissionRate: 15, // 15% commission
+    commissionRate: 0, // No commission for now
     features: {
       maxProducts: 10,
       maxMonthlyOrders: 50,
@@ -197,7 +197,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierDetail
     name: 'Professional',
     monthlyPrice: 29.99,
     annualPrice: 299.99,
-    commissionRate: 10, // 10% commission
+    commissionRate: 0, // No commission for now
     features: {
       maxProducts: 100,
       maxMonthlyOrders: 500,
@@ -214,7 +214,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierDetail
     name: 'Enterprise',
     monthlyPrice: 99.99,
     annualPrice: 999.99,
-    commissionRate: 5, // 5% commission
+    commissionRate: 0, // No commission for now
     features: {
       maxProducts: -1, // Unlimited
       maxMonthlyOrders: -1, // Unlimited
