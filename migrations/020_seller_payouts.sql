@@ -62,8 +62,9 @@ CREATE POLICY "Admins can update payouts"
 CREATE POLICY "Sellers can read own payouts"
   ON seller_payouts FOR SELECT
   USING (
-    seller_payouts.seller_id IN (
-      SELECT ba.id FROM business_accounts ba
-      WHERE ba.owner_user_id = auth.uid()
+    EXISTS (
+      SELECT 1 FROM business_accounts ba
+      WHERE ba.id = seller_payouts.seller_id
+      AND ba.owner_user_id = auth.uid()
     )
   );
