@@ -262,6 +262,7 @@ export async function processCashOnDelivery(payment: Omit<Payment, 'id' | 'creat
 
 /**
  * Create a PayDunya payment record (status will be updated via IPN callback)
+ * @deprecated Use processModemPayPayment instead
  */
 export async function processPayDunyaPayment(payment: Omit<Payment, 'id' | 'createdAt' | 'status'>, paydunyaToken: string): Promise<Payment> {
   try {
@@ -283,6 +284,32 @@ export async function processPayDunyaPayment(payment: Omit<Payment, 'id' | 'crea
   } catch (error) {
     paymentLogger.error('Failed to create PayDunya payment', error as Error);
     throw new Error('Could not create PayDunya payment.');
+  }
+}
+
+/**
+ * Create a Modem Pay payment record (status will be updated via webhook)
+ */
+export async function processModemPayPayment(payment: Omit<Payment, 'id' | 'createdAt' | 'status'>, intentId: string): Promise<Payment> {
+  try {
+    const newPayment = await createPayment({
+      ...payment,
+      status: 'Processing',
+      transactionId: intentId,
+      metadata: {
+        ...payment.metadata,
+        paymentProvider: 'ModemPay',
+        modempayIntentId: intentId,
+        note: 'Payment processing via Modem Pay (Afrimoney/QMoney/Wave)',
+      },
+    });
+
+    paymentLogger.debug('Modem Pay payment created', { paymentId: newPayment.id, intentId });
+
+    return newPayment;
+  } catch (error) {
+    paymentLogger.error('Failed to create Modem Pay payment', error as Error);
+    throw new Error('Could not create Modem Pay payment.');
   }
 }
 

@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { getSettings } from '../admin/settings/actions';
 import { createOrder } from '@/services/orderService';
 import { validateCoupon, incrementCouponUsage } from '@/services/couponService';
-import { processCashOnDelivery, processPayDunyaPayment, processMobileMoneyPayment } from '@/services/paymentService';
+import { processCashOnDelivery, processModemPayPayment, processMobileMoneyPayment } from '@/services/paymentService';
 import { useEffect, useState } from 'react';
 import { Order } from '@/lib/types';
 import { Tag, Loader2, CreditCard, Smartphone, Banknote, Info, Copy, CheckCircle } from 'lucide-react';
@@ -23,7 +23,7 @@ import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
 type Settings = { currency?: string };
 
-type PaymentMethod = 'paydunya' | 'mobile_money' | 'cod';
+type PaymentMethod = 'modempay' | 'mobile_money' | 'cod';
 
 interface MobileMoneyAccount {
   provider: string;
@@ -50,7 +50,7 @@ export default function CheckoutPage() {
   const [consentGiven, setConsentGiven] = useState(false);
 
   // Payment method state
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('modempay');
   const [sellerMobileMoneyInfo, setSellerMobileMoneyInfo] = useState<SellerMobileMoneyInfo[]>([]);
   const [mobileMoneyLoading, setMobileMoneyLoading] = useState(false);
   const [mmReferenceNumber, setMmReferenceNumber] = useState('');
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
         }
       }
 
-      const orderPaymentMethod = paymentMethod === 'paydunya' ? 'PayDunya' 
+      const orderPaymentMethod = paymentMethod === 'modempay' ? 'Mobile Money' 
         : paymentMethod === 'mobile_money' ? 'Mobile Money' 
         : 'Cash on Delivery';
 
@@ -256,8 +256,8 @@ export default function CheckoutPage() {
         customerName: `${firstName} ${lastName}`,
       };
 
-      if (paymentMethod === 'paydunya') {
-        const paydunyaRes = await fetch('/api/payments/paydunya/create', {
+      if (paymentMethod === 'modempay') {
+        const modemRes = await fetch('/api/payments/modempay/create-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -267,42 +267,27 @@ export default function CheckoutPage() {
             customerName: `${firstName} ${lastName}`,
             customerEmail: email,
             customerPhone: phone,
-            items: simplifiedItems.map(item => ({
-              name: item.productName,
-              quantity: item.quantity,
-              unitPrice: item.price,
-              totalPrice: item.price * item.quantity,
-            })),
           }),
         });
 
-        const contentType = paydunyaRes.headers.get('content-type') || '';
-        let paydunyaData: any;
-        
-        if (!contentType.includes('application/json')) {
-          const text = await paydunyaRes.text();
-          console.error('PayDunya non-JSON response:', paydunyaRes.status, text.substring(0, 200));
-          throw new Error('Payment service returned an unexpected response. Please try Cash on Delivery.');
-        }
+        const modemData = await modemRes.json();
 
-        paydunyaData = await paydunyaRes.json();
-
-        if (!paydunyaRes.ok || !paydunyaData.checkoutUrl) {
-          throw new Error(paydunyaData.error || 'Failed to create payment. Please try another method.');
+        if (!modemRes.ok || !modemData.paymentLink) {
+          throw new Error(modemData.error || 'Failed to create payment. Please try another method.');
         }
 
         // Payment record is optional — don't block redirect if it fails
         try {
-          await processPayDunyaPayment(
-            { ...paymentBase, paymentMethod: 'PayDunya' },
-            paydunyaData.token
+          await processModemPayPayment(
+            { ...paymentBase, paymentMethod: 'Mobile Money' },
+            modemData.intentId
           );
         } catch (payErr) {
-          console.warn('PayDunya payment record creation failed (non-critical):', payErr);
+          console.warn('Modem Pay payment record creation failed (non-critical):', payErr);
         }
 
         dispatch({ type: 'CLEAR_CART' });
-        window.location.href = paydunyaData.checkoutUrl;
+        window.location.href = modemData.paymentLink;
         return;
 
       } else if (paymentMethod === 'mobile_money') {
@@ -432,28 +417,28 @@ export default function CheckoutPage() {
                   <CardTitle className="font-headline">Payment Method</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {/* PayDunya (Wave / Card) */}
+                  {/* Modem Pay (Afrimoney / QMoney / Wave) */}
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod('paydunya')}
+                    onClick={() => setPaymentMethod('modempay')}
                     className={`w-full flex items-center gap-3 border rounded-lg p-4 transition-colors text-left ${
-                      paymentMethod === 'paydunya'
+                      paymentMethod === 'modempay'
                         ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700 ring-2 ring-blue-400'
                         : 'hover:bg-muted/50 border-border'
                     }`}
                   >
                     <div className={`p-2 rounded-full ${
-                      paymentMethod === 'paydunya' 
+                      paymentMethod === 'modempay' 
                         ? 'bg-blue-100 dark:bg-blue-900' 
                         : 'bg-muted'
                     }`}>
-                      <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <Smartphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium">Wave / Card Payment</div>
-                      <div className="text-sm text-muted-foreground">Pay securely via Wave or bank card</div>
+                      <div className="font-medium">Mobile Money</div>
+                      <div className="text-sm text-muted-foreground">Pay with Afrimoney, QMoney, or Wave</div>
                     </div>
-                    {paymentMethod === 'paydunya' && (
+                    {paymentMethod === 'modempay' && (
                       <CheckCircle className="h-5 w-5 text-blue-600" />
                     )}
                   </button>
@@ -510,13 +495,13 @@ export default function CheckoutPage() {
                     )}
                   </button>
 
-                  {/* PayDunya info */}
-                  {paymentMethod === 'paydunya' && (
+                  {/* Modem Pay info */}
+                  {paymentMethod === 'modempay' && (
                     <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                       <div className="flex items-start gap-2">
                         <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="text-sm text-blue-800 dark:text-blue-300">
-                          <p>You will be redirected to a secure payment page to complete your payment via Wave or bank card. Your order will be confirmed once payment is received.</p>
+                          <p>You will be redirected to Modem Pay to complete your payment via Afrimoney, QMoney, or Wave. Your order will be confirmed once payment is received.</p>
                         </div>
                       </div>
                     </div>
@@ -738,8 +723,8 @@ export default function CheckoutPage() {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {loading 
                       ? 'Processing...' 
-                      : paymentMethod === 'paydunya' 
-                        ? 'Pay Now' 
+                      : paymentMethod === 'modempay' 
+                        ? 'Pay with Mobile Money' 
                         : paymentMethod === 'mobile_money'
                           ? 'Confirm Mobile Money Payment'
                           : 'Place Order (Cash on Delivery)'
