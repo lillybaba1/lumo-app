@@ -88,22 +88,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.items.map((item, index) => (
-                  <div key={index}>
-                    {index > 0 && <Separator className="my-4" />}
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{item.product.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {formatCurrency(item.product.price, currencySymbol)} × {item.quantity}
-                        </p>
-                      </div>
-                      <div className="font-semibold">
-                        {formatCurrency(item.product.price * item.quantity, currencySymbol)}
+                {order.items.map((item: any, index: number) => {
+                  const name = item.product?.name || item.productName || 'Product';
+                  const price = item.product?.price ?? item.price ?? 0;
+                  const qty = item.quantity || 1;
+
+                  return (
+                    <div key={index}>
+                      {index > 0 && <Separator className="my-4" />}
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {formatCurrency(price, currencySymbol)} × {qty}
+                          </p>
+                        </div>
+                        <div className="font-semibold">
+                          {formatCurrency(price * qty, currencySymbol)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Separator className="my-6" />

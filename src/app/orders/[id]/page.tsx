@@ -104,37 +104,48 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <CardTitle className="font-headline">Order Items</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {order.items.map((item, index) => (
-              <div key={index}>
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-muted rounded flex-shrink-0 relative overflow-hidden">
-                    {((item.product.productImages && item.product.productImages.length > 0) ||
-                      (item.product.imageUrls && item.product.imageUrls.length > 0)) && (
-                      <Image
-                        src={
-                          (item.product.productImages && item.product.productImages.length > 0)
-                            ? item.product.productImages[0]
-                            : item.product.imageUrls[0]
-                        }
-                        alt={item.product.name}
-                        fill
-                        sizes="80px"
-                        className="object-cover rounded"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.product.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.product.description}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <span className="text-sm">Qty: {item.quantity}</span>
-                      <span className="font-semibold">${formatAmount(item.product.price * item.quantity)}</span>
+            {order.items.map((item: any, index: number) => {
+              // Support both formats:
+              // Old: { product: { name, price, productImages, imageUrls, description }, quantity }
+              // New (simplified): { productName, price, quantity, productId, sellerId }
+              const name = item.product?.name || item.productName || 'Product';
+              const price = item.product?.price ?? item.price ?? 0;
+              const description = item.product?.description || '';
+              const images = item.product?.productImages || item.product?.imageUrls || [];
+              const qty = item.quantity || 1;
+
+              return (
+                <div key={index}>
+                  <div className="flex gap-4">
+                    <div className="w-20 h-20 bg-muted rounded flex-shrink-0 relative overflow-hidden">
+                      {images.length > 0 && (
+                        <Image
+                          src={images[0]}
+                          alt={name}
+                          fill
+                          sizes="80px"
+                          className="object-cover rounded"
+                        />
+                      )}
+                      {images.length === 0 && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{name}</h3>
+                      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+                      <div className="flex items-center gap-4 mt-2">
+                        <span className="text-sm">Qty: {qty}</span>
+                        <span className="font-semibold">${formatAmount(price * qty)}</span>
+                      </div>
                     </div>
                   </div>
+                  {index < order.items.length - 1 && <Separator className="mt-4" />}
                 </div>
-                {index < order.items.length - 1 && <Separator className="mt-4" />}
-              </div>
-            ))}
+              );
+            })}
 
             <Separator className="my-4" />
 
