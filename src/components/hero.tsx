@@ -319,6 +319,8 @@ const MOCK_DISCOVER: Product[] = [
 
 export default function Hero({ initialSettings }: HeroProps = {}) {
   const [settings, setSettings] = useState<HeroSettings | null>(initialSettings || null);
+  const [realProducts, setRealProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
     if (!initialSettings) {
@@ -328,6 +330,28 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
         .catch(() => {});
     }
   }, [initialSettings]);
+
+  // Fetch real products from the database
+  useEffect(() => {
+    fetch('/api/products?limit=24')
+      .then(res => res.ok ? res.json() : [])
+      .then((data: Product[]) => {
+        // Filter out mock/sample products
+        const real = (data || []).filter(p => p.sellerId !== 'mock-seller' && p.sellerId !== 'mock-seller-id' && p.category !== 'mock');
+        setRealProducts(real);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingProducts(false));
+  }, []);
+
+  // Use real products if available, otherwise fall back to mock data
+  const hasRealProducts = realProducts.length >= 4;
+  const deals = hasRealProducts ? realProducts.slice(0, 4) : MOCK_DEALS;
+  const bestSellers = hasRealProducts ? realProducts.slice(4, 8) : MOCK_BEST_SELLERS;
+  const newArrivals = hasRealProducts ? realProducts.slice(8, 12) : MOCK_NEW_ARRIVALS;
+  const featured = hasRealProducts ? realProducts.slice(12, 16) : MOCK_FEATURED;
+  const budget = hasRealProducts ? realProducts.slice(16, 20) : MOCK_BUDGET;
+  const discover = hasRealProducts ? realProducts.slice(20, 24) : MOCK_DISCOVER;
 
   return (
     <div
@@ -344,16 +368,18 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Mobile Layout - Horizontal Scroll Cards */}
         <div className="md:hidden">
-          {/* Sample products notice */}
-          <div className="mx-4 mb-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
-            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
-            <p className="text-[11px] text-amber-800">These are sample products for demonstration. Real products will appear once sellers list them.</p>
-          </div>
+          {/* Sample products notice — only when no real products */}
+          {!hasRealProducts && !loadingProducts && (
+            <div className="mx-4 mb-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
+              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
+              <p className="text-[11px] text-amber-800">These are sample products for demonstration. Real products will appear once sellers list them.</p>
+            </div>
+          )}
           <MobileHeroCarousel>
             <div className="snap-center">
               <HeroGridWidget
                 title="Continue shopping deals"
-                products={MOCK_DEALS}
+                products={deals}
                 link="/products?filter=deals"
                 bgColor="bg-white"
                 linkLabel="See all deals"
@@ -362,7 +388,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <div className="snap-center">
               <HeroLargeCardWidget
                 title="Best sellers in your area"
-                products={MOCK_BEST_SELLERS}
+                products={bestSellers}
                 link="/products?filter=bestsellers"
                 bgColor="bg-white"
                 linkLabel="See more"
@@ -371,7 +397,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <div className="snap-center">
               <HeroGridWidget
                 title="New arrivals"
-                products={MOCK_NEW_ARRIVALS}
+                products={newArrivals}
                 link="/products?filter=new"
                 bgColor="bg-white"
                 linkLabel="Explore new arrivals"
@@ -380,7 +406,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <div className="snap-center">
               <HeroLargeCardWidget
                 title="Featured for you"
-                products={MOCK_FEATURED}
+                products={featured}
                 link="/products?filter=featured"
                 bgColor="bg-white"
                 linkLabel="See more"
@@ -389,7 +415,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <div className="snap-center">
               <HeroGridWidget
                 title="Budget finds under $50"
-                products={MOCK_BUDGET}
+                products={budget}
                 link="/products?maxPrice=50"
                 bgColor="bg-white"
                 linkLabel="See more"
@@ -398,7 +424,7 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
             <div className="snap-center">
               <HeroGridWidget
                 title="Discover something new"
-                products={MOCK_DISCOVER}
+                products={discover}
                 link="/products"
                 bgColor="bg-white"
                 linkLabel="Explore more"
@@ -409,50 +435,52 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
 
         {/* Desktop Layout — Amazon-style widget grid */}
         <div className="hidden md:block px-4 lg:px-6 py-3 max-w-[1440px] mx-auto">
-          {/* Sample products notice */}
-          <div className="mb-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5">
-            <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
-            <p className="text-sm text-amber-800">These are sample products for demonstration purposes. Real products will appear as sellers list them on the marketplace.</p>
-          </div>
+          {/* Sample products notice — only when no real products */}
+          {!hasRealProducts && !loadingProducts && (
+            <div className="mb-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5">
+              <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded uppercase tracking-wide shrink-0">Sample</span>
+              <p className="text-sm text-amber-800">These are sample products for demonstration purposes. Real products will appear as sellers list them on the marketplace.</p>
+            </div>
+          )}
           <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 auto-rows-fr">
             <HeroGridWidget
               title="Continue shopping deals"
-              products={MOCK_DEALS}
+              products={deals}
               link="/products?filter=deals"
               bgColor="bg-white"
               linkLabel="See all deals"
             />
             <HeroLargeCardWidget
               title="Best sellers in your area"
-              products={MOCK_BEST_SELLERS}
+              products={bestSellers}
               link="/products?filter=bestsellers"
               bgColor="bg-white"
               linkLabel="See more"
             />
             <HeroGridWidget
               title="New arrivals"
-              products={MOCK_NEW_ARRIVALS}
+              products={newArrivals}
               link="/products?filter=new"
               bgColor="bg-white"
               linkLabel="Explore new arrivals"
             />
             <HeroLargeCardWidget
               title="Featured for you"
-              products={MOCK_FEATURED}
+              products={featured}
               link="/products?filter=featured"
               bgColor="bg-white"
               linkLabel="See more"
             />
             <HeroGridWidget
               title="Budget finds under $50"
-              products={MOCK_BUDGET}
+              products={budget}
               link="/products?maxPrice=50"
               bgColor="bg-white"
               linkLabel="See more"
             />
             <HeroGridWidget
               title="Discover more"
-              products={MOCK_DISCOVER}
+              products={discover}
               link="/products"
               bgColor="bg-white"
               linkLabel="Explore more"
