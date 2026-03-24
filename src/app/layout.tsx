@@ -42,6 +42,12 @@ const CapacitorBackButton = dynamic(
   { ssr: false }
 );
 
+// Capacitor status bar fix for Android app
+const CapacitorStatusBar = dynamic(
+  () => import('@/components/capacitor-status-bar'),
+  { ssr: false }
+);
+
 // Optimized font loading with next/font - prevents FOUT (Flash of Unstyled Text)
 const inter = Inter({
   subsets: ['latin'],
@@ -143,6 +149,7 @@ export default async function RootLayout({
               <CookieConsent />
               <VisitorTracker />
               <CapacitorBackButton />
+              <CapacitorStatusBar />
               </LocationProvider>
             </CartProvider>
           </SettingsProvider>
