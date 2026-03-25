@@ -45,6 +45,7 @@ export default function Header() {
     <>
       <header 
         className="fixed top-0 left-0 right-0 z-50 w-full bg-white"
+        style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))' }}
       >
         {/* Mobile Header - Clean: Menu | Logo + Store Name | Cart */}
         <div className="flex md:hidden w-full h-14 items-center px-3 gap-2 bg-white" style={{ color: '#1e293b' }}>
@@ -319,7 +320,8 @@ export default function Header() {
 
       {/* Spacer to prevent content from being hidden behind fixed header */}
       <div 
-        className="w-full flex-shrink-0 h-14"
+        className="w-full flex-shrink-0"
+        style={{ height: 'calc(3.5rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px)))' }}
       />
 
 

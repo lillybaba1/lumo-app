@@ -333,7 +333,7 @@ function Home(props: {
       {/* ── Mobile Category Chips (fixed below header, seamless with header) ── */}
       <div
         className="md:hidden fixed left-0 right-0 z-40 bg-white px-3 py-2 border-b"
-        style={{ top: '3.5rem' }}
+        style={{ top: 'calc(3.5rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px)))' }}
       >
         <CategoryChips
           categories={categories}
