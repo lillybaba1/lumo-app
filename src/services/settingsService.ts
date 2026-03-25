@@ -90,14 +90,6 @@ export interface Settings {
     chatbotLabelTextColor?: string;
     chatbotPulseEnabled?: boolean;
 
-    // Header Settings
-    headerBgColor?: string;
-    headerTextColor?: string;
-    headerButtonStyle?: 'outline' | 'solid' | 'ghost';
-    headerButtonColor?: string;
-    homeButtonGradientFrom?: string;
-    homeButtonGradientTo?: string;
-
     // Announcement Bar Settings
     announcementEnabled?: boolean;
     announcementText?: string;
@@ -233,12 +225,6 @@ const defaultSettings: Settings = {
     chatbotLabelBgColor: '#ffffff',
     chatbotLabelTextColor: '#4F46E5',
     chatbotPulseEnabled: true,
-    headerBgColor: '#ffffff',
-    headerTextColor: '#1e293b',
-    headerButtonStyle: 'outline',
-    headerButtonColor: '#4F46E5',
-    homeButtonGradientFrom: '#4F46E5',
-    homeButtonGradientTo: '#14B8A6',
     announcementEnabled: false,
     announcementText: '',
     announcementBgColor: '#4F46E5',

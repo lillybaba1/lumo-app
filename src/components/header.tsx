@@ -6,10 +6,8 @@ import { ShoppingBag, Heart, Shield, User, Home, Store, ChevronDown, LogOut, Pac
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
-import { useEffect, useState, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import SearchBar from "./search-bar";
-
 import { useSettings } from "@/context/settings-context";
 import {
   DropdownMenu,
@@ -28,36 +26,6 @@ interface UserData {
   businessStatus?: string;
 }
 
-interface HeaderSettings {
-  headerBgColor?: string;
-  headerTextColor?: string;
-  headerButtonStyle?: 'outline' | 'solid' | 'ghost';
-  headerButtonColor?: string;
-  homeButtonGradientFrom?: string;
-  homeButtonGradientTo?: string;
-  logoUrl?: string;
-  logoAlt?: string;
-  logoWidth?: number;
-  logoHeight?: number;
-  storeName?: string;
-}
-
-// Local defaults for instant loading - matches JulaZone branding
-// These are used immediately, admin settings override after fetch
-const defaultHeaderSettings: HeaderSettings = {
-  headerBgColor: 'rgba(255, 255, 255, 0.9)', // White with slight transparency
-  headerTextColor: '#0f172a', // Dark slate (almost black)
-  headerButtonStyle: 'outline',
-  headerButtonColor: '#0f172a',
-  homeButtonGradientFrom: '#4F46E5',
-  homeButtonGradientTo: '#14B8A6',
-  logoUrl: '',
-  logoAlt: 'JulaZone',
-  logoWidth: 40,
-  logoHeight: 40,
-  storeName: 'JulaZone',
-};
-
 export default function Header() {
   const { state } = useCart();
   const pathname = usePathname();
@@ -66,31 +34,10 @@ export default function Header() {
   
   const user: UserData | null = auth.user || null;
   const isAuthenticated = auth.isAuthenticated;
-  const authChecked = !auth.isLoading;
-  const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
-
+  const storeName = (globalSettings?.storeName as string) || 'JulaZone';
 
   // Hide header on dashboard pages (they have their own layouts)
   const isHidden = pathname?.startsWith('/business') || pathname?.startsWith('/admin');
-
-  // Apply settings from context
-  useEffect(() => {
-    if (globalSettings && Object.keys(globalSettings).length > 0) {
-      setSettings({
-        headerBgColor: (globalSettings.headerBgColor as string) || defaultHeaderSettings.headerBgColor,
-        headerTextColor: (globalSettings.headerTextColor as string) || defaultHeaderSettings.headerTextColor,
-        headerButtonStyle: (globalSettings.headerButtonStyle as 'outline' | 'solid' | 'ghost') || defaultHeaderSettings.headerButtonStyle,
-        headerButtonColor: (globalSettings.headerButtonColor as string) || defaultHeaderSettings.headerButtonColor,
-        homeButtonGradientFrom: (globalSettings.homeButtonGradientFrom as string) || defaultHeaderSettings.homeButtonGradientFrom,
-        homeButtonGradientTo: (globalSettings.homeButtonGradientTo as string) || defaultHeaderSettings.homeButtonGradientTo,
-        logoUrl: (globalSettings.logoUrl as string) || defaultHeaderSettings.logoUrl,
-        logoAlt: (globalSettings.logoAlt as string) || defaultHeaderSettings.logoAlt,
-        logoWidth: (globalSettings.logoWidth as number) || defaultHeaderSettings.logoWidth,
-        logoHeight: (globalSettings.logoHeight as number) || defaultHeaderSettings.logoHeight,
-        storeName: (globalSettings.storeName as string) || defaultHeaderSettings.storeName,
-      });
-    }
-  }, [globalSettings]);
 
   if (isHidden) return null;
 
@@ -209,7 +156,7 @@ export default function Header() {
             <div className="relative h-8 w-8 flex-shrink-0 flex items-center">
               <Image
                 src="/icon.svg"
-                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                alt={storeName}
                 width={32}
                 height={32}
                 className="object-contain"
@@ -217,7 +164,7 @@ export default function Header() {
               />
             </div>
             <span className="text-lg font-bold text-slate-900 truncate">
-              {settings.storeName || 'JulaZone'}
+              {storeName}
             </span>
           </Link>
 
@@ -243,24 +190,21 @@ export default function Header() {
         </div>
 
         {/* Desktop Header */}
-        <div 
-          className="hidden md:flex w-full h-14 items-center px-4 md:px-6 gap-3 backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
-          style={{ backgroundColor: settings.headerBgColor, color: settings.headerTextColor }}
-        >
+        <div className="hidden md:flex w-full h-14 items-center px-4 md:px-6 gap-3 bg-white text-slate-900">
           {/* Logo & Store Name */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
             <div className="relative h-9 w-9 flex items-center">
               <Image
                 src="/icon.svg"
-                alt={settings.logoAlt || settings.storeName || 'Site Logo'}
+                alt={storeName}
                 width={36}
                 height={36}
                 className="object-contain"
                 priority
               />
             </div>
-            <span className="text-lg font-bold tracking-tight" style={{ color: settings.headerTextColor }}>
-              {settings.storeName}
+            <span className="text-lg font-bold tracking-tight text-slate-900">
+              {storeName}
             </span>
           </Link>
           
@@ -277,8 +221,7 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="flex items-center gap-1 px-2 h-9 hover:bg-white/10"
-                    style={{ color: settings.headerTextColor }}
+                    className="flex items-center gap-1 px-2 h-9 text-slate-800 hover:bg-slate-100"
                   >
                     <User className="h-4 w-4" />
                     <span className="text-sm font-medium max-w-[100px] truncate">{user.name?.split(' ')[0]}</span>
@@ -345,8 +288,7 @@ export default function Header() {
               <Button 
                 variant="ghost" 
                 asChild 
-                className="hidden md:flex h-9 px-3 hover:bg-white/10"
-                style={{ color: settings.headerTextColor }}
+                className="hidden md:flex h-9 px-3 text-slate-800 hover:bg-slate-100"
               >
                 <Link href="/login">
                   <User className="h-4 w-4 mr-1.5" />
@@ -359,9 +301,8 @@ export default function Header() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="hidden md:flex relative h-9 w-9 hover:bg-white/10" 
-              asChild 
-              style={{ color: settings.headerTextColor }}
+              className="hidden md:flex relative h-9 w-9 text-slate-800 hover:bg-slate-100" 
+              asChild
             >
               <Link href="/cart">
                 <ShoppingBag className="h-5 w-5" />

@@ -5,17 +5,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface Settings {
   currency?: string;
   storeName?: string;
-  // Header settings
-  headerBgColor?: string;
-  headerTextColor?: string;
-  headerButtonStyle?: string;
-  headerButtonColor?: string;
-  homeButtonGradientFrom?: string;
-  homeButtonGradientTo?: string;
-  logoUrl?: string;
-  logoAlt?: string;
-  logoWidth?: number;
-  logoHeight?: number;
   // Footer settings
   storeTagline?: string;
   footerDescription?: string;
