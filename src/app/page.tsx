@@ -330,8 +330,11 @@ function Home(props: {
   return (
     <div className="flex flex-col w-full" style={{ backgroundColor: 'var(--color-bg-page)', width: '100%' }}>
 
-      {/* ── Mobile Category Chips ── */}
-      <div className="md:hidden w-full bg-white px-3 py-2">
+      {/* ── Mobile Category Chips (fixed below header, seamless with header) ── */}
+      <div
+        className="md:hidden fixed left-0 right-0 z-40 bg-white px-3 py-2 border-b"
+        style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+      >
         <CategoryChips
           categories={categories}
           selectedCategory={selectedCategory}
@@ -346,6 +349,8 @@ function Home(props: {
           maxVisible={6}
         />
       </div>
+      {/* Spacer for fixed header + category bar on mobile */}
+      <div className="md:hidden w-full" style={{ height: '44px' }} />
 
       {/* ── Hero ── */}
       <div className="w-full" style={{ width: '100%' }}>
