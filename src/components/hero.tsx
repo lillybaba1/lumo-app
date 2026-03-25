@@ -345,13 +345,45 @@ export default function Hero({ initialSettings }: HeroProps = {}) {
   }, []);
 
   // Use real products if available, otherwise fall back to mock data
-  const hasRealProducts = realProducts.length >= 4;
-  const deals = hasRealProducts ? realProducts.slice(0, 4) : MOCK_DEALS;
-  const bestSellers = hasRealProducts ? realProducts.slice(4, 8) : MOCK_BEST_SELLERS;
-  const newArrivals = hasRealProducts ? realProducts.slice(8, 12) : MOCK_NEW_ARRIVALS;
-  const featured = hasRealProducts ? realProducts.slice(12, 16) : MOCK_FEATURED;
-  const budget = hasRealProducts ? realProducts.slice(16, 20) : MOCK_BUDGET;
-  const discover = hasRealProducts ? realProducts.slice(20, 24) : MOCK_DISCOVER;
+  // Mix real products into each section; fill remaining slots with mock data
+  const hasRealProducts = realProducts.length > 0;
+  const hasEnoughForAllSections = realProducts.length >= 24;
+
+  // Helper: fill a section with real products first, then pad with mock data
+  const fillSection = (real: Product[], mock: Product[], count: number = 4): Product[] => {
+    if (real.length >= count) return real.slice(0, count);
+    return [...real, ...mock.slice(0, count - real.length)];
+  };
+
+  // Distribute real products across sections
+  // If we have few products, repeat them across sections so they're visible
+  const distributeProducts = () => {
+    if (hasEnoughForAllSections) {
+      return {
+        deals: realProducts.slice(0, 4),
+        bestSellers: realProducts.slice(4, 8),
+        newArrivals: realProducts.slice(8, 12),
+        featured: realProducts.slice(12, 16),
+        budget: realProducts.slice(16, 20),
+        discover: realProducts.slice(20, 24),
+      };
+    }
+
+    // With fewer products, put them in the first sections and pad with mocks
+    // Also feature real products prominently in "Featured for you"
+    const real = [...realProducts];
+    return {
+      deals: fillSection(real.slice(0, 4), MOCK_DEALS),
+      bestSellers: fillSection(real.slice(0, Math.min(real.length, 4)), MOCK_BEST_SELLERS),
+      newArrivals: fillSection(real.length > 4 ? real.slice(4, 8) : real.slice(0, Math.min(real.length, 4)), MOCK_NEW_ARRIVALS),
+      featured: fillSection(real.slice(0, Math.min(real.length, 4)), MOCK_FEATURED),
+      budget: fillSection(real.length > 8 ? real.slice(8, 12) : [], MOCK_BUDGET),
+      discover: fillSection(real.length > 12 ? real.slice(12, 16) : [], MOCK_DISCOVER),
+    };
+  };
+
+  const sections = distributeProducts();
+  const { deals, bestSellers, newArrivals, featured, budget, discover } = sections;
 
   return (
     <div
