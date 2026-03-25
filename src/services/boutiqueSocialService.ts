@@ -22,22 +22,16 @@ export interface BoutiqueComment {
  * Check if the current user is following a boutique
  */
 export async function isFollowingBoutique(boutiqueId: string): Promise<{ following: boolean; notificationsEnabled: boolean }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return { following: false, notificationsEnabled: false };
-
-  const { data } = await supabase
-    .from('boutique_followers')
-    .select('id, notifications_enabled')
-    .eq('boutique_id', boutiqueId)
-    .eq('user_id', user.id)
-    .single();
-
-  return { 
-    following: !!data, 
-    notificationsEnabled: data?.notifications_enabled ?? true 
-  };
+  try {
+    const res = await fetch(`/api/boutiques/social?boutiqueId=${boutiqueId}`, {
+      credentials: 'same-origin',
+    });
+    if (!res.ok) return { following: false, notificationsEnabled: false };
+    const data = await res.json();
+    return { following: data.isFollowing, notificationsEnabled: data.notificationsEnabled };
+  } catch {
+    return { following: false, notificationsEnabled: false };
+  }
 }
 
 /**
@@ -47,30 +41,20 @@ export async function followBoutique(
   boutiqueId: string, 
   notificationsEnabled: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { success: false, error: 'You must be logged in to follow a boutique' };
-  }
-
-  const { error } = await supabase
-    .from('boutique_followers')
-    .insert({ 
-      boutique_id: boutiqueId, 
-      user_id: user.id,
-      notifications_enabled: notificationsEnabled,
+  try {
+    const res = await fetch('/api/boutiques/follow', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boutiqueId, notificationsEnabled }),
     });
-
-  if (error) {
-    if (error.code === '23505') {
-      return { success: true }; // Already following
-    }
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || 'Failed to follow boutique' };
+    return { success: true };
+  } catch (error) {
     console.error('Error following boutique:', error);
     return { success: false, error: 'Failed to follow boutique' };
   }
-
-  return { success: true };
 }
 
 /**
@@ -80,43 +64,39 @@ export async function toggleFollowNotifications(
   boutiqueId: string, 
   enabled: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { success: false, error: 'You must be logged in' };
-  }
-
-  const { error } = await supabase
-    .from('boutique_followers')
-    .update({ notifications_enabled: enabled })
-    .eq('boutique_id', boutiqueId)
-    .eq('user_id', user.id);
-
-  if (error) {
+  try {
+    const res = await fetch('/api/boutiques/follow', {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boutiqueId, notificationsEnabled: enabled }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || 'Failed to update notification settings' };
+    return { success: true };
+  } catch (error) {
     console.error('Error toggling notifications:', error);
     return { success: false, error: 'Failed to update notification settings' };
   }
-
-  return { success: true };
 }
 
 /**
  * Unfollow a boutique
  */
 export async function unfollowBoutique(boutiqueId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { success: false, error: 'You must be logged in' };
+  try {
+    const res = await fetch(`/api/boutiques/follow?boutiqueId=${boutiqueId}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || 'Failed to unfollow boutique' };
+    return { success: true };
+  } catch (error) {
+    console.error('Error unfollowing boutique:', error);
+    return { success: false, error: 'Failed to unfollow boutique' };
   }
-
-  const { error } = await supabase
-    .from('boutique_followers')
-    .delete()
-    .eq('boutique_id', boutiqueId)
-    .eq('user_id', user.id);
+}
 
   if (error) {
     console.error('Error unfollowing boutique:', error);
@@ -130,70 +110,54 @@ export async function unfollowBoutique(boutiqueId: string): Promise<{ success: b
  * Check if the current user has liked a boutique
  */
 export async function hasLikedBoutique(boutiqueId: string): Promise<boolean> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return false;
-
-  const { data } = await supabase
-    .from('boutique_likes')
-    .select('id')
-    .eq('boutique_id', boutiqueId)
-    .eq('user_id', user.id)
-    .single();
-
-  return !!data;
+  try {
+    const res = await fetch(`/api/boutiques/social?boutiqueId=${boutiqueId}`, {
+      credentials: 'same-origin',
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.hasLiked;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Like a boutique
  */
 export async function likeBoutique(boutiqueId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { success: false, error: 'You must be logged in to like a boutique' };
-  }
-
-  const { error } = await supabase
-    .from('boutique_likes')
-    .insert({ boutique_id: boutiqueId, user_id: user.id });
-
-  if (error) {
-    if (error.code === '23505') {
-      return { success: true }; // Already liked
-    }
+  try {
+    const res = await fetch('/api/boutiques/like', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boutiqueId }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || 'Failed to like boutique' };
+    return { success: true };
+  } catch (error) {
     console.error('Error liking boutique:', error);
     return { success: false, error: 'Failed to like boutique' };
   }
-
-  return { success: true };
 }
 
 /**
  * Unlike a boutique
  */
 export async function unlikeBoutique(boutiqueId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { success: false, error: 'You must be logged in' };
-  }
-
-  const { error } = await supabase
-    .from('boutique_likes')
-    .delete()
-    .eq('boutique_id', boutiqueId)
-    .eq('user_id', user.id);
-
-  if (error) {
+  try {
+    const res = await fetch(`/api/boutiques/like?boutiqueId=${boutiqueId}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || 'Failed to unlike boutique' };
+    return { success: true };
+  } catch (error) {
     console.error('Error unliking boutique:', error);
     return { success: false, error: 'Failed to unlike boutique' };
   }
-
-  return { success: true };
 }
 
 /**
@@ -389,47 +353,16 @@ export async function getBoutiqueSocialStats(boutiqueId: string): Promise<{
   notificationsEnabled: boolean;
   hasLiked: boolean;
 }> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Get counts from boutique
-  const { data: boutique } = await supabase
-    .from('boutiques')
-    .select('follower_count, like_count, comment_count')
-    .eq('id', boutiqueId)
-    .single();
-
-  let isFollowing = false;
-  let notificationsEnabled = true;
-  let hasLiked = false;
-
-  if (user) {
-    // Check if user is following and their notification preference
-    const { data: followData } = await supabase
-      .from('boutique_followers')
-      .select('id, notifications_enabled')
-      .eq('boutique_id', boutiqueId)
-      .eq('user_id', user.id)
-      .single();
-    isFollowing = !!followData;
-    notificationsEnabled = followData?.notifications_enabled ?? true;
-
-    // Check if user has liked
-    const { data: likeData } = await supabase
-      .from('boutique_likes')
-      .select('id')
-      .eq('boutique_id', boutiqueId)
-      .eq('user_id', user.id)
-      .single();
-    hasLiked = !!likeData;
+  try {
+    const res = await fetch(`/api/boutiques/social?boutiqueId=${boutiqueId}`, {
+      credentials: 'same-origin',
+    });
+    if (!res.ok) {
+      return { followerCount: 0, likeCount: 0, commentCount: 0, isFollowing: false, notificationsEnabled: true, hasLiked: false };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching social stats:', error);
+    return { followerCount: 0, likeCount: 0, commentCount: 0, isFollowing: false, notificationsEnabled: true, hasLiked: false };
   }
-
-  return {
-    followerCount: boutique?.follower_count || 0,
-    likeCount: boutique?.like_count || 0,
-    commentCount: boutique?.comment_count || 0,
-    isFollowing,
-    notificationsEnabled,
-    hasLiked,
-  };
 }
