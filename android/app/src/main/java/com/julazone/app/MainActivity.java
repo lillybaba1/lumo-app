@@ -15,7 +15,9 @@ public class MainActivity extends BridgeActivity {
         // Fix: Prevent WebView from rendering behind the status bar
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, true);
-        window.setStatusBarColor(Color.parseColor("#a21caf"));
+        window.setStatusBarColor(Color.parseColor("#ffffff"));
+        // Dark icons on white status bar
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
     }
 
     @Override

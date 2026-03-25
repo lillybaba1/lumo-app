@@ -17,9 +17,9 @@ export function CapacitorStatusBar() {
         // Prevent status bar from overlaying the WebView
         await StatusBar.setOverlaysWebView({ overlay: false });
         
-        // Set status bar style and color
-        await StatusBar.setBackgroundColor({ color: '#a21caf' });
-        await StatusBar.setStyle({ style: Style.Dark });
+        // Set status bar to white with dark icons to match the app header
+        await StatusBar.setBackgroundColor({ color: '#ffffff' });
+        await StatusBar.setStyle({ style: Style.Light });
       } catch {
         // Not running in Capacitor or plugin not available — ignore
       }

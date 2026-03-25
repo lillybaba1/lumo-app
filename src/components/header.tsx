@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Heart, Shield, User, Home, Search, Store, ChevronDown, LogOut, Package, Settings, Camera as CameraIcon } from "lucide-react";
+import { ShoppingBag, Heart, Shield, User, Home, Store, ChevronDown, LogOut, Package } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SearchBar from "./search-bar";
-import MobileSearchModal from "./mobile-search-modal";
+
 import { useSettings } from "@/context/settings-context";
 import {
   DropdownMenu,
@@ -68,7 +68,7 @@ export default function Header() {
   const isAuthenticated = auth.isAuthenticated;
   const authChecked = !auth.isLoading;
   const [settings, setSettings] = useState<HeaderSettings>(defaultHeaderSettings);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
 
   // Hide header on dashboard pages (they have their own layouts)
   const isHidden = pathname?.startsWith('/business') || pathname?.startsWith('/admin');
@@ -97,23 +97,20 @@ export default function Header() {
   return (
     <>
       <header 
-        className="fixed top-0 left-0 right-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-white"
         style={{ 
-          backgroundColor: settings.headerBgColor,
-          color: settings.headerTextColor,
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* Mobile Header - Amazon style: Menu | Logo | Search Bar */}
-        <div className="flex md:hidden w-full h-14 items-center px-2 gap-2">
+        {/* Mobile Header - Clean: Menu | Logo + Store Name | Cart */}
+        <div className="flex md:hidden w-full h-14 items-center px-3 gap-2 bg-white" style={{ color: '#1e293b' }}>
           {/* Left: Menu Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="flex-shrink-0 h-9 w-9"
-                style={{ color: settings.headerTextColor }}
+                className="flex-shrink-0 h-9 w-9 text-slate-800"
                 aria-label="Open menu"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -207,9 +204,9 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Center: Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <div className="relative h-8 w-8 flex items-center">
+          {/* Center: Logo + Store Name */}
+          <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="relative h-8 w-8 flex-shrink-0 flex items-center">
               <Image
                 src="/icon.svg"
                 alt={settings.logoAlt || settings.storeName || 'Site Logo'}
@@ -219,20 +216,37 @@ export default function Header() {
                 priority
               />
             </div>
+            <span className="text-lg font-bold text-slate-900 truncate">
+              {settings.storeName || 'JulaZone'}
+            </span>
           </Link>
 
-          {/* Right: Search Bar (tappable, opens modal) */}
-          <button
-            onClick={() => setMobileSearchOpen(true)}
-            className="flex-1 h-9 px-3 flex items-center gap-2 bg-white rounded-lg border border-gray-300 text-gray-500"
+          {/* Right: Cart icon (search is in bottom nav) */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex-shrink-0 relative h-9 w-9 text-slate-800" 
+            asChild
           >
-            <Search className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm truncate">Search...</span>
-          </button>
+            <Link href="/cart">
+              <ShoppingBag className="h-5 w-5" />
+              {itemCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
+                >
+                  {itemCount > 99 ? '99+' : itemCount}
+                </Badge>
+              )}
+            </Link>
+          </Button>
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden md:flex w-full h-14 items-center px-4 md:px-6 gap-3">
+        <div 
+          className="hidden md:flex w-full h-14 items-center px-4 md:px-6 gap-3 backdrop-blur supports-[backdrop-filter]:bg-opacity-60"
+          style={{ backgroundColor: settings.headerBgColor, color: settings.headerTextColor }}
+        >
           {/* Logo & Store Name */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
             <div className="relative h-9 w-9 flex items-center">
@@ -371,11 +385,7 @@ export default function Header() {
         style={{ height: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
       />
 
-      {/* Mobile Search Modal */}
-      <MobileSearchModal 
-        isOpen={mobileSearchOpen} 
-        onClose={() => setMobileSearchOpen(false)} 
-      />
+
     </>
   );
 }

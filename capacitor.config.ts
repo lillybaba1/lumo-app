@@ -10,18 +10,18 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
-    backgroundColor: '#d946ef',
+    backgroundColor: '#ffffff',
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#d946ef',
+      backgroundColor: '#ffffff',
       showSpinner: true,
-      spinnerColor: '#ffffff',
+      spinnerColor: '#4F46E5',
     },
     StatusBar: {
-      backgroundColor: '#d946ef',
-      style: 'LIGHT',
+      backgroundColor: '#ffffff',
+      style: 'DARK',
       overlaysWebView: false,
     },
   },
