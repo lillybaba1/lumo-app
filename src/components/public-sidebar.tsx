@@ -96,6 +96,7 @@ export default function PublicSidebar() {
     <AppSidebar
       sections={sections}
       mobileTitle="JulaZone"
+      hideMobileHeader={true}
       className="top-14 h-[calc(100vh-3.5rem)]"
       mobileIcon={
         <Image 

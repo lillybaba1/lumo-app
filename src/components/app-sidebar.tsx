@@ -32,6 +32,8 @@ type SidebarProps = {
   mobileOffsetClassName?: string;
   mobileTopOffset?: string;
   onLogoClick?: () => void;
+  /** Hide the mobile header bar — use when a parent already provides a header (e.g. Header component) */
+  hideMobileHeader?: boolean;
 };
 
 export function AppSidebar({
@@ -46,6 +48,7 @@ export function AppSidebar({
   mobileOffsetClassName = 'top-0',
   mobileTopOffset,
   onLogoClick,
+  hideMobileHeader = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -165,7 +168,8 @@ export function AppSidebar({
 
   return (
     <>
-       {/* Mobile Header & Trigger */}
+       {/* Mobile Header & Trigger — hidden when parent provides its own header */}
+      {!hideMobileHeader && (
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-background/95 backdrop-blur border-b shadow-sm">
         <div className="flex items-center gap-3">
            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -186,6 +190,7 @@ export function AppSidebar({
            </div>
         </div>
       </div>
+      )}
 
       {/* Desktop Sidebar - with subtle glass effect */}
       <aside
