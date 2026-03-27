@@ -116,8 +116,8 @@ export default async function AnalyticsPage() {
                             <Badge variant="secondary" className="mt-1 bg-yellow-500/10 text-yellow-600">Pending</Badge>
                         </div>
                         <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600">{analytics.ordersByStatus.Processing}</p>
-                            <Badge variant="secondary" className="mt-1 bg-blue-500/10 text-blue-600">Processing</Badge>
+                            <p className="text-2xl font-bold text-blue-600">{analytics.ordersByStatus.Paid}</p>
+                            <Badge variant="secondary" className="mt-1 bg-blue-500/10 text-blue-600">Paid</Badge>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold text-purple-600">{analytics.ordersByStatus.Shipped}</p>

@@ -20,13 +20,17 @@ import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
 type Settings = { currency?: string };
 
-const statusVariant = {
+const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
     'Pending': 'default',
-    'Processing': 'secondary',
+    'Paid': 'secondary',
+    'Preparing': 'secondary',
     'Shipped': 'secondary',
     'Delivered': 'outline',
+    'Payout Pending': 'default',
+    'Completed': 'outline',
+    'Disputed': 'destructive',
     'Cancelled': 'destructive',
-} as const;
+};
 
 
 export default function RecentOrdersTable() {

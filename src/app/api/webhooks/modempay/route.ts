@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyModemPayWebhook } from '@/lib/modempay';
 import { logger } from '@/lib/logger';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { updateOrderStatus } from '@/services/orderService';
 import { updatePayoutByTransferId } from '@/services/payoutService';
+import { onPaymentReceived } from '@/services/escrowService';
 
 const webhookLogger = logger.child('ModemPayWebhook');
 
@@ -51,17 +51,16 @@ export async function POST(request: NextRequest) {
         if (orderId) {
           // Update payment record
           await updatePaymentByIntentId(intentId, 'Completed');
-          // Update order status
-          try {
-            await updateOrderStatus(orderId, 'Processing');
-          } catch (e) {
-            webhookLogger.warn('Could not update order status (may require admin auth)', { orderId });
-            // Direct update as fallback
+          // Use escrow flow: transition to 'Paid' (money held in platform account)
+          const escrowUpdated = await onPaymentReceived(orderId);
+          if (!escrowUpdated) {
+            webhookLogger.warn('Escrow update failed, doing direct DB update', { orderId });
+            // Fallback direct update
             await supabaseAdmin
               .from('orders')
               .update({
                 payment_status: 'Paid',
-                status: 'Processing',
+                status: 'Paid',
                 updated_at: new Date().toISOString(),
               })
               .eq('id', orderId);

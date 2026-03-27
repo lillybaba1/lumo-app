@@ -10,20 +10,25 @@ import { getOrderById } from '@/services/orderService';
 import { getPaymentByOrder } from '@/services/paymentService';
 import { getSettings } from '@/app/admin/settings/actions';
 import { getCurrencySymbol } from '@/lib/currency';
+import { EscrowActions } from '@/components/admin/escrow-actions';
 
-const statusVariant = {
+const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   'Pending': 'default',
-  'Processing': 'secondary',
+  'Paid': 'secondary',
+  'Preparing': 'secondary',
   'Shipped': 'secondary',
   'Delivered': 'outline',
+  'Payout Pending': 'default',
+  'Completed': 'outline',
+  'Disputed': 'destructive',
   'Cancelled': 'destructive',
-} as const;
+};
 
-const paymentStatusVariant = {
+const paymentStatusVariant: Record<string, 'default' | 'outline' | 'destructive'> = {
   'Pending': 'default',
   'Paid': 'outline',
   'Failed': 'destructive',
-} as const;
+};
 
 function formatCurrency(amount: number, currencySymbol: string) {
   return `${currencySymbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -181,6 +186,64 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               )}
             </CardContent>
           </Card>
+
+          {/* Escrow Timeline */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Escrow Timeline</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${order.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={order.paymentStatus === 'Paid' ? 'font-medium' : 'text-muted-foreground'}>
+                    Payment Received
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${['Preparing', 'Shipped', 'Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={['Preparing', 'Shipped', 'Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'font-medium' : 'text-muted-foreground'}>
+                    Seller Preparing
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${['Shipped', 'Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={['Shipped', 'Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'font-medium' : 'text-muted-foreground'}>
+                    Shipped {order.shippedAt && `— ${formatDate(order.shippedAt)}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${['Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={['Delivered', 'Payout Pending', 'Completed'].includes(order.status) ? 'font-medium' : 'text-muted-foreground'}>
+                    Buyer Confirmed {order.deliveredAt && `— ${formatDate(order.deliveredAt)}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${order.status === 'Completed' ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={order.status === 'Completed' ? 'font-medium' : 'text-muted-foreground'}>
+                    Payout Released {order.payoutAt && `— ${formatDate(order.payoutAt)}`}
+                  </span>
+                </div>
+                {order.status === 'Disputed' && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    <span className="font-medium text-red-600">Disputed</span>
+                  </div>
+                )}
+              </div>
+
+              {order.autoConfirmAt && order.status === 'Shipped' && (
+                <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-xs text-amber-700 dark:text-amber-400">
+                  Auto-confirms on {formatDate(order.autoConfirmAt)}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Escrow Actions */}
+          {['Payout Pending', 'Disputed'].includes(order.status) && (
+            <EscrowActions orderId={order.id} status={order.status} total={order.total} currencySymbol={currencySymbol} />
+          )}
 
           <Card>
             <CardHeader>

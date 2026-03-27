@@ -66,14 +66,18 @@ export async function getAnalytics(dateRange?: DateRange): Promise<AnalyticsData
     // Calculate orders by status
     const ordersByStatus: Record<Order['status'], number> = {
       'Pending': 0,
-      'Processing': 0,
+      'Paid': 0,
+      'Preparing': 0,
       'Shipped': 0,
       'Delivered': 0,
+      'Payout Pending': 0,
+      'Completed': 0,
+      'Disputed': 0,
       'Cancelled': 0,
     };
 
     filteredOrders.forEach(order => {
-      ordersByStatus[order.status]++;
+      ordersByStatus[order.status]++;;
     });
 
     return {
@@ -99,9 +103,13 @@ export async function getAnalytics(dateRange?: DateRange): Promise<AnalyticsData
       revenueByMonth: [],
       ordersByStatus: {
         'Pending': 0,
-        'Processing': 0,
+        'Paid': 0,
+        'Preparing': 0,
         'Shipped': 0,
         'Delivered': 0,
+        'Payout Pending': 0,
+        'Completed': 0,
+        'Disputed': 0,
         'Cancelled': 0,
       },
     };

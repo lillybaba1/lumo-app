@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrderById, updateOrder } from '@/services/orderService';
+import { Order } from '@/lib/types';
 import OrderEditForm from '@/components/admin/order-edit-form';
 import { revalidatePath } from 'next/cache';
 
@@ -21,7 +22,7 @@ async function updateOrderAction(formData: FormData) {
   'use server';
 
   const orderId = formData.get('orderId') as string;
-  const status = formData.get('status') as 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  const status = formData.get('status') as Order['status'];
   const paymentStatus = formData.get('paymentStatus') as 'Pending' | 'Paid' | 'Failed';
   const notes = formData.get('notes') as string;
 

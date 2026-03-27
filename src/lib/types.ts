@@ -112,6 +112,27 @@ export interface OrderItem {
   sellerStatus?: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'; // Seller-specific status
 }
 
+// Escrow order statuses:
+// Pending        → waiting for payment
+// Paid           → payment received, held in escrow
+// Preparing      → seller is preparing the order
+// Shipped        → seller marked as shipped, confirmation link sent to buyer
+// Delivered      → buyer confirmed receipt
+// Payout Pending → awaiting admin to release payout to seller
+// Completed      → payout sent to seller, order fully complete
+// Disputed       → buyer reported a problem
+// Cancelled      → order was cancelled
+export type OrderStatus =
+  | 'Pending'
+  | 'Paid'
+  | 'Preparing'
+  | 'Shipped'
+  | 'Delivered'
+  | 'Payout Pending'
+  | 'Completed'
+  | 'Disputed'
+  | 'Cancelled';
+
 export interface Order {
   id: string;
   customerId?: string; // FK to User (optional for guest checkout)
@@ -123,11 +144,17 @@ export interface Order {
   subtotal: number;
   discount: number;
   total: number;
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: OrderStatus;
   paymentMethod: 'Wave Money' | 'Cash on Delivery' | 'PayDunya' | 'Mobile Money';
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
   couponCode?: string;
   notes?: string;
+  // Escrow fields
+  confirmationToken?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  payoutAt?: string;
+  autoConfirmAt?: string; // 7 days after shipped — auto-confirm if buyer doesn't respond
   createdAt: string;
   updatedAt?: string;
 }

@@ -48,9 +48,13 @@ export default function OrderEditForm({ order }: { order: any }) {
               <Label htmlFor="status">Order Status</Label>
               <select name="status" id="status" value={status} onChange={e => setStatus(e.target.value)} className="w-full">
                 <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
+                <option value="Paid">Paid (Escrow)</option>
+                <option value="Preparing">Preparing</option>
                 <option value="Shipped">Shipped</option>
                 <option value="Delivered">Delivered</option>
+                <option value="Payout Pending">Payout Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Disputed">Disputed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
@@ -91,7 +95,7 @@ export default function OrderEditForm({ order }: { order: any }) {
               <span className="font-medium">{order.paymentMethod}</span>
 
               <span className="text-muted-foreground">Total:</span>
-              <span className="font-medium">${formatAmount(order.total)}</span>
+              <span className="font-medium">D{formatAmount(order.total)}</span>
             </div>
           </CardContent>
         </Card>

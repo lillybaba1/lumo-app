@@ -8,7 +8,7 @@ const apiLogger = logger.child('API:AdminOrders');
 
 const updateOrderSchema = z.object({
   orderId: z.string().uuid(),
-  status: z.enum(['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']).optional(),
+  status: z.enum(['Pending', 'Paid', 'Preparing', 'Shipped', 'Delivered', 'Payout Pending', 'Completed', 'Disputed', 'Cancelled']).optional(),
   paymentStatus: z.enum(['Pending', 'Paid', 'Failed']).optional(),
   notes: z.string().max(1000).optional(),
 });

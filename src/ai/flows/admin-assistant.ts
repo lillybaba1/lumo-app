@@ -597,8 +597,9 @@ async function getSystemOverview(): Promise<string> {
 **💰 Revenue & Orders:**
 • Total Revenue: ${currencySymbol}${analytics.totalRevenue.toFixed(2)}
 • Total Orders: ${analytics.totalOrders}
-• Pending: ${analytics.ordersByStatus.Pending} | Processing: ${analytics.ordersByStatus.Processing}
-• Shipped: ${analytics.ordersByStatus.Shipped} | Delivered: ${analytics.ordersByStatus.Delivered}
+• Pending: ${analytics.ordersByStatus.Pending} | Paid: ${analytics.ordersByStatus.Paid}
+• Preparing: ${analytics.ordersByStatus.Preparing} | Shipped: ${analytics.ordersByStatus.Shipped}
+• Delivered: ${analytics.ordersByStatus.Delivered} | Completed: ${analytics.ordersByStatus.Completed}
 
 **📦 Products & Inventory:**
 • Total Products: ${products.length}
@@ -643,8 +644,12 @@ async function getRecentOrders(): Promise<string> {
   sorted.forEach(order => {
     const emoji = 
       order.status === 'Delivered' ? '✅' :
+      order.status === 'Completed' ? '✅' :
       order.status === 'Shipped' ? '🚚' :
-      order.status === 'Processing' ? '⚙️' :
+      order.status === 'Preparing' ? '⚙️' :
+      order.status === 'Paid' ? '💰' :
+      order.status === 'Payout Pending' ? '💵' :
+      order.status === 'Disputed' ? '⚠️' :
       order.status === 'Cancelled' ? '❌' : '⏳';
     
     result += `${emoji} #${order.id.slice(0, 8)} - $${order.total.toFixed(2)} (${order.status})\n`;

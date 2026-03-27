@@ -214,7 +214,7 @@ No orders yet! Here are some tips to get started:
       }
       
       const recent = sellerOrders.slice(0, 5);
-      const pending = sellerOrders.filter(o => o.status === 'Pending' || o.status === 'Processing');
+      const pending = sellerOrders.filter(o => o.status === 'Pending' || o.status === 'Paid' || o.status === 'Preparing');
       
       let response = `📦 **Your Orders Summary**\n\n`;
       response += `• Total Orders: ${sellerOrders.length}\n`;
@@ -225,7 +225,8 @@ No orders yet! Here are some tips to get started:
         const emoji = 
           order.status === 'Delivered' ? '✅' :
           order.status === 'Shipped' ? '🚚' :
-          order.status === 'Processing' ? '⚙️' : '⏳';
+          order.status === 'Preparing' ? '⚙️' :
+          order.status === 'Paid' ? '💰' : '⏳';
         response += `${emoji} #${order.id.slice(0, 8)} - $${order.total?.toFixed(2) || '0.00'} (${order.status})\n`;
       });
       

@@ -13,13 +13,17 @@ import { getOrders } from '@/services/orderService';
 import { getSettings } from '@/app/admin/settings/actions';
 import { getCurrencySymbol, formatAmount } from '@/lib/currency';
 
-const statusVariant = {
+const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
     'Pending': 'default',
-    'Processing': 'secondary',
+    'Paid': 'secondary',
+    'Preparing': 'secondary',
     'Shipped': 'secondary',
     'Delivered': 'outline',
+    'Payout Pending': 'default',
+    'Completed': 'outline',
+    'Disputed': 'destructive',
     'Cancelled': 'destructive',
-} as const;
+};
 
 export default async function OrdersPage() {
   const orders = await getOrders();

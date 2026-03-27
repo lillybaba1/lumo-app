@@ -202,7 +202,7 @@ export async function updatePaymentStatus(
 
     // Update order payment status
     if (status === 'Completed') {
-      await updateOrderStatus(payment.orderId, 'Processing');
+      await updateOrderStatus(payment.orderId, 'Paid');
     } else if (status === 'Failed') {
       // Map failed payment to cancelled order
       await updateOrderStatus(payment.orderId, 'Cancelled');
