@@ -6,6 +6,7 @@ import { useEffect } from 'react';
  * Initializes the Capacitor StatusBar plugin on Android.
  * Ensures the status bar does NOT overlay the WebView content.
  * Sets a CSS variable for the status bar height so the header can offset itself.
+ * Also handles keyboard open/close to prevent header from shifting on Android.
  */
 export function CapacitorStatusBar() {
   useEffect(() => {
@@ -30,6 +31,19 @@ export function CapacitorStatusBar() {
         // Android status bar is typically 24-28dp
         const statusBarHeight = info?.visible !== false ? 28 : 0;
         document.documentElement.style.setProperty('--capacitor-status-bar-height', `${statusBarHeight}px`);
+
+        // Handle keyboard open/close — add a CSS class so we can adjust layout
+        try {
+          const { Keyboard } = await import('@capacitor/keyboard');
+          Keyboard.addListener('keyboardWillShow', () => {
+            document.documentElement.classList.add('keyboard-open');
+          });
+          Keyboard.addListener('keyboardWillHide', () => {
+            document.documentElement.classList.remove('keyboard-open');
+          });
+        } catch {
+          // Keyboard plugin not available — ignore
+        }
       } catch {
         // Not running in Capacitor or plugin not available — ignore
       }

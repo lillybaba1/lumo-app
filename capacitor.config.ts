@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'com.julazone.app',
@@ -23,6 +24,10 @@ const config: CapacitorConfig = {
       backgroundColor: '#ffffff',
       style: 'DARK',
       overlaysWebView: false,
+    },
+    Keyboard: {
+      resize: KeyboardResize.Body,
+      resizeOnFullScreen: true,
     },
   },
 };
