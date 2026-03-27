@@ -172,7 +172,7 @@ export function AppSidebar({
       {!hideMobileHeader && (
       <div 
         className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-background/95 backdrop-blur border-b shadow-sm"
-        style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))' }}
+        style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))', transform: 'translateY(var(--keyboard-offset, 0px))' }}
       >
         <div className="flex items-center gap-3">
            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

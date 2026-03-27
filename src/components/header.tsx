@@ -48,7 +48,10 @@ export default function Header() {
     <>
       <header 
         className="fixed top-0 left-0 right-0 z-50 w-full bg-white"
-        style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))' }}
+        style={{ 
+          paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))',
+          transform: 'translateY(var(--keyboard-offset, 0px))',
+        }}
       >
         {/* Mobile Header - Clean: Menu | Logo + Store Name | Cart */}
         <div className="flex md:hidden w-full h-14 items-center px-3 gap-2 bg-white" style={{ color: '#1e293b' }}>

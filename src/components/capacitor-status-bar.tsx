@@ -6,7 +6,7 @@ import { useEffect } from 'react';
  * Initializes the Capacitor StatusBar plugin on Android.
  * Ensures the status bar does NOT overlay the WebView content.
  * Sets a CSS variable for the status bar height so the header can offset itself.
- * Also handles keyboard open/close to prevent header from shifting on Android.
+ * Also handles keyboard open/close to prevent fixed header from shifting on Android.
  */
 export function CapacitorStatusBar() {
   useEffect(() => {
@@ -32,7 +32,26 @@ export function CapacitorStatusBar() {
         const statusBarHeight = info?.visible !== false ? 28 : 0;
         document.documentElement.style.setProperty('--capacitor-status-bar-height', `${statusBarHeight}px`);
 
-        // Handle keyboard open/close — add a CSS class so we can adjust layout
+        // Fix: On Android with adjustPan, the keyboard pans the viewport up,
+        // causing fixed-position headers to move behind the status bar.
+        // Use visualViewport to detect the pan offset and compensate.
+        if (window.visualViewport) {
+          const vv = window.visualViewport;
+          const onViewportChange = () => {
+            // offsetTop tells us how much the viewport has been panned
+            const offset = vv.offsetTop;
+            document.documentElement.style.setProperty('--keyboard-offset', `${offset}px`);
+            if (offset > 0) {
+              document.documentElement.classList.add('keyboard-open');
+            } else {
+              document.documentElement.classList.remove('keyboard-open');
+            }
+          };
+          vv.addEventListener('resize', onViewportChange);
+          vv.addEventListener('scroll', onViewportChange);
+        }
+
+        // Also try Capacitor Keyboard plugin for additional handling
         try {
           const { Keyboard } = await import('@capacitor/keyboard');
           Keyboard.addListener('keyboardWillShow', () => {
@@ -40,6 +59,7 @@ export function CapacitorStatusBar() {
           });
           Keyboard.addListener('keyboardWillHide', () => {
             document.documentElement.classList.remove('keyboard-open');
+            document.documentElement.style.setProperty('--keyboard-offset', '0px');
           });
         } catch {
           // Keyboard plugin not available — ignore
