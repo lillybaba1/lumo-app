@@ -267,6 +267,7 @@ export default function BusinessSidebar({ user, businessAccount }: BusinessSideb
           "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-card border-r shadow-xl transition-transform duration-300 ease-in-out flex flex-col",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))' }}
       >
         <SidebarContent />
       </aside>

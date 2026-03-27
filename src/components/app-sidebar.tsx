@@ -182,7 +182,7 @@ export function AppSidebar({
                  <span className="sr-only">Open menu</span>
                </Button>
              </SheetTrigger>
-             <SheetContent side="left" className="p-0 w-[280px]">
+             <SheetContent side="left" className="p-0 w-[280px]" style={{ paddingTop: 'var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))' }}>
                <SidebarContent isCollapsed={false} />
              </SheetContent>
            </Sheet>

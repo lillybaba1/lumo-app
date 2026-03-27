@@ -67,7 +67,10 @@ export default function Header() {
             <SheetContent side="left" className="p-0 w-[280px]">
               <div className="flex flex-col h-full bg-white">
                 {/* Drawer Header */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b">
+                <div 
+                  className="flex items-center gap-3 px-4 py-3 border-b"
+                  style={{ paddingTop: 'calc(0.75rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px)))' }}
+                >
                   <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3">
                     <Image src="/icon.svg" alt={storeName} width={40} height={40} className="rounded-lg" />
                     <div className="flex flex-col">
