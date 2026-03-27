@@ -231,7 +231,10 @@ export default function BusinessSidebar({ user, businessAccount }: BusinessSideb
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b shadow-sm">
+      <div 
+        className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b shadow-sm"
+        style={{ paddingTop: 'calc(0.75rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px)))' }}
+      >
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold">
             <Store className="h-5 w-5" />

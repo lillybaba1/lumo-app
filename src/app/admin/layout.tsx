@@ -17,7 +17,8 @@ export default async function AdminLayout({
       <div className="flex min-h-screen bg-muted/40">
          <AdminSidebar user={adminUser} />
          <main className="flex-1 w-full lg:w-auto min-w-0">
-          <div className="pt-14 lg:pt-0 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:pt-6 admin-main-content">
+            <style>{`.admin-main-content { padding-top: calc(4.5rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))); } @media (min-width: 1024px) { .admin-main-content { padding-top: 1.5rem !important; } }`}</style>
             {children}
           </div>
          </main>

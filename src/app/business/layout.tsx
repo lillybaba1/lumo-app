@@ -63,7 +63,8 @@ export default async function BusinessLayout({
           businessAccount={businessAccount}
         />
         <main className="flex-1 w-full lg:w-auto min-w-0">
-          <div className="pt-16 lg:pt-0 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:pt-6 business-main-content">
+            <style>{`.business-main-content { padding-top: calc(4.5rem + var(--capacitor-status-bar-height, env(safe-area-inset-top, 0px))); } @media (min-width: 1024px) { .business-main-content { padding-top: 1.5rem !important; } }`}</style>
             {children}
           </div>
         </main>
