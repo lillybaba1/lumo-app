@@ -29,10 +29,10 @@ interface Props {
 }
 
 const PAYOUT_METHODS = [
-  { id: 'bank_transfer', label: 'Bank Transfer', icon: Building2 },
+  { id: 'mobile_money', label: 'Mobile Money (Modem Pay)', icon: Smartphone },
   { id: 'wave_money', label: 'Wave Money', icon: Smartphone },
+  { id: 'bank_transfer', label: 'Bank Transfer', icon: Building2 },
   { id: 'paypal', label: 'PayPal', icon: CreditCard },
-  { id: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
 ];
 
 export default function PayoutSettingsForm({ settings }: Props) {
@@ -116,7 +116,7 @@ export default function PayoutSettingsForm({ settings }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label>Minimum Payout Amount ($)</Label>
+              <Label>Minimum Payout Amount (GMD)</Label>
               <Input
                 type="number"
                 min={0}
@@ -252,7 +252,7 @@ export default function PayoutSettingsForm({ settings }: Props) {
             <p className="text-sm text-muted-foreground">
               <strong>Example:</strong> A sale completed today will have funds available after{' '}
               <strong>{payouts.holdPeriodDays} days</strong>. If the seller has at least{' '}
-              <strong>${payouts.minimumPayout}</strong> available, they will receive payment on the next{' '}
+              <strong>D{payouts.minimumPayout}</strong> available, they will receive payment on the next{' '}
               <strong>{payouts.payoutSchedule}</strong> payout cycle via their chosen method.
             </p>
           </div>

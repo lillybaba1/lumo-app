@@ -3,6 +3,7 @@ import { verifyModemPayWebhook } from '@/lib/modempay';
 import { logger } from '@/lib/logger';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { updateOrderStatus } from '@/services/orderService';
+import { updatePayoutByTransferId } from '@/services/payoutService';
 
 const webhookLogger = logger.child('ModemPayWebhook');
 
@@ -112,20 +113,43 @@ export async function POST(request: NextRequest) {
       }
 
       case 'transfer.completed': {
+        const transferId = payload.id;
+        const sellerId = payload.metadata?.seller_id;
         webhookLogger.info('Transfer completed', {
-          transferId: payload.id,
+          transferId,
           amount: payload.amount,
-          sellerId: payload.metadata?.seller_id,
+          sellerId,
         });
-        // Transfer payout to seller succeeded — could update payout record here
+        
+        // Update the payout record and seller's business account
+        if (transferId) {
+          const updated = await updatePayoutByTransferId(transferId, 'completed');
+          if (updated) {
+            webhookLogger.info('Payout record updated to completed', { transferId });
+          } else {
+            webhookLogger.warn('Could not find payout record for transfer', { transferId });
+          }
+        }
         break;
       }
 
       case 'transfer.failed': {
+        const transferId = payload.id;
+        const sellerId = payload.metadata?.seller_id;
+        const failureReason = payload.failure_reason || payload.error || 'Unknown error';
         webhookLogger.error('Transfer failed', {
-          transferId: payload.id,
-          sellerId: payload.metadata?.seller_id,
+          transferId,
+          sellerId,
+          failureReason,
         });
+        
+        // Update the payout record as failed
+        if (transferId) {
+          const updated = await updatePayoutByTransferId(transferId, 'failed', failureReason);
+          if (updated) {
+            webhookLogger.info('Payout record updated to failed', { transferId });
+          }
+        }
         break;
       }
 

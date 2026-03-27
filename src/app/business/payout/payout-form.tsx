@@ -9,11 +9,22 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Loader2, Save, Building, CreditCard, Wallet, CheckCircle,
-  Info, Shield
+  Info, Shield, Smartphone
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface PayoutDetails {
+  // Mobile Money (primary for The Gambia)
+  mobileMoneyProvider?: string;
+  mobileMoneyNumber?: string;
+  mobileMoneyAccountName?: string;
   // Bank Transfer
   bankName?: string;
   accountHolderName?: string;
@@ -37,12 +48,21 @@ export default function PayoutSettingsForm({ businessAccountId, currentMethod, c
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  const [payoutMethod, setPayoutMethod] = useState(currentMethod || 'bank');
+  const [payoutMethod, setPayoutMethod] = useState(currentMethod || 'mobile_money');
   const [details, setDetails] = useState<PayoutDetails>(currentDetails);
 
   const handleSave = async () => {
     // Validate based on method
-    if (payoutMethod === 'bank') {
+    if (payoutMethod === 'mobile_money') {
+      if (!details.mobileMoneyProvider || !details.mobileMoneyNumber || !details.mobileMoneyAccountName) {
+        toast({
+          title: 'Missing Information',
+          description: 'Please fill in all required mobile money details.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    } else if (payoutMethod === 'bank') {
       if (!details.bankName || !details.accountHolderName || !details.accountNumber) {
         toast({
           title: 'Missing Information',
@@ -125,6 +145,21 @@ export default function PayoutSettingsForm({ businessAccountId, currentMethod, c
           <RadioGroup value={payoutMethod} onValueChange={setPayoutMethod} className="space-y-3">
             <div 
               className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                payoutMethod === 'mobile_money' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+              }`}
+              onClick={() => setPayoutMethod('mobile_money')}
+            >
+              <RadioGroupItem value="mobile_money" id="mobile_money" />
+              <Smartphone className="h-5 w-5 text-muted-foreground" />
+              <div className="flex-1">
+                <Label htmlFor="mobile_money" className="font-medium cursor-pointer">Mobile Money</Label>
+                <p className="text-sm text-muted-foreground">Receive payouts via Wave, QMoney, or Afrimoney</p>
+              </div>
+              <CheckCircle className={`h-5 w-5 ${payoutMethod === 'mobile_money' ? 'text-primary' : 'text-transparent'}`} />
+            </div>
+
+            <div 
+              className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
                 payoutMethod === 'bank' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
               }`}
               onClick={() => setPayoutMethod('bank')}
@@ -155,6 +190,65 @@ export default function PayoutSettingsForm({ businessAccountId, currentMethod, c
           </RadioGroup>
         </CardContent>
       </Card>
+
+      {/* Mobile Money Details */}
+      {payoutMethod === 'mobile_money' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Mobile Money Details
+            </CardTitle>
+            <CardDescription>
+              Enter your mobile money account information for receiving payouts
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <Label>Provider *</Label>
+                <Select
+                  value={details.mobileMoneyProvider || ''}
+                  onValueChange={(v) => setDetails({ ...details, mobileMoneyProvider: v })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Wave">Wave</SelectItem>
+                    <SelectItem value="QMoney">QMoney</SelectItem>
+                    <SelectItem value="Afrimoney">Afrimoney</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Phone Number *</Label>
+                <Input
+                  value={details.mobileMoneyNumber || ''}
+                  onChange={(e) => setDetails({ ...details, mobileMoneyNumber: e.target.value })}
+                  placeholder="+220 XXXXXXX"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Account Name *</Label>
+                <Input
+                  value={details.mobileMoneyAccountName || ''}
+                  onChange={(e) => setDetails({ ...details, mobileMoneyAccountName: e.target.value })}
+                  placeholder="Name on the account"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+              <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-green-700 dark:text-green-300">
+                Payouts will be sent directly to your mobile money account via Modem Pay when processed by the platform.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bank Details */}
       {payoutMethod === 'bank' && (
@@ -268,7 +362,7 @@ export default function PayoutSettingsForm({ businessAccountId, currentMethod, c
             </div>
             <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <span className="text-muted-foreground">Minimum Payout</span>
-              <span className="font-medium">$25.00</span>
+              <span className="font-medium">D25.00</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <span className="text-muted-foreground">Processing Time</span>

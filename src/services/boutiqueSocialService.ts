@@ -98,14 +98,6 @@ export async function unfollowBoutique(boutiqueId: string): Promise<{ success: b
   }
 }
 
-  if (error) {
-    console.error('Error unfollowing boutique:', error);
-    return { success: false, error: 'Failed to unfollow boutique' };
-  }
-
-  return { success: true };
-}
-
 /**
  * Check if the current user has liked a boutique
  */

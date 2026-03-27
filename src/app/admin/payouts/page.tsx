@@ -56,6 +56,7 @@ import { formatAmount } from '@/lib/currency';
 
 interface SellerEarnings {
   sellerId: string;
+  boutiqueId?: string;
   businessName: string;
   contactEmail: string;
   subscriptionTier: string;
@@ -79,11 +80,13 @@ interface SellerEarnings {
 interface PayoutRecord {
   id: string;
   sellerId: string;
+  boutiqueId?: string;
   businessName: string;
   amount: number;
   commission: number;
   payoutMethod: string;
   status: string;
+  transferId?: string;
   notes?: string;
   processedBy?: string;
   processedAt?: string;
@@ -134,6 +137,7 @@ export default function AdminPayoutsPage() {
   const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<SellerEarnings | null>(null);
   const [payoutMethod, setPayoutMethod] = useState('');
+  const [selectedMobileAccount, setSelectedMobileAccount] = useState<{ provider: string; number: string; accountName: string } | null>(null);
   const [payoutNotes, setPayoutNotes] = useState('');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -173,13 +177,17 @@ export default function AdminPayoutsPage() {
 
   const handlePayoutClick = (seller: SellerEarnings) => {
     setSelectedSeller(seller);
-    // Pre-fill payout method
+    // Pre-fill payout method with first mobile money account if available
     if (seller.mobileMoneyAccounts && seller.mobileMoneyAccounts.length > 0) {
-      setPayoutMethod(`${seller.mobileMoneyAccounts[0].provider} - ${seller.mobileMoneyAccounts[0].number}`);
+      const primary = seller.mobileMoneyAccounts[0];
+      setPayoutMethod(primary.provider.toLowerCase());
+      setSelectedMobileAccount(primary);
     } else if (seller.payoutMethod) {
       setPayoutMethod(seller.payoutMethod);
+      setSelectedMobileAccount(null);
     } else {
       setPayoutMethod('manual');
+      setSelectedMobileAccount(null);
     }
     setPayoutNotes('');
     setPayoutDialogOpen(true);
@@ -199,6 +207,7 @@ export default function AdminPayoutsPage() {
             commission: selectedSeller.commission,
             payoutMethod,
             notes: payoutNotes,
+            mobileMoneyAccount: selectedMobileAccount || undefined,
           }),
         });
 
@@ -206,11 +215,12 @@ export default function AdminPayoutsPage() {
 
         if (res.ok && data.success) {
           toast({
-            title: 'Payout Processed',
-            description: `${formatAmount(selectedSeller.pendingPayout)} GMD sent to ${selectedSeller.businessName}`,
+            title: data.transferId ? 'Payout Initiated via Modem Pay' : 'Payout Recorded',
+            description: data.message || `${formatAmount(selectedSeller.pendingPayout)} GMD sent to ${selectedSeller.businessName}`,
           });
           setPayoutDialogOpen(false);
           setSelectedSeller(null);
+          setSelectedMobileAccount(null);
           await loadData();
         } else {
           toast({
@@ -619,43 +629,67 @@ export default function AdminPayoutsPage() {
                 </div>
               </div>
 
-              {/* Seller's Payout Methods */}
+              {/* Mobile Money Accounts — select to send via Modem Pay */}
               {selectedSeller.mobileMoneyAccounts &&
                 selectedSeller.mobileMoneyAccounts.length > 0 && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Mobile Money Accounts</label>
+                    <label className="text-sm font-medium">Send to Mobile Money (via Modem Pay)</label>
+                    <p className="text-xs text-muted-foreground">Select an account to send money directly via Modem Pay</p>
                     {selectedSeller.mobileMoneyAccounts.map((acc, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                        className={`flex items-center gap-2 rounded-md border p-3 text-sm cursor-pointer transition-colors ${
+                          selectedMobileAccount?.number === acc.number && selectedMobileAccount?.provider === acc.provider
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => {
+                          setSelectedMobileAccount(acc);
+                          setPayoutMethod(acc.provider.toLowerCase());
+                        }}
                       >
                         <Smartphone className="h-4 w-4 text-green-600" />
                         <span className="font-medium">{acc.provider}</span>
                         <span className="text-muted-foreground">·</span>
-                        <span>{acc.number}</span>
+                        <span className="font-mono">{acc.number}</span>
                         <span className="text-muted-foreground">({acc.accountName})</span>
+                        {selectedMobileAccount?.number === acc.number && selectedMobileAccount?.provider === acc.provider && (
+                          <CheckCircle2 className="h-4 w-4 text-primary ml-auto" />
+                        )}
                       </div>
                     ))}
+                    {/* Option to mark as manual instead */}
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground underline mt-1"
+                      onClick={() => {
+                        setSelectedMobileAccount(null);
+                        setPayoutMethod('manual');
+                      }}
+                    >
+                      Or mark as manual/external payout
+                    </button>
                   </div>
                 )}
 
-              {/* Payout Method */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Method Used</label>
-                <Select value={payoutMethod} onValueChange={setPayoutMethod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="wave">Wave</SelectItem>
-                    <SelectItem value="qmoney">QMoney</SelectItem>
-                    <SelectItem value="afrimoney">Afrimoney</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="manual">Manual / Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Manual payout method (when no mobile money or choosing manual) */}
+              {(!selectedSeller.mobileMoneyAccounts || selectedSeller.mobileMoneyAccounts.length === 0 || !selectedMobileAccount) && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Payment Method Used</label>
+                  <Select value={payoutMethod} onValueChange={(v) => { setPayoutMethod(v); setSelectedMobileAccount(null); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="wave">Wave</SelectItem>
+                      <SelectItem value="qmoney">QMoney</SelectItem>
+                      <SelectItem value="afrimoney">Afrimoney</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="manual">Manual / Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Notes */}
               <div className="space-y-2">
@@ -667,6 +701,19 @@ export default function AdminPayoutsPage() {
                   rows={2}
                 />
               </div>
+
+              {/* Info banner about Modem Pay */}
+              {selectedMobileAccount && (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <Smartphone className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    <strong>Modem Pay Transfer:</strong> Clicking confirm will send{' '}
+                    <strong>{formatAmount(selectedSeller.pendingPayout)} GMD</strong> directly to{' '}
+                    <strong>{selectedMobileAccount.accountName}</strong>&apos;s{' '}
+                    <strong>{selectedMobileAccount.provider}</strong> account ({selectedMobileAccount.number}).
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -677,16 +724,22 @@ export default function AdminPayoutsPage() {
             <Button
               onClick={handleProcessPayout}
               disabled={isPending || !selectedSeller || selectedSeller.pendingPayout <= 0}
+              className={selectedMobileAccount ? 'bg-green-600 hover:bg-green-700' : ''}
             >
               {isPending ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  {selectedMobileAccount ? 'Sending...' : 'Processing...'}
+                </>
+              ) : selectedMobileAccount ? (
+                <>
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Send via Modem Pay
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirm Payout
+                  Mark as Paid
                 </>
               )}
             </Button>

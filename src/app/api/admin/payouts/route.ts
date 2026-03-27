@@ -73,7 +73,9 @@ export async function GET(request: Request) {
 
 /**
  * POST /api/admin/payouts
- * Process a payout for a seller (Mark as Paid)
+ * Process a payout for a seller
+ * If the seller has a mobile money account and the method is a mobile money provider,
+ * it will initiate an actual Modem Pay transfer to send money directly.
  */
 export async function POST(request: Request) {
   const { isAdmin, userId, error } = await verifyAdmin();
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { sellerId, amount, commission, payoutMethod, notes } = body;
+    const { sellerId, amount, commission, payoutMethod, notes, mobileMoneyAccount } = body;
 
     if (!sellerId || !amount) {
       return NextResponse.json({ error: 'sellerId and amount are required' }, { status: 400 });
@@ -95,7 +97,8 @@ export async function POST(request: Request) {
       parseFloat(commission || 0),
       payoutMethod || 'manual',
       userId || 'admin',
-      notes
+      notes,
+      mobileMoneyAccount || undefined
     );
 
     if (!result.success) {
@@ -105,7 +108,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       payoutId: result.payoutId,
-      message: 'Payout processed successfully',
+      transferId: result.transferId,
+      message: result.transferId
+        ? 'Payout initiated via Modem Pay. Funds are being sent to the seller\'s mobile money account.'
+        : 'Payout recorded successfully.',
     });
   } catch (err) {
     console.error('Error in POST /api/admin/payouts:', err);
