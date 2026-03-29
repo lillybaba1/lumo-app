@@ -20,6 +20,7 @@ import { Order } from '@/lib/types';
 import { Tag, Loader2, CreditCard, Smartphone, Banknote, Info, Copy, CheckCircle } from 'lucide-react';
 import { CheckoutConsent } from '@/components/checkout-consent';
 import { getCurrencySymbol, formatAmount } from '@/lib/currency';
+import { useModemPay } from '@/hooks/use-modempay';
 
 type Settings = { currency?: string };
 
@@ -42,6 +43,7 @@ export default function CheckoutPage() {
   const { items } = state;
   const { toast } = useToast();
   const router = useRouter();
+  const { isLoaded: modemPayLoaded, openCheckout } = useModemPay();
   const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -257,37 +259,54 @@ export default function CheckoutPage() {
       };
 
       if (paymentMethod === 'modempay') {
-        const modemRes = await fetch('/api/payments/modempay/create-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: order.id,
-            amount: total,
-            description: `JulaZone Order #${order.id.substring(0, 8)}`,
-            customerName: `${firstName} ${lastName}`,
-            customerEmail: email,
-            customerPhone: phone,
-          }),
+        if (!modemPayLoaded) {
+          toast({ title: 'Payment Loading', description: 'Payment system is still loading. Please try again.', variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://julazone.com';
+
+        // Open inline ModemPay checkout — wallet only (no card)
+        const modal = openCheckout({
+          amount: Math.round(total),
+          currency: settings?.currency || 'GMD',
+          payment_methods: 'wallet', // Only mobile money — no card
+          walletOnly: true, // Force-hide card tab in the Modem Pay modal
+          title: `JulaZone Order #${order.id.substring(0, 8)}`,
+          description: `Payment for JulaZone order`,
+          customer_name: `${firstName} ${lastName}`,
+          customer_email: email,
+          customer_phone: phone,
+          metadata: { order_id: order.id },
+          return_url: `${appUrl}/checkout/payment-result?status=success&order=${order.id}`,
+          cancel_url: `${appUrl}/checkout/payment-result?status=cancelled&order=${order.id}`,
+          callback: async (transaction) => {
+            // Payment completed — record it and redirect
+            try {
+              await processModemPayPayment(
+                { ...paymentBase, paymentMethod: 'Mobile Money' },
+                transaction.id
+              );
+            } catch (payErr) {
+              console.warn('Modem Pay payment record creation failed (non-critical):', payErr);
+            }
+            dispatch({ type: 'CLEAR_CART' });
+            router.push(`/checkout/payment-result?status=success&order=${order.id}`);
+          },
+          onClose: (cancelled) => {
+            if (cancelled) {
+              setLoading(false);
+              toast({ title: 'Payment Cancelled', description: 'You can try again when ready.' });
+            }
+          },
         });
 
-        const modemData = await modemRes.json();
-
-        if (!modemRes.ok || !modemData.paymentLink) {
-          throw new Error(modemData.error || 'Failed to create payment. Please try another method.');
+        if (!modal) {
+          throw new Error('Failed to open payment. Please try again.');
         }
 
-        // Payment record is optional — don't block redirect if it fails
-        try {
-          await processModemPayPayment(
-            { ...paymentBase, paymentMethod: 'Mobile Money' },
-            modemData.intentId
-          );
-        } catch (payErr) {
-          console.warn('Modem Pay payment record creation failed (non-critical):', payErr);
-        }
-
-        dispatch({ type: 'CLEAR_CART' });
-        window.location.href = modemData.paymentLink;
+        // Don't setLoading(false) here — the modal is open and will handle it via callback/onClose
         return;
 
       } else if (paymentMethod === 'mobile_money') {
@@ -436,7 +455,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Mobile Money</div>
-                      <div className="text-sm text-muted-foreground">Pay with Afrimoney, QMoney, or Wave</div>
+                      <div className="text-sm text-muted-foreground">Pay with Wave, Afrimoney, or QMoney</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">Afrimoney</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">QMoney</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300">Wave</span>
+                      </div>
                     </div>
                     {paymentMethod === 'modempay' && (
                       <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -462,7 +486,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Mobile Money Transfer</div>
-                      <div className="text-sm text-muted-foreground">Send via QMoney, Afrimoney, or Wave</div>
+                      <div className="text-sm text-muted-foreground">Send directly via QMoney, Afrimoney, or Wave</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">Afrimoney</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">QMoney</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300">Wave</span>
+                      </div>
                     </div>
                     {paymentMethod === 'mobile_money' && (
                       <CheckCircle className="h-5 w-5 text-purple-600" />
@@ -501,7 +530,7 @@ export default function CheckoutPage() {
                       <div className="flex items-start gap-2">
                         <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="text-sm text-blue-800 dark:text-blue-300">
-                          <p>You will be redirected to Modem Pay to complete your payment via Afrimoney, QMoney, or Wave. Your order will be confirmed once payment is received.</p>
+                          <p>A secure payment window will open for you to pay via <strong>Afrimoney</strong>, <strong>QMoney</strong>, or <strong>Wave</strong>. Your order will be confirmed once payment is received.</p>
                         </div>
                       </div>
                     </div>

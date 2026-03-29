@@ -56,6 +56,7 @@ export async function createModemPayIntent(params: {
     const intent = await modempay.paymentIntents.create({
       amount: Math.round(params.amount), // GMD integer
       currency: 'GMD',
+      payment_methods: ['wallet'], // Only show mobile money (Afrimoney, QMoney, Wave) — no card
       title: `JulaZone Order #${params.orderId.substring(0, 8)}`,
       description: params.description || `Payment for JulaZone order`,
       customer_name: params.customerName,
