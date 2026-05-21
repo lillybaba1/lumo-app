@@ -1,8 +1,0 @@
-
-> nextn@0.1.0 build
-> node scripts/run-build.mjs
-
-  ▲ Next.js 14.2.33
-  - Environments: .env.local, .env
-
-   Creating an optimized production build ...
