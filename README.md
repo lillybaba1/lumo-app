@@ -1,155 +1,60 @@
-# Lumo E-Commerce App
+# Lumo / JulaZone
 
-A modern e-commerce platform built with Next.js, Firebase, and powered by Google's Gemini AI for intelligent shopping assistance.
+E-commerce platform built with Next.js 14 and Supabase, with an AI shopping assistant powered by Google Gemini (via Genkit).
 
 ## Features
 
-- Product browsing and search
-- AI-powered shopping assistant (Gemini 2.0 Flash)
-- Product recommendations
-- Natural language product queries
-- Firebase authentication and storage
-- Responsive UI with Tailwind CSS
-- Server-side rendering with Next.js 15
+- Customer storefront, multi-seller marketplace, and admin dashboard
+- AI shopping assistant (Gemini 2.0 Flash, OpenAI fallback)
+- Supabase auth (email + phone OTP), Postgres, and Storage
+- Capacitor wrapper for Android
 
-## Quick Start
+## Quick start
 
-### Prerequisites
+```bash
+# 1. Install
+npm install
 
-- Node.js 20.x
-- npm or yarn
-- Google AI API key ([Get one here](https://aistudio.google.com/app/apikey))
+# 2. Configure env
+cp .env.example .env.local
+# Set: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+#      SUPABASE_SERVICE_ROLE_KEY, GOOGLE_API_KEY (or GEMINI_API_KEY)
 
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. Add your Google AI API key to `.env.local`:
-   ```
-   GOOGLE_API_KEY=your_google_ai_api_key_here
-   ```
-
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-6. Open [http://localhost:3000](http://localhost:3000)
-
-## AI Assistant Setup
-
-The app includes an intelligent shopping assistant powered by **Google Gemini AI** and **Firebase Genkit**.
-
-For detailed setup instructions, see [AI_SETUP.md](./AI_SETUP.md)
-
-### Quick AI Setup:
-
-1. Get API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Add to `.env.local`: `GOOGLE_API_KEY=your_key`
-3. Restart dev server
-4. Click the bot icon in the bottom-right corner
-
-## Available Scripts
-
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run emulator:start` - Start Firebase emulators
-
-## Project Structure
-
-```
-src/
-├── ai/
-│   ├── flows/              # AI flows (shopping assistant, Q&A, recommendations)
-│   └── genkit.ts           # Genkit configuration
-├── app/
-│   ├── api/assistant/      # AI assistant API endpoint
-│   └── ...                 # Pages and layouts
-├── components/
-│   ├── ai-assistant-widget.tsx
-│   ├── chat-interface.tsx
-│   └── ...                 # UI components
-└── lib/                    # Utilities and configs
+# 3. Run
+npm run dev
 ```
 
-## Tech Stack
+Open http://localhost:3000.
 
-- **Frontend**: Next.js 15, React 18, Tailwind CSS
-- **AI**: Google Gemini 2.0 Flash, Firebase Genkit
-- **Backend**: Firebase (Auth, Firestore, Storage)
-- **UI Components**: Radix UI, Lucide Icons
-- **Deployment**: Vercel
+## Scripts
 
-## Environment Variables
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Next.js dev server |
+| `npm run build` | Production build (via `scripts/run-build.mjs`) |
+| `npm start` | Production server |
+| `npm test` | Vitest |
+| `npm run typecheck` | TypeScript |
+| `npm run lint` | ESLint |
+| `npm run pages:deploy` | Cloudflare Pages deploy |
+| `npm run android:build` | Android debug APK |
+| `npm run android:release` | Android release AAB |
 
-See `.env.example` for all available configuration options.
+Requires Node 20.
 
-Required for AI features:
-- `GOOGLE_API_KEY` - Google AI API key for Gemini
+## Tech stack
 
-Optional:
-- `FIREBASE_SERVICE_ACCOUNT_JSON` - Firebase admin credentials
-- `FIREBASE_COOKIE_NAME` - Session cookie name
+- **Framework:** Next.js 14 (App Router), React 18, TypeScript
+- **UI:** Tailwind CSS + Radix UI
+- **Backend:** Supabase (Postgres, Auth, Storage)
+- **AI:** Google Gemini 2.0 Flash via Genkit; OpenAI as fallback
+- **Mobile:** Capacitor 7 → Android
+- **Deploy:** Vercel (primary), Cloudflare Pages
 
-## Deployment
+## Documentation
 
-### Vercel (Recommended)
+All project docs live under [`docs/`](./docs/INDEX.md) — see the index for setup, auth, admin, deployment, migrations, and security guides.
 
-1. Push to GitHub
-2. Import project in Vercel
-3. Add environment variables:
-   - `GOOGLE_API_KEY`
-   - Any Firebase credentials
-4. Deploy
+## Environment
 
-### Environment Variables in Vercel
-
-1. Go to Project Settings → Environment Variables
-2. Add `GOOGLE_API_KEY` for all environments
-3. Redeploy
-
-## Troubleshooting
-
-### AI Not Working
-
-If the AI assistant doesn't respond:
-1. Check if `GOOGLE_API_KEY` is set in `.env.local`
-2. Verify API key is valid at [Google AI Studio](https://aistudio.google.com/)
-3. Check server logs for errors
-4. See [AI_SETUP.md](./AI_SETUP.md) for detailed troubleshooting
-
-### Development
-
-For development tips and common issues, check:
-- Server logs in terminal
-- Browser console for client-side errors
-- Firebase emulator logs if using Firebase locally
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is part of Firebase Studio.
-
-## Resources
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Firebase Genkit](https://firebase.google.com/docs/genkit)
-- [Google AI Studio](https://aistudio.google.com/)
-- [Gemini API Docs](https://ai.google.dev/docs)
+See `.env.example` (development) and `.env.production.example` (Vercel deployment).

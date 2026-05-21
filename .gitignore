@@ -40,14 +40,9 @@ next-env.d.ts
 .genkit/*
 .env*
 
-# firebase
-firebase-debug.log
-firestore-debug.log
-.firebase/
-service-account-key.json
-**/service-account*.json
-service-account-base64.txt
+# secrets / logs
 deploy.log
+build.log
 
 # Android
 *.keystore
