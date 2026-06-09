@@ -23,9 +23,11 @@ export async function GET() {
   };
 
   // Check 1: Authentication
+  let isAuthenticated = false;
   try {
     const user = await getCurrentUser();
     if (user) {
+      isAuthenticated = true;
       diagnostics.checks.authentication = {
         status: 'success',
         details: `Authenticated as ${user.email} (${user.userId})`,
@@ -68,6 +70,18 @@ export async function GET() {
       status: 'error',
       details: 'Cannot check role - authentication failed',
     };
+  }
+
+  // Infrastructure checks are only exposed to authenticated users so that
+  // anonymous callers can't probe database/storage configuration.
+  if (!isAuthenticated) {
+    diagnostics.checks.supabaseConnection = { status: 'skipped', details: 'Login required' };
+    diagnostics.checks.storageBucket = { status: 'skipped', details: 'Login required' };
+    diagnostics.summary = 'Log in to run the full diagnostics.';
+    return NextResponse.json(diagnostics, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Check 3: Supabase Connection

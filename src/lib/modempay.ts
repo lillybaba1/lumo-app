@@ -129,6 +129,8 @@ export async function initiateModemPayTransfer(params: {
   orderId?: string;
   sellerId?: string;
   narration?: string;
+  /** Stable key tied to the payout record so retries can't double-pay */
+  idempotencyKey?: string;
 }): Promise<{
   success: boolean;
   transferId?: string;
@@ -143,8 +145,12 @@ export async function initiateModemPayTransfer(params: {
     const modempay = getModemPay();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://julazone.com';
 
-    // Generate idempotency key from order + seller to prevent duplicates
-    const idempotencyKey = `payout-${params.orderId || 'manual'}-${params.sellerId || 'unknown'}-${Date.now()}`;
+    // Use the caller's stable key (e.g. the payout record ID) so the same
+    // payout can never produce two transfers. Date.now() fallback is only
+    // for callers that genuinely have no stable identity for the payout.
+    const idempotencyKey =
+      params.idempotencyKey ||
+      `payout-${params.orderId || 'manual'}-${params.sellerId || 'unknown'}-${Date.now()}`;
 
     modemPayLogger.info('Initiating transfer', {
       amount: params.amount,
