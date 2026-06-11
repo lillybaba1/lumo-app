@@ -289,11 +289,39 @@ export async function processSellerPayout(
 
     // Determine if we should send via Modem Pay
     const network = PROVIDER_TO_NETWORK[payoutMethod] || PROVIDER_TO_NETWORK[mobileMoneyAccount?.provider || ''];
+    const viaModemPay = !!(network && mobileMoneyAccount);
     let transferId: string | undefined;
-    let payoutStatus: 'pending' | 'processing' | 'completed' = 'completed';
+    let payoutStatus: 'pending' | 'processing' | 'completed' = viaModemPay ? 'processing' : 'completed';
 
-    if (network && mobileMoneyAccount) {
-      // Initiate Modem Pay transfer to seller's mobile money account
+    // 1. Create payout record BEFORE moving any money so the record ID can be
+    //    used as the transfer idempotency key, and so a successful transfer
+    //    can never end up untracked.
+    const dbMethod = toDbPayoutMethod(payoutMethod);
+    const { data: payoutData, error: payoutError } = await supabaseAdmin
+      .from('seller_payouts')
+      .insert({
+        boutique_id: boutiqueId || sellerId,
+        amount,
+        currency: 'GMD',
+        payout_method: dbMethod,
+        status: payoutStatus,
+        transaction_id: null,
+        notes: notes || `Payout via ${payoutMethod}`,
+        processed_by: processedBy,
+        processed_date: payoutStatus === 'completed' ? new Date().toISOString() : null,
+        business_name: businessName,
+        commission,
+      })
+      .select()
+      .single();
+
+    if (payoutError || !payoutData) {
+      payoutLogger.error('Error creating payout record:', payoutError);
+      return { success: false, error: 'Could not create payout record' };
+    }
+
+    // 2. Initiate Modem Pay transfer to seller's mobile money account
+    if (viaModemPay && mobileMoneyAccount && network) {
       payoutLogger.info('Initiating Modem Pay transfer', {
         sellerId,
         network,
@@ -308,43 +336,23 @@ export async function processSellerPayout(
         beneficiaryName: mobileMoneyAccount.accountName,
         sellerId,
         narration: `Payout to ${businessName} - ${mobileMoneyAccount.provider}`,
+        idempotencyKey: `payout-${payoutData.id}`,
       });
 
       if (transferResult.success) {
         transferId = transferResult.transferId;
-        payoutStatus = 'processing'; // Will be updated to 'completed' via webhook
         payoutLogger.info('Modem Pay transfer initiated', { transferId, status: transferResult.status });
+        await supabaseAdmin
+          .from('seller_payouts')
+          .update({ transaction_id: transferId })
+          .eq('id', payoutData.id);
       } else {
         payoutLogger.error('Modem Pay transfer failed', { error: transferResult.error });
+        await supabaseAdmin
+          .from('seller_payouts')
+          .update({ status: 'failed', failure_reason: transferResult.error || 'Transfer failed' })
+          .eq('id', payoutData.id);
         return { success: false, error: `Mobile money transfer failed: ${transferResult.error}` };
-      }
-    }
-
-    // 1. Create payout record using correct column names (boutique_id, not business_account_id)
-    const dbMethod = toDbPayoutMethod(payoutMethod);
-    const { data: payoutData, error: payoutError } = await supabaseAdmin
-      .from('seller_payouts')
-      .insert({
-        boutique_id: boutiqueId || sellerId,
-        amount,
-        currency: 'GMD',
-        payout_method: dbMethod,
-        status: payoutStatus,
-        transaction_id: transferId || null,
-        notes: notes || `Payout via ${payoutMethod}${transferId ? ` (Transfer: ${transferId})` : ''}`,
-        processed_by: processedBy,
-        processed_date: payoutStatus === 'completed' ? new Date().toISOString() : null,
-        business_name: businessName,
-        commission,
-      })
-      .select()
-      .single();
-
-    if (payoutError) {
-      payoutLogger.error('Error creating payout record:', payoutError);
-      // If it was a Modem Pay transfer that already succeeded, we still need to track it
-      if (transferId) {
-        payoutLogger.warn('Modem Pay transfer was initiated but DB record failed', { transferId });
       }
     }
 

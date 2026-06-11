@@ -17,9 +17,19 @@ export async function POST(request: NextRequest) {
       contentLength: body.length,
     });
 
-    // Verify webhook signature if secret is configured
+    // Verify webhook signature. In production this is mandatory — an
+    // unverified webhook could mark unpaid orders as Paid or flip payouts.
     let event: any;
-    if (process.env.MODEMPAY_WEBHOOK_SECRET && signature) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !process.env.MODEMPAY_WEBHOOK_SECRET) {
+      webhookLogger.error('MODEMPAY_WEBHOOK_SECRET is not configured in production');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    }
+    if (process.env.MODEMPAY_WEBHOOK_SECRET) {
+      if (!signature) {
+        webhookLogger.error('Webhook rejected: missing signature header');
+        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      }
       const verified = verifyModemPayWebhook(body, signature);
       if (!verified) {
         webhookLogger.error('Webhook signature verification failed');
@@ -27,7 +37,7 @@ export async function POST(request: NextRequest) {
       }
       event = verified;
     } else {
-      // Parse raw body if no webhook secret configured (dev/test mode)
+      // No webhook secret configured — only allowed outside production (dev/test)
       try {
         event = JSON.parse(body);
       } catch {
@@ -159,8 +169,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     webhookLogger.error('Webhook processing error', error as Error);
-    // Return 200 to prevent Modem Pay from retrying
-    return NextResponse.json({ error: 'Processing error' }, { status: 200 });
+    // Return 500 so Modem Pay retries — handlers are idempotent (payout
+    // updates skip records already in a final state), so retries are safe.
+    return NextResponse.json({ error: 'Processing error' }, { status: 500 });
   }
 }
 

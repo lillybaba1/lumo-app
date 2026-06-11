@@ -61,3 +61,7 @@ android/.gradle/
 *.aab
 src/app/page.tsx.bak
 *.aab
+
+# Never commit tester PII or real env values
+testers.csv
+vercel-env-values.txt

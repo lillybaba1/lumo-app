@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin, UnauthorizedError } from '@/lib/auth-admin';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { getCollections } from '@/app/admin/collections/actions';
 
@@ -9,6 +10,8 @@ import { getCollections } from '@/app/admin/collections/actions';
  */
 export async function GET() {
   try {
+    await requireAdmin({ redirect: false });
+
     const [productsResult, ordersResult, collectionsData, trendingSettings] = await Promise.all([
       supabaseAdmin
         .from('products')
@@ -152,6 +155,9 @@ export async function GET() {
       stats,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     console.error('Smart placement API error:', error);
     return NextResponse.json({ products: [], sections: {}, stats: {} }, { status: 500 });
   }
