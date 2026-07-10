@@ -74,9 +74,24 @@ export async function uploadImageAndGetUrl(file: File, path: string): Promise<st
 
         // Generate safe file path with timestamp to prevent caching issues
         const timestamp = Date.now();
-        const ext = file.name.split('.').pop() ?? 'jpg';
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const fileName = `${timestamp}_${safeName}`;
+        
+        // Remove file extension first
+        // Note: Using lastDotIndex > 0 (not >= 0) treats files starting with a dot
+        // as having no extension, which is appropriate for image uploads
+        const lastDotIndex = file.name.lastIndexOf('.');
+        const nameWithoutExt = lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name;
+        const ext = lastDotIndex > 0 ? file.name.substring(lastDotIndex + 1).toLowerCase() : 'jpg';
+
+        // Aggressive sanitization: only keep alphanumeric and single underscores
+        const safeName = nameWithoutExt
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')  // Replace any non-alphanumeric with underscore
+          .replace(/_+/g, '_')           // Replace multiple underscores with single
+          .replace(/^_|_$/g, '')         // Remove leading/trailing underscores
+          .substring(0, 50)              // Limit length to 50 chars
+          || 'file';                     // Fallback if name becomes empty
+
+        const fileName = `${timestamp}_${safeName}.${ext}`;
         const filePath = `${path}/${fileName}`;
 
         storageLogger.debug('Uploading to Supabase Storage', { filePath });
