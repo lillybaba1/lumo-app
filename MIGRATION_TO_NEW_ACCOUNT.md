@@ -61,6 +61,17 @@ old account's state, because all history is local.
 > **Note on forking:** do not use GitHub's "Fork" button. A fork stays linked to
 > the restricted upstream. Push to a fresh empty repo instead.
 
+### GitHub Actions is currently disabled on the old account
+
+Every CI job on the old account now fails 1–3 seconds after starting, with no
+log output at all (log downloads 404). That is the runner never starting, not a
+test failure — GitHub suspends Actions on accounts with an unresolved billing
+problem. Nothing in the workflow files is wrong.
+
+Expect this to clear by itself once the repo lives under an account in good
+standing. Do not "fix" `ci.yaml` in response to these failures; there is nothing
+to fix. Re-run the workflows after the move to get a real signal.
+
 ### Re-add the CI secrets
 
 `.github/workflows/` needs these repository secrets re-created under the new
@@ -78,6 +89,31 @@ project — read the new values from `.vercel/project.json` after running
 ---
 
 ## 2. Vercel
+
+### First: five Vercel projects are deploying this repo
+
+CI checks on a recent PR showed the `heiliges-projects` Vercel account building
+this same repository **five times** on every push:
+
+| Project | Looks like |
+|---|---|
+| `lumo-app` | the real one — matches `PRODUCTION_URLS.md` |
+| `lumo-app-q69v` | abandoned import |
+| `lumo-app-16qo` | abandoned import |
+| `lumo-app-zdhi-supabase` | abandoned import |
+| `lumo-app-jnhu-supa` | abandoned import |
+
+The random suffixes are what Vercel appends when you re-import a repo whose
+project name is taken, so these are almost certainly leftovers from repeated
+setup attempts. Each one consumes build minutes on every push, and each holds
+its own copy of your environment variables — including secrets.
+
+Before migrating, confirm which project actually serves production, then delete
+the rest. Do that *first*: it is much cheaper than carrying four dead projects
+into the new account, and it removes four stale copies of your service-role key.
+
+Check each project's Settings → Domains — the one holding your production
+domain is the keeper.
 
 ### Option A — same Vercel account, repoint Git (recommended)
 
@@ -214,15 +250,25 @@ ModemPay and does **not** cover `MODEMPAY_*`, `NEXT_PUBLIC_SITE_URL`, `ZOHO_*`,
 
 ## 5. Cloudflare
 
-What Cloudflare is doing determines the work:
+Cloudflare is **actively building this repo** — PR checks include a
+`Workers Builds: lumo` check that runs on every push. So this is not just DNS,
+and `wrangler.toml` is not dead config.
 
-- **DNS / domain only** — nothing in the repo changes. After the new Vercel
-  project has a domain, update the `CNAME`/`A` records to Vercel's targets. If
-  the domain is proxied (orange cloud), SSL mode must be **Full (strict)**.
-- **Hosting via Pages** — `wrangler.toml` (project `lumo-app`) and the
-  `pages:build` / `pages:deploy` scripts exist, so this is at least set up.
-  Recreate the Pages project under the new account, repoint its Git integration,
-  and re-add every variable from §4; `wrangler.toml` only carries `NODE_ENV`.
+That means Cloudflare has its own Git integration pointing at the old account,
+which must be repointed like Vercel's:
+
+1. Cloudflare dashboard → Workers & Pages → the `lumo` project → Settings →
+   Build → **disconnect** the old repository, reconnect the new one. Authorize
+   the Cloudflare GitHub App on the new account when prompted.
+2. Re-add every variable from §4 under Settings → Variables and Secrets.
+   `wrangler.toml` only carries `NODE_ENV`; everything else lives in the
+   dashboard and does **not** travel with the repo.
+3. If the domain is also on Cloudflare and proxied (orange cloud), SSL mode must
+   be **Full (strict)** or you get a redirect loop.
+
+Worth deciding while you are in there: you are currently building this app on
+both Vercel and Cloudflare. If only one actually serves traffic, disconnecting
+the other removes a whole category of migration work and stops duplicate builds.
 
 `vercel.json` pins `regions: ["iad1"]` and a 60s max duration for
 `src/app/api/**` — both carry over automatically, no action needed.
